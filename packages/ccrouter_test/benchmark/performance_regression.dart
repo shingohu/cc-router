@@ -4,7 +4,8 @@ import 'dart:io';
 /// Runs the repeatable Pure Dart performance and lifecycle regression suite.
 ///
 /// The default suite covers Runtime scaling, concurrent navigation, Service
-/// lookup/lifecycle, a bounded long run, and Analytics queue pressure. Add
+/// lookup/lifecycle and a bounded long run. Application analytics benchmarks
+/// live under demo/modules/analytics/benchmark and are not framework gates. Add
 /// `--full` to include the end-to-end generator fixture at 1x/10x/20x/30x.
 /// Each child process owns its state so RSS samples are not mixed with the
 /// orchestrator or a test runner. This is a trend/reporting tool, not a fixed
@@ -21,10 +22,6 @@ Future<void> main(List<String> arguments) async {
     const _BenchmarkSpec(
       'runtime_long_run.dart',
       arguments: ['--cycles=1000', '--recreate-every=100'],
-    ),
-    const _BenchmarkSpec(
-      'analytics_dispatcher.dart',
-      arguments: ['--events=5000', '--capacity=64'],
     ),
     if (full)
       const _BenchmarkSpec(

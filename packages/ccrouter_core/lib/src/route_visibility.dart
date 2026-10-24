@@ -15,12 +15,13 @@ extension CCRouterRuntimeRouteVisibility on CCRouterRuntime {
   /// Transitions are delivered by the bounded FIFO observer queue. The returned
   /// callback removes the listener and cancels its queued deliveries. Removing
   /// it is required when a diagnostic subscriber outlives its Host.
+  /// Cleanup is idempotent and never removes a later re-add of this callback.
+  /// Simultaneous duplicate adds still share one subscription.
   void Function() addRouteVisibilityListener(
     CCRouteVisibilityListener listener,
   ) {
     _ensureInitialized();
-    _routeVisibilityListeners.add(listener);
-    return () => _routeVisibilityListeners.remove(listener);
+    return _subscribeNavigationObserver(_routeVisibilityListeners, listener);
   }
 
   /// Emits a visibility observation while isolating subscriber failures.
@@ -41,10 +42,9 @@ extension CCRouterRuntimeRouteVisibility on CCRouterRuntime {
       }
       _routeVisibilityEvents.add(event);
     }
-    _enqueueNavigationObserverBatch(
+    _enqueueRegisteredNavigationObserverBatch(
       _routeVisibilityListeners,
       (listener) => listener(event),
-      isActive: _routeVisibilityListeners.contains,
       failureLabel: 'Route visibility listener',
     );
     _emitDiagnostic(

@@ -52,7 +52,11 @@ Fix 时才会提交一个有界源码编辑。插件不可用时，项目仍可�
 
 | Code | 默认级别 | 作用 |
 | --- | --- | --- |
-| `ccrouter_cross_package_generated_import` | error | 阻止业务 Package 直接导入另一个 Package 的 `src/ccrouter_generated` |
+| `ccrouter_cross_package_generated_import` | error | 检查 import/export 的每个条件 URI，阻止业务 Package 引用另一个 Package 的 `src/ccrouter_generated` |
+| `ccrouter_route_placement_invalid` | error | 检查直接声明的 Host/Outlet/Shell/parent 稳定 ID |
+| `ccrouter_route_parent_self` | error | 拒绝直接字面量的父路由自引用 |
+| `ccrouter_route_policy_invalid` | error | 拒绝直接列表字面量中的非法 Interceptor/PopGuard ID |
+| `ccrouter_route_policy_duplicate` | error | 拒绝直接列表字面量中重复的 policy ID |
 | `ccrouter_generated_output_missing` | warning | 标记 Route/Binding、Route/Service Contract、Service、Command Handler、Event Subscription 或 InitTask 的确定性同源输出缺失 |
 | `ccrouter_required_init_task_contract_missing` | error | required InitTask 必须使用稳定的 `CCInitTaskContract` |
 | `ccrouter_required_init_task_timeout_missing` | error | 异步 required InitTask 必须声明 timeout |
@@ -67,6 +71,10 @@ Fix 时才会提交一个有界源码编辑。插件不可用时，项目仍可�
 | `ccrouter_pub_resolution_stale` | warning | 保存的 Host dependencies 与 resolved Pub graph 不一致；先运行 Pub get，期间暂停 Owner 推断 |
 | `ccrouter_service_disposable_missing` | warning | 注解 Service 已有兼容的实例 `dispose()`，却未实现 Scope 识别的 `CCDisposable` |
 | `ccrouter_service_owned_resource` | warning | 注解 Service 的私有 final 字段直接持有自建可释放资源，但 Service 没有接入 Scope 释放 |
+
+Route 配置诊断适用于能证明框架身份的 `CCRoute` 和 `CCRouteContract`；placement 也需证明
+`CCRoutePlacement` 构造器身份。计算常量、未知表达式、跨文件父链与完整 Host 拓扑继续交给
+Generator/Validator。插件不猜测注册关系，也不为这些错误自动发明 ID 或提供拓扑修改。
 
 ### Generated-src 诊断重复调研（2026-10-06）
 
@@ -179,9 +187,12 @@ Owner 缺少可证明的公共常量，就不提供批量修复，避免形成�
 这两条是 IDE 开发反馈，不新增 Runtime/Generator 必需接口，也不要求无资源的 Service
 编写空释放方法。
 
-## 接入步骤
 
-当前接入仍为手工 bootstrap。CLI 已提供只读的 Host 状态和健康检查：
+## Host 接入与验证
+
+Plugin 是可选 Host 开发工具，不运行 Generator，不后台改写源码。其 Analyzer 依赖图必须与应用和 Generator Workspace 隔离；当前仓库尚未完成 Hosted 发布，不能把下面的版本号当作可下载证据。
+
+已装配 Host 先检查：
 
 ```bash
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer status demo
@@ -189,89 +200,138 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer doctor demo
 fvm dart run --verbosity=error ccrouter_generator:ccrouter analyzer pin-check demo
 ```
 
-`status` 区分 `notInstalled`、`incomplete`、`stale`、`incompatible`、`modified` 和
-`healthy`，并输出实际 bootstrap、来源、固定 Git ref/Hosted 版本及 Analyzer 版本；它只证明
-静态配置一致，不证明 Git 凭据可用或 Analysis Server 已成功加载插件。
-`doctor` 只在静态状态健康时，在临时副本中校验 lockfile、执行 bootstrap analyze 和 loader
-compile；不修改 Host、活动 bootstrap manifest 或 lockfile，也不运行 Generator。Git 凭据或
-SSH Key 不可用时会明确说明 IDE 诊断尚不可用。输出分别标记 source pin、cache artifact、
-temporary loader smoke、Analysis Server restart 和 live IDE verification；bootstrap analyze 或
-loader compile 不能升级为 live success。对当前 bootstrap 路径及其真实路径对应的 legacy
-plugin-manager 条目，`doctor` 会比较 manifest 和 `bin/plugin.dart`，报告
-`absent/current/stale`，不按同名 Package 猜测其它 Host 的缓存所有权。该检查适配 Dart 3.11
-的路径 MD5 缓存键；它不是生成物内容证明，SDK 改变缓存布局后仍需真实加载验收。
+手工 bootstrap 的完整目录、manifest、loader 和 analysis_options 配置见[独立接入指南](../skills/ccrouter-integration-development/references/ide-analysis-server.md#manual-host-bootstrap)。Host 必须排除内层 `tools/analyzer_plugin/**` 源码，由隔离图验证 loader。Demo 保持手工装配，不由 CLI 自动接管。
 
-`pin-check` 只供 maintainer/release 手动运行。它复用静态 identity 检查，在临时 bare Git
-repository 中验证完整 SHA 可从 manifest 声明的远端精确 fetch，并报告该 pin 到当前工作树的
-`packages/ccrouter_analyzer_plugin/lib` 生产变化。`pending` 是两阶段流程中第一阶段提交/推送后
-的预期状态，不导致命令失败，也不应成为所有 Plugin PR 的默认门禁；pin bump 后应重新运行并
-得到 `none`。命令不修改 Host、lockfile、Git index 或全局 cache。
+Hosted 发布后优先在 Host 的普通 `dev_dependencies` 中声明已发布的 Plugin 版本，再启用 `analyzer.plugins` 并重启 Analysis Server；当前 Git bootstrap 只使用远端可解析的完整 SHA。安装和运行范围仍受验证过的 SDK/IDE 组合约束。
 
-发现问题时，doctor 会尽可能报告候选进程的 PID、PPID、elapsed、command 以及每个 cache
-entry 的精确 source/backup 路径。候选命令匹配不是所有权证明，CLI 不自动 kill、move 或
-delete。先从 IDE 停止 Analysis Server，确认相关进程退出，再将 doctor 列出的**整个哈希条目
-目录**手工移到 `~/.dartServer/.plugin_manager` 外备份，之后重启并运行 doctor。不能只移走条目中的
-`analyzer_plugin` 子目录：Dart 3.11 会复用仍存在的父目录，随后因 `bin/plugin.dart` 缺失
-而启动失败。不能清空整个 Pub cache 或其它插件缓存。
+### CLI 命令与证明边界
 
-`install/upgrade/uninstall` 已提供显式 Host 自动装配及 `--dry-run`，其中 install/upgrade
-进入 legacy maintenance-only 状态并会提示弃用。Hosted 必须指定已发布版本，Git 必须指定远端 URL
-和完整 SHA；候选 loader 验证成功后才写 Host。Hosted 发布后优先使用普通 `dev_dependency`：
+已实现：
+
+```text
+ccrouter analyzer status [host-root]
+ccrouter analyzer doctor [host-root]
+ccrouter analyzer pin-check [host-root]
+```
+
+写入型命令也已实现；以下三个命令都支持 `--dry-run`：
+
+```text
+ccrouter analyzer install [host-root] [--source hosted|git] [--version <range>]
+                          [--url <git-url> --ref <full-commit-sha>] [--git-path <package-path>]
+ccrouter analyzer upgrade [host-root] [--version <range> | --ref <full-commit-sha>]
+ccrouter analyzer uninstall [host-root]
+```
+
+#### `install`
+
+- 只面向明确的 Host Package，不把 Workspace 聚合根或组件 Package 猜成 Host。
+- 检测当前 Dart 3.10+、Host SDK constraint；loader 固定 Analyzer 8.4.0 / analyzer_plugin 0.13.10，实际解析、分析、编译验证兼容性，不承诺任意 SDK。
+- 默认来源为 Hosted，但必须显式 `--version`；仓库版本号不能证明包已发布。Git 必须同时提供远端 HTTPS/SSH URL 和完整 commit SHA，通过临时 bare fetch 验证远端可获取，拒绝本地路径和浮动引用。
+- 创建隔离的 `tool/ccrouter_analyzer_host/tools/analyzer_plugin` bootstrap，不把 Plugin Analyzer 依赖混入应用或 Generator
+  Workspace。
+- 以 YAML 结构叶和 ownership 记录更新 `analysis_options.yaml`，自动添加隔离 loader 的
+  `analyzer.exclude`；只认领 CLI 新增的列表项，保留预先存在的相同项、其它规则、注释及祖先
+  规则继承。发现未知的同名配置或其它插件冲突时停止并给出差异，不覆盖用户内容。
+- 生成前提供 dry-run 摘要；重复执行相同配置不得改写文件或 lockfile。
+
+#### `status`
+
+- 已实现，只读取指定 Host 与最近的 enclosing Workspace Package config。
+- 输出 Host、bootstrap 路径、Plugin 来源、Hosted 版本或 Git ref、Analyzer 版本、lockfile
+  状态，以及 `analysis_options.yaml` 是否启用 Plugin 并排除其隔离 loader 源码。
+- 区分 `notInstalled`、`healthy`、`stale`、`incompatible`、`modified` 和 `incomplete`，不把
+  Plugin 状态错误描述成应用构建错误。
+
+#### `doctor`
+
+- 已实现；所有工具检查在 bootstrap 临时副本中执行，不改写活动 bootstrap 的 `.dart_tool`、
+  manifest 或 lockfile。
+- 先执行 `status`，再验证依赖解析、loader `dart analyze` 和
+  `dart compile exe bin/plugin.dart`。
+- 不启动常驻 Analysis Server，不运行生成器，不修改配置。
+- 检查当前 bootstrap 对应的 legacy 缓存 manifest 和入口，区分 cache artifact
+  `absent/current/stale`；stale 保持 advisory，不按 Package 同名误报其他 Host 的缓存。
+- cache 异常时以 POSIX `ps` 或 Windows CIM 做只读、保守的进程匹配，报告 PID、PPID、elapsed
+  和 command。候选匹配不是所有权证明，CLI 不自动 kill、move 或 delete。
+- 分别输出 source pin、cache artifact、temporary loader smoke、Analysis Server restart 与 live IDE
+  verification；loader compile 或 `dart analyze` 不能证明运行中的 IDE 已加载插件。
+- 给出完整 hash entry 的精确 source/backup 路径；开发者必须先从 IDE 停止 Server、确认进程
+  退出，再手工备份整个条目并重启。禁止只移动 `analyzer_plugin` 子目录或清空无关 cache。
+
+#### `pin-check`
+
+- 供 maintainer/release 手动运行，不接入所有 Plugin PR 的默认硬门禁。
+- 只接受健康的 Git bootstrap；校验完整 40 位 SHA、manifest/lock/`resolved-ref` 一致，并在
+  临时 bare repository 中精确 fetch 该 SHA，拒绝本地 Git URL 和越界 package path。
+- 在当前维护仓库中比较 pinned SHA 与工作树的 `packages/ccrouter_analyzer_plugin/lib`。存在
+  生产变化时报告 `pending` 及文件列表但返回成功：先验证并推送 Plugin，再在独立提交中 bump
+  manifest/lock；bump 后重新运行应报告 `none`。
+- 不修改 Host、活动 bootstrap、lockfile、Git index、全局 cache 或 IDE 进程。
+
+#### `upgrade`
+
+- 只在开发者显式给出目标 Hosted 版本或远端 commit SHA 时更新。
+- 不自动跟随 `main`，不把本地 HEAD 当作 Git ref，不自动跨 Analyzer 兼容区间。
+- 更新前对现有安装运行 `doctor`，新版本先在临时目录通过依赖解析和 doctor，再写入 Host 并执行 Pub；失败时恢复受管配置和已记录的 Pub 解析文件。
+- 相同来源/版本且静态状态健康时直接幂等返回，不重新解析或修改 lockfile；改变来源类型需显式卸载后安装。
+
+#### `uninstall`
+
+- 只移除 ownership 记录且摘要仍匹配的四个 bootstrap 文件、记录文件、Host dev_dependency、
+  `analysis_options.yaml` 受管叶和 CLI 自己添加的 loader exclude；预先存在的相同 exclude 不删除。
+- 保留未知文件、用户 Analyzer 配置和非 CCRouter Plugin。
+- 可先执行 `--dry-run`；部分内容被用户修改时拒绝删除，并给出手工处理范围。现有手工 bootstrap 不自动采用或迁移。
+
+#### Hosted 迁移与弃用冻结（2026-10-05）
+
+`ccrouter analyzer install` 与 `upgrade` 进入 legacy maintenance-only 状态：实现保留可回滚
+能力，不再增加新的来源、IDE 或 SDK 管理特性，执行时会明确输出弃用提示。`status`、`doctor`
+和 `uninstall` 保留，用于诊断和撤销已有隔离 bootstrap；`doctor` 对私有
+`.dartServer/.plugin_manager` 只给 advisory，不把跨 SDK 的缓存目录当作权威门禁。普通 Hosted
+依赖的推荐迁移方式是直接编辑 Host：
 
 ```yaml
 dev_dependencies:
   ccrouter_analyzer_plugin: ^0.1.0
 ```
 
-已有手工 bootstrap
-不自动接管，Demo 保持原配置；CLI 成功也不代表正在运行的 IDE 已重新加载。完整边界见
-[`CCRouter-analyzer-cli-plan.md`](CCRouter-analyzer-cli-plan.md)。Analyzer 装配不会挂入
-`generate`、Pub Hook 或组件脚手架隐式执行。
+再在 `analysis_options.yaml` 启用插件并执行普通 `dart analyze`/IDE 重启。仓库保留
+`demo/tools/ccrouter_analyzer_plugin_host/tools/analyzer_plugin/pubspec.hosted.yaml` 作为发布后
+替换模板；在 Hosted 版本真正可解析前，Demo 继续使用固定 Git SHA，不执行隐式切换。
 
-插件规则 Package 位于 `packages/ccrouter_analyzer_plugin`，当前因为官方
-`analyzer_plugin` 版本与生成器的 Analyzer 版本约束不同，未加入主 Dart Workspace；这避免
-为了 IDE 工具降级生成器和全仓 Analyzer。正式接入前应发布到 Hosted（推荐），再在宿主
-Package 中作为 `dev_dependency` 引入：
+### 所有权、失败与回滚
 
-```yaml
-dev_dependencies:
-  ccrouter_analyzer_plugin: ^0.1.0
-```
+- CLI 拥有固定 bootstrap 路径及 `.ccrouter-analyzer.json` 记录的配置叶；loader exclude 采用
+  列表项级 ownership，只有 CLI 新增时才拥有，不拥有 Host 的其它 IDE 配置。
+- Plugin 是开发期可选能力；任何安装、加载和版本故障都不得改变生成物、Runtime 或业务结果。
+- 文件写入采用临时文件和原子替换；多文件操作保留本次备份，全部验证成功后才完成提交。
+- `--dry-run` 不启动子进程、不写文件；实际操作在 Pub owner 下使用非阻塞文件锁，多 Host 共用 Workspace 时串行修改。
+- 只安装明确的 Flutter Host：Package 必须直接依赖 `ccrouter`，并由 `.metadata` 的
+  `project_type: app` 或 `ccrouter.yaml` 的 `host.enabled: true` 证明 Host 角色；
+  `host.enabled: false` 可显式降级。`lib/main.dart` 不是 Host 证据，Workspace 聚合根及普通组件
+  不接受安装。
+- 多 Host Workspace 必须逐 Host 装配；命令不扫描并批量修改所有 Package。
+- 执行后提示重启 Dart Analysis Server 或 IDE，但 CLI 不主动终止 IDE 进程。
 
-然后在宿主 Package 的 `analysis_options.yaml` 启用：
+提交 Host 的 pubspec/options、四个 bootstrap 文件、ownership 记录和 Pub lockfile；不要提交
+`.dart_tool`。Host Pub 使用当前 Dart 所属 Flutter SDK，并禁用 Pub Hook，不运行生成器。
+事务记录位于 canonical Pub owner 对应的 project-isolated
+`CCROUTER_HOME/coordination/v2/.../analyzer/transactions/`，保存原始字节；operation lock 与其
+同级，因此 `flutter clean` 不会解除活动写事务或删除恢复证据。普通
+失败恢复本次受管配置及 Host/Workspace 的 lockfile、package_config、package_graph、Flutter
+plugins dependency 文件。不会回滚全局 Pub cache 或其它平台缓存。并发用户改动、无法读取的
+Pub 结果或进程中断保留恢复记录，后续写命令拒绝继续；核对记录中的明确路径后恢复，不能清空
+缓存来绕过。未知文件保留。子进程输出有界，单阶段三分钟超时并结束子进程。
 
-```yaml
-analyzer:
-  plugins:
-    - ccrouter_analyzer_plugin
-```
 
-Android Studio、IntelliJ 和 VS Code 使用同一个 Dart Analysis Server 配置；启用后重启
-Analysis Server 或 IDE。插件会在编辑 `.dart` 文件时发送标准 `analysis.errors` 诊断，并读取
-当前未保存的 overlay；删除 required Owner 等问题不需要等到保存或运行 Generator 后才出现。
-Plugin 初始化只分析开发者编写的 Dart 源码，跳过平台/build 产物和 CCRouter 生成库。
+### Demo pin 的两阶段流程
 
-`dart analyze` 不能证明 CCRouter Plugin 已加载到当前 IDE 会话。Dart 3.11.5 在分析范围命中
-Host 的 `analysis_options.yaml` 与 bootstrap 时会初始化 Plugin manager，可能报告 Plugin
-诊断，也可能暴露 Server/Plugin 启动或兼容性失败；它不能再被视为“只运行 Dart 内置规则”。
-该行为取决于 SDK、分析范围和 bootstrap 状态。实时闭环仍应使用 Android Studio、IntelliJ、
-VS Code 或真实 Language Server 协议测试；跨文件与生成物最终正确性继续由
-`ccrouter generate --check` 保证。
+当前 SHA 只由 Demo 活动 bootstrap manifest 与 lockfile 维护，不在文档复制第三份值。Plugin 生产行为变化时先完成独立 Package 的分析、测试、提交和推送；随后以远端可解析的完整 SHA，在独立变更中更新 Demo manifest/lock。
 
-当前仓库尚未发布 Package 时，可先在插件 Package 本身验证：
+运行 `ccrouter analyzer pin-check demo` 验证来源与生产 drift，再运行 `doctor demo`、重启 Dart Analysis Server，并以真实诊断或 Quick Fix 证明 live 加载。第一阶段的 `pending` 是预期状态，不是普通 Plugin PR 的失败门禁；测试、注释和行为不变的重构不要求 bump。不得把修改 pin 的提交本身、未推送 SHA、分支或浮动 tag 作为 pin。
 
-```bash
-cd packages/ccrouter_analyzer_plugin
-dart pub get
-dart analyze
-dart test
-
-cd tools/analyzer_plugin
-dart pub get
-dart analyze
-```
-
-工具包的 `pubspec_overrides.yaml` 只用于本地加载器编译验证，不应复制到发布物中。
+未经用户明确要求，不升级版本或 ref，不接管手工 bootstrap；工具故障仍保留普通 Analyzer 与 `generate --check`。报告中分别说明静态状态、临时 loader、真实 IDE 加载，不合并为一个“通过”。
 
 ### 真实 Server 自动回归
 
@@ -286,8 +346,8 @@ dart analyze
 - Dart Workspace 内跨 Package 的 Owner metadata 增删/修改与 Contract 源码变更。
 - Server/Plugin 错误或退出视为失败；超时与退出均清理进程、订阅和临时目录。
 
-本轮修复原始磁盘路径被 Analyzer import 依赖图过滤的问题，并将精确
-`ccrouter_package.json` 加入插件关注路径。重新装配分析根时释放 Context 引用和旧索引。
+插件将精确
+`ccrouter_package.json` 加入关注路径；重新装配分析根时释放 Context 引用和旧索引。
 磁盘 fixture 验证监听效果，不等于在这些 fixture 上执行过 `clean/generate`。
 生成物正确性仍由独立的真实 CLI 回归保证。
 
@@ -347,75 +407,6 @@ Flutter 分发版内置的 Dart SDK，不能通过单独替换系统 Dart 安全
 `generate --check` 或 Runtime 路由参数语义，也不应通过修改 CCRouter public API、放宽生成器
 校验或清理全局缓存规避。
 
-watch diagnostics bridge 与 canonical Host identity 修复已推送，并进入 Demo 固定的远端
-commit。当前值以 Demo bootstrap manifest/lock 为准；两者必须保持一致。运行 doctor 后仍需
-重启 IDE，不能仅凭依赖解析或本地插件测试声称正在运行的 IDE 已升级。
-
-## Demo 接入
-
-`demo/analysis_options.yaml` 已启用 `ccrouter_demo_analyzer_plugin`，并排除
-`tools/ccrouter_analyzer_plugin_host/tools/analyzer_plugin/**`。内层 loader 由自己的 Pub graph
-和 `analyzer doctor` 验证，不由 Demo 的普通 Analyzer graph 解析。这是一个只属于 Demo Host
-的 bootstrap Package，位置为：
-
-```text
-demo/tools/ccrouter_analyzer_plugin_host/
-└── tools/analyzer_plugin/
-    ├── pubspec.yaml
-    └── bin/plugin.dart
-```
-
-Demo 的 `pubspec.yaml` 只依赖这个不带 Analyzer 约束的 Host Package；真正的规则 Package
-在 bootstrap 的独立依赖环境中解析。这样不会把 Analyzer 8.4.0 与 Workspace 生成器的
-Analyzer 10 混在一个依赖图里。bootstrap 当前使用远端 `main` 上固定的完整 commit；其
-source of truth 是活动 `pubspec.yaml` 与 `pubspec.lock` 的 `resolved-ref`，可由 Analysis Server
-复制到临时目录并正常启动。bootstrap 目录同时保留 `pubspec.hosted.yaml` 作为发布后的
-Hosted fallback；发布到 Hosted 后只能二选一替换活动 manifest，不能在同一个 bootstrap
-Package 同时声明 Git 和 Hosted 两个来源。
-
-Loader smoke 使用 `dart analyze` 和 `dart compile exe bin/plugin.dart`，只验证依赖解析和
-Analysis Server entrypoint 可加载，不会启动常驻 Analysis Server。插件启动失败或版本不兼容
-时，应关闭该 bootstrap，继续使用 Dart Analyzer 和 `ccrouter generate --check`；这不会改变
-应用构建或生成器门禁。
-
-通常优先用 `ccrouter analyzer doctor demo` 执行相同 smoke；直接进入 bootstrap 目录的命令
-保留为 CLI 不可用时的排障回退。
-
-修改 `packages/ccrouter_analyzer_plugin` 后，在尚未推送并固定到远端的本地工作区，不能直接
-用 Git bootstrap 验证新代码。可在 bootstrap 的临时本地验证环境中使用绝对 path override
-验证，验证完成后恢复固定 Git ref；绝对 path 不得提交。Git ref 更新前必须先运行插件
-Package 的 analyze/test 和 loader smoke。
-
-当前固定 ref 已包含 2026-10-03 完成的
-F14/F15 类型与 Owner 修复、Service 生命周期诊断，以及既有的单个/批量 Owner Quick Fix、
-未保存 overlay 诊断、性能缓存、structured watch diagnostics bridge、canonical Host identity
-和只读 CLI 健康检查。无需仅为追随本地 HEAD 而更新。只有 Plugin 生产代码真实变化、隔离测试
-通过并推送远端后，才更新为对应的完整 commit SHA；禁止使用 `main` 或尚未推送的本地 SHA。
-
-该同步是强制的两阶段流程，不能把“之后再更新 Demo”留作隐含约定：第一阶段独立提交并验证
-Plugin，推送后确保完整 SHA 可被 bootstrap 的 Git URL 解析；第二阶段用另一个提交执行
-`ccrouter analyzer upgrade demo --ref <full-sha>`，提交 manifest 与 lockfile，再运行
-`ccrouter analyzer doctor demo`。随后重启 Dart Analysis Server，并用真实 diagnostic 或 Quick Fix
-确认 IDE 已加载新版本。一个提交不能让依赖 ref 指向它自身，也不能使用浮动 tag。纯测试、注释
-和不改变行为的重构不要求更新 ref。除非新 Plugin 改动同时改变 SDK 兼容区间，否则不要顺带升级
-隔离 bootstrap 的 `analyzer`/`analyzer_plugin` 版本。
-
-2026-10-03 的 F14/F15、Service 生命周期诊断等旧修复，以及后续 watch diagnostics bridge 与
-canonical identity 改动，均已完成各自的插件测试并推送远端；Demo bootstrap 当前值只在
-活动 manifest/lock 中维护。任何 ref 更新都不等于正在运行的 IDE 已重新加载，仍需重启 Dart
-Analysis Server 后验证新增规则。
-
-2026-10-03 已完成本机 Android Studio 的实际验收：关闭工程停止 Analysis Server，备份
-指定旧缓存条目后重开；临时 `@CCService` 的既有 `dispose()` 触发
-`ccrouter_service_disposable_missing`，IDE Quick Fix 补入 `implements CCDisposable` 后
-该警告消失，普通 Dart 的 `@override` 提示继续正常工作。临时文件已移出工程。
-这证明本机当前 SDK/IDE 的此条链路，不代表 VS Code、全部诊断或完整文件监听矩阵均已验收。
-
-Demo 运行时还接入了 `ccrouter_devtools`：进入 Navigation Lab 的“诊断”分区，点击
-“打开 CCRouter DevTools”，即可查看只读 Overview、Components、Entries、Timeline、
-Failures 和 InitTask DAG。该入口使用应用自己的本地 BottomSheet，不会把 DevTools 变成
-CCRouter 管理页面，也不会增加 Runtime 控制 API。
-
 ## 诊断与生成的协作顺序
 
 编辑带 CCRouter 能力注解的源码时，先保存源代码并继续完成业务修改；插件提示是开发反馈，生成物
@@ -459,4 +450,9 @@ IDE。因此：
 
 这些剩余项不改变 Analyzer Plugin 的“不生成、无后台改写、显式安全 Quick Fix”边界。
 DevTools 当前实现与协议见 [`CCRouter-devtools.md`](CCRouter-devtools.md)，发布门槛见
-[`CCRouter-pre-release-capability-plan.md`](CCRouter-pre-release-capability-plan.md)。
+[Release Readiness](CCRouter-release-readiness.md)。
+
+
+## 文档职责
+
+本规范统一维护诊断、CLI 装配、失败与 pin 规则。[CLI 原计划](archive/20261024-consolidation/CCRouter-analyzer-cli-plan.md)与[合并前 IDE 文档](archive/20261024-consolidation/CCRouter-ide-analysis-server.md)保存阶段验收、配置演进与当时证据；不代表本轮重跑。当前验证从[验证索引](validation/README.md)查阅，待补矩阵由[后续工作](CCRouter-future-work-plan.md)维护。

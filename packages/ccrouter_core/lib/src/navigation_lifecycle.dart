@@ -18,12 +18,13 @@ extension CCRouterRuntimeNavigationLifecycle on CCRouterRuntime {
   /// bounded FIFO observer queue on a later event-loop turn. The returned
   /// callback removes the listener and cancels its queued deliveries; listener
   /// failures are isolated from navigation execution.
+  /// Cleanup is idempotent and never removes a later re-add of this callback.
+  /// Simultaneous duplicate adds still share one subscription.
   void Function() addNavigationListener(
     CCNavigationLifecycleListener listener,
   ) {
     _ensureInitialized();
-    _navigationListeners.add(listener);
-    return () => _navigationListeners.remove(listener);
+    return _subscribeNavigationObserver(_navigationListeners, listener);
   }
 
   /// Emits a lifecycle event for one Runtime-validated request.
@@ -51,10 +52,9 @@ extension CCRouterRuntimeNavigationLifecycle on CCRouterRuntime {
       }
       _navigationEvents.add(event);
     }
-    _enqueueNavigationObserverBatch(
+    _enqueueRegisteredNavigationObserverBatch(
       _navigationListeners,
       (listener) => listener(event),
-      isActive: _navigationListeners.contains,
       failureLabel: 'Navigation listener',
       critical: phase != CCNavigationLifecyclePhase.requested,
     );

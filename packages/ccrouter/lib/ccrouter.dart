@@ -8,9 +8,13 @@ export 'package:ccrouter_contracts/ccrouter_contracts.dart'
     hide
         CCNavigationAdapter,
         CCNavigationTargetedCloseAdapter,
+        CCNavigationDispatch,
+        CCNavigationDispatchAdapter,
+        CCNavigationParentStackAdapter,
         CCNavigationAdapterCapabilities,
         CCNavigationAdapterCapabilitySource,
         CCNavigationAdapterHostBinding,
+        CCNavigationOutletVisibilityBinding,
         CCInitialBackendEntrySnapshot,
         CCNavigationBackendEvent,
         CCNavigationBackendEventListener,
@@ -18,11 +22,14 @@ export 'package:ccrouter_contracts/ccrouter_contracts.dart'
         CCNavigationBackendSnapshotSource,
         CCNavigationHostCapabilitySource,
         CCNavigationManagedEntryReleaseSink,
+        CCNavigationRouteExitBinding,
         CCNavigationPopCoordinator,
         CCNavigationScopedPopCoordinator,
         CCNavigationPopGuardBinding,
+        CCNavigationScopedPopGuardBinding,
         CCNavigationPopTarget,
         CCNavigationPopTargetSource,
+        CCNavigationScopedPopTargetSource,
         CCNavigationPredictiveBackSource,
         CCNavigationPredictiveBackSourceProvider,
         CCServiceToken,
@@ -30,11 +37,10 @@ export 'package:ccrouter_contracts/ccrouter_contracts.dart'
         CCNavigationRequest,
         CCNavigationShell,
         CCPopGuardEvaluator,
+        CCScopedPopGuardEvaluator,
         CCPredictiveBackEvent,
         CCPredictiveBackEventListener,
-        CCPredictiveBackPhase,
-        CCRouteRestorationOpportunitySignal,
-        CCRouteRestorationOpportunitySource;
+        CCPredictiveBackPhase;
 export 'package:ccrouter_core/ccrouter_core.dart'
     hide
         CCRouterRuntime,

@@ -118,7 +118,7 @@ final class DemoTransparentPage extends StatelessWidget {
             right: 12,
             child: IconButton.filledTonal(
               tooltip: '关闭',
-              onPressed: () => CCRouter.navigator.pop(),
+              onPressed: () => CCRouter.navigator.pop(context: context),
               icon: const Icon(Icons.close),
             ),
           ),
@@ -145,11 +145,15 @@ final class DemoDialogPage extends StatelessWidget {
     content: const Text('它具备 typed result、Interceptor、Aspect 和 RouteEntry。'),
     actions: [
       TextButton(
-        onPressed: () => CCRouter.navigator.pop(result: 'dialog:cancel'),
+        onPressed: () =>
+            CCRouter.navigator.pop(result: 'dialog:cancel', context: context),
         child: const Text('取消'),
       ),
       FilledButton(
-        onPressed: () => CCRouter.navigator.pop(result: 'dialog:confirmed'),
+        onPressed: () => CCRouter.navigator.pop(
+          result: 'dialog:confirmed',
+          context: context,
+        ),
         child: const Text('确认'),
       ),
     ],
@@ -183,7 +187,10 @@ final class DemoBottomSheetPage extends StatelessWidget {
         const Text('拖拽、点击 barrier 或按钮均应只关闭这一个 Managed Entry。'),
         const SizedBox(height: 20),
         FilledButton(
-          onPressed: () => CCRouter.navigator.pop(result: 'sheet:selected'),
+          onPressed: () => CCRouter.navigator.pop(
+            result: 'sheet:selected',
+            context: context,
+          ),
           child: const Text('选择并返回'),
         ),
       ],
@@ -214,7 +221,7 @@ final class _PresentationPage extends StatelessWidget {
           Text(title, style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 20),
           FilledButton.icon(
-            onPressed: () => CCRouter.navigator.pop(),
+            onPressed: () => CCRouter.navigator.pop(context: context),
             icon: const Icon(Icons.close),
             label: const Text('关闭'),
           ),

@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:ccrouter_analytics/ccrouter_analytics.dart';
+import 'package:demo_analytics/demo_analytics.dart';
 import 'package:ccrouter/ccrouter.dart';
 import 'package:flutter/foundation.dart';
 
@@ -11,16 +11,20 @@ final demoApplicationLogger = DemoApplicationLogger();
 final demoNavigationLabStore = DemoNavigationLabStore();
 final demoDiagnosticsSink = DemoDiagnosticsSink();
 final demoAnalyticsSink = DemoAnalyticsSink();
-final demoAnalyticsDispatcher = CCAnalyticsEventDispatcher(
+final demoAnalyticsDispatcher = AppAnalyticsEventDispatcher(
   sinks: [demoAnalyticsSink],
-  policy: CCAnalyticsPolicy(consentGranted: false),
+  policy: AppAnalyticsPolicy(consentGranted: false),
 );
-final demoNavigationAnalytics = CCNavigationAnalyticsBridge(
+final demoNavigationAnalytics = AppNavigationAnalyticsBridge(
   dispatcher: demoAnalyticsDispatcher,
+  identityProvider: () => const AppAnalyticsIdentity(
+    anonymousVisitorId: 'demo-visitor',
+    applicationSessionId: 'demo-run',
+  ),
 );
-final demoAnalyticsTracker = CCAnalyticsTracker(
+final demoAnalyticsTracker = AppAnalyticsTracker(
   dispatcher: demoAnalyticsDispatcher,
-  context: const CCAnalyticsContext(
+  context: const AppAnalyticsContext(
     componentId: 'demo_navigation_lab',
     hostId: 'default',
     outlet: 'root',
@@ -29,6 +33,7 @@ final demoAnalyticsTracker = CCAnalyticsTracker(
 
 /// Updates the Demo's product analytics consent without changing navigation.
 void setDemoAnalyticsConsent(bool granted) {
+  demoNavigationAnalytics.resetTracking();
   demoAnalyticsDispatcher.updatePolicy(
     demoAnalyticsDispatcher.policy.copyWith(consentGranted: granted),
   );
@@ -243,6 +248,12 @@ final class DemoNavigationLabStore extends ChangeNotifier {
   bool dirtyForm = true;
   bool allowDeferredOnce = false;
 
+  /// Exact identity selected by a stack-page policy experiment, never a Context.
+  CCRouteEntryHandle? revalidationTarget;
+
+  /// Committed policy action for that selected identity.
+  DemoRevalidationAction revalidationAction = DemoRevalidationAction.keep;
+
   List<String> get events => List.unmodifiable(_events);
 
   void record(String message, {bool mirrorToApplicationLogger = true}) {
@@ -306,14 +317,14 @@ final class DemoDiagnosticsSink implements CCDiagnosticSink {
 }
 
 /// Demo application sink that makes product events visible beside framework logs.
-final class DemoAnalyticsSink implements CCAnalyticsSink {
-  final List<CCAnalyticsEvent> _events = <CCAnalyticsEvent>[];
+final class DemoAnalyticsSink implements AppAnalyticsSink {
+  final List<AppAnalyticsEvent> _events = <AppAnalyticsEvent>[];
 
   /// Events accepted by the provider-neutral dispatcher in this Demo session.
-  List<CCAnalyticsEvent> get events => List.unmodifiable(_events);
+  List<AppAnalyticsEvent> get events => List.unmodifiable(_events);
 
   @override
-  void write(CCAnalyticsEvent event) {
+  void write(AppAnalyticsEvent event) {
     _events.add(event);
     if (_events.length > 100) _events.removeAt(0);
     demoApplicationLogger.recordApplication(
@@ -346,16 +357,33 @@ final class DemoGlobalNavigationInterceptor implements CCNavigationInterceptor {
   }
 }
 
-final class DemoNavigationTelemetryProvider
-    implements CCNavigationTelemetryContextProvider {
-  const DemoNavigationTelemetryProvider();
+/// Reconciles already-open Demo routes after Host access state changes.
+enum DemoRevalidationAction { keep, close, replace, reset }
+
+final class DemoRouteRevalidationPolicy implements CCRouteRevalidationPolicy {
+  /// Creates the stateless policy backed by [demoNavigationLabStore].
+  const DemoRouteRevalidationPolicy();
 
   @override
-  CCNavigationTelemetryContext currentContext() =>
-      const CCNavigationTelemetryContext(
-        anonymousVisitorId: 'demo-visitor',
-        applicationSessionId: 'macos-demo-run',
-      );
+  CCRouteRevalidationDecision evaluate(CCRouteRevalidationContext context) {
+    if (context.entry.handle == demoNavigationLabStore.revalidationTarget) {
+      return switch (demoNavigationLabStore.revalidationAction) {
+        DemoRevalidationAction.keep => const CCRouteRevalidationKeep(),
+        DemoRevalidationAction.close => const CCRouteRevalidationClose(),
+        DemoRevalidationAction.replace => CCRouteRevalidationReplace(
+          DemoNavigationLabRoutes.stack(level: 900),
+        ),
+        DemoRevalidationAction.reset => CCRouteRevalidationReset(
+          DemoNavigationLabRoutes.home(),
+        ),
+      };
+    }
+    if (demoNavigationLabStore.blockDetailGlobally &&
+        context.entry.routeId == 'demo_navigation_lab.detail') {
+      return const CCRouteRevalidationClose();
+    }
+    return const CCRouteRevalidationKeep();
+  }
 }
 
 final class DemoNavigationFailurePolicy implements CCNavigationFailurePolicy {

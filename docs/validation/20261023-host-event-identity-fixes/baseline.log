@@ -1,0 +1,175 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart
+00:00 +0: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
+00:00 +0 -1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
+00:00 +0 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: same logical Host gets disjoint Managed backend operation identities [E]
+  Expected: an object with length of <2>
+    Actual: []
+     Which: has length of <0>
+  
+  package:matcher                                                                  expect
+  package:flutter_test/src/widget_tester.dart 477:18                               expect
+  packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart 114:9  main.<fn>
+  
+00:00 +0 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +0 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0) [E]
+  Bad state: Too many elements
+  dart:core                                                _Array.single
+  packages/ccrouter_test/test/multi_host_test.dart 452:40  main.<fn>
+  
+00:00 +0 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +0 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=2) [E]
+  Bad state: Too many elements
+  dart:core                                                _Array.single
+  packages/ccrouter_test/test/multi_host_test.dart 452:40  main.<fn>
+  
+00:00 +0 -4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +0 -4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: child operation IDs are isolated per registration and deduplicated within it [E]
+  Bad state: No element
+  dart:core                                                Iterable.single
+  packages/ccrouter_test/test/multi_host_test.dart 494:16  main.<fn>
+  
+00:00 +0 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +0 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: queued events from retired registration cannot detach replacement or publish gestures [E]
+  Expected: an object with length of <1>
+    Actual: [Instance of 'CCNavigationBackendEvent', Instance of 'CCNavigationBackendEvent']
+     Which: has length of <2>
+  
+  package:matcher                                         expect
+  package:flutter_test/src/widget_tester.dart 477:18      expect
+  packages/ccrouter_test/test/multi_host_test.dart 538:7  main.<fn>
+  
+00:00 +1 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +2 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +3 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +4 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +5 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +6 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +7 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +8 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +9 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +10 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +11 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +12 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +13 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +14 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +15 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +16 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +17 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +18 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +19 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +20 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +21 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +22 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +23 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +24 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +25 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +26 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +27 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +28 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +29 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +30 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +31 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +32 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +33 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +34 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +35 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +36 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +37 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +38 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +39 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +40 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +41 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +42 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +42 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: public Session service cleanup (reentrant=false)
+public service: reentrant=false, disposals=1
+00:00 +43 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +43 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: public Session service cleanup (reentrant=true)
+public service: reentrant=true, disposals=1
+00:00 +44 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +44 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: factory resource cleanup (scope=app, reentrant=false)
+factory: scope=app, reentrant=false, disposals=1
+00:00 +45 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +45 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: factory resource cleanup (scope=session, reentrant=false)
+factory: scope=session, reentrant=false, disposals=1
+00:00 +46 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +46 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: factory resource cleanup (scope=app, reentrant=true)
+factory: scope=app, reentrant=true, disposals=1
+00:00 +47 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +47 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: factory resource cleanup (scope=session, reentrant=true)
+factory: scope=session, reentrant=true, disposals=1
+00:00 +48 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +48 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: Command timeout preserves error when listener throws=false
+timeout: throwing=false, result=CCInvocationTimeoutError, trace=timedOut
+00:00 +49 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +49 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: Command timeout preserves error when listener throws=true
+timeout: throwing=true, result=CCInvocationTimeoutError, trace=timedOut
+00:00 +50 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +50 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: deferred request cannot be resurrected in replacement Host
+defer replacement: old=CCRouteCancelledError, path=/
+00:00 +51 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +51 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: control: focus change preserves live Host
+control: remove=false, old=Null
+00:00 +52 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +52 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: control: removed Host without replacement fails
+control: remove=true, old=CCRouteCancelledError
+00:00 +53 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +54 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +55 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:00 +56 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:01 +57 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:01 +57 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: new Host request does not share old singleFlight gate
+replacement gate: policy=singleFlight, calls=2, fresh=Null, path=/detail/A
+00:01 +58 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:01 +59 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:01 +59 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: new Host request does not share old rejectDuplicate gate
+replacement gate: policy=rejectDuplicate, calls=2, fresh=Null, path=/detail/A
+00:01 +60 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 0 widgets with text "第 3 代：host_detached": []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart:42:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart line 42
+The test description was:
+  reopened Host rejects old work and admits new work
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +60 -6: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work [E]
+  Test failed. See exception logs above.
+  The test description was: reopened Host rejects old work and admits new work
+  
+00:01 +60 -6: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: auxiliary Host renders its trusted home on every mount
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following StateError was thrown running a test:
+Bad state: No element
+
+When the exception was thrown, this was the stack:
+#0      ListBase.singleWhere (dart:collection/list.dart:167:5)
+#1      main.<anonymous closure> (file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart:101:50)
+<asynchronous suspension>
+#2      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#3      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  auxiliary Host renders its trusted home on every mount
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +60 -7: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: auxiliary Host renders its trusted home on every mount [E]
+  Test failed. See exception logs above.
+  The test description was: auxiliary Host renders its trusted home on every mount
+  
+00:01 +60 -7: Some tests failed.

@@ -228,6 +228,7 @@ final class _DemoGuardedPageState extends State<DemoGuardedPage> {
   Future<void> _tryPop() async {
     final outcome = await CCRouter.navigator.maybePopOutcome(
       trigger: CCPopTrigger.business,
+      context: context,
     );
     if (!mounted || outcome.handled) return;
     ScaffoldMessenger.of(
@@ -330,7 +331,7 @@ final class _PolicyResultPage extends StatelessWidget {
           Text(title, style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 20),
           FilledButton.icon(
-            onPressed: () => CCRouter.navigator.pop(),
+            onPressed: () => CCRouter.navigator.pop(context: context),
             icon: const Icon(Icons.arrow_back),
             label: const Text('返回实验台'),
           ),

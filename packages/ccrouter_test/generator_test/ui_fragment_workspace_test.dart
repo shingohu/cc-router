@@ -54,6 +54,19 @@ void main() {
       isEmpty,
     );
   });
+  for (final range in [
+    '>=1.0.0',
+    '<=1.0.0',
+    '<2.0.0',
+    '>=1.0.0\t<2.0.0',
+    '>=1.0.0\n<2.0.0',
+  ]) {
+    test('UI Workspace accepts documented comparator $range', () {
+      final docs = documents();
+      (docs[2]['uiRequirements'] as List).single['versionRange'] = range;
+      expect(validateUIFragmentWorkspaceDiagnostics(docs, host: true), isEmpty);
+    });
+  }
   final cases = <String, void Function(List<Map<String, Object?>>)>{
     'contract_duplicate': (docs) =>
         (docs[0]['uiContracts'] as List).add(contract()),

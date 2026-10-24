@@ -1,5 +1,28 @@
 part of 'runtime.dart';
 
+/// Published DAG drain identity, installed before any task callback executes.
+final class _InitTaskDrain {
+  /// Creates the original caller's wait before synchronous Gate reentry.
+  _InitTaskDrain() {
+    _firstWait = result.wait();
+  }
+
+  /// Shared completion data, safe for shutdown in another error Zone.
+  final _SharedResult<CCInitTaskRunResult> result = _SharedResult();
+
+  /// Error Zone in which the first Gate caller must receive its outcome.
+  final Zone _firstErrorZone = Zone.current.errorZone;
+
+  /// Preserves same-Zone overlapping Gate Future identity.
+  late final Future<CCInitTaskRunResult> _firstWait;
+
+  /// Shares execution while restoring failures in each caller's error Zone.
+  Future<CCInitTaskRunResult> get future =>
+      identical(Zone.current.errorZone, _firstErrorZone)
+      ? _firstWait
+      : result.wait();
+}
+
 /// Runs one statically registered InitTask.
 ///
 /// A task observes Runtime deadline and cancellation through [context]. It must

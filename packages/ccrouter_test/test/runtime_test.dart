@@ -398,25 +398,29 @@ void main() {
 
   test('caller timeout does not poison shared Service readiness', () async {
     final pending = Completer<void>();
+    final started = Completer<void>();
     late CCInvocationContext initializerContext;
     runtime.registerService(
       CCServiceProvider<Counter>(
         factory: (_) => Counter('timeout'),
         initializer: (_, context) {
           initializerContext = context;
+          started.complete();
           return pending.future;
         },
       ),
     );
     runtime.initialize();
 
+    final owner = runtime.serviceAsync<Counter>();
+    await started.future;
     await expectLater(
       runtime.serviceAsync<Counter>(timeout: const Duration(milliseconds: 10)),
       throwsA(isA<CCInvocationTimeoutError>()),
     );
     expect(initializerContext.cancellation.isCancelled, isFalse);
     pending.complete();
-    await Future<void>.delayed(Duration.zero);
+    expect((await owner).id, 'timeout');
     expect(runtime.service<Counter>().id, 'timeout');
   });
 

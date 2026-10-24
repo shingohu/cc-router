@@ -659,7 +659,8 @@ hook is not installed automatically and is not part of Flutter's internal tool
 snapshot.
 `create component <package-name> [parent-directory] [--with-example]` creates a
 new component Package without overwriting existing files. The optional example
-is a Flutter application Host created through Flutter's official template.
+is a Managed Flutter Host with an authored / home, generated Assembly entry,
+and a proven build_runner dependency, created through Flutter's official template.
 `create page <PageName>
 [component-directory]` creates an internal typed Route page. `create service`,
 `create command`, `create event`, and `create init-task` create one internal

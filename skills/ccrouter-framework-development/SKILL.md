@@ -20,9 +20,11 @@ before changing framework code.
   developer-experience/documentation gap, application responsibility, general
   framework capability, or conditionally deferred work.
 - Map the behavior to existing Route, Service, Command, Event, InitTask,
-  Scope, Host/Outlet, diagnostics, analytics, Adapter, and Generator contracts
+  Scope, Host/Outlet, diagnostics, navigation observations, Adapter, and Generator contracts
   before proposing a new abstraction.
 - Do not promote one application's business special case into a public API.
+- Product analytics, Consent and vendor delivery are application-owned; framework
+  observations are integration points, not framework product-event contracts.
 - For non-trivial changes, compare application-only, optional Adapter/tooling,
   Core-contract, and defer-with-diagnostics solutions with explicit trade-offs.
 - Record owner, lifecycle, failure, cancellation, concurrency, fallback,

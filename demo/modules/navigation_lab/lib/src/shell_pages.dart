@@ -28,6 +28,7 @@ final class DemoShellFeedPage extends StatelessWidget {
           'Shell Detail',
           CCRouter.navigator.push<void>(
             DemoNavigationLabRoutes.shellDetail(item: 7),
+            context: context,
           ),
         ),
         icon: const Icon(Icons.open_in_new),
@@ -36,6 +37,8 @@ final class DemoShellFeedPage extends StatelessWidget {
       OutlinedButton.icon(
         onPressed: () => observeDemoOperation(
           'Shell Root 透明页',
+          // This action intentionally escapes the Shell Outlet. The
+          // composition root owns active-Host selection for root navigation.
           CCRouter.navigator.push<void>(
             DemoNavigationLabRoutes.presentationTransparent(),
           ),
@@ -69,7 +72,7 @@ final class DemoShellDetailPage extends StatelessWidget {
     body: 'parentRouteId 和 Outlet 都由路由契约声明，页面不读取 GoRouterState。',
     actions: [
       FilledButton.icon(
-        onPressed: () => CCRouter.navigator.pop(),
+        onPressed: () => CCRouter.navigator.pop(context: context),
         icon: const Icon(Icons.arrow_back),
         label: const Text('返回 Feed'),
       ),
@@ -120,6 +123,7 @@ final class DemoWorkspaceHomePage extends StatelessWidget {
           'Workspace Detail',
           CCRouter.navigator.push<void>(
             DemoNavigationLabRoutes.workspaceDetail(item: 42),
+            context: context,
           ),
         ),
         icon: const Icon(Icons.open_in_new),
@@ -151,8 +155,18 @@ final class DemoWorkspaceDetailPage extends StatelessWidget {
     icon: Icons.description_outlined,
     body: '该页面保留在 Home 分支栈中，不会被 Activity 或 Profile 分支覆盖掉。',
     actions: [
+      OutlinedButton(
+        onPressed: () => observeDemoOperation(
+          'Cross Shell push',
+          CCRouter.navigator.push(
+            DemoNavigationLabRoutes.shellFeed(),
+            context: context,
+          ),
+        ),
+        child: const Text('Push 另一个 Shell，再返回此分支'),
+      ),
       FilledButton.icon(
-        onPressed: () => CCRouter.navigator.pop(),
+        onPressed: () => CCRouter.navigator.pop(context: context),
         icon: const Icon(Icons.arrow_back),
         label: const Text('返回 Home 分支'),
       ),
@@ -235,7 +249,7 @@ final class DemoExtraPage extends StatelessWidget {
         'Extra 不进入 URL，不用于外部 Deep Link 或状态恢复。',
     actions: [
       FilledButton.icon(
-        onPressed: () => CCRouter.navigator.pop(),
+        onPressed: () => CCRouter.navigator.pop(context: context),
         icon: const Icon(Icons.close),
         label: const Text('关闭'),
       ),
@@ -258,11 +272,19 @@ final class _ShellPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(title)),
+    appBar: AppBar(
+      title: Text(title),
+      leading: BackButton(
+        onPressed: () => observeDemoOperation(
+          'Shell Back',
+          CCRouter.navigator.maybePop(context: context),
+        ),
+      ),
+    ),
     body: Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 620),
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,

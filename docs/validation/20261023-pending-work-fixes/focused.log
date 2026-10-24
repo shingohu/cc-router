@@ -1,0 +1,371 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart
+00:00 +0: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/shared_execution_regression_test.dart: InitTask publication control: ordinary overlapping Gate calls share one drain
+00:00 +1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/shared_execution_regression_test.dart: InitTask publication control: ordinary overlapping Gate calls share one drain
+00:00 +2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +6: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +7: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +8: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +9: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +10: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +11: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +12: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +13: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +14: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +15: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +16: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +17: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +18: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +19: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +20: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +21: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +22: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +23: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +24: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +25: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +26: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +27: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +28: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +29: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +30: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +31: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +32: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +33: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +34: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +35: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +36: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +37: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +38: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +39: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +40: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +41: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +42: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +43: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +44: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +45: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +46: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +47: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +48: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +49: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +50: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +51: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +52: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +53: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +54: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +55: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +56: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +57: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +58: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +59: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +60: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +61: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +62: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +63: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +64: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +65: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +66: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +67: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +68: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained navigation callback Zone releases Runtime decision=true
+00:00 +69: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained navigation callback Zone releases Runtime decision=true
+00:00 +70: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained navigation callback Zone releases Runtime decision=true
+00:00 +71: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained navigation callback Zone releases Runtime decision=true
+00:00 +72: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained navigation callback Zone releases Runtime decision=true
+00:00 +73: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained navigation callback Zone releases Runtime decision=true
+00:00 +74: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained navigation callback Zone releases Runtime decision=true
+00:00 +75: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained navigation callback Zone releases Runtime decision=true
+00:00 +76: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained navigation callback Zone releases Runtime decision=true
+00:00 +77: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained navigation callback Zone releases Runtime decision=true
+00:00 +78: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained navigation callback Zone releases Runtime decision=true
+00:00 +79: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained navigation callback Zone releases Runtime decision=true
+00:00 +80: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained navigation callback Zone releases Runtime decision=true
+00:00 +81: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained navigation callback Zone releases Runtime decision=true
+00:00 +82: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained navigation callback Zone releases Runtime decision=true
+00:00 +83: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained navigation callback Zone releases Runtime decision=true
+00:00 +84: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained navigation callback Zone releases Runtime decision=true
+00:00 +85: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained navigation callback Zone releases Runtime decision=true
+00:00 +86: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained navigation callback Zone releases Runtime decision=true
+00:00 +87: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +88: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +89: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +90: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +91: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +92: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +93: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +94: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +95: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +96: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +97: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +98: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +99: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +100: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +101: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +102: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +103: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +104: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +105: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences single, CCServiceCreationPolicy.singleton, prewarm=true
+00:00 +106: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences single, CCServiceCreationPolicy.singleton, prewarm=true
+00:00 +107: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences single, CCServiceCreationPolicy.singleton, prewarm=true
+00:00 +108: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences single, CCServiceCreationPolicy.singleton, prewarm=true
+00:00 +109: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences single, CCServiceCreationPolicy.singleton, prewarm=true
+00:00 +110: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences single, CCServiceCreationPolicy.singleton, prewarm=true
+00:00 +111: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences single, CCServiceCreationPolicy.singleton, prewarm=true
+00:00 +112: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences single, CCServiceCreationPolicy.singleton, prewarm=true
+00:00 +113: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences single, CCServiceCreationPolicy.singleton, prewarm=true
+00:00 +114: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: live CCServiceScope.app factory owner survives GC and fences its later callback
+00:00 +115: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: live CCServiceScope.app factory owner survives GC and fences its later callback
+00:00 +116: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: live CCServiceScope.app factory owner survives GC and fences its later callback
+00:00 +117: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: live CCServiceScope.app factory owner survives GC and fences its later callback
+00:00 +118: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.newInstance releases ended owner
+00:00 +119: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.newInstance releases ended owner
+00:00 +120: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.newInstance releases ended owner
+00:00 +121: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.newInstance releases ended owner
+00:00 +122: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.newInstance releases ended owner
+00:00 +123: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.newInstance releases ended owner
+00:00 +124: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences single, CCServiceCreationPolicy.newInstance, prewarm=false
+00:00 +125: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences single, CCServiceCreationPolicy.newInstance, prewarm=false
+00:00 +126: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.newInstance releases ended owner
+00:00 +127: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: live CCServiceScope.session factory owner survives GC and fences its later callback
+00:00 +128: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences single, CCServiceCreationPolicy.newInstance, prewarm=true
+00:00 +129: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences single, CCServiceCreationPolicy.newInstance, prewarm=true
+00:00 +130: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences single, CCServiceCreationPolicy.newInstance, prewarm=true
+00:00 +131: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: live CCServiceScope.route factory owner survives GC and fences its later callback
+00:01 +132: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.session policy=CCServiceCreationPolicy.singleton releases ended owner
+00:01 +133: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optional, CCServiceCreationPolicy.singleton, prewarm=false
+00:01 +134: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optional, CCServiceCreationPolicy.singleton, prewarm=false
+00:01 +135: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.session policy=CCServiceCreationPolicy.newInstance releases ended owner
+00:01 +136: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: retained CCServiceScope.app initializer Zone releases ended Runtime
+00:01 +137: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optional, CCServiceCreationPolicy.singleton, prewarm=true
+00:01 +138: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optional, CCServiceCreationPolicy.singleton, prewarm=true
+00:01 +139: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optional, CCServiceCreationPolicy.singleton, prewarm=true
+00:01 +140: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.route policy=CCServiceCreationPolicy.singleton releases ended owner
+00:01 +141: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=false scope=CCServiceScope.route policy=CCServiceCreationPolicy.singleton releases ended owner
+00:01 +142: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optional, CCServiceCreationPolicy.newInstance, prewarm=false
+00:01 +143: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optional, CCServiceCreationPolicy.newInstance, prewarm=false
+00:01 +144: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.route policy=CCServiceCreationPolicy.singleton releases ended owner
+00:01 +145: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.route policy=CCServiceCreationPolicy.singleton releases ended owner
+00:01 +146: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optional, CCServiceCreationPolicy.newInstance, prewarm=true
+00:01 +147: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optional, CCServiceCreationPolicy.newInstance, prewarm=true
+00:01 +148: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optional, CCServiceCreationPolicy.newInstance, prewarm=true
+00:01 +149: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart: shared App initializer retains no first Route payload or short-lived owner
+00:01 +150: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending initializer GC pending initializer=true scope=CCServiceScope.route policy=CCServiceCreationPolicy.newInstance releases ended owner
+00:01 +151: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences all, CCServiceCreationPolicy.singleton, prewarm=false
+00:01 +152: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending message GC command pending=false releases ended Runtime
+00:01 +153: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences all, CCServiceCreationPolicy.singleton, prewarm=true
+00:01 +154: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences all, CCServiceCreationPolicy.singleton, prewarm=true
+00:01 +155: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending message GC event pending=false releases ended Runtime
+00:01 +156: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences all, CCServiceCreationPolicy.newInstance, prewarm=false
+00:01 +157: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences all, CCServiceCreationPolicy.newInstance, prewarm=false
+00:01 +158: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending message GC typedEvent pending=false releases ended Runtime
+00:01 +159: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences all, CCServiceCreationPolicy.newInstance, prewarm=true
+00:01 +160: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences all, CCServiceCreationPolicy.newInstance, prewarm=true
+00:01 +161: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending message GC generatedEvent pending=false releases ended Runtime
+00:01 +162: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences key, CCServiceCreationPolicy.singleton, prewarm=false
+00:01 +163: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences key, CCServiceCreationPolicy.singleton, prewarm=false
+00:01 +164: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending message GC service pending=false releases ended Runtime
+00:01 +165: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences key, CCServiceCreationPolicy.singleton, prewarm=true
+00:01 +166: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences key, CCServiceCreationPolicy.singleton, prewarm=true
+00:01 +167: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending message GC initTask pending=false releases ended Runtime
+00:02 +168: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences key, CCServiceCreationPolicy.newInstance, prewarm=false
+00:02 +169: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: pending message GC initTask pending=true releases ended Runtime
+00:02 +170: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences key, CCServiceCreationPolicy.newInstance, prewarm=true
+00:02 +171: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences key, CCServiceCreationPolicy.newInstance, prewarm=true
+00:02 +172: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences key, CCServiceCreationPolicy.newInstance, prewarm=true
+00:02 +173: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences key, CCServiceCreationPolicy.newInstance, prewarm=true
+00:02 +174: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences key, CCServiceCreationPolicy.newInstance, prewarm=true
+00:02 +175: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: ended CCServiceScope.session releases while Runtime lives, CCServiceCreationPolicy.newInstance
+00:02 +176: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.singleton, prewarm=false
+00:02 +177: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.singleton, prewarm=false
+00:02 +178: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.singleton, prewarm=false
+00:02 +178 -1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.singleton, prewarm=false
+00:02 +178 -1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: readiness owner end across error Zones: CCServiceScope.app CCServiceCreationPolicy.singleton lateError=false [E]
+  Expected: <Instance of 'CCInvocationCancelledError'>
+    Actual: CCScopeClosedError:<CCScopeClosedError: Scope "app" is closed.>
+     Which: is not an instance of 'CCInvocationCancelledError'
+  
+  package:matcher                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                              expect
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 175:13  main.<fn>
+  
+00:02 +178 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.singleton, prewarm=false
+00:02 +178 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: readiness owner end across error Zones: CCServiceScope.app CCServiceCreationPolicy.singleton lateError=true [E]
+  Expected: <Instance of 'CCInvocationCancelledError'>
+    Actual: CCScopeClosedError:<CCScopeClosedError: Scope "app" is closed.>
+     Which: is not an instance of 'CCInvocationCancelledError'
+  
+  package:matcher                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                              expect
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 175:13  main.<fn>
+  
+00:02 +179 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.singleton, prewarm=false
+00:02 +179 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.singleton, prewarm=false
+00:02 +179 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: readiness owner end across error Zones: CCServiceScope.app CCServiceCreationPolicy.newInstance lateError=true [E]
+  Bad state: late business error
+  dart:async                                                                      _Completer.completeError
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 182:21  main.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                      _CustomZone.registerUnaryCallback
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 163:11  main.<fn>
+  
+00:02 +179 -4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.singleton, prewarm=false
+00:02 +179 -4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: readiness owner end across error Zones: CCServiceScope.session CCServiceCreationPolicy.singleton lateError=false [E]
+  Expected: <Instance of 'CCInvocationCancelledError'>
+    Actual: CCScopeClosedError:<CCScopeClosedError: Scope "1792768831312477-692028709-session-1" is closed.>
+     Which: is not an instance of 'CCInvocationCancelledError'
+  
+  package:matcher                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                              expect
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 175:13  main.<fn>
+  
+00:02 +179 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.singleton, prewarm=false
+00:02 +179 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: readiness owner end across error Zones: CCServiceScope.session CCServiceCreationPolicy.singleton lateError=true [E]
+  Expected: <Instance of 'CCInvocationCancelledError'>
+    Actual: CCScopeClosedError:<CCScopeClosedError: Scope "1792768831315139-898687817-session-1" is closed.>
+     Which: is not an instance of 'CCInvocationCancelledError'
+  
+  package:matcher                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                              expect
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 175:13  main.<fn>
+  
+00:02 +180 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.singleton, prewarm=false
+00:02 +180 -6: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.singleton, prewarm=false
+00:02 +180 -6: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: readiness owner end across error Zones: CCServiceScope.session CCServiceCreationPolicy.newInstance lateError=true [E]
+  Bad state: late business error
+  dart:async                                                                      _Completer.completeError
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 182:21  main.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                      _CustomZone.registerUnaryCallback
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 163:11  main.<fn>
+  
+00:02 +180 -7: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.singleton, prewarm=false
+00:02 +180 -7: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: readiness owner end across error Zones: CCServiceScope.route CCServiceCreationPolicy.singleton lateError=false [E]
+  Expected: <Instance of 'CCInvocationCancelledError'>
+    Actual: CCScopeClosedError:<CCScopeClosedError: Scope "route-1792768831320593-1396448397-entry-1" is closed.>
+     Which: is not an instance of 'CCInvocationCancelledError'
+  
+  package:matcher                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                              expect
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 175:13  main.<fn>
+  
+00:02 +180 -8: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.singleton, prewarm=false
+00:02 +180 -8: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: readiness owner end across error Zones: CCServiceScope.route CCServiceCreationPolicy.singleton lateError=true [E]
+  Expected: <Instance of 'CCInvocationCancelledError'>
+    Actual: CCScopeClosedError:<CCScopeClosedError: Scope "route-1792768831323127-4043424130-entry-1" is closed.>
+     Which: is not an instance of 'CCInvocationCancelledError'
+  
+  package:matcher                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                              expect
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 175:13  main.<fn>
+  
+00:02 +181 -8: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.singleton, prewarm=false
+00:02 +181 -9: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.singleton, prewarm=false
+00:02 +181 -9: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: readiness owner end across error Zones: CCServiceScope.route CCServiceCreationPolicy.newInstance lateError=true [E]
+  Bad state: late business error
+  dart:async                                                                      _Completer.completeError
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 182:21  main.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                      _CustomZone.registerUnaryCallback
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 143:13  main.<fn>
+  
+00:02 +182 -9: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.singleton, prewarm=false
+00:02 +182 -10: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.singleton, prewarm=false
+00:02 +182 -10: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: event cancel consumes lateError=true once [E]
+  Bad state: late subscriber failure
+  dart:async                                                                      _Completer.completeError
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 260:26  main.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                      _CustomZone.registerUnaryCallback
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 248:11  main.<fn>
+  
+00:02 +183 -10: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: event timeout consumes lateError=false once
+00:02 +184 -10: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.singleton, prewarm=true
+00:02 +185 -10: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: event timeout consumes lateError=true once
+00:02 +185 -11: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.newInstance, prewarm=false
+00:02 +186 -11: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.newInstance, prewarm=true
+00:02 +186 -11: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: event timeout consumes lateError=true once [E]
+  Bad state: late subscriber failure
+  dart:async                                                                      _Completer.completeError
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 260:26  main.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                      _CustomZone.registerUnaryCallback
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 248:11  main.<fn>
+  
+00:02 +187 -11: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.newInstance, prewarm=true
+00:02 +187 -12: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.newInstance, prewarm=true
+00:02 +187 -12: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: event shutdown consumes lateError=true once [E]
+  Bad state: late subscriber failure
+  dart:async                                                                      _Completer.completeError
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 260:26  main.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                      _CustomZone.registerUnaryCallback
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 248:11  main.<fn>
+  
+00:02 +188 -12: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.newInstance, prewarm=true
+00:02 +188 -13: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: timeout fences optionalKey, CCServiceCreationPolicy.newInstance, prewarm=true
+00:02 +188 -13: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: typedEvent cancel consumes lateError=true once [E]
+  Bad state: late subscriber failure
+  dart:async                                                                      _Completer.completeError
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 260:26  main.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                      _CustomZone.registerUnaryCallback
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 248:11  main.<fn>
+  
+00:02 +189 -13: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: typedEvent timeout consumes lateError=false once
+00:02 +190 -13: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: typedEvent timeout consumes lateError=false once
+00:02 +191 -13: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: shared CCServiceScope.app initializer resolves after first waiter timeout
+00:02 +192 -13: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: typedEvent timeout consumes lateError=true once
+00:02 +193 -13: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: typedEvent timeout consumes lateError=true once
+00:02 +193 -14: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: shared CCServiceScope.session initializer resolves after first waiter timeout
+00:02 +193 -14: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: typedEvent timeout consumes lateError=true once [E]
+  Bad state: late subscriber failure
+  dart:async                                                                      _Completer.completeError
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 260:26  main.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                      _CustomZone.registerUnaryCallback
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 248:11  main.<fn>
+  
+00:02 +194 -14: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: shared CCServiceScope.session initializer resolves after first waiter timeout
+00:02 +194 -15: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: shared CCServiceScope.session initializer resolves after first waiter timeout
+00:02 +194 -15: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: typedEvent shutdown consumes lateError=true once [E]
+  Bad state: late subscriber failure
+  dart:async                                                                      _Completer.completeError
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 260:26  main.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                      _CustomZone.registerUnaryCallback
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 248:11  main.<fn>
+  
+00:02 +195 -15: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: shared CCServiceScope.session initializer resolves after first waiter timeout
+00:02 +195 -16: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/service_resolution_admission_test.dart: shared CCServiceScope.session initializer resolves after first waiter timeout
+00:02 +195 -16: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: generatedEvent cancel consumes lateError=true once [E]
+  Bad state: late subscriber failure
+  dart:async                                                                      _Completer.completeError
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 260:26  main.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                      _CustomZone.registerUnaryCallback
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 248:11  main.<fn>
+  
+00:02 +196 -16: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: generatedEvent timeout consumes lateError=false once
+00:02 +197 -16: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: generatedEvent timeout consumes lateError=false once
+00:02 +198 -16: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: generatedEvent timeout consumes lateError=true once
+00:02 +198 -17: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: generatedEvent timeout consumes lateError=true once [E]
+  Bad state: late subscriber failure
+  dart:async                                                                      _Completer.completeError
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 260:26  main.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                      _CustomZone.registerUnaryCallback
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 248:11  main.<fn>
+  
+00:02 +198 -17: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: generatedEvent shutdown consumes lateError=false once
+00:02 +199 -17: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: generatedEvent shutdown consumes lateError=true once
+00:02 +199 -18: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: generatedEvent shutdown consumes lateError=true once [E]
+  Bad state: late subscriber failure
+  dart:async                                                                      _Completer.completeError
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 260:26  main.<fn>
+  ===== asynchronous gap ===========================
+  dart:async                                                                      _CustomZone.registerUnaryCallback
+  packages/ccrouter_test/test/pending_work_ownership_regression_test.dart 248:11  main.<fn>
+  
+00:02 +199 -18: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: constructor uniqueness uses identity rather than overloaded equality
+00:02 +200 -18: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/pending_work_ownership_regression_test.dart: invalid later Host input never takes ownership of earlier children
+00:02 +201 -18: Some tests failed.

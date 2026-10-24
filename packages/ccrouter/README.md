@@ -24,9 +24,25 @@ default-off switch, local gates, Theme constraints, and recovery behavior.
 For typed cross-component local UI, opt in separately to `ccrouter_ui` and its
 [integration guide](../../skills/ccrouter-integration-development/references/ui-fragments.md).
 
-Do not import `ccrouter_core/src/*` or use Runtime internals directly. Navigation
-backends remain separate packages; use `ccrouter_go_router` from the application
-Composition Root when GoRouter is the selected backend.
+Do not import `ccrouter_core/src/*` or use Runtime internals directly. Use native
+`CCManagedRouterApp`, or compose `CCManagedRouterBackend` and
+`CCRouterApp.managed` with `MaterialApp.router(routerConfig: backend.routerConfig)`.
+The GoRouter compatibility package and attach API have been removed.
+
+Managed completes ordinary Pop results at logical removal and keeps the outgoing
+content and Route Scope until Flutter finishes rendering the exit. Exact close
+releases business resources promptly, including underneath retained foreign
+Popups. Shutdown cancels render waits without requiring another frame.
+MultiHost layout selection is forwarded into each Managed Store and remains
+authoritative through navigation and focus changes. Both optional backend
+bindings belong to the Host SPI, not the business facade.
+
+Renderer unmount releases Route/guard/foreign/lifecycle references without
+closing the retained logical Stack, result or Route Service. Remount preserves
+managed identities; Widget State and foreign popups follow Flutter lifetime.
+Native Back policy uses exact Host/Outlet/Entry identity through optional
+Host-only `CCNavigationScopedPopGuardBinding`, retaining legacy binding support.
+After folding hides focus, Back can select the sole visible mounted Outlet.
 
 The package is currently pre-release and is not yet published. See the
 [workspace README](https://github.com/shingohu/cc-router/blob/main/README.md)

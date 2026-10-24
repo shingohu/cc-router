@@ -1,0 +1,46 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/scaffold_command_test.dart
+00:00 +0: YAML scalar round trips preserve SDK ranges and Git ref strings
+00:00 +0 -1: YAML scalar round trips preserve SDK ranges and Git ref strings [E]
+  Error on line 6, column 9: Expected comment or line break.
+    ╷
+  6 │   sdk: >=3.10.0 <4.0.0
+    │         ^
+    ╵
+  package:yaml/src/scanner.dart 1140:7                                     Scanner._scanBlockScalar
+  package:yaml/src/scanner.dart 770:17                                     Scanner._fetchBlockScalar
+  package:yaml/src/scanner.dart 414:9                                      Scanner._fetchNextToken
+  package:yaml/src/scanner.dart 337:7                                      Scanner._fetchMoreTokens
+  package:yaml/src/scanner.dart 315:27                                     Scanner.peek
+  package:yaml/src/scanner.dart 309:12                                     Scanner.advance
+  package:yaml/src/parser.dart 487:22                                      Parser._parseBlockMappingValue
+  package:yaml/src/parser.dart 102:16                                      Parser._stateMachine
+  package:yaml/src/parser.dart 61:19                                       Parser.parse
+  package:yaml/src/loader.dart 181:39                                      Loader._loadMapping
+  package:yaml/src/loader.dart 91:35                                       Loader._loadNode
+  package:yaml/src/loader.dart 181:21                                      Loader._loadMapping
+  package:yaml/src/loader.dart 91:35                                       Loader._loadNode
+  package:yaml/src/loader.dart 71:20                                       Loader._loadDocument
+  package:yaml/src/loader.dart 63:20                                       Loader.load
+  package:yaml/yaml.dart 69:25                                             loadYamlDocument
+  package:yaml/yaml.dart 54:5                                              loadYamlNode
+  package:yaml/yaml.dart 41:5                                              loadYaml
+  packages/ccrouter_test/generator_test/scaffold_command_test.dart 142:13  main.<fn>
+  
+00:00 +0 -1: example inherits build_runner from the same staged component snapshot
+00:00 +0 -2: example inherits build_runner from the same staged component snapshot [E]
+  Expected: '^2.10.0'
+    Actual: '^2.11.0'
+     Which: is different.
+            Expected: ^2.10.0
+              Actual: ^2.11.0
+                          ^
+             Differ at offset 4
+  feature/example
+  
+  package:matcher                                                         expect
+  packages/ccrouter_test/generator_test/scaffold_command_test.dart 209:9  main.<fn>
+  
+00:00 +0 -2: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

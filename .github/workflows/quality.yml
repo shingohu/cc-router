@@ -117,6 +117,14 @@ jobs:
           dart packages/ccrouter_generator/bin/ccrouter_generator.dart generate demo/modules/order/example --no-cache --check
       - name: Test Demo
         run: flutter test --no-pub demo
+      - name: Analyze application analytics libraries
+        run: |
+          dart analyze demo/modules/analytics
+          dart analyze demo/modules/analytics_flutter
+      - name: Test application analytics and Firebase mapping
+        run: |
+          dart test demo/modules/analytics/test demo/modules/analytics_firebase/test
+          flutter test --no-pub demo/modules/analytics_flutter/test
       - name: Test independent Order Example
         working-directory: demo/modules/order/example
         run: flutter test --no-pub test

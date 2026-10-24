@@ -1,0 +1,924 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_router_outlet_test.dart
+00:00 +0: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +6: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +7: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +8: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +9: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +10: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +11: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +12: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +13: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +14: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +15: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +16: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +17: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +18: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +19: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +20: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +21: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +22: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +23: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +24: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +25: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +26: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +27: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +28: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +29: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +30: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +31: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +32: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +33: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +34: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +35: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +36: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +37: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +38: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +39: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +40: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +41: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +42: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +43: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +44: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +45: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +46: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +47: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +48: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +49: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +50: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +51: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +52: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +53: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:01 +54: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_router_outlet_test.dart: MultiHost layout remains authoritative across Managed navigation
+00:01 +55: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_router_outlet_test.dart: MultiHost layout remains authoritative across Managed navigation
+00:01 +56: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_router_outlet_test.dart: MultiHost layout remains authoritative across Managed navigation
+00:01 +57: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_router_outlet_test.dart: MultiHost layout remains authoritative across Managed navigation
+00:01 +58: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_router_outlet_test.dart: MultiHost layout remains authoritative across Managed navigation
+00:01 +59: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_router_outlet_test.dart: MultiHost layout remains authoritative across Managed navigation
+00:01 +60: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/catalog_assembler_test.dart: Managed renders primary, alias and Regex from one catalog
+00:01 +61: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/catalog_assembler_test.dart: Managed renders primary, alias and Regex from one catalog
+00:01 +62: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +63: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +64: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +65: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +66: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +67: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +68: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +69: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +70: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +71: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +72: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +73: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +74: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +75: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +76: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +77: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +78: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +79: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +80: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +81: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +82: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +83: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +84: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +85: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +86: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +87: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +88: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +89: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +90: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +91: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +92: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +93: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +94: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +95: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +96: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +97: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +98: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +99: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +100: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +101: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +102: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +103: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +104: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +105: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +106: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +107: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:01 +108: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 0 preserves order and delivery
+00:02 +109: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_router_outlet_test.dart: stateful Shell preserves branches and closes inactive identity
+00:02 +110: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/route_service_test.dart: Managed page resolves and disposes its exact Route Service
+00:02 +111: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/route_service_test.dart: Managed page resolves and disposes its exact Route Service
+00:02 +112: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/route_service_test.dart: Managed page resolves and disposes its exact Route Service
+00:02 +113: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/route_service_test.dart: Managed page resolves and disposes its exact Route Service
+00:02 +114: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/route_service_test.dart: Managed page resolves and disposes its exact Route Service
+00:02 +115: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/route_service_test.dart: Managed page resolves and disposes its exact Route Service
+00:02 +116: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/route_service_test.dart: Managed page resolves and disposes its exact Route Service
+00:02 +117: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/route_service_test.dart: Managed page resolves and disposes its exact Route Service
+00:02 +118: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/route_service_test.dart: Managed page resolves and disposes its exact Route Service
+00:02 +119: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/route_service_test.dart: Managed page resolves and disposes its exact Route Service
+00:02 +120: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/route_service_test.dart: Managed page resolves and disposes its exact Route Service
+00:02 +121: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/route_service_test.dart: Managed page resolves and disposes its exact Route Service
+00:02 +122: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 2 preserves order and delivery
+00:03 +123: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 3 preserves order and delivery
+00:03 +124: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 3 preserves order and delivery
+00:03 +125: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 3 preserves order and delivery
+00:03 +126: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_test.dart: Runtime history capacity 3 preserves order and delivery
+00:03 +127: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/resource_lifecycle_regression_test.dart: retained disposed foreign bridge releases its Adapter owner
+00:03 +128: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/resource_lifecycle_regression_test.dart: retained disposed foreign bridge releases its Adapter owner
+00:03 +129: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/resource_lifecycle_regression_test.dart: retained disposed foreign bridge releases its Adapter owner
+00:03 +130: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/resource_lifecycle_regression_test.dart: retained disposed foreign bridge releases its Adapter owner
+00:03 +131: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/resource_lifecycle_regression_test.dart: retained disposed foreign bridge releases its Adapter owner
+00:03 +132: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:03 +133: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:03 +134: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:03 +135: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:03 +136: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:03 +137: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:03 +138: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:04 +139: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:04 +140: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:04 +141: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:04 +142: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:04 +143: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:04 +144: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:04 +145: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:04 +146: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:04 +147: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:04 +148: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:04 +149: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:04 +150: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:04 +151: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: concurrent maybePop preserves actual result and unique receipt
+00:04 +152: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/page_lifecycle_test.dart: Listener tracks foreign PopupRoutes and ignores widget rebuilds
+00:04 +153: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/page_lifecycle_test.dart: Listener tracks foreign PopupRoutes and ignores widget rebuilds
+00:04 +154: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/page_lifecycle_test.dart: Listener tracks foreign PopupRoutes and ignores widget rebuilds
+00:04 +155: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: independent Outlets preserve concurrent results
+00:04 +156: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: independent Outlets preserve concurrent results
+00:04 +157: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: independent Outlets preserve concurrent results
+00:04 +158: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: independent Outlets preserve concurrent results
+00:04 +159: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: waiting maybePop cannot claim pop removal
+00:05 +160: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: nested delivery retains Host Zone, not Runtime; idle close=false
+00:05 +161: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: waiting maybePop cannot claim push removal
+00:05 +162: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: waiting maybePop cannot claim push removal
+00:05 +163: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: nested delivery retains Host Zone, not Runtime; idle close=true
+00:05 +164: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +165: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +166: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +167: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +168: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +169: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +170: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +171: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +172: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +173: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +174: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +175: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +176: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +177: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +178: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +179: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +180: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +181: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +182: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +183: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +184: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +185: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:05 +186: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +187: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +188: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +189: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +190: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +191: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +192: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +193: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +194: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +195: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +196: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +197: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +198: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +199: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +200: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +201: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +202: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +203: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +204: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +205: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +206: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +207: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +208: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +209: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +210: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +211: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +212: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +213: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +214: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +215: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +216: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +217: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +218: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +219: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +220: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:06 +221: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:07 +222: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:07 +223: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:07 +224: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:07 +225: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:07 +226: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:07 +227: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:07 +228: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:07 +229: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:07 +230: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostics_test.dart: timeout cleanup isolates throwing listeners and sanitizes diagnostics
+00:07 +231: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostics_test.dart: timeout cleanup isolates throwing listeners and sanitizes diagnostics
+00:07 +232: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostics_test.dart: timeout cleanup isolates throwing listeners and sanitizes diagnostics
+00:07 +233: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostics_test.dart: timeout cleanup isolates throwing listeners and sanitizes diagnostics
+00:07 +234: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostics_test.dart: timeout cleanup isolates throwing listeners and sanitizes diagnostics
+00:07 +235: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostics_test.dart: timeout cleanup isolates throwing listeners and sanitizes diagnostics
+00:07 +236: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:07 +237: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:07 +238: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:07 +239: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:07 +240: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:07 +241: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:07 +242: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:07 +243: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:07 +244: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:07 +245: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:08 +246: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:08 +247: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:08 +248: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:08 +249: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:08 +250: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:08 +251: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:08 +252: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:08 +253: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:08 +254: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:08 +255: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:08 +256: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: completed Shell exit releases old Routes while Adapter stays alive
+00:08 +257: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: independent readiness roots reject a shared dependency cycle
+00:08 +258: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location supersedes old policy (initial=/)
+00:08 +259: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location supersedes old policy (initial=/)
+00:08 +260: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location supersedes old policy (initial=/)
+00:08 +261: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location supersedes old policy (initial=/)
+00:08 +262: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location supersedes old policy (initial=/)
+00:08 +263: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location supersedes old policy (initial=/)
+00:08 +264: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location supersedes old policy (initial=/)
+00:08 +265: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location supersedes old policy (initial=/)
+00:08 +266: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location supersedes old policy (initial=/)
+00:08 +267: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location supersedes old policy (initial=/)
+00:08 +268: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Session requires explicit open, closes services, and creates new instances
+00:08 +269: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location supersedes old policy (initial=/detail/A)
+00:08 +270: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Session IDs are unique across independent Runtime instances
+00:08 +271: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: same-current location still cancels the old policy
+00:08 +272: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: same-current location still cancels the old policy
+00:08 +273: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: same-current location still cancels the old policy
+00:08 +274: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: same-current location still cancels the old policy
+00:08 +275: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: same-current location still cancels the old policy
+00:08 +276: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: scope disposal timeout does not block other instances
+00:08 +277: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location cancels an old Failure Policy recovery
+00:08 +278: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location cancels an old Failure Policy recovery
+00:08 +279: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location cancels an old Failure Policy recovery
+00:08 +280: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location cancels an old Failure Policy recovery
+00:08 +281: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location cancels an old Failure Policy recovery
+00:08 +282: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location cancels an old Failure Policy recovery
+00:08 +283: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location cancels an old Failure Policy recovery
+00:08 +284: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location cancels an old Failure Policy recovery
+00:08 +285: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location cancels an old Failure Policy recovery
+00:08 +286: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: initialization timeout and Runtime disposal cancel pending work
+00:08 +287: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: late interceptor redirect and cancellation errors stay fenced
+00:08 +288: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: late interceptor redirect and cancellation errors stay fenced
+00:08 +289: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: late interceptor redirect and cancellation errors stay fenced
+00:08 +290: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: late interceptor redirect and cancellation errors stay fenced
+00:08 +291: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: late interceptor redirect and cancellation errors stay fenced
+00:08 +292: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: cancellation works before and during invocation
+00:08 +293: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: platform ingress cancellation remains isolated per Host
+00:08 +294: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: platform ingress cancellation remains isolated per Host
+00:08 +295: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: platform ingress cancellation remains isolated per Host
+00:08 +296: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: platform ingress cancellation remains isolated per Host
+00:08 +297: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: platform ingress cancellation remains isolated per Host
+00:08 +298: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: platform ingress cancellation remains isolated per Host
+00:08 +299: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: platform ingress cancellation remains isolated per Host
+00:08 +300: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: platform ingress cancellation remains isolated per Host
+00:08 +301: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: platform ingress cancellation remains isolated per Host
+00:08 +302: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: platform ingress cancellation remains isolated per Host
+00:08 +303: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: platform ingress cancellation remains isolated per Host
+00:08 +304: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: platform ingress cancellation remains isolated per Host
+00:08 +305: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: platform ingress cancellation remains isolated per Host
+00:08 +306: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: platform ingress cancellation remains isolated per Host
+00:08 +307: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart: new location cancels deferred replay (resuming=false)
+00:08 +308: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: singleFlight must not skip external origin policy
+00:08 +309: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: singleFlight must not skip external origin policy
+00:08 +310: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: singleFlight must not skip external origin policy
+00:09 +311: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: singleFlight must not skip external origin policy
+00:09 +312: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: singleFlight must not skip external origin policy
+00:09 +313: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: singleFlight must not skip external origin policy
+00:09 +314: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: singleFlight must not skip external origin policy
+00:09 +315: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: singleFlight must not skip external origin policy
+00:09 +316: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: singleFlight must not skip external origin policy
+00:09 +317: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: singleFlight must not skip external origin policy
+00:09 +318: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: singleFlight must not skip external origin policy
+00:09 +319: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: singleFlight must not skip external origin policy
+00:09 +320: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_test.dart: last declarative close retains foreign popup: nested=false root=true
+00:09 +321: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: visited redirect Host removal releases initial CCNavigationConcurrencyPolicy.singleFlight gate immediately
+00:10 +322: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: visited redirect Host removal releases initial CCNavigationConcurrencyPolicy.singleFlight gate immediately
+00:10 +323: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: visited redirect Host removal releases initial CCNavigationConcurrencyPolicy.singleFlight gate immediately
+00:10 +324: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: visited redirect Host removal releases initial CCNavigationConcurrencyPolicy.singleFlight gate immediately
+00:10 +325: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: visited redirect Host removal releases initial CCNavigationConcurrencyPolicy.singleFlight gate immediately
+00:10 +326: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: visited redirect Host removal releases initial CCNavigationConcurrencyPolicy.singleFlight gate immediately
+00:10 +327: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: visited redirect Host removal releases initial CCNavigationConcurrencyPolicy.singleFlight gate immediately
+00:10 +328: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: visited redirect Host removal releases initial CCNavigationConcurrencyPolicy.singleFlight gate immediately
+00:10 +329: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: visited redirect Host removal releases initial CCNavigationConcurrencyPolicy.singleFlight gate immediately
+00:10 +330: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: visited redirect Host removal releases initial CCNavigationConcurrencyPolicy.singleFlight gate immediately
+00:10 +331: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: visited redirect Host removal releases initial CCNavigationConcurrencyPolicy.singleFlight gate immediately
+00:10 +332: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: visited redirect Host removal releases initial CCNavigationConcurrencyPolicy.singleFlight gate immediately
+00:10 +333: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: visited redirect Host removal releases initial CCNavigationConcurrencyPolicy.singleFlight gate immediately
+00:10 +334: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: visited redirect Host removal releases initial CCNavigationConcurrencyPolicy.singleFlight gate immediately
+00:10 +335: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: visited redirect Host removal releases initial CCNavigationConcurrencyPolicy.singleFlight gate immediately
+00:10 +336: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: visited redirect Host removal releases initial CCNavigationConcurrencyPolicy.singleFlight gate immediately
+00:10 +337: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 0
+00:10 +338: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 0
+00:10 +339: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 0
+00:10 +340: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 0
+00:10 +341: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 0
+00:11 +342: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 0
+00:11 +343: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 0
+00:11 +344: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 0
+00:11 +345: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 0
+00:11 +346: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 0
+00:11 +347: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 0
+00:11 +348: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 0
+00:11 +349: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 0
+00:11 +350: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 0
+00:11 +351: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 0
+00:11 +352: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_router_backend_test.dart: removing one of multiple foreign popups keeps the required anchor
+00:11 +353: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: reset ends before late policy after Host removal
+00:11 +354: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: reset ends before late policy after Host removal
+00:11 +355: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: reset ends before late policy after Host removal
+00:11 +356: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: replace releases Routes and controllers with live history capacity 0
+00:11 +357: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: replace releases Routes and controllers with live history capacity 0
+00:11 +358: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: replace releases Routes and controllers with live history capacity 0
+00:11 +359: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: replace releases Routes and controllers with live history capacity 0
+00:11 +360: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: replace releases Routes and controllers with live history capacity 0
+00:11 +361: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: replace releases Routes and controllers with live history capacity 0
+00:11 +362: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: replace releases Routes and controllers with live history capacity 0
+00:11 +363: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: replace releases Routes and controllers with live history capacity 0
+00:11 +364: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: replace releases Routes and controllers with live history capacity 0
+00:11 +365: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: replace releases Routes and controllers with live history capacity 0
+00:11 +366: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: replace releases Routes and controllers with live history capacity 0
+00:11 +367: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: replace releases Routes and controllers with live history capacity 0
+00:11 +368: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: replace releases Routes and controllers with live history capacity 0
+00:11 +369: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: replace releases Routes and controllers with live history capacity 0
+00:11 +370: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: replace releases Routes and controllers with live history capacity 0
+00:11 +371: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: replace releases Routes and controllers with live history capacity 0
+00:11 +372: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: replace releases Routes and controllers with live history capacity 0
+00:12 +373: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: replace releases Routes and controllers with live history capacity 0
+00:12 +374: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: replace releases Routes and controllers with live history capacity 0
+00:12 +375: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: notification ends before late policy after Host removal
+00:12 +376: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: notification ends before late policy after Host removal
+00:12 +377: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: CCNavigationConcurrencyPolicy.singleFlight isolates CCNavigationOrigin.externalNotification from CCNavigationOrigin.internal
+00:12 +378: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_router_backend_test.dart: revalidation closes a covered Managed page and disposes its Scope once
+00:12 +379: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_router_backend_test.dart: revalidation closes a covered Managed page and disposes its Scope once
+00:12 +380: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 0
+00:12 +381: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 0
+00:12 +381: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: public Session service cleanup (reentrant=false)
+public service: reentrant=false, disposals=1
+00:12 +382: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 0
+00:12 +382: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: public Session service cleanup (reentrant=true)
+public service: reentrant=true, disposals=1
+00:12 +383: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 0
+00:12 +383: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: factory resource cleanup (scope=app, reentrant=false)
+factory: scope=app, reentrant=false, disposals=1
+00:12 +384: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 0
+00:12 +385: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 0
+00:12 +385: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: factory resource cleanup (scope=session, reentrant=false)
+factory: scope=session, reentrant=false, disposals=1
+00:12 +386: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 0
+00:12 +386: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: factory resource cleanup (scope=app, reentrant=true)
+factory: scope=app, reentrant=true, disposals=1
+00:12 +387: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 0
+00:12 +388: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 0
+00:12 +388: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: factory resource cleanup (scope=session, reentrant=true)
+factory: scope=session, reentrant=true, disposals=1
+00:12 +389: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 0
+00:12 +390: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 0
+00:12 +391: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 0
+00:12 +391: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: Command timeout preserves error when listener throws=false
+timeout: throwing=false, result=CCInvocationTimeoutError, trace=timedOut
+00:12 +392: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 0
+00:12 +393: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 0
+00:12 +393: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: Command timeout preserves error when listener throws=true
+timeout: throwing=true, result=CCInvocationTimeoutError, trace=timedOut
+00:12 +394: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 0
+00:12 +395: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 0
+00:12 +396: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 0
+00:12 +397: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: deferred request cannot be resurrected in replacement Host
+defer replacement: old=CCRouteCancelledError, path=/
+00:12 +398: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_router_backend_test.dart: Managed predictive-back ignores duplicate terminal events per stack level (variant: TargetPlatform.android)
+00:12 +399: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_router_backend_test.dart: Managed predictive-back ignores duplicate terminal events per stack level (variant: TargetPlatform.android)
+00:12 +400: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 2
+00:12 +400: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: control: focus change preserves live Host
+control: remove=false, old=Null
+00:12 +401: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 2
+00:12 +402: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 2
+00:12 +403: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 2
+00:12 +404: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 2
+00:12 +405: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 2
+00:12 +405: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: control: removed Host without replacement fails
+control: remove=true, old=CCRouteCancelledError
+00:12 +406: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 2
+00:12 +407: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 2
+00:12 +408: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: pop releases Routes and controllers with live history capacity 2
+00:12 +409: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_observer_test.dart: real Navigator events stay on their Host and Outlet: nested=false
+00:12 +410: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_observer_test.dart: real Navigator events stay on their Host and Outlet: nested=false
+00:12 +411: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_observer_test.dart: real Navigator events stay on their Host and Outlet: nested=false
+00:13 +412: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_observer_test.dart: real Navigator events stay on their Host and Outlet: nested=false
+00:13 +413: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_observer_test.dart: real Navigator events stay on their Host and Outlet: nested=false
+00:13 +414: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_observer_test.dart: real Navigator events stay on their Host and Outlet: nested=false
+00:13 +415: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_observer_test.dart: real Navigator events stay on their Host and Outlet: nested=false
+00:13 +416: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_observer_test.dart: real Navigator events stay on their Host and Outlet: nested=false
+00:13 +416: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: new Host request does not share old singleFlight gate
+replacement gate: policy=singleFlight, calls=2, fresh=Null, path=/detail/A
+00:13 +417: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_observer_test.dart: real Navigator events stay on their Host and Outlet: nested=false
+00:13 +418: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_observer_test.dart: real Navigator events stay on their Host and Outlet: nested=false
+00:13 +419: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_observer_test.dart: real Navigator events stay on their Host and Outlet: nested=false
+00:13 +420: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_observer_test.dart: real Navigator events stay on their Host and Outlet: nested=false
+00:13 +421: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_observer_test.dart: real Navigator events stay on their Host and Outlet: nested=false
+00:13 +422: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_observer_test.dart: real Navigator events stay on their Host and Outlet: nested=false
+00:13 +423: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:13 +423: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: new Host request does not share old rejectDuplicate gate
+replacement gate: policy=rejectDuplicate, calls=2, fresh=Null, path=/detail/A
+00:13 +424: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:13 +425: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:13 +426: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:13 +427: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:13 +428: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:13 +429: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:13 +430: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:13 +431: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:13 +432: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:14 +433: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:14 +434: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:14 +435: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:14 +436: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:14 +437: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:14 +438: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:14 +439: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:14 +440: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:14 +441: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:14 +442: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:14 +443: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:14 +444: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: foreign routes and local history never remove a managed Route Entry
+00:14 +445: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 1000
+00:14 +446: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 1000
+00:14 +447: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 1000
+00:14 +448: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/navigation_history_lifecycle_test.dart: remove releases Routes and controllers with live history capacity 1000
+00:14 +449: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: an external system Pop closes a managed go route entry
+00:14 +450: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: reset redirect Intent preserves Shell and parent in admitted Host
+00:14 +451: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: Managed system back evaluates the Runtime PopGuard before removal
+00:14 +452: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: Managed system back evaluates the Runtime PopGuard before removal
+00:14 +453: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: reset recovery Intent preserves Shell and parent in admitted Host
+00:14 +454: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: reset recovery Intent preserves Shell and parent in admitted Host
+00:14 +455: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: system PopGuard allow preserves local Form refusal and result
+00:14 +456: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: system PopGuard allow preserves local Form refusal and result
+00:14 +457: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: system PopGuard allow preserves local Form refusal and result
+00:14 +458: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: system PopGuard allow preserves local Form refusal and result
+00:14 +459: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: system PopGuard allow preserves local Form refusal and result
+00:14 +460: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/test_host_test.dart: test host overlays the static facade only inside its Zone
+00:15 +461: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/test_host_test.dart: test host overlays the static facade only inside its Zone
+00:15 +462: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: push redirect Intent preserves Shell and parent in admitted Host
+00:15 +463: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: push redirect Intent preserves Shell and parent in admitted Host
+00:15 +464: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: push redirect Intent preserves Shell and parent in admitted Host
+00:15 +465: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: push redirect Intent preserves Shell and parent in admitted Host
+00:15 +466: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: push redirect Intent preserves Shell and parent in admitted Host
+00:15 +467: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: push redirect Intent preserves Shell and parent in admitted Host
+00:15 +468: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: push redirect Intent preserves Shell and parent in admitted Host
+00:15 +469: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: push redirect Intent preserves Shell and parent in admitted Host
+00:15 +470: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: dynamic open pushes on Managed and completes before its later Pop
+00:15 +471: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: dynamic open pushes on Managed and completes before its later Pop
+00:15 +472: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: dynamic open pushes on Managed and completes before its later Pop
+00:15 +473: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: dynamic open pushes on Managed and completes before its later Pop
+00:15 +474: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: dynamic open pushes on Managed and completes before its later Pop
+00:15 +475: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: dynamic open pushes on Managed and completes before its later Pop
+00:15 +476: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: dynamic open pushes on Managed and completes before its later Pop
+00:15 +477: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: dynamic open pushes on Managed and completes before its later Pop
+00:15 +478: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: dynamic open pushes on Managed and completes before its later Pop
+00:15 +479: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/integration_test.dart: dynamic open pushes on Managed and completes before its later Pop
+00:15 +480: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: push redirect URI preserves Shell and parent in admitted Host
+00:15 +481: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: push redirect URI preserves Shell and parent in admitted Host
+00:15 +482: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: push redirect URI preserves Shell and parent in admitted Host
+00:15 +483: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: push redirect URI preserves Shell and parent in admitted Host
+00:15 +484: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +485: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +486: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +487: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +488: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +489: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +490: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +491: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +492: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +493: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +494: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +495: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +496: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +497: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +498: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +499: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +500: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +501: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +502: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +503: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +504: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +505: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +506: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +507: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +508: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +509: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: commitBackGesture
+00:15 +510: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: openPush recovery Intent preserves Shell and parent in admitted Host
+00:16 +511: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: cancelBackGesture
+00:16 +512: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: cancelBackGesture
+00:16 +513: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: cancelBackGesture
+00:16 +514: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: cancelBackGesture
+00:16 +515: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: cancelBackGesture
+00:16 +516: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: openGo redirect Intent preserves Shell and parent in admitted Host
+00:16 +517: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: openGo redirect Intent preserves Shell and parent in admitted Host
+00:16 +518: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: openGo redirect Intent preserves Shell and parent in admitted Host
+00:16 +519: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: shared coordinator retires the gesture fence: lost
+00:16 +520: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_core_test.dart: route-local guard denial is target-specific
+00:16 +521: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:16 +522: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:16 +523: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:16 +524: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:16 +525: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:16 +526: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:16 +527: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:16 +528: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:16 +529: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:16 +530: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:16 +531: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:16 +532: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:17 +533: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:17 +534: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:17 +535: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:17 +536: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:17 +537: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:17 +538: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:17 +539: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:17 +540: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:17 +541: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:17 +542: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:17 +543: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:17 +544: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:17 +545: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:17 +546: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:17 +547: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:17 +548: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:17 +549: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: CCManagedRouterApp forwards MaterialApp.router configuration
+00:17 +550: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: Theme change cancels preview: platform=false terminal=commitBackGesture
+00:17 +551: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: Theme change cancels preview: platform=false terminal=commitBackGesture
+00:17 +552: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: Theme change cancels preview: platform=false terminal=commitBackGesture
+00:17 +553: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: Theme change cancels preview: platform=false terminal=commitBackGesture
+00:17 +554: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: Theme change cancels preview: platform=false terminal=commitBackGesture
+00:17 +555: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: pending Back keeps receipt after shutdown
+00:17 +556: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: pending Back keeps receipt after shutdown
+00:17 +557: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_app_configuration_test.dart: Managed custom factory runs once across presentation rebuilds
+00:17 +558: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: Theme change cancels preview: platform=false terminal=cancelBackGesture
+00:17 +559: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: Theme change cancels preview: platform=false terminal=cancelBackGesture
+00:17 +560: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: scoped maybePop reports actual root Popup Outlet
+00:18 +561: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: Theme change cancels preview: platform=true terminal=commitBackGesture
+00:18 +562: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: Theme change cancels preview: platform=true terminal=commitBackGesture
+00:18 +563: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart: default Host survives explicit hop (recovery=false defer=true)
+00:18 +564: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: Theme change cancels preview: platform=true terminal=cancelBackGesture
+00:18 +565: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: Theme change cancels preview: platform=true terminal=cancelBackGesture
+00:18 +566: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +567: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +568: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +569: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +570: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +571: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +572: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +573: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +574: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +575: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +576: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +577: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +578: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +579: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +580: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +581: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +582: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +583: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +584: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +585: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +586: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +587: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +588: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +589: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +590: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +591: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +592: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +593: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +594: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +595: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +596: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:18 +597: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +598: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +599: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +600: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +601: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +602: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +603: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +604: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +605: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +606: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +607: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +608: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +609: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +610: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +611: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +612: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +613: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +614: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +615: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +616: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +617: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +618: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +619: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +620: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +621: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +622: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +623: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +624: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +625: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +626: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +627: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +628: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +629: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +630: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +631: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +632: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +633: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +634: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +635: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +636: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +637: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +638: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/flutter_route_factory_test.dart: Material Android 页面不额外响应 Cupertino 边缘返回手势
+00:19 +639: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +640: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +641: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +642: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +643: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +644: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +645: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +646: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +647: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +648: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +649: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +650: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +651: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +652: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +653: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +654: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +655: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +656: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +657: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +658: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +659: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +660: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +661: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +662: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +663: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +664: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +665: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +666: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +667: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +668: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +669: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +670: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +671: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +672: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +673: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +674: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +675: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +676: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +677: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +678: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +679: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +680: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +681: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +682: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:19 +683: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:20 +684: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:20 +685: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: same-frame pane reparent preserves live popup and native Guard
+00:20 +686: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/host_initialization_failure_test.dart: cleanup waiters in owner, parent and sibling error Zones: rollback=true, failure=false
+00:20 +687: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: replace invalidates old gesture without popping new top
+00:20 +688: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: replace invalidates old gesture without popping new top
+00:20 +689: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: replace invalidates old gesture without popping new top
+00:20 +690: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: replace invalidates old gesture without popping new top
+00:20 +691: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: replace invalidates old gesture without popping new top
+00:20 +692: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: replace invalidates old gesture without popping new top
+00:20 +693: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Shell renderer remount preserves both retained branch identities
+00:20 +694: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Shell renderer remount preserves both retained branch identities
+00:20 +695: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Shell renderer remount preserves both retained branch identities
+00:20 +696: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Shell renderer remount preserves both retained branch identities
+00:20 +697: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Shell renderer remount preserves both retained branch identities
+00:20 +698: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Shell renderer remount preserves both retained branch identities
+00:20 +699: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Shell renderer remount preserves both retained branch identities
+00:20 +700: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Shell renderer remount preserves both retained branch identities
+00:20 +701: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Shell renderer remount preserves both retained branch identities
+00:20 +702: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Shell renderer remount preserves both retained branch identities
+00:20 +703: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Shell renderer remount preserves both retained branch identities
+00:20 +704: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Shell renderer remount preserves both retained branch identities
+00:20 +705: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Shell renderer remount preserves both retained branch identities
+00:20 +706: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Shell renderer remount preserves both retained branch identities
+00:20 +707: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Shell renderer remount preserves both retained branch identities
+00:20 +708: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Shell renderer remount preserves both retained branch identities
+00:20 +709: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Shell renderer remount preserves both retained branch identities
+00:20 +710: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/host_initialization_failure_test.dart: Host rollback releases Sink before write completes; error=true
+00:20 +711: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/host_initialization_failure_test.dart: Host rollback releases Sink before write completes; error=true
+00:20 +712: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/host_initialization_failure_test.dart: Host rollback releases Sink before write completes; error=true
+00:20 +713: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/host_initialization_failure_test.dart: Host rollback releases Sink before write completes; error=true
+00:20 +714: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/host_initialization_failure_test.dart: Host rollback releases Sink before write completes; error=true
+00:20 +715: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/host_initialization_failure_test.dart: Host rollback releases Sink before write completes; error=true
+00:20 +716: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: live Adapter releases old Routes after renderer remount
+00:20 +717: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: live Adapter releases old Routes after renderer remount
+00:20 +718: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: live Adapter releases old Routes after renderer remount
+00:20 +719: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: live Adapter releases old Routes after renderer remount
+00:20 +720: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: live Adapter releases old Routes after renderer remount
+00:20 +721: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: live Adapter releases old Routes after renderer remount
+00:20 +722: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: live Adapter releases old Routes after renderer remount
+00:20 +723: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: live Adapter releases old Routes after renderer remount
+00:20 +724: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: live Adapter releases old Routes after renderer remount
+00:21 +725: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: live Adapter releases old Routes after renderer remount
+00:21 +726: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: live Adapter releases old Routes after renderer remount
+00:21 +727: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: replaced Host consumes the previous gesture commit
+00:21 +728: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/generated_command_binding_test.dart: generated binding preserves stable ID and component identities
+00:21 +729: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: native Back and predictive policy stay in an inactive Host
+00:21 +730: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: native Back and predictive policy stay in an inactive Host
+00:21 +731: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: native Back and predictive policy stay in an inactive Host
+00:21 +732: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: native Back and predictive policy stay in an inactive Host
+00:21 +733: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: retired Host releases observation on restart
+00:21 +734: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: repeated pane remount preserves Scope, result and exact identity
+00:21 +735: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: repeated pane remount preserves Scope, result and exact identity
+00:21 +736: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: repeated pane remount preserves Scope, result and exact identity
+00:22 +737: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: repeated pane remount preserves Scope, result and exact identity
+00:22 +738: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: repeated pane remount preserves Scope, result and exact identity
+00:22 +739: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: 默认关闭 bridge，Flutter 动画与 managed Scope 正常
+00:22 +740: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: root renderer remount also preserves its logical Entry
+00:22 +741: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: root renderer remount also preserves its logical Entry
+00:22 +742: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: 框架 Guard allow：交互动画关闭，提交后按 system 判断
+00:22 +743: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: native Pop then shutdown closes Scope without another frame
+00:22 +744: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_layout_test.dart: Host layout metrics classify compact, medium, and expanded
+00:22 +745: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: 框架 Guard deny：提交不移除页面与 Scope
+00:22 +746: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: 框架 Guard deny：提交不移除页面与 Scope
+00:22 +747: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/predictive_back_test.dart: 框架 Guard deny：提交不移除页面与 Scope
+00:22 +748: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:22 +749: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:22 +750: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:23 +751: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:23 +752: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:23 +753: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:23 +754: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:24 +755: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:24 +756: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:24 +757: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:24 +758: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:24 +759: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:24 +760: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:24 +761: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:25 +762: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:25 +763: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:25 +764: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:25 +765: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:25 +766: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:25 +767: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:25 +768: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:25 +769: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:25 +770: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:25 +771: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:25 +772: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:26 +773: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:26 +774: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:26 +775: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:26 +776: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:26 +777: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:26 +778: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:26 +779: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:27 +780: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:27 +781: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:27 +782: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:28 +783: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:29 +784: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:29 +785: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:30 +786: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:30 +787: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:31 +788: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:31 +789: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:31 +790: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:32 +791: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:33 +792: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:33 +793: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:33 +794: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:34 +795: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:35 +796: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:36 +797: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:36 +798: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:38 +799: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:38 +800: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:39 +801: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:39 +802: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:39 +803: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:39 +804: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:40 +805: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:40 +806: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:40 +807: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:41 +808: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:41 +809: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:41 +810: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:41 +811: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:41 +812: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:41 +813: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:42 +814: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:42 +815: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:44 +816: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:44 +817: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:44 +818: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:44 +819: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:45 +820: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:45 +821: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:46 +822: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:46 +823: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:46 +824: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:47 +825: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:47 +826: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:47 +827: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:48 +828: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:48 +829: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:48 +830: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:48 +831: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:48 +832: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:49 +833: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:50 +834: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:50 +835: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:50 +836: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:50 +837: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:51 +838: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:51 +839: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:51 +840: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:51 +841: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:51 +842: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:51 +843: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:51 +844: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:51 +845: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:52 +846: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: predictive back preserves and releases typed UI Fragments (variant: TargetPlatform.android)
+00:53 +847: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: predictive back preserves and releases typed UI Fragments (variant: TargetPlatform.android)
+00:53 +848: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: go retires retained Shell ownership exactly
+00:54 +849: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:55 +850: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:55 +851: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:55 +852: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:55 +853: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:55 +854: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:55 +855: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:55 +856: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:55 +857: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:55 +858: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:56 +859: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:57 +860: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:57 +861: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:57 +862: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:59 +863: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:59 +864: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:59 +865: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+01:00 +866: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+01:01 +867: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+01:01 +868: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+01:02 +869: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+01:02 +870: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+01:04 +871: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+01:04 +872: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+01:04 +873: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+01:05 +874: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+01:05 +875: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+01:05 +876: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+01:06 +877: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+01:06 +878: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+01:07 +879: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+01:07 +880: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+01:08 +881: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+01:08 +882: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+01:09 +883: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+01:09 +884: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: retained branch URL must follow selected branch
+01:09 +885: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+01:09 +886: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+01:09 +887: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: shutdown with mounted Shell must not rebuild errors
+01:09 +888: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=transient (variant: TargetPlatform.android)
+01:10 +889: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=transient (variant: TargetPlatform.android)
+01:10 +890: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=transient (variant: TargetPlatform.android)
+01:10 +891: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+01:11 +892: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+01:16 +893: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: cancelled iOS swipe preserves Entry identity (variant: TargetPlatform.iOS)
+01:16 +894: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: shutdown retires mounted Shell and foreign popup safely
+01:17 +895: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: shutdown during a Shell edge swipe does not double remove (variant: TargetPlatform.iOS)
+01:17 +896: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: close covered Shell seed must keep context child
+01:18 +897: All tests passed!

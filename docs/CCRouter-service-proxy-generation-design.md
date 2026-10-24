@@ -2,6 +2,10 @@
 
 ## 1. 状态与目标
 
+本文统一维护跨组件 Service 声明、生成与方法支持矩阵；Provider 注册、readiness、Scope 和
+释放规则见[Service 生命周期规范](CCRouter-service-lifecycle-design.md)。原 Service 实施清单已
+吸收到这两份规范，历史执行记录见[合并归档](archive/20261024-consolidation/README.md)。
+
 - 状态：1.x 已实现
 - 使用者：存在真实跨组件 Service 调用的组件作者
 - 目标：消除手写 Proxy 中的 Token、method ID、caller component ID、参数转发和同步/异步
@@ -144,6 +148,8 @@ compatibility 变更，必须按 Contract SemVer 处理并重新生成消费者�
 ## 7. 性能与回退
 
 生成器只处理显式消费项，不扫描依赖 Package 的全部 Service。没有声明时不写
-`*.service_api.g.dart`。Proxy 每次调用增加一次受控 Provider 解析和 Trace；普通本地 Service 不走
-此路径。若 Proxy 生成出现兼容问题，消费方可以临时退回 `CCRouter.service<T>()`，Provider、Scope
-和 Contract 注册无需迁移，但会失去生成 caller identity 和方法级 Trace。
+`*.service_api.g.dart`，删除最后一个声明时清理陈旧受管输出。Provider/Contract metadata 的增删改
+必须使缓存失效，缓存与 `--no-cache` 输出逐字节一致；冷生成不依赖先生成 Token 再运行第二次。
+Proxy 每次调用增加一次受控 Provider 解析和 Trace；普通本地 Service 不走此路径。
+跨组件消费不应通过手写 Proxy 或直接 service lookup 绕开生成依赖边界；遇到生成不兼容时应
+保留失败证据并修复/回退对应工具链，不能把丢失 caller identity 的调用包装成等价推荐路径。

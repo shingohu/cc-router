@@ -298,6 +298,17 @@ const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
     expect(result.output, isNot(contains('CCRouterRuntime')));
     expect(result.output, isNot(contains('registerRoute')));
   });
+  for (final range in ['>=1.0.0', '<=1.0.0', '<2.0.0']) {
+    test('consumer generation accepts single comparator $range', () async {
+      final result = await _generate('''$_source
+const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
+  dependencies: [owner], uiDependencies: [
+    CCUIFragmentDependency<Summary>(alias: 'summary', versionRange: '$range')]);
+''', metadata: false);
+      expect(result.output, contains('class AccountFragments'));
+      expect(result.output, contains('CCUIGeneratedFragment<'));
+    });
+  }
   for (final optional in [false, true]) {
     test(
       'missing required owner explains the repair (optional: $optional)',

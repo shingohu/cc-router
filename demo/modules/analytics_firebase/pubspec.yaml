@@ -1,5 +1,5 @@
 name: demo_analytics_firebase
-description: Demo-owned Firebase Analytics mapping for CCRouter analytics events.
+description: Demo-owned Firebase Analytics mapping for application analytics events.
 version: 0.1.0
 resolution: workspace
 publish_to: none
@@ -8,7 +8,7 @@ environment:
   sdk: ^3.10.0
 
 dependencies:
-  ccrouter_analytics: ^0.1.0
+  demo_analytics: ^0.1.0
 
 dev_dependencies:
   test: ^1.26.0

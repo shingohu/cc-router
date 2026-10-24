@@ -1,0 +1,53 @@
+00:00 +0: loading tool/test/documentation_check_test.dart
+00:00 +0: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +1: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +2: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +3: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +4: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +5: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +6: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +7: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +8: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +9: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +10: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +11: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +12: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +13: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +14: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +15: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +16: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +17: tool/test/performance_compare_test.dart: rejects reports from different execution environments
+00:00 +18: tool/test/performance_compare_test.dart: rejects reports from different execution environments
+00:00 +19: tool/test/performance_compare_test.dart: rejects reports from different execution environments
+00:00 +20: tool/test/performance_compare_test.dart: rejects reports from different execution environments
+00:00 +21: tool/test/performance_compare_test.dart: rejects reports from different execution environments
+00:00 +22: tool/test/performance_compare_test.dart: rejects reports from different execution environments
+00:00 +23: tool/test/performance_compare_test.dart: rejects reports from different execution environments
+00:00 +24: tool/test/performance_compare_test.dart: rejects reports from different execution environments
+00:00 +25: tool/test/performance_compare_test.dart: rejects reports from different execution environments
+00:00 +26: tool/test/performance_compare_test.dart: rejects reports from different execution environments
+00:00 +27: tool/test/documentation_check_test.dart: checks a new staged document against its current bytes
+00:01 +28: tool/test/documentation_check_test.dart: checks a new staged document against its current bytes
+00:01 +29: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:01 +30: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:02 +31: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:02 +32: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:03 +33: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:03 +34: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:04 +35: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:05 +36: tool/test/documentation_check_test.dart: code and comments do not provide index navigation
+00:07 +37: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:07 +38: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:08 +39: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:08 +40: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:09 +41: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:09 +42: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:10 +43: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:10 +44: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:11 +45: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:11 +46: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:12 +47: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:12 +48: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:13 +49: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:13 +50: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:21 +51: All tests passed!

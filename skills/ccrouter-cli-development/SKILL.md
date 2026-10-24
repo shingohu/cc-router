@@ -291,9 +291,12 @@ recomputes source, configuration, resolution, metadata, and managed-output
 digests before trusting it. A writable unproven Package falls back to
 `actual=runBuilder`; a read-only Git/Pub/external-Path Package fails explicitly
 instead of being modified by the Host. Set `CCROUTER_DISABLE_AGGREGATE_ONLY=1`
-to disable both optimizations. Commit Portable Generation State with managed
-outputs, but never commit the disposable local baseline under
-`.dart_tool/ccrouter/v1/build_plans/`. `--no-cache --profile` must report
+to disable both optimizations. For Packages explicitly opting into portable
+distribution with `generation: { portable: true }`, use `portable prepare` and
+`portable publish`, then commit Portable Generation State with managed outputs.
+Ordinary local generation does not produce that state. Never commit the
+disposable local baseline under `.dart_tool/ccrouter/v1/build_plans/`.
+`--no-cache --profile` must report
 `no-cache-reference` and run the authoritative full path; CI keeps using
 `--no-cache --check`.
 
@@ -362,7 +365,17 @@ generator dependencies, and retain the app `project_type`; the example is
 therefore a Host by default. Publish the component directory only after all
 steps succeed. A failure removes only that unique staging directory. In a
 Workspace, list both the component and example as members; outside one, the
-example uses `path: ..` for the component.
+example uses `path: ..` for the component. The authored main installs the generated
+Host Assembly and `CCManagedRouterApp`; the example owns a real `/` Route.
+Both Packages declare proven-source `build_runner` and the SDK's Flutter test
+dependency. A standalone parent also opts into Portable State: Pub get and
+`ccrouter portable prepare .` in the component precede Pub get and generation in
+the example. Repeat preparation after component declarations change. Independent
+lockfiles must resolve compatible toolchain identities; align them on mismatch
+instead of bypassing Portable validation or writing into the read-only parent.
+The example rebases its tools from the staged component manifest. Keep SDK ranges
+and Git refs as strings when reviewing manifests; YAML-looking scalars may need
+quotes, and source text matching is not a substitute for parsing the result.
 Component manifests inherit the nearest explicit Dart SDK constraint and
 `ccrouter`/`ccrouter_generator` Hosted, Git, or rebased Path declarations. A
 resolved Package version is used only when no explicit declaration exists; if
@@ -546,8 +559,14 @@ It reports source, cache, temporary loader smoke, restart, and live verification
 separately. Then restart and verify a real IDE diagnostic; doctor alone does not
 prove the live session loaded the plugin.
 
-Use explicit `install/upgrade/uninstall` for a CLI-owned installation. All three
-support `--dry-run` without processes or writes. Hosted requires an explicit
+`install` and `upgrade` are legacy maintenance-only commands and emit a
+deprecation notice; no new management features will be added. After Hosted
+publication, prefer a normal Host `dev_dependency`; do not assume an unreleased
+version is resolvable. A reviewed remote full Git SHA remains available for an
+isolated bootstrap before publication. `status`, `doctor`, `pin-check` and
+`uninstall` continue to support bootstrap diagnosis and maintenance.
+Use explicit `install/upgrade/uninstall` when managing a legacy CLI-owned
+installation. All three support `--dry-run` without processes or writes. Hosted requires an explicit
 published version; Git requires a remote URL and full SHA verified by remote
 fetch. The command validates a candidate loader before updating Host configuration
 and running Pub with Hook disabled. Existing manual bootstraps are not adopted;

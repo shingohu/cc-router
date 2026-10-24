@@ -28,6 +28,12 @@ final class _RouteEntryRecord {
   /// Scope owning services and cancellation tied to this route opening.
   final CCScope scope;
 
+  /// Logical removal signal, independent of the outgoing render Scope lifetime.
+  ///
+  /// Targeted-close waits end when this exact Entry leaves the active stack;
+  /// ordinary Pop animations may keep its Scope alive until rendering exits.
+  final CCCancellationToken removal = CCCancellationToken();
+
   /// Mutable lifecycle state retained only by Runtime.
   CCRouteEntryLifecycleState state = CCRouteEntryLifecycleState.created;
 
@@ -70,32 +76,54 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
     return null;
   }
 
+  /// Resolves services for an active Entry or its bounded outgoing rendering.
+  ///
+  /// Exiting entries are excluded from navigation, revalidation and diagnostics
+  /// of active stacks; only exact Route-bound service access can use them.
+  _RouteEntryRecord? _routeServiceEntryForNavigation(String navigationId) =>
+      _routeEntryForNavigation(navigationId) ??
+      _exitingRouteEntries[navigationId];
+
   /// Subscribes to Route Entry lifecycle transitions.
   ///
   /// Transitions are delivered by the bounded FIFO observer queue. Listener
   /// failures are isolated from navigation. The returned callback removes the
   /// listener and cancels its queued deliveries.
+  /// Cleanup is idempotent and never removes a later re-add of this callback.
+  /// Simultaneous duplicate adds still share one subscription.
   void Function() addRouteEntryListener(
     CCRouteEntryLifecycleListener listener,
   ) {
     _ensureInitialized();
-    _routeEntryListeners.add(listener);
-    return () => _routeEntryListeners.remove(listener);
+    return _subscribeNavigationObserver(_routeEntryListeners, listener);
   }
 
-  /// Allocates one Entry and its Route Scope before Adapter execution.
+  /// Allocates Entry-owned signals in Host context before Adapter execution.
+  ///
+  /// An active Route Scope must not retain its original navigation caller Zone.
   _RouteEntryRecord _createRouteEntry(CCNavigationRequest request) {
-    final entry = _RouteEntryRecord(
-      id: '$_runtimeId-entry-${++_routeEntrySequence}',
-      request: request,
-      address: _addressSummaryFor(routeId: request.routeId, uri: request.uri),
+    final entry = _hostZone.run(
+      () => _RouteEntryRecord(
+        id: '$_runtimeId-entry-${++_routeEntrySequence}',
+        request: request.parentStack.isEmpty
+            ? request
+            : request.withParentStack(const []),
+        address: _addressSummaryFor(routeId: request.routeId, uri: request.uri),
+      ),
     );
     _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.resolving);
     return entry;
   }
 
-  /// Commits an accepted Entry into Runtime's navigation order.
-  void _commitRouteEntry(_RouteEntryRecord entry) {
+  /// Commits an accepted Entry only while its original lifetime remains live.
+  ///
+  /// Replacing old Entries can synchronously cancel Scopes and invoke owned
+  /// cleanup. Recheck after that work so a detached Host or shutdown cannot
+  /// acquire a new Entry after its teardown has already visited this stack.
+  void _commitRouteEntry(
+    _RouteEntryRecord entry, {
+    CCCancellationToken? requestCancellation,
+  }) {
     switch (entry.request.operation) {
       case CCNavigationOperation.replace:
         _removeTopRouteEntry(
@@ -116,6 +144,7 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
         }
         break;
     }
+    _ensureNavigationRequestAlive(requestCancellation);
     _routeEntries.add(entry);
     _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.pushed);
     _associateCommittedBackendEntry(entry);
@@ -274,6 +303,7 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
       return;
     }
     _routeEntries.remove(entry);
+    entry.removal.cancel();
     final adapter = _navigationAdapter;
     if (adapter is CCNavigationManagedEntryReleaseSink) {
       (adapter as CCNavigationManagedEntryReleaseSink).releaseManagedNavigation(
@@ -326,14 +356,59 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
 
   /// Closes one Route Scope without blocking the Adapter transition.
   Future<void> _closeRouteEntry(_RouteEntryRecord entry, String reason) async {
-    await entry.scope.close();
-    if (entry.state == CCRouteEntryLifecycleState.removed) {
-      _emitRouteEntryTransition(
-        entry,
-        CCRouteEntryLifecycleState.disposed,
-        reason: reason,
-      );
+    try {
+      final exit = _waitForRouteExit(entry, reason);
+      if (exit != null) await exit;
+    } finally {
+      await entry.scope.close();
+      if (entry.state == CCRouteEntryLifecycleState.removed) {
+        _emitRouteEntryTransition(
+          entry,
+          CCRouteEntryLifecycleState.disposed,
+          reason: reason,
+        );
+      }
     }
+  }
+
+  /// Waits for rendering with explicit cancellation and no active-stack entry.
+  Future<void>? _waitForRouteExit(_RouteEntryRecord entry, String reason) {
+    final adapter = _navigationAdapter;
+    if (!_disposed &&
+        reason != 'hostDetached' &&
+        adapter is CCNavigationRouteExitBinding) {
+      final navigationId = entry.request.navigationId;
+      final completed = Completer<void>();
+      final unsubscribe = (adapter as CCNavigationRouteExitBinding)
+          .addRouteExitListener(
+            navigationId: navigationId,
+            hostId: entry.request.hostId,
+            onExited: () {
+              if (!completed.isCompleted) completed.complete();
+            },
+          );
+      if (unsubscribe != null) {
+        _exitingRouteEntries[navigationId] = entry;
+        void release() {
+          try {
+            unsubscribe();
+          } finally {
+            if (!completed.isCompleted) completed.complete();
+          }
+        }
+
+        _routeExitWaiters[navigationId] = release;
+        return completed.future.whenComplete(() {
+          try {
+            unsubscribe();
+          } finally {
+            _routeExitWaiters.remove(navigationId);
+            _exitingRouteEntries.remove(navigationId);
+          }
+        });
+      }
+    }
+    return null;
   }
 
   /// Removes the current top Entry, preserving the root when requested.
@@ -410,10 +485,9 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
       _routeEntryEvents.add(event);
     }
     _emitAspectEntryState(entry, state);
-    _enqueueNavigationObserverBatch(
+    _enqueueRegisteredNavigationObserverBatch(
       _routeEntryListeners,
       (listener) => listener(event),
-      isActive: _routeEntryListeners.contains,
       failureLabel: 'Route Entry listener',
       critical:
           state == CCRouteEntryLifecycleState.removed ||

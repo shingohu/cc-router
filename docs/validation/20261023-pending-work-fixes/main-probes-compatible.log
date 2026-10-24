@@ -1,0 +1,146 @@
+00:00 +0: loading /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart
+00:00 +0: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: command pending=false releases ended Runtime
+00:00 +0 -1: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: command pending=false releases ended Runtime
+00:00 +0 -1: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/multi_host_constructor.dart: constructor rejects shared Adapter before claiming Host ownership [E]
+  Expected: ({int disposals, bool rejected}):<(disposals: 0, rejected: true)>
+    Actual: ({int disposals, bool rejected}):<(disposals: 2, rejected: false)>
+  dynamic registration already rejects the same Adapter
+  
+  package:matcher                                                                                    expect
+  package:flutter_test/src/widget_tester.dart 477:18                                                 expect
+  packages/ccrouter_test/test/review_repros/pending_work_retention/multi_host_constructor.dart 44:5  main.<fn>
+  
+00:00 +1 -1: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: command pending=false releases ended Runtime
+00:00 +1 -2: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: command pending=false releases ended Runtime
+00:00 +1 -2: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/multi_host_constructor.dart: dynamic registration rejects already-owned Adapter without disposing it [E]
+  Expected: throws <Instance of 'CCNavigationAdapterError'>
+    Actual: <Closure: () => void>
+     Which: returned <null>
+  
+  package:matcher                                                                                    expect
+  package:flutter_test/src/widget_tester.dart 477:18                                                 expect
+  packages/ccrouter_test/test/review_repros/pending_work_retention/multi_host_constructor.dart 78:7  main.<fn>
+  
+00:00 +2 -2: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart: pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +3 -2: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: command pending=true releases ended Runtime
+00:00 +3 -3: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart: pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +3 -4: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: command pending=true releases ended Runtime [E]
+  Expected: false
+    Actual: <true>
+  application callback does not capture Runtime
+  
+  package:matcher                                                                                expect
+  package:flutter_test/src/widget_tester.dart 477:18                                             expect
+  packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart 133:9  main.<fn>
+  
+00:00 +3 -4: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: event pending=false releases ended Runtime
+00:00 +3 -4: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart: pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.singleton releases ended owner [E]
+  Expected: ({bool payloadAfter, bool payloadBefore, bool runtimeAfter, bool runtimeBefore}):<(payloadAfter: false, payloadBefore: false, runtimeAfter: false, runtimeBefore: false)>
+    Actual: ({bool payloadAfter, bool payloadBefore, bool runtimeAfter, bool runtimeBefore}):<(payloadAfter: false, payloadBefore: false, runtimeAfter: false, runtimeBefore: true)>
+  initializer holds only the external Future; fields describe retention before/after release
+  
+  package:matcher                                                                     expect
+  package:flutter_test/src/widget_tester.dart 477:18                                  expect
+  packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart 131:13  main.<fn>
+  
+00:00 +4 -4: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart: pending initializer=false scope=CCServiceScope.app policy=CCServiceCreationPolicy.newInstance releases ended owner
+00:00 +5 -4: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: event pending=true releases ended Runtime
+00:00 +5 -5: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart: pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.newInstance releases ended owner
+00:00 +5 -5: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: event pending=true releases ended Runtime [E]
+  Expected: false
+    Actual: <true>
+  application callback does not capture Runtime
+  
+  package:matcher                                                                                expect
+  package:flutter_test/src/widget_tester.dart 477:18                                             expect
+  packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart 133:9  main.<fn>
+  
+00:00 +5 -6: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: typedEvent pending=false releases ended Runtime
+00:00 +5 -6: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart: pending initializer=true scope=CCServiceScope.app policy=CCServiceCreationPolicy.newInstance releases ended owner [E]
+  Expected: ({bool payloadAfter, bool payloadBefore, bool runtimeAfter, bool runtimeBefore}):<(payloadAfter: false, payloadBefore: false, runtimeAfter: false, runtimeBefore: false)>
+    Actual: ({bool payloadAfter, bool payloadBefore, bool runtimeAfter, bool runtimeBefore}):<(payloadAfter: false, payloadBefore: false, runtimeAfter: false, runtimeBefore: true)>
+  initializer holds only the external Future; fields describe retention before/after release
+  
+  package:matcher                                                                     expect
+  package:flutter_test/src/widget_tester.dart 477:18                                  expect
+  packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart 131:13  main.<fn>
+  
+00:00 +6 -6: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart: pending initializer=false scope=CCServiceScope.session policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +7 -6: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: typedEvent pending=true releases ended Runtime
+00:00 +7 -7: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart: pending initializer=true scope=CCServiceScope.session policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +7 -7: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: typedEvent pending=true releases ended Runtime [E]
+  Expected: false
+    Actual: <true>
+  application callback does not capture Runtime
+  
+  package:matcher                                                                                expect
+  package:flutter_test/src/widget_tester.dart 477:18                                             expect
+  packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart 133:9  main.<fn>
+  
+00:00 +7 -8: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: generatedEvent pending=false releases ended Runtime
+00:00 +7 -8: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart: pending initializer=true scope=CCServiceScope.session policy=CCServiceCreationPolicy.singleton releases ended owner [E]
+  Expected: ({bool payloadAfter, bool payloadBefore, bool runtimeAfter, bool runtimeBefore}):<(payloadAfter: false, payloadBefore: false, runtimeAfter: false, runtimeBefore: false)>
+    Actual: ({bool payloadAfter, bool payloadBefore, bool runtimeAfter, bool runtimeBefore}):<(payloadAfter: false, payloadBefore: false, runtimeAfter: false, runtimeBefore: true)>
+  initializer holds only the external Future; fields describe retention before/after release
+  
+  package:matcher                                                                     expect
+  package:flutter_test/src/widget_tester.dart 477:18                                  expect
+  packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart 131:13  main.<fn>
+  
+00:00 +8 -8: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart: pending initializer=false scope=CCServiceScope.session policy=CCServiceCreationPolicy.newInstance releases ended owner
+00:00 +9 -8: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: generatedEvent pending=true releases ended Runtime
+00:00 +9 -9: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: generatedEvent pending=true releases ended Runtime
+00:00 +9 -10: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart: pending initializer=true scope=CCServiceScope.session policy=CCServiceCreationPolicy.newInstance releases ended owner [E]
+  Expected: ({bool payloadAfter, bool payloadBefore, bool runtimeAfter, bool runtimeBefore}):<(payloadAfter: false, payloadBefore: false, runtimeAfter: false, runtimeBefore: false)>
+    Actual: ({bool payloadAfter, bool payloadBefore, bool runtimeAfter, bool runtimeBefore}):<(payloadAfter: false, payloadBefore: false, runtimeAfter: false, runtimeBefore: true)>
+  initializer holds only the external Future; fields describe retention before/after release
+  
+  package:matcher                                                                     expect
+  package:flutter_test/src/widget_tester.dart 477:18                                  expect
+  packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart 131:13  main.<fn>
+  
+00:00 +9 -10: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: generatedEvent pending=true releases ended Runtime [E]
+  Expected: false
+    Actual: <true>
+  application callback does not capture Runtime
+  
+  package:matcher                                                                                expect
+  package:flutter_test/src/widget_tester.dart 477:18                                             expect
+  packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart 133:9  main.<fn>
+  
+00:00 +9 -10: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: service pending=false releases ended Runtime
+00:00 +10 -10: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart: pending initializer=false scope=CCServiceScope.route policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +11 -10: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: service pending=true releases ended Runtime
+00:00 +12 -10: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart: pending initializer=true scope=CCServiceScope.route policy=CCServiceCreationPolicy.singleton releases ended owner
+00:00 +12 -11: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: initTask pending=false releases ended Runtime
+00:00 +12 -11: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart: pending initializer=true scope=CCServiceScope.route policy=CCServiceCreationPolicy.singleton releases ended owner [E]
+  Expected: ({bool payloadAfter, bool payloadBefore, bool runtimeAfter, bool runtimeBefore}):<(payloadAfter: false, payloadBefore: false, runtimeAfter: false, runtimeBefore: false)>
+    Actual: ({bool payloadAfter, bool payloadBefore, bool runtimeAfter, bool runtimeBefore}):<(payloadAfter: false, payloadBefore: true, runtimeAfter: false, runtimeBefore: true)>
+  initializer holds only the external Future; fields describe retention before/after release
+  
+  package:matcher                                                                     expect
+  package:flutter_test/src/widget_tester.dart 477:18                                  expect
+  packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart 131:13  main.<fn>
+  
+00:00 +13 -11: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart: pending initializer=false scope=CCServiceScope.route policy=CCServiceCreationPolicy.newInstance releases ended owner
+00:00 +14 -11: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: initTask pending=true releases ended Runtime
+00:00 +14 -12: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart: pending initializer=true scope=CCServiceScope.route policy=CCServiceCreationPolicy.newInstance releases ended owner
+00:00 +14 -12: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart: initTask pending=true releases ended Runtime [E]
+  Expected: false
+    Actual: <true>
+  application callback does not capture Runtime
+  
+  package:matcher                                                                                expect
+  package:flutter_test/src/widget_tester.dart 477:18                                             expect
+  packages/ccrouter_test/test/review_repros/pending_work_retention/message_retention.dart 133:9  main.<fn>
+  
+00:00 +14 -13: /private/tmp/ccrouter-main-comparison.wAgoMs/packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart: pending initializer=true scope=CCServiceScope.route policy=CCServiceCreationPolicy.newInstance releases ended owner [E]
+  Expected: ({bool payloadAfter, bool payloadBefore, bool runtimeAfter, bool runtimeBefore}):<(payloadAfter: false, payloadBefore: false, runtimeAfter: false, runtimeBefore: false)>
+    Actual: ({bool payloadAfter, bool payloadBefore, bool runtimeAfter, bool runtimeBefore}):<(payloadAfter: false, payloadBefore: true, runtimeAfter: false, runtimeBefore: true)>
+  initializer holds only the external Future; fields describe retention before/after release
+  
+  package:matcher                                                                     expect
+  package:flutter_test/src/widget_tester.dart 477:18                                  expect
+  packages/ccrouter_test/test/review_repros/pending_work_retention/repro.dart 131:13  main.<fn>
+  
+00:00 +14 -13: Some tests failed.

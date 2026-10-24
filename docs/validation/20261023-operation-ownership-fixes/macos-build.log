@@ -1,0 +1,5 @@
+CCRouter preflight started for `flutter build`.
+CCRouter generation reused active watch cycle 3; exact active Host watch evidence matched.
+CCRouter preflight finished: elapsed=566ms.
+Building macOS application...                                   
+✓ Built build/macos/Build/Products/Debug/ccrouter_demo.app

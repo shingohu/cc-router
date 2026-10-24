@@ -1,7 +1,6 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
-// ignore: deprecated_member_use
-import 'package:ccrouter_go_router/ccrouter_go_router.dart';
+import 'support/managed_test_home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -80,7 +79,7 @@ final class _RouteServiceRegistrar implements CCComponentRegistrar {
 void main() {
   tearDown(CCRouterHost.shutdown);
 
-  testWidgets('GoRouter page resolves and disposes its exact Route Service', (
+  testWidgets('Managed page resolves and disposes its exact Route Service', (
     tester,
   ) async {
     final created = <_RouteService>[];
@@ -90,7 +89,7 @@ void main() {
           CCComponentManifest(
             id: 'route_service',
             version: '1.0.0',
-            registrar: _RouteServiceRegistrar(created),
+            registrar: WithTestHome(_RouteServiceRegistrar(created)),
           ),
         ],
       ),
@@ -111,17 +110,14 @@ void main() {
       ),
     );
     final catalog = CCFlutterRouteCatalog(
-      [destination],
+      [testHomeDestination(), destination],
       componentVersions: const {'route_service': '1.0.0'},
     );
-    final backend = CCGoRouterBackend.managed(
-      catalog: catalog,
-      hostRoutes: [GoRoute(path: '/', builder: (_, _) => const Text('home'))],
-    );
+    final backend = CCManagedRouterBackend(routeCatalog: catalog);
     await tester.pumpWidget(
       CCRouterApp.managed(
         backend: backend,
-        child: MaterialApp.router(routerConfig: backend.router),
+        child: MaterialApp.router(routerConfig: backend.routerConfig),
       ),
     );
     await tester.pumpAndSettle();

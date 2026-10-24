@@ -1,5 +1,6 @@
-// ignore: deprecated_member_use
-import 'package:ccrouter_go_router/ccrouter_go_router.dart';
+import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter/ccrouter_host.dart';
+import 'support/managed_test_home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:leak_tracker/leak_tracker.dart' show forceGC;
@@ -70,24 +71,32 @@ void main() {
       testWidgets(
         '$removal releases Routes and controllers with live history capacity $capacity',
         (tester) async {
-          final observer = CCGoRouterNavigationObserver(outlet: 'root');
-          final navigatorKey = GlobalKey<NavigatorState>();
-          final router = GoRouter(
-            navigatorKey: navigatorKey,
-            observers: [observer],
-            routes: [GoRoute(path: '/', builder: (_, _) => const Text('home'))],
+          CCRouterHost.initialize(
+            navigationDiagnosticCapacity: capacity,
+            hostAssembly: CCHostAssembly.fromComponents(
+              components: const [
+                CCComponentManifest(
+                  id: 'fixture',
+                  version: '1.0.0',
+                  registrar: TestHomeRegistrar(),
+                ),
+              ],
+            ),
           );
-          final adapter = CCGoRouterAdapter(
-            router: router,
-            observers: [observer],
-            lifecycleEventCapacity: capacity,
+          final backend = CCManagedRouterBackend(
+            routeCatalog: CCFlutterRouteCatalog(
+              [testHomeDestination()],
+              componentVersions: const {'fixture': '1.0.0'},
+            ),
           );
-          addTearDown(() {
-            adapter.dispose();
-            router.dispose();
-          });
-          adapter.initialize(const []);
-          await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+          final navigatorKey = backend.host.navigatorKey;
+          addTearDown(CCRouterHost.shutdown);
+          await tester.pumpWidget(
+            CCRouterApp.managed(
+              backend: backend,
+              child: MaterialApp.router(routerConfig: backend.routerConfig),
+            ),
+          );
           await tester.pumpAndSettle();
 
           final resources = _Resources();
@@ -106,7 +115,7 @@ void main() {
           // Retain a caller's history snapshot too: neither it nor the live
           // Adapter may keep closed resources alive. No capacity eviction or
           // Adapter/Router disposal may be used to make this test pass.
-          final history = adapter.lifecycleEvents;
+          final history = CCRouter.recentBackendNavigationEvents;
           expect(history.length, capacity == 0 ? 0 : greaterThan(0));
           expect(history.length, lessThan(1000));
           await tester.runAsync(
@@ -125,7 +134,7 @@ void main() {
             resources.arguments.map((ref) => ref.target),
             everyElement(isNull),
           );
-          expect(adapter.lifecycleEvents.length, history.length);
+          expect(CCRouter.recentBackendNavigationEvents.length, history.length);
           expect(find.text('home'), findsOneWidget);
           expect(navigatorKey.currentState!.canPop(), isFalse);
         },

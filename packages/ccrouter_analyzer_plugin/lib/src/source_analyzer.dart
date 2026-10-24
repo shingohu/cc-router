@@ -15,6 +15,8 @@ import 'project_context.dart';
 import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
+part 'route_configuration_analysis.dart';
+
 /// Describes one CCRouter-specific diagnostic before it is converted to the
 /// Analysis Server protocol.
 ///
@@ -373,22 +375,27 @@ abstract final class CCRouterSourceAnalyzer {
     final diagnostics = <CCRouterAnalyzerDiagnostic>[];
     for (final directive
         in parsed.unit.directives.whereType<NamespaceDirective>()) {
-      final uri = directive.uri.stringValue;
-      if (uri == null || !_isGeneratedImport(uri, filePath, root, owner)) {
-        continue;
+      for (final reference in [
+        directive.uri,
+        ...directive.configurations.map((configuration) => configuration.uri),
+      ]) {
+        final uri = reference.stringValue;
+        if (uri == null || !_isGeneratedImport(uri, filePath, root, owner)) {
+          continue;
+        }
+        diagnostics.add(
+          CCRouterAnalyzerDiagnostic(
+            offset: reference.offset,
+            length: reference.length,
+            code: 'ccrouter_cross_package_generated_import',
+            message:
+                'Cross-Package imports of src/ccrouter_generated are not a stable CCRouter API.',
+            correction:
+                'Import the owning Package public Contract or Host barrel instead.',
+            severity: AnalysisErrorSeverity.ERROR,
+          ),
+        );
       }
-      diagnostics.add(
-        CCRouterAnalyzerDiagnostic(
-          offset: directive.uri.offset,
-          length: directive.uri.length,
-          code: 'ccrouter_cross_package_generated_import',
-          message:
-              'Cross-Package imports of src/ccrouter_generated are not a stable CCRouter API.',
-          correction:
-              'Import the owning Package public Contract or Host barrel instead.',
-          severity: AnalysisErrorSeverity.ERROR,
-        ),
-      );
     }
 
     for (final location in CCRouterHostLifecycleAnalysis.violations(
@@ -730,6 +737,9 @@ abstract final class CCRouterSourceAnalyzer {
     String annotationName,
   ) {
     final diagnostics = <CCRouterAnalyzerDiagnostic>[];
+    if (annotationName == 'CCRoute' || annotationName == 'CCRouteContract') {
+      diagnostics.addAll(_RouteConfigurationAnalysis.diagnostics(annotation));
+    }
     if ((annotationName == 'CCRoute' || annotationName == 'CCRouteContract') &&
         _namedArgument(annotation, 'pattern') != null &&
         _namedArgument(annotation, 'patterns') != null) {

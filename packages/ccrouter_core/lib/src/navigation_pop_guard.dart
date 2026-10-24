@@ -2,6 +2,23 @@ part of 'runtime.dart';
 
 /// Evaluates synchronous Pop policy for managed route entries.
 extension CCRouterRuntimePopGuard on CCRouterRuntime {
+  /// Binds the most precise supported policy and clears it on every terminal.
+  void _bindNavigationPopGuards(
+    CCNavigationAdapter adapter, {
+    bool clear = false,
+  }) {
+    if (adapter is CCNavigationScopedPopGuardBinding) {
+      (adapter as CCNavigationScopedPopGuardBinding)
+          .bindScopedPopGuardEvaluator(
+            clear ? null : _evaluatePopGuardsForActiveEntry,
+          );
+    } else if (adapter is CCNavigationPopGuardBinding) {
+      (adapter as CCNavigationPopGuardBinding).bindPopGuardEvaluator(
+        clear ? null : _evaluatePopGuardsForActiveEntry,
+      );
+    }
+  }
+
   /// Runs global guards followed by guards declared by the active route.
   ///
   /// Foreign, opaque, and unidentifiable backend entries bypass managed guards
@@ -57,6 +74,10 @@ extension CCRouterRuntimePopGuard on CCRouterRuntime {
   /// stack from inferred positional changes. Adapters without a ledger use the
   /// Runtime top Entry as their documented compatibility behavior.
   _RouteEntryRecord? _managedPopTarget(CCNavigationPopTarget? target) {
+    if (target?.handlesPopInternally == true ||
+        target?.owner == CCBackendEntryOwner.foreign ||
+        target?.owner == CCBackendEntryOwner.opaque)
+      return null;
     _BackendEntryRecord? topBackendEntry;
     for (final backendEntry in _backendEntries.values) {
       if (backendEntry.lifecycleState != CCBackendEntryLifecycleState.active) {

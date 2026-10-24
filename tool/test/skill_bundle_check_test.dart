@@ -67,6 +67,87 @@ void main() {
     expect(checkSkillBundle(temporary), isEmpty);
   });
 
+  test('reference-style links cannot hide a missing bundled resource', () {
+    entries();
+    write(
+      '${skillBundleNames.first}/SKILL.md',
+      '[Guide][guide]\n\n[guide]: references/missing.md\n',
+    );
+    expect(checkSkillBundle(temporary), contains(contains('missing bundled')));
+  });
+
+  test('Markdown examples do not become required bundle resources', () {
+    entries();
+    write('${skillBundleNames.first}/SKILL.md', r'''
+```md
+[Example](missing.md)
+```
+    [Example](missing.md)
+
+\[Example](missing.md)
+`[Example](missing.md)`
+<!-- [Example](missing.md) -->
+''');
+    expect(checkSkillBundle(temporary), isEmpty);
+  });
+
+  test(
+    'local paths with parentheses and URL suffixes resolve in the bundle',
+    () {
+      entries();
+      write('${skillBundleNames.first}/references/guide (v2).md', '# Guide');
+      write(
+        '${skillBundleNames.first}/SKILL.md',
+        '[Guide](<references/guide (v2).md?plain=1#guide>)\n',
+      );
+      expect(checkSkillBundle(temporary), isEmpty);
+    },
+  );
+
+  test('encoded traversal cannot escape the isolated bundle', () {
+    entries();
+    write('outside.md', '# Outside');
+    final bundle = Directory('${temporary.path}/bundle')..createSync();
+    copySkillBundle(temporary, bundle);
+    File(
+      '${bundle.path}/${skillBundleNames.first}/SKILL.md',
+    ).writeAsStringSync('[Outside](%2e%2e/%2e%2e/outside.md)');
+    expect(checkSkillBundle(bundle), contains(contains('escapes bundle')));
+  });
+
+  test(
+    'protocol-relative links stay external and remote file URIs fail cleanly',
+    () {
+      entries();
+      write(
+        '${skillBundleNames.first}/SKILL.md',
+        '[External](//example.invalid/guide.md)\n'
+            '[Invalid](file://remote.invalid/guide.md)\n',
+      );
+      final findings = checkSkillBundle(temporary);
+      expect(findings, hasLength(1));
+      expect(findings.single, contains('invalid link'));
+    },
+  );
+
+  test(
+    'a symlinked Skill root is rejected before reading or copying',
+    () {
+      write('outside/SKILL.md', '# Outside');
+      final source = Directory('${temporary.path}/source')..createSync();
+      Link(
+        '${source.path}/${skillBundleNames.first}',
+      ).createSync('${temporary.path}/outside');
+      expect(checkSkillBundle(source), contains(contains('symlinks')));
+      expect(
+        () =>
+            copySkillBundle(source, Directory('${temporary.path}/destination')),
+        throwsStateError,
+      );
+    },
+    skip: Platform.isWindows,
+  );
+
   test('CLI examples cannot invent commands or command-specific flags', () {
     const help = '''Usage:
   ccrouter generate [host-root] [--check]

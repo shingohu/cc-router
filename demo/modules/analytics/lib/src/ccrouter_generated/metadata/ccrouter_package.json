@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 2,
+  "generatorVersion": "0.1.5",
+  "package": {
+    "name": "demo_analytics",
+    "version": "0.1.0"
+  },
+  "contentFingerprint": "85cbc075fb657a1acdd408cc75e5f13508bb17d2bcf691882a318a6d821be6b7",
+  "bundle": null,
+  "dependencies": [],
+  "metadata": [],
+  "capabilityCatalog": {
+    "schemaVersion": 1,
+    "records": []
+  }
+}

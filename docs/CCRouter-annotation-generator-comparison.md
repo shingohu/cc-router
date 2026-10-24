@@ -3,13 +3,13 @@
 ## 文档状态
 
 - 版本：v0.2
-- 状态：已与当前实现对齐；本文只记录外部方案比较和仍可借鉴的工程能力
+- 状态：2026-09-19 外部方案比较快照；保留当时的 GoRouter 实现名称，不作为当前接入规范
 - 参考对象：[ff_annotation_route](https://github.com/fluttercandies/ff_annotation_route)
 - 参考范围：上游 `master` 的 README、示例说明和公开生成模型
 - 评估日期：2026-09-19
 - 结论：借鉴工程能力，不直接复制其全局路由表和动态扩展模型
 
-本文档记录 `ff_annotation_route` 对 CCRouter 注解生成器、路由生命周期和多后端设计的参考价值，不作为实现完成状态清单。核心路由契约以[路由子系统设计](CCRouter-route-design.md)为准，已完成能力以[路由完成计划](CCRouter-route-completion-plan.md)为准。
+本文档记录 `ff_annotation_route` 对 CCRouter 注解生成器、路由生命周期和多后端设计的参考价值，不作为实现完成状态清单。GoRouter 兼容包和本文中的 `CCGoRouter…` API 已移除；当前接入与能力边界以[根 README](../README.md)、[文档状态矩阵](README.md)和[Integration Skill](../skills/ccrouter-integration-development/SKILL.md)为准，不能直接复用下文旧 Assembler/Observer/Shell 示例。
 
 ## 1. 总体判断
 

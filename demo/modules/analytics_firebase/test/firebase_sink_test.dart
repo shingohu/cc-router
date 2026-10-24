@@ -1,4 +1,4 @@
-import 'package:ccrouter_analytics/ccrouter_analytics.dart';
+import 'package:demo_analytics/demo_analytics.dart';
 import 'package:demo_analytics_firebase/demo_analytics_firebase.dart';
 import 'package:test/test.dart';
 
@@ -13,13 +13,13 @@ void main() {
       },
     );
     await sink.write(
-      CCAnalyticsEvent(
+      AppAnalyticsEvent(
         eventId: 'page.view.orders',
-        type: CCAnalyticsEventType.pageView,
+        type: AppAnalyticsEventType.pageView,
         occurredAt: DateTime(2026),
         routeId: 'orders.detail',
-        properties: CCAnalyticsProperties.from([
-          CCAnalyticsProperty('tab', 'summary'),
+        properties: AppAnalyticsProperties.from([
+          AppAnalyticsProperty('tab', 'summary'),
         ]),
       ),
     );

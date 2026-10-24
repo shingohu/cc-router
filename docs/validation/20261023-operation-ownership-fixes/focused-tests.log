@@ -1,0 +1,31 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart
+00:00 +0: concurrent maybePop preserves actual result and unique receipt
+00:00 +1: independent Outlets preserve concurrent results
+00:00 +2: waiting maybePop cannot claim pop removal
+00:00 +3: waiting maybePop cannot claim push removal
+00:00 +4: waiting maybePop cannot claim close removal
+00:00 +5: waiting maybePop cannot claim unmount removal
+00:00 +6: LocalHistory precedes deny Guard (native=false)
+00:00 +7: LocalHistory precedes deny Guard (native=true)
+00:00 +8: Shell exit gives its result only to the selected branch
+00:00 +9: pending willPop ends on renderer teardown (shutdown=false)
+00:00 +10: pending willPop ends on renderer teardown (shutdown=true)
+00:00 +11: Shell receipt identifies its actual selected child at Pop
+00:00 +12: Shell exit retains content and child Scope (native=false)
+00:00 +13: Shell exit retains content and child Scope (native=true)
+00:00 +14: LocalHistory removed during wait cannot bypass denied exit
+00:00 +15: Shell exit remains bounded when interrupted by push
+00:00 +16: Shell exit remains bounded when interrupted by reenter
+00:00 +17: Shell exit remains bounded when interrupted by unmount
+00:00 +18: Shell exit remains bounded when interrupted by shutdown
+00:00 +19: completed Shell exit releases old Routes while Adapter stays alive
+00:00 +20: new location supersedes old policy (initial=/)
+00:01 +21: new location supersedes old policy (initial=/detail/A)
+00:01 +22: same-current location still cancels the old policy
+00:01 +23: new location cancels an old Failure Policy recovery
+00:01 +24: late interceptor redirect and cancellation errors stay fenced
+00:01 +25: platform ingress cancellation remains isolated per Host
+00:01 +26: new location cancels deferred replay (resuming=false)
+00:01 +27: new location cancels deferred replay (resuming=true)
+00:01 +28: shutdown cancels a never-completing platform policy without another frame
+00:01 +29: All tests passed!

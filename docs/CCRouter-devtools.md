@@ -19,8 +19,8 @@
 
 Host 直接依赖 `ccrouter_devtools` 后，`ccrouter generate` 会生成静态 Catalog，并将
 `CCDevToolsHostIntegration` 写入 `CCHostAssembly`。Composition Root 只需把 Assembly
-交给 `CCRouterHost.initialize`，不再手工注册或清理 VM Service Extension。完整设计与实现边界见
-[`CCRouter-devtools-host-integration-plan.md`](CCRouter-devtools-host-integration-plan.md)。
+交给 `CCRouterHost.initialize`，不再手工注册或清理 VM Service Extension。本文统一维护
+工具接入、Host 自动装配与生命周期规则；旧计划与阶段记录见[合并归档](archive/20261024-consolidation/README.md)。
 
 仅在开发或内部诊断构建中加入依赖：
 
@@ -54,10 +54,39 @@ const diagnosticsPage = CCRouterDevToolsPanel();
 应用仍然负责 Debug/Release 开关。面板不会自动初始化 `CCRouter`，Runtime 未初始化时
 会显示空状态。生产构建可以不引入该 Package，或通过应用自己的 build flag 不挂载页面。
 
+## Host 自动装配与生命周期
+
+生成器只认 Host 对 `ccrouter_devtools` 的直接依赖，不扫描组件传递依赖决定 opt-in。
+没有直接依赖时不生成 Tool Integration 或协议静态快照。生成 Catalog 只包含已验证的
+Component、五类能力、Owner、静态关系、可移植源码位置与 fingerprint；未知关系显示 unresolved，
+不猜测运行时调用。Host Assembly 携带只读 Integration 列表，并拒绝空或重复 Integration ID。
+
+Host 使用唯一必需参数 `hostAssembly`。生成 Host 传入 `ccrouterGeneratedHostAssembly`，
+手写 Host 使用 `CCHostAssembly.fromComponents`；不存在 loose `components/contractBundle`
+与 Assembly 二选一的初始化方式。
+
+依赖方向为 `ccrouter_devtools -> ccrouter Host SPI`，生成 Assembly 引用具体 Integration；
+`ccrouter` 不反向依赖 DevTools。`CCHostToolIntegration` 只向 Composition Root 暴露同步
+`id/onRuntimeReady/onRuntimeStopping`，不允许业务取得 Runtime、Registry、Scope 或 Adapter。
+
+1. Runtime 完成组件和 Contract 校验并安装 Facade Resolver 后，调用 `onRuntimeReady`。
+2. Integration 注册或更新 isolate endpoint，绑定生成 Catalog 和只读 Provider。
+3. `CCRouterHost.shutdown` 开始时先调用 `onRuntimeStopping`，清空 Provider/Catalog，后续查询
+   返回 uninitialized；再按 Runtime 原有顺序清理资源。
+4. endpoint 无法注销，重初始化复用 handler；页面、单个 Navigation Host 和测试 Overlay
+   不接管默认 Runtime 的工具生命周期。
+
+工具注册、快照转换和停止失败均隔离为脱敏诊断，不能阻断初始化、业务调用或关闭。
+回调必须同步短小，不能重入导航、解析 Service 或执行 Command。
+
+Debug 默认开启，可用 `CCROUTER_DEVTOOLS=false` 关闭；Profile 默认关闭，可显式开启；Release
+强制关闭，即使 define 为 true 也不得注册。开关只控制注册和交付，不保证依赖从 Release
+构建图消失；需要完全隔离时由应用使用独立调试 Package/构建配置。
+
 ## 视图
 
 - **Overview**：Runtime 状态、组件数、Managed Route Entry、Backend Entry、Pending
-  导航、Failure 和 InitTask 数量，以及状态恢复需求信号。
+  导航、Failure 和 InitTask 数量。
 - **Catalog**：搜索 Route、Service、Command、Event、InitTask，显示它是否出现在当前
   Runtime，并展示可复制的源码位置。Host 可以提供 `onOpenSource` 做 IDE/源码浏览器映射。
 - **Components**：组件版本、必选/可选依赖组成的只读 Component Graph，支持搜索、聚焦和反向
@@ -73,6 +102,7 @@ const diagnosticsPage = CCRouterDevToolsPanel();
   预期协作，Runtime 边用于确认本次实际发生的调用；两者不互相猜测或补全。
 
 所有列表都来自 CCRouter 已有的容量限制。刷新和事件订阅只重新读取快照，不改变 Runtime。
+恢复需求采集属于应用，不进入 Runtime Snapshot 或 DevTools 面板；完整路由状态恢复尚未实现。
 
 ## Snapshot 协议
 
@@ -126,3 +156,11 @@ dart run devtools_extensions build_and_copy \
 门禁是稳定 SDK 的 Web 构建加官方 validate；框架和 Demo 仍使用项目默认 FVM 验证。Extension
 显示源码 URI，但不绑定本机 IDE；需要跳转时由 Host/开发工具自行建立 Package URI 到工作区
 文件的映射。
+
+## 验证与维护
+
+回归覆盖直接/传递依赖、Debug/Profile/Release 开关、Catalog 一致性、启动失败隔离、
+shutdown/重初始化、单 Host 卸载不影响 isolate endpoint、无缓存生成一致性和面板 listener
+释放。静态声明、Runtime 事实与单次 Trace 分开呈现，面板不是审计或离线回放系统。
+按日期记录的运行结果见[验证索引](validation/README.md)，发布门禁见
+[Release Readiness](CCRouter-release-readiness.md)，不在本文重复维护测试数字或平台通过表。

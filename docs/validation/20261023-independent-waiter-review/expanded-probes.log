@@ -1,0 +1,60 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/host_identity.dart
+packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart:31:19: Error: A value must be explicitly returned from a non-void function.
+    if (!enabled) return;
+                  ^
+00:00 +0 -1: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart [E]
+  Failed to load "/Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart":
+  Compilation failed for testPath=/Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart:31:19: Error: A value must be explicitly returned from a non-void function.
+      if (!enabled) return;
+                    ^
+  .
+00:00 +0 -2: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/host_identity.dart [E]
+  Error: The Dart compiler exited unexpectedly.
+  package:flutter_tools/src/base/common.dart 34:3  throwToolExit
+  package:flutter_tools/src/compile.dart 939:11    DefaultResidentCompiler._compile.<fn>
+  dart:async/zone_root.dart 48:47                  _rootRunUnary
+  dart:async/zone.dart 733:19                      _CustomZone.runUnary
+  dart:async/future_impl.dart 948:45               Future._propagateToListeners.handleValueCallback
+  dart:async/future_impl.dart 977:13               Future._propagateToListeners
+  dart:async/future_impl.dart 862:9                Future._propagateToListeners
+  dart:async/future_impl.dart 720:5                Future._completeWithValue
+  dart:async/future_impl.dart 804:7                Future._asyncCompleteWithValue.<fn>
+  dart:async/zone_root.dart 35:13                  _rootRun
+  dart:async/zone.dart 726:19                      _CustomZone.run
+  dart:async/zone.dart 625:7                       _CustomZone.runGuarded
+  dart:async/zone.dart 666:23                      _CustomZone.bindCallbackGuarded.<fn>
+  dart:async/schedule_microtask.dart 40:35         _microtaskLoop
+  dart:async/schedule_microtask.dart 49:5          _startMicrotaskLoop
+  dart:isolate-patch/isolate_patch.dart 127:13     _runPendingImmediateCallback
+  dart:isolate-patch/isolate_patch.dart 194:5      _RawReceivePort._handleMessage
+  
+00:00 +0 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/host_identity.dart: local Entry IDs remain isolated across children, collision=false
+00:00 +1 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/host_identity.dart: local Entry IDs remain isolated across children, collision=true
+00:00 +1 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/host_identity.dart: local Entry IDs remain isolated across children, collision=true [E]
+  Expected: ['1792769964348002-3800683107-entry-2']
+    Actual: []
+     Which: at location [0] is [] which shorter than expected
+  
+  package:matcher                                                                            expect
+  package:flutter_test/src/widget_tester.dart 477:18                                         expect
+  packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/host_identity.dart 116:7  main.<fn>
+  
+00:00 +1 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/host_identity.dart: foreign event in right Host preserves left Entry, collision=false
+00:00 +2 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/host_identity.dart: foreign event in right Host preserves left Entry, collision=true
+00:00 +3 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/host_identity.dart: MultiHost predictive observer failure is isolated, throws=false
+00:00 +4 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/host_identity.dart: MultiHost predictive observer failure is isolated, throws=true
+00:00 +4 -4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/host_identity.dart: MultiHost predictive observer failure is isolated, throws=true [E]
+  Expected: [
+              CCPredictiveBackPhase:CCPredictiveBackPhase.started,
+              CCPredictiveBackPhase:CCPredictiveBackPhase.updated,
+              CCPredictiveBackPhase:CCPredictiveBackPhase.committed,
+              CCPredictiveBackPhase:CCPredictiveBackPhase.cancelled
+            ]
+    Actual: []
+     Which: at location [0] is [] which shorter than expected
+  
+  package:matcher                                                                            expect
+  package:flutter_test/src/widget_tester.dart 477:18                                         expect
+  packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/host_identity.dart 175:7  main.<fn>
+  
+00:00 +4 -4: Some tests failed.

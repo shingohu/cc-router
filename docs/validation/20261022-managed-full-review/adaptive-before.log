@@ -1,0 +1,28 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/multi_host_demo_test.dart
+00:00 +0: adaptive named Outlet renders and returns a managed destination
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 0 widgets with text "栈操作 · Level 73": []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/multi_host_demo_test.dart:23:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/multi_host_demo_test.dart line 23
+The test description was:
+  adaptive named Outlet renders and returns a managed destination
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -1: adaptive named Outlet renders and returns a managed destination [E]
+  Test failed. See exception logs above.
+  The test description was: adaptive named Outlet renders and returns a managed destination
+  
+00:00 +0 -1: Some tests failed.

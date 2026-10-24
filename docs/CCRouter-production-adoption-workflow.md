@@ -41,7 +41,8 @@
 ## 4. 能力映射与分类
 
 先映射到现有 Route、Service、Command、Event、InitTask、Interceptor、PopGuard、Aspect、
-Analytics、Scope、Host/Outlet、Adapter 或 Generator。随后只能归入以下一种主分类：
+页面生命周期、Scope、Host/Outlet、Adapter 或 Generator。产品 Analytics、Consent、身份、
+队列与上传由应用拥有，通过观察接口接入，不属于框架能力契约。随后归入以下一种主分类：
 
 ### A. 已支持
 

@@ -1,5 +1,4 @@
 import 'navigation.dart';
-import 'navigation_telemetry.dart';
 import 'route_entry.dart';
 import 'route_placement.dart';
 import 'route_presentation.dart';
@@ -65,7 +64,6 @@ final class CCNavigationAspectRequest {
     required this.source,
     required this.presentation,
     this.referrerRouteId,
-    this.telemetryContext,
     List<String> redirectChain = const [],
   }) : redirectChain = List.unmodifiable(redirectChain);
 
@@ -123,9 +121,6 @@ final class CCNavigationAspectRequest {
 
   /// Adapter-neutral presentation contract of the destination.
   final CCRoutePresentation presentation;
-
-  /// Anonymous Host telemetry captured when this navigation started.
-  final CCNavigationTelemetryContext? telemetryContext;
 }
 
 /// Cumulative stage durations captured for one navigation observation.

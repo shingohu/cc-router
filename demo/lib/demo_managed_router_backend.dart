@@ -18,7 +18,8 @@ const demoAdaptiveDetailOutlet = 'adaptive.detail';
 CCManagedRouterBackend createDemoManagedRouterBackend({
   required CCFlutterRouteCatalog catalog,
   String hostId = 'default',
-  String initialLocation = '/',
+  String? initialLocation = '/',
+  bool overridePlatformDefaultLocation = false,
   bool enablePredictiveBack = false,
   bool initializeFromRouteInformation = true,
 }) {
@@ -43,6 +44,7 @@ CCManagedRouterBackend createDemoManagedRouterBackend({
     routeCatalog: catalog,
     host: host,
     initialLocation: initialLocation,
+    overridePlatformDefaultLocation: overridePlatformDefaultLocation,
     enablePredictiveBack: enablePredictiveBack,
     initializeFromRouteInformation: initializeFromRouteInformation,
     shellBindings: [

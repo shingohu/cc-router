@@ -1,0 +1,15 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart
+00:00 +0: pre-initialization registration binds each Adapter once
+00:00 +0 -1: pre-initialization registration binds each Adapter once [E]
+  Expected: an object with length of <1>
+    Actual: Set:[
+              Closure: (CCNavigationBackendEvent) => void,
+              Closure: (CCNavigationBackendEvent) => void
+            ]
+     Which: has length of <2>
+  
+  package:matcher                                                             expect
+  package:flutter_test/src/widget_tester.dart 477:18                          expect
+  packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart 129:5  main.<fn>
+  
+00:00 +0 -1: Some tests failed.

@@ -2,6 +2,7 @@
 library;
 
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:build/build.dart';
 import 'package:build_test/build_test.dart';
@@ -92,6 +93,26 @@ void main() {
     }
     expect(await reader.canRead(output), isTrue, reason: logs.join('\n'));
     return reader.readAsString(output);
+  }
+
+  final routeCases =
+      jsonDecode(
+            File(
+              'packages/ccrouter_test/fixtures/route_configuration_cases.json',
+            ).readAsStringSync(),
+          )
+          as List;
+  for (final entry in routeCases.cast<Map<String, dynamic>>()) {
+    test(
+      'shared Analyzer configuration: ${entry['name']}',
+      timeout: const Timeout(Duration(minutes: 2)),
+      () async {
+        await generate(
+          "@CCRoute<void>(id: 'sample.home', pattern: CCPathPattern('/'), ${entry['arguments']}) class Home {}",
+          fails: (entry['codes'] as List).isNotEmpty,
+        );
+      },
+    );
   }
 
   Future<String> generateContract(

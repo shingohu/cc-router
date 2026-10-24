@@ -1,9 +1,11 @@
 part of 'runtime.dart';
 
-/// Creates a service instance inside the active invocation and Scope context.
+/// Creates a service instance in Host context with its concrete Scope ownership.
 ///
 /// Component registrars use factories when service construction requires the
 /// Runtime-provided deadline, cancellation, or trace context.
+/// Framework trace/dependency/reentrancy state is explicit; arbitrary values
+/// from the first consumer's Zone are not shared Service configuration.
 typedef CCServiceFactory<T> = T Function(CCInvocationContext context);
 
 /// Lazily prepares a Scope-owned Service for asynchronous use.
@@ -12,6 +14,9 @@ typedef CCServiceFactory<T> = T Function(CCInvocationContext context);
 /// this initializer then performs optional I/O or asynchronous setup exactly
 /// once per singleton instance. It must observe context cancellation because
 /// its Session, Route, or Runtime Scope may close while setup is pending.
+/// Singleton producer execution uses the owning Host context independently of
+/// its first waiter. New-instance initialization retains caller cancellation
+/// lineage because it belongs to that concrete invocation and consumer Scope.
 typedef CCServiceInitializer<T> =
     FutureOr<void> Function(T service, CCInvocationContext context);
 
@@ -248,6 +253,10 @@ final class CCServiceProvider<T extends Object> {
   });
 
   /// Factory invoked lazily when the service is first resolved.
+  ///
+  /// Successfully returned disposables transfer to Scope ownership even if
+  /// construction synchronously triggered closure. Lookup then fails with
+  /// CCScopeClosedError while close joins cleanup of the returned resource.
   final CCServiceFactory<T> factory;
 
   /// Optional lazy asynchronous readiness initializer.

@@ -1,0 +1,30 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/navigation_zone_repro.dart
+00:00 +0: singleFlight navigation: same error Zone=true, policy cancels=false
+00:00 +1: singleFlight navigation: same error Zone=true, policy cancels=true
+00:00 +1 -1: singleFlight navigation: same error Zone=true, policy cancels=true [E]
+  Expected: every element(CCNavigationAspectOutcome:<CCNavigationAspectOutcome.cancelled>)
+    Actual: [
+              CCNavigationAspectOutcome:CCNavigationAspectOutcome.cancelled,
+              CCNavigationAspectOutcome:CCNavigationAspectOutcome.failed
+            ]
+     Which: has value CCNavigationAspectOutcome:<CCNavigationAspectOutcome.failed> which doesn't match CCNavigationAspectOutcome:<CCNavigationAspectOutcome.cancelled> at index 1
+  
+  package:matcher                                                                                  expect
+  package:flutter_test/src/widget_tester.dart 477:18                                               expect
+  packages/ccrouter_test/test/review_repros/init_task_reentrancy/navigation_zone_repro.dart 106:9  main.<fn>
+  
+00:00 +1 -1: singleFlight navigation: same error Zone=false, policy cancels=false
+00:00 +2 -1: singleFlight navigation: same error Zone=false, policy cancels=true
+00:00 +2 -2: singleFlight navigation: same error Zone=false, policy cancels=true [E]
+  Expected: every element(CCNavigationAspectOutcome:<CCNavigationAspectOutcome.cancelled>)
+    Actual: [
+              CCNavigationAspectOutcome:CCNavigationAspectOutcome.cancelled,
+              CCNavigationAspectOutcome:CCNavigationAspectOutcome.failed
+            ]
+     Which: has value CCNavigationAspectOutcome:<CCNavigationAspectOutcome.failed> which doesn't match CCNavigationAspectOutcome:<CCNavigationAspectOutcome.cancelled> at index 1
+  
+  package:matcher                                                                                  expect
+  package:flutter_test/src/widget_tester.dart 477:18                                               expect
+  packages/ccrouter_test/test/review_repros/init_task_reentrancy/navigation_zone_repro.dart 106:9  main.<fn>
+  
+00:00 +2 -2: Some tests failed.

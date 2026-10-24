@@ -1,0 +1,1698 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: lease close during startup cannot leave a heartbeat running
+00:00 +1: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: canonical identity resolves the macOS temporary-directory alias
+00:00 +2: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: reload waits for the cycle covering the observed input
+00:00 +3: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: reload does not accept an older cycle after a second save
+00:00 +4: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: generation failure blocks the matching reload
+00:00 +5: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: topology change rejects reload but permits explicit restart
+00:00 +6: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: host identity accepts a symbolic-link alias
+00:00 +7: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: missing versioned input evidence fails within the bound
+00:00 +8: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: machine proxy forwards reload only after matching success
+00:02 +9: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: machine proxy forwards parent stdin EOF to Flutter
+00:02 +10: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: Flutter run supervisor preserves exit and removes its lease
+CCRouter interactive Hot Reload is not generation-gated. After changing generated declarations, wait for `aggregationSucceeded` before pressing r or R.
+00:02 +11: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: interactive supervisor reports that terminal reload is ungated
+00:03 +12: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: interactive supervisor removes its lease before child termination
+00:07 +13: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: machine supervisor removes its lease before child termination
+00:11 +14: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: interactive supervisor handles termination at the first heartbeat
+00:15 +15: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: machine supervisor handles termination at the first heartbeat
+00:18 +16: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: stale supervised lease expires an orphaned watch
+00:19 +17: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: shared watch remains active until its last run lease exits
+00:19 +18: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: machine proxy returns daemon error and withholds failed reload
+00:19 +19: loading packages/ccrouter_test/generator_test/workspace_validator_test.dart
+00:23 +19: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts typed InitTask dependencies across required components
+00:23 +20: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects missing, optional-owner, and cyclic InitTask dependencies
+00:23 +21: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects malformed persisted InitTask ownership and policy
+00:23 +22: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects unsafe required InitTask startup contracts
+00:23 +23: packages/ccrouter_test/generator_test/workspace_validator_test.dart: preserves first optional InitTask order across shared DAG paths
+00:23 +24: packages/ccrouter_test/generator_test/workspace_validator_test.dart: keeps cycle and optional InitTask diagnostics on reference path
+00:23 +25: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts Event subscribers through required or optional owners
+00:23 +26: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects invalid Event relationships and duplicate Subscriber IDs
+00:23 +27: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts an exact Service dependency owned by a required component
+00:23 +28: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects missing owner and duplicate Service Client members
+00:23 +29: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects invalid persisted Service and Command Client aliases
+00:23 +30: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects a generated consumer for a Route-scoped Service
+00:23 +31: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts components and emits derived route exposure
+00:23 +32: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects missing required component dependencies
+00:23 +33: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects required and optional self dependencies
+00:23 +34: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects cycles across required and present optional dependencies
+00:23 +35: packages/ccrouter_test/generator_test/workspace_validator_test.dart: ignores absent optional dependencies
+00:23 +36: packages/ccrouter_test/generator_test/workspace_validator_test.dart: orders present optional and required dependencies deterministically
+00:23 +37: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects unknown route owners
+00:23 +38: packages/ccrouter_test/generator_test/workspace_validator_test.dart: missing owner diagnostics retain exact authored locations
+00:23 +39: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects duplicate and unknown component contributions
+00:23 +40: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts a generated Service contract and implementation
+00:23 +41: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects invalid Service ownership and Provider conflicts
+00:23 +42: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects unknown source exposure
+00:23 +43: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects duplicate routes and conflicting component descriptors
+00:23 +44: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires an explicit registrar component declaration
+00:23 +45: packages/ccrouter_test/generator_test/workspace_validator_test.dart: derives package exposure for a same-package public contract
+00:23 +46: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects missing, duplicate, and unknown public implementations
+00:23 +47: packages/ccrouter_test/generator_test/workspace_validator_test.dart: derives external exposure and requires the owner implementation
+00:23 +48: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects unsupported metadata schemas
+00:23 +49: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects invalid persisted identifiers and SemVer values
+00:23 +50: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects missing, self-referencing, and cyclic route parents
+00:23 +51: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects parent placement mismatches
+00:23 +52: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires cross-component parents to be visible dependencies
+00:23 +53: packages/ccrouter_test/generator_test/workspace_validator_test.dart: reuses exact parent visibility through present optional dependencies
+00:23 +54: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects equal-specificity overlapping path patterns
+00:23 +55: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts path patterns with different fixed segments
+00:23 +56: packages/ccrouter_test/generator_test/workspace_validator_test.dart: indexed candidates retain swapped fixed and dynamic conflicts
+00:23 +57: packages/ccrouter_test/generator_test/workspace_validator_test.dart: indexed candidates retain wildcard conflicts
+00:23 +58: packages/ccrouter_test/generator_test/workspace_validator_test.dart: validates a large fixed-path catalog without conflict diagnostics
+00:23 +59: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts provably disjoint path constraints
+00:23 +60: packages/ccrouter_test/generator_test/workspace_validator_test.dart: does not compare URI patterns with different authorities
+00:23 +61: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects identical regex patterns
+00:23 +62: packages/ccrouter_test/generator_test/workspace_validator_test.dart: leaves complex regex overlap to runtime validation
+00:23 +63: packages/ccrouter_test/generator_test/workspace_validator_test.dart: does not require a public barrel for internal contracts
+00:23 +64: packages/ccrouter_test/generator_test/workspace_validator_test.dart: handles many internal-only documents without public barrel work
+00:23 +65: packages/ccrouter_test/generator_test/workspace_validator_test.dart: validates mixed public contracts through one package export index
+00:23 +66: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires public contracts to export the generated library
+00:23 +67: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts a stable generated Contract barrel only through public API
+00:23 +68: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires public Service contracts to export the authored interface
+00:23 +69: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires contracts Package Command declarations in a public barrel
+00:23 +70: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires contracts Package Event declarations in a public barrel
+00:23 +71: packages/ccrouter_test/generator_test/workspace_validator_test.dart: does not require component-internal messaging contracts in a barrel
+00:23 +72: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires contracts Package InitTask constants in a public barrel
+00:23 +73: packages/ccrouter_test/generator_test/workspace_validator_test.dart: annotates and clears public libraries for messaging contracts
+00:23 +74: loading packages/ccrouter_test/generator_test/service_generator_test.dart
+00:24 +74: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder emits a typed owner-only Token
+00:34 +75: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder infers one directly implemented contract
+00:37 +76: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder emits an internal type-local Provider
+00:38 +77: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder emits a component caller for sync and async members
+00:39 +78: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder preserves bounded generic methods and explicit forwarding
+00:41 +79: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy defaults preserve Dart string and collection constants
+00:43 +80: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy preserves wide collection default types
+00:44 +81: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy rejects inaccessible default-only enum types
+00:45 +82: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy forwards colliding parameter and generic names
+00:47 +83: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy import prefixes avoid generic parameter names
+00:48 +84: packages/ccrouter_test/generator_test/service_generator_test.dart: contract alias is the default generated Service Client member
+00:49 +85: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder embeds typed Key and explicit alias
+00:50 +86: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder emits nothing without a Service dependency
+00:52 +87: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder rejects an owner missing from required dependencies
+00:53 +88: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder rejects a contract imported through src
+00:54 +89: packages/ccrouter_test/generator_test/service_generator_test.dart: service metadata records contracts and ownerless implementations
+01:00 +90: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects keyword alias
+01:01 +91: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects concrete declaration
+01:02 +92: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects invalid ID
+01:03 +93: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects generic contract
+01:04 +94: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects stream result
+01:06 +95: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects future-or result
+01:07 +96: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects callback parameter
+01:08 +97: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects setter
+01:09 +98: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects operator
+01:10 +99: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects contract inheritance
+01:12 +100: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects missing identity
+01:13 +101: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects parameterized constructor
+01:14 +102: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects private implementation
+01:15 +103: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects invalid Key
+01:16 +104: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects multiple directly implemented contracts
+01:18 +105: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects an id beside an inferred contract
+01:19 +106: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder does not infer an indirectly inherited contract
+01:20 +107: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects direct and indirect contracts together
+01:22 +108: loading packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart
+01:22 +108: packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart: collects only completed required phases
+01:22 +109: packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart: collects lazy phases and every execution outcome
+01:22 +110: packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart: retains malformed terminal lines without failing collection
+01:22 +111: packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart: reset isolates consecutive watch cycles
+01:22 +112: packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart: does not encode unavailable phase details as zero counters
+01:22 +113: loading packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart
+01:22 +113: packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart: accepts only the exact ready lease with a live owner
+01:22 +114: packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart: reports a watch ownership conflict immediately
+01:22 +115: packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart: does not accept stale status from another lease
+01:22 +116: packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart: accepts an exact lease acknowledged by an existing watch
+01:22 +117: packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart: rejects an attachment acknowledged by a different watch PID
+01:22 +118: packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart: does not accept ready status after ownership was released
+01:23 +119: packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart: rejects ready status backed only by a legacy V1 owner
+01:23 +120: packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart: accepts the legacy owner when legacy coordination is selected
+01:23 +121: packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart: fails immediately when the wrapper lease disappears
+01:23 +122: loading packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart
+01:23 +122: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: routes resolves transitive cross-package inputs and constants
+01:30 +123: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: route_bindings resolves transitive cross-package inputs and constants
+01:39 +124: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: route_contracts resolves transitive cross-package inputs and constants
+01:50 +125: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: route_metadata resolves transitive cross-package inputs and constants
+02:05 +126: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: services resolves transitive cross-package inputs and constants
+02:14 +127: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: service_contracts resolves transitive cross-package inputs and constants
+02:18 +128: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: service_proxies resolves transitive cross-package inputs and constants
+02:22 +129: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: service_metadata resolves transitive cross-package inputs and constants
+02:26 +130: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: commands resolves transitive cross-package inputs and constants
+02:29 +131: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: command_metadata resolves transitive cross-package inputs and constants
+02:33 +132: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: events resolves transitive cross-package inputs and constants
+02:37 +133: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: event_metadata resolves transitive cross-package inputs and constants
+02:41 +134: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: init_tasks resolves transitive cross-package inputs and constants
+02:45 +135: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: init_task_metadata resolves transitive cross-package inputs and constants
+02:49 +136: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: component_metadata resolves transitive cross-package inputs and constants
+02:53 +137: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: route_metadata observes location but ignores a trailing ordinary comment
+02:57 +138: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: service_metadata observes location but ignores a trailing ordinary comment
+03:01 +139: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: command_metadata observes location but ignores a trailing ordinary comment
+03:06 +140: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: event_metadata observes location but ignores a trailing ordinary comment
+03:10 +141: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: init_task_metadata observes location but ignores a trailing ordinary comment
+03:14 +142: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: routes embeds a changed transitive default constant
+03:17 +143: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: route_contracts embeds a changed transitive default constant
+03:19 +144: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: service_proxies embeds a changed transitive default constant
+03:22 +145: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: command metadata validates bodies even without local declarations
+03:25 +146: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: event metadata validates bodies even without local declarations
+03:28 +147: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: InitTask metadata distinguishes equal constants from reference syntax
+03:30 +148: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: barrel changes must re-resolve even when the consumer bytes are unchanged
+03:34 +149: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: part declarations contribute output and source locations
+03:37 +150: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: Route DartDoc affects metadata without changing executable output
+03:42 +151: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: Service Proxy consumes imported generic bounds and typedef targets
+03:46 +152: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: Route Codec validation follows imported supertype arguments
+03:49 +153: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: a transitive annotation changes diagnostics in an unchanged ordinary body
+03:52 +154: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: a previously empty input can gain a Route without changing the graph
+03:54 +155: loading packages/ccrouter_test/generator_test/generation_atomicity_test.dart
+03:54 +155: packages/ccrouter_test/generator_test/generation_atomicity_test.dart: (setUpAll)
+03:54 +155: packages/ccrouter_test/generator_test/generation_atomicity_test.dart: failed generation restores the previous managed source outputs
+04:01 +156: packages/ccrouter_test/generator_test/generation_atomicity_test.dart: (tearDownAll)
+04:01 +156: loading packages/ccrouter_test/generator_test/host_aggregation_test.dart
+04:01 +156: packages/ccrouter_test/generator_test/host_aggregation_test.dart: host aggregation includes a component without routes
+04:01 +157: packages/ccrouter_test/generator_test/host_aggregation_test.dart: host aggregation joins an external contract to its page binding
+04:02 +158: packages/ccrouter_test/generator_test/host_aggregation_test.dart: component Route API rejects colliding generated member names
+04:03 +159: packages/ccrouter_test/generator_test/host_aggregation_test.dart: component contribution requires a Package component owner
+04:03 +160: loading packages/ccrouter_test/generator_test/reverse_dependency_closure_test.dart
+04:03 +160: packages/ccrouter_test/generator_test/reverse_dependency_closure_test.dart: finds chain, diamond, cycle, and disconnected dependents
+04:03 +161: packages/ccrouter_test/generator_test/reverse_dependency_closure_test.dart: preserves unknown seeds and propagates their known dependents
+04:03 +162: packages/ccrouter_test/generator_test/reverse_dependency_closure_test.dart: matches fixed-point reference across deterministic random graphs
+04:03 +163: loading packages/ccrouter_test/generator_test/generation_watch_test.dart
+04:03 +163: packages/ccrouter_test/generator_test/generation_watch_test.dart: (setUpAll)
+04:03 +163: packages/ccrouter_test/generator_test/generation_watch_test.dart: machine requires watch mode
+04:06 +164: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch stops during child session startup before reading signals
+04:08 +165: packages/ccrouter_test/generator_test/generation_watch_test.dart: initial snapshot failure stops the child before releasing ownership
+04:17 +166: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch kill switch performs one machine-readable fallback
+04:28 +167: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch publishes active and stopped local status
+04:38 +168: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch restores deleted Host observability from stable session
+04:46 +169: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch invalidates after persistent build-root state removal
+04:53 +170: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch stops after a supervised Flutter lease heartbeat expires
+05:03 +171: packages/ccrouter_test/generator_test/generation_watch_test.dart: shared Builder status publication is fail-open
+05:08 +172: packages/ccrouter_test/generator_test/generation_watch_test.dart: optimized and reference watch cycles publish identical artifacts
+watch aggregation timing: inProcess=730ms subprocessReference=2614ms
+05:32 +173: packages/ccrouter_test/generator_test/generation_watch_test.dart: non-generating Dart edits preserve artifacts across generation entrypoints
+06:15 +174: packages/ccrouter_test/generator_test/generation_watch_test.dart: generating annotation edits publish identical bytes across entrypoints
+07:08 +175: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch restarts only when the resolved Host closure needs a new session
+07:23 +176: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch does not attribute a mid-cycle save to the older cycle
+07:40 +177: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch handles Dart file add rename and delete without session restart
+08:16 +178: packages/ccrouter_test/generator_test/generation_watch_test.dart: one-shot check reuses exact watch evidence while reference paths fail fast
+08:34 +179: packages/ccrouter_test/generator_test/generation_watch_test.dart: installed flutter build preflight reuses an active watch
+Installed CCRouter pub hook in Flutter SDK: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_25MOvh
+The hook runs after successful Flutter/Dart pub commands and before `flutter run/build`.
+CCRouter pub hook SDK: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_25MOvh
+  marker: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_25MOvh/bin/.ccrouter_pub_hook.json (valid)
+  POSIX wrapper: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_25MOvh/bin/flutter (verified)
+  POSIX backup: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_25MOvh/bin/flutter.ccrouter-original (present)
+  Dart POSIX wrapper: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_25MOvh/bin/cache/dart-sdk/bin/dart (verified)
+  Dart POSIX backup: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_25MOvh/bin/cache/dart-sdk/bin/dart.ccrouter-original (present)
+  run/build preflight: enabled, run watch: enabled, clean guard: enabled, watch startup handshake: enabled, run supervisor: enabled, machine reload gate: enabled, flutter pub post-hook: enabled, dart pub post-hook: enabled
+CCRouter pub hook result: installed and verified
+08:43 +180: packages/ccrouter_test/generator_test/generation_watch_test.dart: one-shot check waits for watch evidence matching a current source edit
+08:59 +180 -1: packages/ccrouter_test/generator_test/generation_watch_test.dart: one-shot check waits for watch evidence matching a current source edit [E]
+  Expected: <0>
+    Actual: <1>
+  error: CCRouter generation input changed during before-aggregation; generated output was discarded. Rerun after source changes settle.
+  
+  
+  package:matcher                                                          expect
+  packages/ccrouter_test/generator_test/generation_watch_test.dart 1084:9  main.<fn>
+  
+08:59 +180 -1: packages/ccrouter_test/generator_test/generation_watch_test.dart: Hosts sharing one build root reuse one Builder owner in either start order
+09:52 +181 -1: packages/ccrouter_test/generator_test/generation_watch_test.dart: subscriber takes over the shared Builder when its owner exits
+10:15 +182 -1: packages/ccrouter_test/generator_test/generation_watch_test.dart: subscriber rotates its Host session when its topology adds a target
+10:49 +183 -1: packages/ccrouter_test/generator_test/generation_watch_test.dart: multi-Host watch kill switch preserves fail-fast ownership
+10:57 +184 -1: packages/ccrouter_test/generator_test/generation_watch_test.dart: duplicate watch for one Host fails before sharing its status file
+11:04 +185 -1: packages/ccrouter_test/generator_test/generation_watch_test.dart: concurrent Flutter runs reuse one Host watch until the last lease exits
+11:13 +186 -1: packages/ccrouter_test/generator_test/generation_watch_test.dart: stopped Host watch retains a stable registration lock for restart
+11:24 +187 -1: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch evidence reuse keeps current Builder-only output bytes
+12:03 +188 -1: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch fails fast while one-shot generation is waiting for the root lock
+12:09 +189 -1: packages/ccrouter_test/generator_test/generation_watch_test.dart: V2 startup rejects a still-active legacy owner
+12:12 +190 -1: packages/ccrouter_test/generator_test/generation_watch_test.dart: (tearDownAll)
+12:12 +190 -1: loading packages/ccrouter_test/generator_test/pub_hook_test.dart
+12:12 +190 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: (setUpAll)
+12:28 +190 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: failure rendering removes routine Builder progress after success
+12:28 +191 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: failure rendering preserves complete output before Builder success
+12:28 +192 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: pub-hook install preserves an entrypoint when its rename fails
+12:28 +193 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: pub-hook install, status, and uninstall are reversible
+12:30 +194 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: pub-hook uninstall safely restores a verified schema 4 install
+12:33 +195 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: schema 5 install is stale but remains safely uninstallable
+12:35 +196 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: schema 4 uninstall rejects unowned Dart backups
+12:37 +197 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: installed wrapper preserves successful pub exit and skips plain projects
+12:42 +198 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: installed wrapper never runs generation for help or dry-run Pub calls
+12:43 +199 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: Flutter wrapper locates only the real top-level command
+12:45 +200 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: clean guard rejects only a live watch owner
+12:47 +201 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: clean guard also rejects a live V1 watch owner
+12:47 +202 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: inner Dart wrapper runs post-pub once and preserves bypass semantics
+12:55 +203 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: inner Dart wrapper runs generation from the Package root
+12:57 +204 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: Flutter wrapper suppresses nested Dart post-pub hooks
+12:59 +205 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: pub-hook run skips a project without resolved CCRouter packages
+12:59 +206 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: pub-hook run skips a Workspace aggregator
+13:00 +207 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: post-pub hook runs package-local generation for participating Packages
+13:06 +208 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: package-local post-pub reports a covering active Host watch
+13:07 +209 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: package-local post-pub reuses exact active Host watch evidence
+13:08 +210 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: package-local post-pub fails fast when evidence is unavailable
+13:10 +211 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: package-local post-pub uses stable Builder session without local status
+13:13 +212 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: package-local post-pub reports an active Host watch without its target
+13:14 +213 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: package-local post-pub ignores stale build-root watch status
+13:15 +214 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: package-local post-pub rejects malformed or wrong-root watch evidence
+13:16 +215 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: run and pub hooks emit concise phase-specific generation logs
+13:21 +216 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: failed hook preserves actionable generator diagnostics
+13:23 +217 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: post-pub hook waits for an active watch aggregation
+13:25 +218 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: post-pub hook uses stable Host session without local status
+13:32 +219 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: post-pub hook reuses a watch through a symlinked Host path
+13:32 +220 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: post-pub hook surfaces active watch generation diagnostics
+13:35 +221 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: post-pub hook fails quickly when resolution changes during a failed cycle
+13:38 +222 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: post-pub hook does not reuse a historical watch failure
+13:39 +223 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: post-pub hook waits for ready after a watch session restart
+13:41 +224 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: post-pub hook fences a new failure from a legacy watch status
+13:42 +225 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: run and build execute a generation preflight before Flutter
+13:44 +226 -1: packages/ccrouter_test/generator_test/pub_hook_test.dart: (tearDownAll)
+13:44 +226 -1: loading packages/ccrouter_test/generator_test/route_find_command_test.dart
+13:44 +226 -1: packages/ccrouter_test/generator_test/route_find_command_test.dart: find ignores legacy framework indexes without changing files
+13:46 +227 -1: packages/ccrouter_test/generator_test/route_find_command_test.dart: find merges contract and page sources across Package indexes
+13:47 +228 -1: packages/ccrouter_test/generator_test/route_find_command_test.dart: find accepts exact alias and absolute-URI declarations
+13:49 +229 -1: packages/ccrouter_test/generator_test/route_find_command_test.dart: find locates a generated InitTask by stable capability ID
+13:52 +230 -1: packages/ccrouter_test/generator_test/route_find_command_test.dart: find usage reports satisfied and missing typed dependencies
+13:53 +231 -1: packages/ccrouter_test/generator_test/route_find_command_test.dart: find usage does not invent a dependency for the capability owner
+13:54 +232 -1: packages/ccrouter_test/generator_test/route_find_command_test.dart: find usage respects Route and internal Contract boundaries
+13:56 +233 -1: packages/ccrouter_test/generator_test/route_find_command_test.dart: find usage rejects an unknown consumer without writing indexes
+13:56 +234 -1: packages/ccrouter_test/generator_test/route_find_command_test.dart: find is scoped to the selected Host dependency closure
+13:59 +235 -1: packages/ccrouter_test/generator_test/route_find_command_test.dart: find rejects missing queries and generation flags
+14:02 +236 -1: packages/ccrouter_test/generator_test/route_find_command_test.dart: find rejects missing and corrupted Package indexes
+14:04 +237 -1: packages/ccrouter_test/generator_test/route_find_command_test.dart: find rejects mixed dependency Index revisions without writing
+14:05 +238 -1: loading packages/ccrouter_test/generator_test/contracts_layout_test.dart
+14:05 +238 -1: packages/ccrouter_test/generator_test/contracts_layout_test.dart: 领域迁移保持 Route 代码及 Route/Service 契约形状
+14:15 +239 -1: loading packages/ccrouter_test/generator_test/bounded_process_shutdown_test.dart
+14:15 +239 -1: packages/ccrouter_test/generator_test/bounded_process_shutdown_test.dart: stops after SIGINT without escalating
+14:16 +240 -1: packages/ccrouter_test/generator_test/bounded_process_shutdown_test.dart: escalates from ignored SIGINT to SIGTERM
+14:16 +241 -1: packages/ccrouter_test/generator_test/bounded_process_shutdown_test.dart: escalates to SIGKILL when graceful signals are ignored
+14:16 +242 -1: loading packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart
+14:16 +242 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: UI marker and DTOs require explicit public Contract exposure
+14:16 +243 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: no UI declaration emits nothing
+14:21 +244 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: shape includes DTO fields and enum values
+14:29 +245 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: effective const defaults participate in the fingerprint
+14:32 +246 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: effective field initializers participate in the fingerprint
+14:37 +247 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: nested imported defaults and named DTO constructors remain supported
+14:41 +248 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unmodeled DTO construction: const Props() : orderId = 1;
+14:43 +249 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unmodeled DTO construction: const Props({int orderId = 1}) : orderId = orderId * 2;
+14:45 +250 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unmodeled DTO construction: const Props({required int orderId}) : orderId = orderId;
+14:47 +251 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unmodeled DTO construction: const Props() : this.named(1); const Props.named(this.orderId);
+14:50 +252 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects enhanced UI enum: enum Action { openDetails; Widget get content => const SizedBox(); }
+14:51 +253 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects enhanced UI enum: enum Action { openDetails; Widget content() => const SizedBox(); }
+14:53 +254 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects enhanced UI enum: enum Action { openDetails; set content(Widget value) {} }
+14:55 +255 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects enhanced UI enum: enum Action { openDetails; static const label = "open"; }
+14:57 +256 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects enhanced UI enum: mixin Behavior { Widget get content => const SizedBox(); } enum Action with Behavior { openDetails }
+14:58 +257 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects enhanced UI enum: abstract interface class Behavior {} enum Action implements Behavior { openDetails }
+15:00 +258 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects enhanced UI enum: enum Action { openDetails; const Action(); }
+15:02 +259 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: nested DTO enum uses the same plain-enum boundary
+15:03 +260 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unsupported Props field Widget
+15:05 +261 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unsupported Props field BuildContext
+15:07 +262 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unsupported Props field Axis
+15:09 +263 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unsupported Props field TextDirection
+15:10 +264 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unsupported Props field Future<int>
+15:12 +265 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unsupported Props field Stream<int>
+15:13 +266 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unsupported Props field void Function()
+15:15 +267 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unsupported Props field List<int>
+15:17 +268 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unsupported Props field dynamic
+15:18 +269 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: Action enum cannot originate from Flutter
+15:20 +270 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: consumer generation uses isolated typed Widget Client
+15:21 +271 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: consumer generation accepts single comparator >=1.0.0
+15:23 +272 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: consumer generation accepts single comparator <=1.0.0
+15:25 +273 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: consumer generation accepts single comparator <2.0.0
+15:26 +274 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: missing required owner explains the repair (optional: false)
+15:28 +275 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: missing required owner explains the repair (optional: true)
+15:30 +276 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: consumer identifies invalidAlias: build-card
+15:32 +277 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: consumer identifies invalidAlias: toString
+15:33 +278 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: consumer identifies duplicateAlias: summary
+15:35 +279 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: consumer identifies duplicateDependency: other
+15:37 +280 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: cross-Package DTO Action selectedId uses UI schema 2 everywhere
+15:38 +281 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: cross-Package DTO Action deviceId uses UI schema 2 everywhere
+15:40 +282 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action String (metadata: true)
+15:42 +283 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action String (metadata: false)
+15:43 +284 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action int (metadata: true)
+15:45 +285 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action int (metadata: false)
+15:46 +286 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action bool (metadata: true)
+15:48 +287 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action bool (metadata: false)
+15:50 +288 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action num (metadata: true)
+15:52 +289 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action num (metadata: false)
+15:53 +290 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action double (metadata: true)
+15:55 +291 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action double (metadata: false)
+15:57 +292 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: DTO Action still permits every scalar as a field
+15:59 +293 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: DTO Action field defaults and types affect the shape
+16:06 +294 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: invalid DTO Action is rejected: class Action { const Action(); }
+16:08 +295 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: invalid DTO Action is rejected: sealed class Action { const Action(); }
+16:10 +296 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: invalid DTO Action is rejected: final class Action { Action(); }
+16:11 +297 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: invalid DTO Action is rejected: final class Action { const Action({required this.id}); final Object id; }
+16:14 +298 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: invalid DTO Action is rejected: final class Action { const Action({required this.id}); final List<int> id; }
+16:15 +299 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: invalid DTO Action is rejected: final class Action { const Action(); String get id => "x"; }
+16:17 +300 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: invalid consumer range identifies the contract and repair
+16:19 +301 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: Renderer signature must match exact schema
+16:21 +302 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: UI metadata proves marker renderer and consumer source locations
+16:23 +303 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: part UI metadata separates source location from library identity
+16:24 +304 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: UI workspace diagnostics preserve portable consumer location
+16:24 +305 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: mixed UI metadata validates record versions and rejects downgraded documents
+16:24 +306 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: Host validation rejects missing or foreign-owner Renderer
+16:24 +307 -1: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: Host reports the consumer behind a missing required UI owner edge
+16:24 +308 -1: loading packages/ccrouter_test/generator_test/event_generator_test.dart
+16:24 +308 -1: packages/ccrouter_test/generator_test/event_generator_test.dart: subscriber generator accepts resolved async.Future<void>
+16:28 +309 -1: packages/ccrouter_test/generator_test/event_generator_test.dart: subscriber generator accepts resolved async.FutureOr<void>
+16:30 +310 -1: packages/ccrouter_test/generator_test/event_generator_test.dart: subscriber generator accepts resolved async.Future<void>?
+16:31 +311 -1: packages/ccrouter_test/generator_test/event_generator_test.dart: subscriber generator accepts resolved Completion
+16:32 +312 -1: packages/ccrouter_test/generator_test/event_generator_test.dart: subscriber generator rejects resolved async.Future<int>
+16:33 +313 -1: packages/ccrouter_test/generator_test/event_generator_test.dart: subscriber generator rejects resolved BadCompletion
+16:34 +314 -1: packages/ccrouter_test/generator_test/event_generator_test.dart: subscriber builder emits stable typed registration
+16:36 +315 -1: packages/ccrouter_test/generator_test/event_generator_test.dart: one-parameter subscriber is adapted to registry signature
+16:37 +316 -1: packages/ccrouter_test/generator_test/event_generator_test.dart: metadata contains portable contract and subscriber locations
+16:38 +317 -1: packages/ccrouter_test/generator_test/event_generator_test.dart: mutable payload fields fail generation
+16:40 +318 -1: packages/ccrouter_test/generator_test/event_generator_test.dart: subscriber business result fails generation
+16:41 +319 -1: packages/ccrouter_test/generator_test/event_generator_test.dart: invalid stable ID fails generation
+16:42 +320 -1: packages/ccrouter_test/generator_test/event_generator_test.dart: annotated Event cannot bypass its generated owner Client
+16:43 +321 -1: loading packages/ccrouter_test/generator_test/analyzer_command_test.dart
+16:43 +321 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: status distinguishes missing Host and missing plugin setup
+16:48 +322 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: status resolves a plugin from an enclosing workspace config
+16:50 +323 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: status reports incomplete resolved state
+16:53 +324 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: status reports a configured loader without a Host exclude
+16:55 +325 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: status rejects path and floating Git dependencies
+17:00 +326 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: status detects stale dependency identity
+17:03 +327 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: status detects incompatible locked versions
+17:05 +328 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: status validates Hosted version constraints
+17:07 +329 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: pin-check reports production drift without failing two-stage flow
+17:08 +330 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: pin-check fails when the exact remote commit is unavailable
+17:08 +331 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: pin-check rejects a local Git URL before running subprocesses
+17:08 +332 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: doctor stops before subprocess checks when status is unhealthy
+17:10 +333 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: doctor treats a stale Analysis Server plugin-manager copy as advisory
+17:10 +334 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: doctor parses Windows process details without taking action
+17:10 +335 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: doctor distinguishes a current legacy cache artifact
+17:10 +336 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: doctor reports an absent cache without claiming a live load
+17:10 +337 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: doctor reports missing child without changing or blaming other caches
+17:10 +338 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: doctor reports missing entrypoint without changing or blaming other caches
+17:10 +339 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: doctor reports changed entrypoint without changing or blaming other caches
+17:10 +340 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: analyzer rejects unsupported actions and excess arguments
+17:15 +341 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: write command parser rejects install --version 1.0.0 --version 2.0.0
+17:18 +342 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: write command parser rejects install --url
+17:20 +343 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: write command parser rejects status --dry-run
+17:23 +344 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: write command parser rejects upgrade --source git
+17:25 +345 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: write command parser rejects uninstall --version 1.0.0
+17:28 +346 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: write command parser rejects install --unknown
+17:30 +347 -1: packages/ccrouter_test/generator_test/analyzer_command_test.dart: install dry-run parses explicit Git source without touching Host
+17:32 +348 -1: loading packages/ccrouter_test/generator_test/project_context_test.dart
+17:32 +348 -1: packages/ccrouter_test/generator_test/project_context_test.dart: separates a Workspace member request from its resolution root
+17:33 +349 -1: packages/ccrouter_test/generator_test/project_context_test.dart: uses a valid Pub workspace reference before ancestor discovery
+17:33 +350 -1: packages/ccrouter_test/generator_test/project_context_test.dart: keeps a standalone Package independent below a Workspace
+17:33 +351 -1: packages/ccrouter_test/generator_test/project_context_test.dart: rejects a stale workspace reference instead of using another root
+17:33 +352 -1: loading packages/ccrouter_test/generator_test/project_role_test.dart
+17:33 +352 -1: packages/ccrouter_test/generator_test/project_role_test.dart: matches the shared Generator and Analyzer role matrix
+17:33 +353 -1: packages/ccrouter_test/generator_test/project_role_test.dart: Flutter app defaults to Host
+17:33 +354 -1: packages/ccrouter_test/generator_test/project_role_test.dart: non-app Flutter project defaults to package-local
+17:33 +355 -1: packages/ccrouter_test/generator_test/project_role_test.dart: host.enabled overrides Flutter project type in both directions
+17:33 +356 -1: packages/ccrouter_test/generator_test/project_role_test.dart: Pure Dart contracts Package is package-local
+17:33 +357 -1: packages/ccrouter_test/generator_test/project_role_test.dart: Workspace aggregator and unrelated Package are skipped
+17:33 +358 -1: packages/ccrouter_test/generator_test/project_role_test.dart: Host override requires a direct runtime dependency
+17:33 +359 -1: packages/ccrouter_test/generator_test/project_role_test.dart: invalid host.enabled is rejected
+17:33 +360 -1: loading packages/ccrouter_test/generator_test/hvigor_preflight_test.dart
+17:33 +360 -1: packages/ccrouter_test/generator_test/hvigor_preflight_test.dart: Hvigor preflight is ordered before the Flutter task
+17:33 +361 -1: packages/ccrouter_test/generator_test/hvigor_preflight_test.dart: Hvigor preflight uses the resolved SDK Dart and propagates failure
+17:33 +362 -1: packages/ccrouter_test/generator_test/hvigor_preflight_test.dart: Hvigor preflight has an isolated bypass
+17:33 +363 -1: loading packages/ccrouter_test/generator_test/scaffold_command_test.dart
+17:33 +363 -1: packages/ccrouter_test/generator_test/scaffold_command_test.dart: create component and page emits a minimal non-overwriting template
+17:38 +364 -1: packages/ccrouter_test/generator_test/scaffold_command_test.dart: create rejects invalid names before writing files
+17:38 +365 -1: packages/ccrouter_test/generator_test/scaffold_command_test.dart: create component can atomically add a runnable example Host
+17:42 +366 -1: packages/ccrouter_test/generator_test/scaffold_command_test.dart: failed example creation publishes no partial component
+17:42 +367 -1: packages/ccrouter_test/generator_test/scaffold_command_test.dart: create component reports its exact workspace entry
+17:43 +368 -1: packages/ccrouter_test/generator_test/scaffold_command_test.dart: create component inherits resolved dependency sources
+17:44 +369 -1: packages/ccrouter_test/generator_test/scaffold_command_test.dart: create capability templates emit valid annotation starting points
+17:49 +370 -1: packages/ccrouter_test/generator_test/scaffold_command_test.dart: create capability options add only explicitly requested glue
+17:57 +371 -1: packages/ccrouter_test/generator_test/scaffold_command_test.dart: create reports an incomplete template command
+17:57 +372 -1: loading packages/ccrouter_test/generator_test/ui_fragment_tooling_test.dart
+17:57 +372 -1: packages/ccrouter_test/generator_test/ui_fragment_tooling_test.dart: preview has no writes and CLI execution rejects duplicate targets
+17:59 +373 -1: packages/ccrouter_test/generator_test/ui_fragment_tooling_test.dart: all targets are checked before any source is written
+17:59 +374 -1: packages/ccrouter_test/generator_test/ui_fragment_tooling_test.dart: execution cannot overwrite a target created after preview
+17:59 +375 -1: packages/ccrouter_test/generator_test/ui_fragment_tooling_test.dart: invalid names, traversal, unknown owners and linked parents are rejected
+17:59 +376 -1: packages/ccrouter_test/generator_test/ui_fragment_tooling_test.dart: scaffold and printed Consumer steps pass the real UI Builders
+18:05 +377 -1: packages/ccrouter_test/generator_test/ui_fragment_tooling_test.dart: UI import proofs honor hide, conditional exports and repeated show
+18:05 +378 -1: packages/ccrouter_test/generator_test/ui_fragment_tooling_test.dart: UI proof deferral preserves existing Service public-library facts
+18:05 +379 -1: loading packages/ccrouter_test/generator_test/custom_output_check_test.dart
+18:05 +379 -1: packages/ccrouter_test/generator_test/custom_output_check_test.dart: (setUpAll)
+18:05 +379 -1: packages/ccrouter_test/generator_test/custom_output_check_test.dart: custom catalogs are compared and restored in docs and build
+18:19 +380 -1: packages/ccrouter_test/generator_test/custom_output_check_test.dart: custom catalog write failure restores earlier writes
+18:22 +381 -1: packages/ccrouter_test/generator_test/custom_output_check_test.dart: (tearDownAll)
+18:22 +381 -1: loading packages/ccrouter_test/generator_test/init_task_generator_test.dart
+18:22 +381 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: task builder emits complete typed registration
+18:26 +382 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: zero-argument internal task is adapted to Runtime signature
+18:27 +383 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: FutureOr Handler may receive invocation context
+18:29 +384 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: metadata records Contract DAG and source locations
+18:30 +385 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: contract and id cannot be configured together
+18:31 +386 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: invalid Handler signature fails generation
+18:32 +387 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: private Handler fails generation
+18:33 +388 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: incorrectly parameterized Handler fails generation
+18:35 +389 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: invalid Gate fails generation
+18:36 +390 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: non-positive timeout fails generation
+18:37 +391 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: duplicate and self dependencies fail generation
+18:38 +392 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: dependency list rejects inline Contract construction
+18:39 +393 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: required task must use a Contract
+18:40 +394 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: async required task must declare a timeout
+18:41 +395 -1: loading packages/ccrouter_test/generator_test/command_generator_test.dart
+18:42 +395 -1: packages/ccrouter_test/generator_test/command_generator_test.dart: handler builder emits stable typed registration
+18:46 +396 -1: packages/ccrouter_test/generator_test/command_generator_test.dart: one-parameter handler is adapted to the registry signature
+18:47 +397 -1: packages/ccrouter_test/generator_test/command_generator_test.dart: metadata contains portable contract and handler locations
+18:48 +398 -1: packages/ccrouter_test/generator_test/command_generator_test.dart: command alias changes the generated Contract fingerprint
+18:51 +399 -1: packages/ccrouter_test/generator_test/command_generator_test.dart: keyword Command alias fails generation
+18:52 +400 -1: packages/ccrouter_test/generator_test/command_generator_test.dart: mutable payload fields fail generation
+18:54 +401 -1: packages/ccrouter_test/generator_test/command_generator_test.dart: handler result mismatch fails generation
+18:55 +402 -1: packages/ccrouter_test/generator_test/command_generator_test.dart: invalid stable ID fails generation
+18:56 +403 -1: packages/ccrouter_test/generator_test/command_generator_test.dart: annotated Command cannot bypass its generated Client
+18:57 +404 -1: loading packages/ccrouter_test/generator_test/generation_command_test.dart
+18:58 +404 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: (setUpAll)
+18:58 +404 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: framework dependency indexes do not change generated business identities
+19:14 +405 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: Renderer-only components do not opt an existing Host into UI
+19:18 +406 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: package-local generation publishes a Pure Dart Package without Host validation
+19:21 +407 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: package-local generation preserves Flutter component artifacts
+19:26 +408 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: generate skips a non-participating Workspace aggregator
+19:26 +409 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: package-local portable lifecycle owns only the requested Package
+19:30 +410 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: Host generation preserves a sibling example Host byte for byte
+19:35 +411 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: generate check rejects cross-Package internal imports despite ignores
+19:38 +412 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: unified generation checks workspace outputs and restores stale probes
+19:42 +413 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: concurrent generation is serialized by the workspace lock
+19:43 +414 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: generation rejects authored input changed after build_runner
+19:57 +415 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: generation removes only obsolete source-tree metadata
+20:00 +416 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: clean removes managed outputs but preserves user files and rebuilds
+20:16 +417 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: cached and no-cache generation produce identical artifacts
+20:18 +418 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: profile emits a structured trace and atomically persists the latest run
+20:20 +419 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: no-cache profile traces the full generator and Builder phases
+20:23 +420 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: shared planning and unified epoch snapshots match reference state bytes
+20:33 +421 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: parallel exact-byte reads match sequential artifacts and planning state
+20:42 +422 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: Runtime Bundle reverse closure matches fixed-point generated bytes
+20:51 +423 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: InitTask reachability memo matches recursive generated bytes
+21:01 +424 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: Route visibility memo matches per-Route generated bytes
+21:06 +425 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: post-Builder aggregation reuse matches the kill-switch reference
+21:26 +426 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: shared planning snapshot isolates Build Plan state failures
+21:29 +427 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: fast path requires exact authored inputs and managed outputs
+21:41 +428 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: generation without profile emits only the final timing
+21:42 +429 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: P1 build plan diagnoses Host-only changes without skipping Builder
+21:50 +430 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: P1 build plan reports changed source and repairs local planning state
+22:07 +431 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: P6 tool identity changes force the full Builder path
+22:14 +432 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: CLI integration edits do not change the generation tool identity
+22:18 +433 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: generation-cycle kernel edits invalidate the generation tool identity
+22:26 +434 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: P2 full Builder fallback matches a Host component removal reference
+22:45 +435 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: portable prepare bypasses a matching manifest and repairs state
+23:01 +436 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: P3 falls back to Builder when a Portable Package changes resolution
+23:17 +437 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: P3 rejects a read-only Package without valid Portable Generation State
+24:02 +438 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: corrupted generation cache falls back to a full parse
+24:04 +439 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: corrupted generation manifest fails closed to full generation
+24:07 +440 -1: packages/ccrouter_test/generator_test/generation_command_test.dart: (tearDownAll)
+24:07 +440 -1: loading packages/ccrouter_test/generator_test/ui_fragment_find_command_test.dart
+24:07 +440 -1: packages/ccrouter_test/generator_test/ui_fragment_find_command_test.dart: UI lookup and existing usage use exact portable locations and alias
+24:07 +441 -1: packages/ccrouter_test/generator_test/ui_fragment_find_command_test.dart: missing usage reports required edge and never invents a Client alias
+24:08 +442 -1: packages/ccrouter_test/generator_test/ui_fragment_find_command_test.dart: legacy alias metadata defers the callable member
+24:08 +443 -1: packages/ccrouter_test/generator_test/ui_fragment_find_command_test.dart: a missing public DTO proof withholds the entire dependency recipe
+24:08 +444 -1: packages/ccrouter_test/generator_test/ui_fragment_find_command_test.dart: same-owner usage points to a local Widget and unknown consumers fail
+24:09 +445 -1: packages/ccrouter_test/generator_test/ui_fragment_find_command_test.dart: missing Renderer and ambiguous UI IDs are explicit
+24:10 +446 -1: loading packages/ccrouter_test/generator_test/one_shot_generation_diagnostics_test.dart
+24:10 +446 -1: packages/ccrouter_test/generator_test/one_shot_generation_diagnostics_test.dart: publishes failed and successful one-shot terminal snapshots
+24:10 +447 -1: loading packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart
+24:10 +447 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: (setUpAll)
+24:10 +447 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight framework UI barrel preserves exact owners: package:ccrouter_ui/ccrouter_ui.dart
+24:10 +448 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight framework UI barrel preserves exact owners: package:ccrouter_contracts/ccrouter_ui_contracts.dart
+24:10 +449 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight nested lib directories never alias another Library
+24:10 +450 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight does not use unrelated same-Package owner constants
+24:10 +451 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight unimported Contracts cannot be discovered through Package membership
+24:10 +452 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight follows exact relative barrels and preserves local shadowing
+24:10 +453 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight unknown and conditional namespaces defer to Builder
+24:10 +454 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight relative imports and CLI library paths use the same namespace
+24:10 +455 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight aggregates capabilities by uniquely proven owner
+24:10 +456 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight resolves prefixed imports and respects show and hide
+24:10 +457 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight declines computed and ambiguous declarations
+24:10 +458 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: generate reports proven missing owners before build_runner without writes
+24:11 +459 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: (tearDownAll)
+24:11 +459 -1: loading packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart
+24:11 +459 -1: packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart: rejects cross-Package imports, exports, and conditional imports
+24:11 +460 -1: packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart: allows owner imports, public contracts, and generated Host glue
+24:11 +461 -1: loading packages/ccrouter_test/generator_test/analyzer_installation_smoke_test.dart
+24:11 +461 -1: packages/ccrouter_test/generator_test/analyzer_installation_smoke_test.dart: real remote Git install, upgrade, doctor and uninstall in a temporary Flutter Host
+  Skip: Opt in with CCROUTER_ANALYZER_NETWORK_SMOKE=1; requires remote Git/Pub and a Flutter SDK.
+24:11 +461 ~1 -1: loading packages/ccrouter_test/generator_test/devtools_catalog_literal_test.dart
+24:11 +461 ~1 -1: packages/ccrouter_test/generator_test/devtools_catalog_literal_test.dart: (setUpAll)
+24:11 +461 ~1 -1: packages/ccrouter_test/generator_test/devtools_catalog_literal_test.dart: Host Catalog descriptions round-trip as compiled Dart literals
+24:21 +462 ~1 -1: packages/ccrouter_test/generator_test/devtools_catalog_literal_test.dart: (tearDownAll)
+24:21 +462 ~1 -1: loading packages/ccrouter_test/generator_test/portable_distribution_test.dart
+24:21 +462 ~1 -1: packages/ccrouter_test/generator_test/portable_distribution_test.dart: prebuilt Package survives independent Git and archive consumption
+25:17 +463 ~1 -1: loading packages/ccrouter_test/generator_test/coordination_home_test.dart
+25:17 +463 ~1 -1: packages/ccrouter_test/generator_test/coordination_home_test.dart: CCROUTER_HOME overrides platform defaults
+25:17 +464 ~1 -1: packages/ccrouter_test/generator_test/coordination_home_test.dart: CLI reports a non-directory CCROUTER_HOME without a stack trace
+25:20 +465 ~1 -1: packages/ccrouter_test/generator_test/coordination_home_test.dart: CLI reports an unwritable CCROUTER_HOME without a stack trace
+25:22 +466 ~1 -1: packages/ccrouter_test/generator_test/coordination_home_test.dart: platform defaults follow CLI tool conventions
+25:22 +467 ~1 -1: packages/ccrouter_test/generator_test/coordination_home_test.dart: build roots and Hosts receive two-level identities
+25:22 +468 ~1 -1: packages/ccrouter_test/generator_test/coordination_home_test.dart: symlink aliases share one project identity
+25:22 +469 ~1 -1: packages/ccrouter_test/generator_test/coordination_home_test.dart: stable Host and Builder sessions validate exact identities
+25:22 +470 ~1 -1: loading packages/ccrouter_test/generator_test/route_api_boundary_test.dart
+25:22 +470 ~1 -1: packages/ccrouter_test/generator_test/route_api_boundary_test.dart: another Package reports internal use and hides the public Route API
+25:23 +471 ~1 -1: loading packages/ccrouter_test/generator_test/build_runner_command_test.dart
+25:23 +471 ~1 -1: packages/ccrouter_test/generator_test/build_runner_command_test.dart: wrong full snapshot version invalidates and selects Pub rebuild
+25:23 +472 ~1 -1: packages/ccrouter_test/generator_test/build_runner_command_test.dart: unrelated Builder failure preserves the cached snapshot
+25:23 +473 ~1 -1: loading packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart
+25:23 +473 ~1 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: valid UI workspace emits no diagnostics
+25:23 +474 ~1 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator >=1.0.0
+25:23 +475 ~1 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator <=1.0.0
+25:23 +476 ~1 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator <2.0.0
+25:23 +477 ~1 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator >=1.0.0	<2.0.0
+25:23 +478 ~1 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator >=1.0.0
+<2.0.0
+25:23 +479 ~1 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI contract_duplicate has an authored location and correction
+25:23 +480 ~1 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI owner_mismatch has an authored location and correction
+25:23 +481 ~1 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI implementation_duplicate has an authored location and correction
+25:23 +482 ~1 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI dependency_missing has an authored location and correction
+25:23 +483 ~1 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI stale_generated_output has an authored location and correction
+25:23 +484 ~1 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI missing_implementation has an authored location and correction
+25:23 +485 ~1 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI fingerprint_changed has an authored location and correction
+25:23 +486 ~1 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI version_out_of_range has an authored location and correction
+25:23 +487 ~1 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: invalid portable source positions never become IDE diagnostics
+25:23 +488 ~1 -1: loading packages/ccrouter_test/generator_test/generated_client_naming_test.dart
+25:23 +488 ~1 -1: packages/ccrouter_test/generator_test/generated_client_naming_test.dart: default Client names preserve the established suffix rule
+25:23 +489 ~1 -1: packages/ccrouter_test/generator_test/generated_client_naming_test.dart: default Client names do not guess acronym boundaries
+25:23 +490 ~1 -1: packages/ccrouter_test/generator_test/generated_client_naming_test.dart: generated Client aliases reject keywords and invalid casing
+25:23 +491 ~1 -1: loading packages/ccrouter_test/generator_test/generation_file_reader_test.dart
+25:23 +491 ~1 -1: packages/ccrouter_test/generator_test/generation_file_reader_test.dart: concurrent captures share a budget and preserve logical order
+25:23 +492 ~1 -1: packages/ccrouter_test/generator_test/generation_file_reader_test.dart: failure drains in-flight reads and returns all permits
+25:23 +493 ~1 -1: packages/ccrouter_test/generator_test/generation_file_reader_test.dart: multiple read failures report the first logical input
+25:23 +494 ~1 -1: packages/ccrouter_test/generator_test/generation_file_reader_test.dart: sequential reference stops before the next input on error
+25:23 +495 ~1 -1: packages/ccrouter_test/generator_test/generation_file_reader_test.dart: concurrency is bounded to the supported range
+25:23 +496 ~1 -1: packages/ccrouter_test/generator_test/generation_file_reader_test.dart: real fingerprints observe add/edit/delete/rename and Package ownership
+25:23 +497 ~1 -1: loading packages/ccrouter_test/generator_test/metadata_builder_test.dart
+25:23 +497 ~1 -1: packages/ccrouter_test/generator_test/metadata_builder_test.dart: metadata builders preserve all mixed capability documents
+25:32 +498 ~1 -1: loading packages/ccrouter_test/generator_test/route_generator_test.dart
+25:32 +498 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: metadata builder emits documented ownership and parameters
+25:36 +499 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: metadata serializes modal presentation intent
+25:38 +500 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: metadata records the public contract library
+25:39 +501 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: metadata separates an external contract from its page binding
+25:40 +502 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: component metadata builder emits identity and dependencies
+25:41 +503 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: component metadata records exact generated Service Client input
+25:43 +504 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: component metadata records a public Command dependency
+25:44 +505 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: component metadata rejects a non-const component declaration
+25:45 +506 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: component metadata accepts complete SemVer 2.0 versions
+25:46 +507 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: component metadata rejects invalid component ID
+25:47 +508 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: component metadata rejects invalid component version
+25:49 +509 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: component metadata rejects invalid numeric prerelease version
+25:50 +510 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: component metadata rejects invalid component dependencies
+25:51 +511 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: component metadata rejects private component declaration
+25:52 +512 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: route metadata emits a component registration contribution
+25:53 +513 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: route metadata rejects contribution with non-function target
+25:54 +514 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: route metadata rejects contribution with private function
+25:56 +515 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: route metadata rejects contribution with async function
+25:57 +516 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: route metadata rejects contribution with missing Registry parameter
+25:58 +517 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: route metadata rejects contribution with wrong Registry parameter
+25:59 +518 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: route metadata rejects contribution with invalid ID
+26:00 +519 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: route metadata rejects contribution with duplicate ID
+26:02 +520 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: metadata builders emit nothing for an ordinary library
+26:04 +521 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder emits a private component contract and backend-neutral registration
+26:06 +522 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: standalone Extra binding retains typed decode and validation
+26:09 +523 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: infers the sole reversible primary in a Pattern list
+26:10 +524 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: preserves nested source directories in generated route paths
+26:12 +525 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder keeps embedded contracts private and documents metadata
+26:13 +526 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: contract builder emits a standalone Pure Dart contract
+26:14 +527 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: contract builder emits nothing for the embedded default
+26:16 +528 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: contract builder emits a Contract-first Pure Dart API
+26:17 +529 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: page builder binds a Contract-first route without duplicating it
+26:18 +530 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: page builder rejects a Contract-first constructor mismatch
+26:19 +531 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: contract builder rejects page-library contract types
+26:21 +532 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: contract builder rejects Flutter contract types
+26:24 +533 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: contract builder preserves public imported contract types
+26:25 +534 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder emits repeated Query codecs for List and Set values
+26:27 +535 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: standalone defaults preserve wide collection types
+26:29 +536 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: standalone rejects private default-only enum types
+26:30 +537 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder omits an empty collection that equals its default
+26:32 +538 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder emits an isolated custom Query codec boundary
+26:33 +539 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: contract builder imports public Query value and codec types once
+26:35 +540 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: metadata documents repeated and custom Query parameters
+26:36 +541 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder supports super formals and mixed constructor parameters
+26:38 +542 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: contract builder reuses the unprefixed framework contract import
+26:40 +543 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: standalone library isolates generated names from page declarations
+26:41 +544 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects ambiguous inferred primary
+26:42 +545 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects invalid route ID
+26:44 +546 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects invalid repeated route separator
+26:45 +547 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects invalid interceptor ID
+26:47 +548 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects duplicate interceptor ID
+26:48 +549 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects duplicate Pop guard ID
+26:49 +550 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects invalid placement ID
+26:51 +551 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects self parent
+26:52 +552 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects duplicate primaries
+26:54 +553 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects single and plural patterns
+26:55 +554 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects missing patterns
+26:57 +555 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects single regex pattern
+26:58 +556 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects regex-only pattern list
+26:59 +557 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects unmapped parameter
+27:00 +558 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects missing constructor capture
+27:02 +559 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects source conflict
+27:03 +560 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects unsupported query object
+27:04 +561 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects nested query collection
+27:06 +562 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects nullable query collection element
+27:07 +563 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects unsupported query collection element
+27:08 +564 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects query codec without interface
+27:10 +565 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects query codec value mismatch
+27:11 +566 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects query codec without const no-argument constructor
+27:12 +567 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects scalar query with custom codec
+27:14 +568 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects collection query with custom codec
+27:15 +569 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects duplicate query keys
+27:16 +570 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects required external Extra
+27:18 +571 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects multiple Extras
+27:19 +572 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects nullable path
+27:21 +573 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects mismatched aliases
+27:22 +574 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects bad regex
+27:23 +575 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects oversized regex
+27:25 +576 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects too many regex captures
+27:26 +577 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects bad constraint
+27:28 +578 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects oversized constraint
+27:29 +579 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects oversized description
+27:30 +580 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects duplicate ID
+27:32 +581 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects private page
+27:33 +582 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects private parameter type
+27:35 +583 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects implicit result type
+27:37 +584 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects generic page
+27:38 +585 ~1 -1: packages/ccrouter_test/generator_test/route_generator_test.dart: builder rejects no unnamed constructor
+27:39 +586 ~1 -1: loading packages/ccrouter_test/generator_test/package_workspace_test.dart
+27:40 +586 ~1 -1: packages/ccrouter_test/generator_test/package_workspace_test.dart: discovers only the Host runtime dependency closure
+27:40 +587 ~1 -1: packages/ccrouter_test/generator_test/package_workspace_test.dart: requested Package write scope keeps Workspace dependencies read-only
+27:40 +588 ~1 -1: packages/ccrouter_test/generator_test/package_workspace_test.dart: Portable State requires an explicit package declaration
+27:40 +589 ~1 -1: packages/ccrouter_test/generator_test/package_workspace_test.dart: requires resolved Package graph instead of scanning the repository
+27:40 +590 ~1 -1: packages/ccrouter_test/generator_test/package_workspace_test.dart: rejects corrupted and incompatible Package indexes
+27:40 +591 ~1 -1: packages/ccrouter_test/generator_test/package_workspace_test.dart: DTO Action index uses schema 4 and cannot be relabeled as legacy UI
+27:40 +592 ~1 -1: packages/ccrouter_test/generator_test/package_workspace_test.dart: non-framework CCRouter dependencies require a published index
+27:40 +593 ~1 -1: packages/ccrouter_test/generator_test/package_workspace_test.dart: optional UI runtime does not require component Portable State
+27:40 +594 ~1 -1: packages/ccrouter_test/generator_test/package_workspace_test.dart: Package index fingerprint is canonical and detects metadata changes
+27:40 +595 ~1 -1: packages/ccrouter_test/generator_test/package_workspace_test.dart: capability catalog merges route contract and implementation sources
+27:40 +596 ~1 -1: packages/ccrouter_test/generator_test/package_workspace_test.dart: capability catalog retains schema-v2 file-only locations
+27:40 +597 ~1 -1: packages/ccrouter_test/generator_test/package_workspace_test.dart: legacy route implementation does not invent a contract location
+27:40 +598 ~1 -1: packages/ccrouter_test/generator_test/package_workspace_test.dart: metadata cache detects add change rename and delete by exact bytes
+27:40 +599 ~1 -1: packages/ccrouter_test/generator_test/package_workspace_test.dart: metadata cache tracks Service metadata add change rename and delete
+27:40 +600 ~1 -1: loading packages/ccrouter_test/generator_test/analyzer_installation_test.dart
+27:40 +600 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: dry-run validates source and Host without files or processes
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install (dry-run)
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-ii6nLr
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-ii6nLr
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-ii6nLr/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+27:40 +601 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: Hosted install, idempotency and uninstall preserve unrelated YAML
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-t1Wz4M
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-t1Wz4M
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-t1Wz4M/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-t1Wz4M
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-t1Wz4M
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-t1Wz4M/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+Already installed; no files or lockfiles changed.
+CCRouter Analyzer uninstall
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-t1Wz4M
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-t1Wz4M
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-t1Wz4M/tool/ccrouter_analyzer_host
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer uninstall completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-t1Wz4M
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-t1Wz4M
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-t1Wz4M/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+27:40 +602 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: install merges and uninstall removes only its loader exclude
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-btiJ9Z
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-btiJ9Z
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-btiJ9Z/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+CCRouter Analyzer uninstall
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-btiJ9Z
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-btiJ9Z
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-btiJ9Z/tool/ccrouter_analyzer_host
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer uninstall completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+27:40 +603 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: same-source install migrates legacy ownership and adds exclude
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-K2TcoH
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-K2TcoH
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-K2TcoH/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-K2TcoH
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-K2TcoH
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-K2TcoH/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+27:40 +604 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: legacy tools wrapper remains manageable without relocation
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-J2RVMh
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-J2RVMh
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-J2RVMh/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-J2RVMh
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-J2RVMh
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-J2RVMh/tools/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+Already installed; no files or lockfiles changed.
+CCRouter Analyzer uninstall
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-J2RVMh
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-J2RVMh
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-J2RVMh/tools/ccrouter_analyzer_host
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer uninstall completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+27:40 +605 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: pre-existing loader exclude is preserved and never claimed
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-JFtDWb
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-JFtDWb
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-JFtDWb/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+CCRouter Analyzer uninstall
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-JFtDWb
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-JFtDWb
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-JFtDWb/tool/ccrouter_analyzer_host
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer uninstall completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+27:40 +606 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: modified CLI-owned loader exclude is refused without writes
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-jeAFKC
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-jeAFKC
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-jeAFKC/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+error: Analyzer uninstall failed: Bad state: CLI-owned YAML entries changed; refusing to overwrite user configuration.
+27:40 +607 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: Git source verifies a remotely fetchable full commit before Pub
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-D0071k
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-D0071k
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-D0071k/tool/ccrouter_analyzer_host
+  source: git
+  identity: a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: prepare remote commit proof...
+CCRouter Analyzer: verify remote commit...
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source pin: current (manifest/lock/resolved-ref identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+27:40 +608 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: reject invalid source git/null/https://example.com/router.git/main
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+error: Analyzer install failed: Invalid argument(s): Git requires --ref with a full 40-character commit SHA.
+27:40 +609 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: reject invalid source git/null/https://example.com/router.git/a275d1d
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+error: Analyzer install failed: Invalid argument(s): Git requires --ref with a full 40-character commit SHA.
+27:40 +610 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: reject invalid source git/null//tmp/local-repository/a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+error: Analyzer install failed: Invalid argument(s): Git requires a remote HTTPS/SSH --url without credentials; local repositories are refused.
+27:40 +611 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: reject invalid source git/null/file:///tmp/repo/a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+error: Analyzer install failed: Invalid argument(s): Git requires a remote HTTPS/SSH --url without credentials; local repositories are refused.
+27:40 +612 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: reject invalid source git/2.0.0/https://example.com/router.git/a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+error: Analyzer install failed: Invalid argument(s): Git source cannot use --version.
+27:40 +613 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: reject invalid source hosted/any/null/null
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+error: Analyzer install failed: Invalid argument(s): Hosted install/upgrade requires an explicit --version constraint. The source manifest version does not prove a Hosted release exists.
+27:40 +614 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: reject invalid source hosted/null/null/null
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+error: Analyzer install failed: Invalid argument(s): Hosted install/upgrade requires an explicit --version constraint. The source manifest version does not prove a Hosted release exists.
+27:40 +615 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: failure in fetch preserves source and resolution bytes
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-tweH4e
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-tweH4e
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-tweH4e/tool/ccrouter_analyzer_host
+  source: git
+  identity: a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: prepare remote commit proof...
+CCRouter Analyzer: verify remote commit...
+error: Analyzer install failed: Bad state: verify remote commit failed (1).
+
+injected failure
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-tweH4e
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-tweH4e
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-tweH4e/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+27:40 +616 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: failure in pub get preserves source and resolution bytes
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-lo5bEC
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-lo5bEC
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-lo5bEC/tool/ccrouter_analyzer_host
+  source: git
+  identity: a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: prepare remote commit proof...
+CCRouter Analyzer: verify remote commit...
+CCRouter Analyzer: resolve isolated bootstrap...
+error: Analyzer install failed: Bad state: resolve isolated bootstrap failed (1).
+
+injected failure
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-lo5bEC
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-lo5bEC
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-lo5bEC/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+27:40 +617 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: failure in analyze preserves source and resolution bytes
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-rxEUtX
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-rxEUtX
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-rxEUtX/tool/ccrouter_analyzer_host
+  source: git
+  identity: a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: prepare remote commit proof...
+CCRouter Analyzer: verify remote commit...
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+error: Analyzer doctor failed during bootstrap analysis.
+injected failure
+error: Analyzer install failed: Bad state: Candidate loader verification failed.
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-rxEUtX
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-rxEUtX
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-rxEUtX/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+27:40 +618 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: failure in compile preserves source and resolution bytes
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-svOsD2
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-svOsD2
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-svOsD2/tool/ccrouter_analyzer_host
+  source: git
+  identity: a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: prepare remote commit proof...
+CCRouter Analyzer: verify remote commit...
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+error: Analyzer doctor failed during loader compilation.
+injected failure
+error: Analyzer install failed: Bad state: Candidate loader verification failed.
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-svOsD2
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-svOsD2
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-svOsD2/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+27:40 +619 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: failure in Host pub preserves source and resolution bytes
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-hLzON9
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-hLzON9
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-hLzON9/tool/ccrouter_analyzer_host
+  source: git
+  identity: a275d1d46ddfdded6678ecbf1d2d23818cdbdfdc
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: prepare remote commit proof...
+CCRouter Analyzer: verify remote commit...
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source pin: current (manifest/lock/resolved-ref identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Restored CLI configuration and recorded Pub resolution files.
+error: Analyzer install failed: Bad state: resolve Host dependencies (Pub Hook disabled) failed (1).
+
+
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-hLzON9
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-hLzON9
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-hLzON9/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+27:40 +620 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: upgrade verifies before and after; failed candidate keeps old installation
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-OYVmoi
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-OYVmoi
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-OYVmoi/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+warning: analyzer upgrade is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer upgrade
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-OYVmoi
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-OYVmoi
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-OYVmoi/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.1.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve isolated bootstrap...
+error: Analyzer upgrade failed: Bad state: resolve isolated bootstrap failed (1).
+
+candidate failed
+warning: analyzer upgrade is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer upgrade
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-OYVmoi
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-OYVmoi
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-OYVmoi/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.1.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer upgrade completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+27:40 +621 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: failed uninstall restores enabled bootstrap and Pub resolution
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-XnffPO
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-XnffPO
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-XnffPO/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+CCRouter Analyzer uninstall
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-XnffPO
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-XnffPO
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-XnffPO/tool/ccrouter_analyzer_host
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Restored CLI configuration and recorded Pub resolution files.
+error: Analyzer uninstall failed: Bad state: resolve Host dependencies (Pub Hook disabled) failed (1).
+
+
+27:40 +622 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: modified owned entry is refused: tool/ccrouter_analyzer_host/tools/analyzer_plugin/bin/plugin.dart
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-BBv3AF
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-BBv3AF
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-BBv3AF/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+error: Analyzer uninstall failed: Bad state: CLI-owned Analyzer file was modified: tools/analyzer_plugin/bin/plugin.dart. Preserve it and use manual recovery.
+27:40 +623 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: modified owned entry is refused: analysis_options.yaml
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-yag80G
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-yag80G
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-yag80G/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+error: Analyzer uninstall failed: Bad state: CLI-owned YAML entries changed; refusing to overwrite user configuration.
+27:40 +624 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: modified owned entry is refused: pubspec.yaml
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-FJT55k
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-FJT55k
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-FJT55k/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+error: Analyzer uninstall failed: Bad state: CLI-owned YAML entries changed; refusing to overwrite user configuration.
+27:40 +625 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: uninstall preserves unknown wrapper files
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-epZRYA
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-epZRYA
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-epZRYA/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+CCRouter Analyzer uninstall
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-epZRYA
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-epZRYA
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-epZRYA/tool/ccrouter_analyzer_host
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer uninstall completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+27:40 +626 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: rejects existing and inherited Analyzer plugins without modification
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+error: Analyzer install failed: Bad state: Existing Analyzer plugin configuration must be managed manually: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-0LlysU/parent.yaml
+27:40 +627 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: rejects a component or aggregator without an App identity
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+error: Analyzer install failed: Bad state: Selected Package is `package`, not a CCRouter Host. Use `.metadata` project_type app or set `ccrouter.yaml` host.enabled true.
+27:40 +628 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: supports explicit module Host and initially absent options/dev dependencies
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-EijonB
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-EijonB
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-EijonB/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+CCRouter Analyzer uninstall
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-EijonB
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-EijonB
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-EijonB/tool/ccrouter_analyzer_host
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer uninstall completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+27:40 +629 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: host.enabled false rejects an app installation target
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+error: Analyzer install failed: Bad state: Selected Package is `package`, not a CCRouter Host. Use `.metadata` project_type app or set `ccrouter.yaml` host.enabled true.
+27:40 +630 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: symlink bootstrap cannot redirect installation writes
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+error: Analyzer install failed: Bad state: Refusing Analyzer target through a symlink: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-qGURXS/tool/ccrouter_analyzer_host
+27:40 +631 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: concurrent authored edit during verification is preserved
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-kgfRzd
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-kgfRzd
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-kgfRzd/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+Restored CLI configuration and recorded Pub resolution files.
+error: Analyzer install failed: Bad state: File changed during verification; preserving /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-kgfRzd/pubspec.yaml.
+27:40 +632 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: Workspace installs target only one Host and rollback shared Pub state
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-9IMx8I/app
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-9IMx8I
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-9IMx8I/app/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Restored CLI configuration and recorded Pub resolution files.
+error: Analyzer install failed: Bad state: resolve Host dependencies (Pub Hook disabled) failed (1).
+
+
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-9IMx8I/app
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-9IMx8I
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-9IMx8I/app/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+27:40 +633 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: new Host options retain implicitly inherited Workspace rules
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-ybeBgO/app
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-ybeBgO
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-ybeBgO/app/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+CCRouter Analyzer uninstall
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-ybeBgO/app
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-ybeBgO
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-ybeBgO/app/tool/ccrouter_analyzer_host
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer uninstall completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+27:40 +634 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: empty plugin list, repeated uninstall and same-version upgrade are reversible
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-W5dREB
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-W5dREB
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-W5dREB/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+warning: analyzer upgrade is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer upgrade
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-W5dREB
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-W5dREB
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-W5dREB/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+Already installed; no files or lockfiles changed.
+CCRouter Analyzer uninstall
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-W5dREB
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-W5dREB
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-W5dREB/tool/ccrouter_analyzer_host
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer uninstall completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+Analyzer is not installed for /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-W5dREB; no changes.
+27:40 +635 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: incompatible SDK constraint fails before tool execution
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+error: Analyzer install failed: Bad state: Analyzer bootstrap requires a compatible Dart 3.10+ SDK and Host SDK constraint.
+27:40 +636 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: upgrade refuses newly conflicting inherited plugins without writes
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-71etaB
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-71etaB
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-71etaB/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+warning: analyzer upgrade is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+error: Analyzer upgrade failed: Bad state: Existing Analyzer plugin configuration must be managed manually: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-71etaB/parent_options.yaml
+27:40 +637 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: dry-run upgrade and uninstall never mutate a managed installation
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-LTNJoa
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-LTNJoa
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-LTNJoa/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+Analyzer install completed. Restart the Dart Analysis Server. Run analyzer status/doctor before relying on IDE diagnostics.
+warning: analyzer upgrade is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer upgrade (dry-run)
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-LTNJoa
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-LTNJoa
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-LTNJoa/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.1.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer uninstall (dry-run)
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-LTNJoa
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-LTNJoa
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-LTNJoa/tool/ccrouter_analyzer_host
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+27:40 +638 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: CLI process rejects a concurrently locked Pub owner before network work
+27:43 +639 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: interrupted transaction blocks subsequent writes and preserves recovery bytes
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-xjmsdh
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-xjmsdh
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-xjmsdh/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+error: Analyzer install failed: Bad state: An interrupted Analyzer transaction needs recovery: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-coordination-2TGbrc/coordination/v2/projects/8f302a1dedb30bb0192f07f2f9a8b161cbffc646e62e8ec7c72913e006395332/analyzer/transactions
+27:43 +640 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: stable mode rejects an active legacy Analyzer writer
+27:45 +641 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: legacy A/B mode retains its journal under .dart_tool
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-hsY2Dn
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-hsY2Dn
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-hsY2Dn/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+error: Analyzer install failed: Bad state: An interrupted Analyzer transaction needs recovery: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-hsY2Dn/.dart_tool/ccrouter/analyzer/transactions
+27:45 +642 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: unreadable Pub result restores other files and retains recovery journal
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-UUKUIW
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-UUKUIW
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-UUKUIW/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+error: Analyzer install failed: Bad state: Rollback preserved concurrent edits: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-UUKUIW/pubspec.lock. Original bytes remain in /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-coordination-aOzO7Z/coordination/v2/projects/5c2e90b22ff708965b821eddcbb5a97c5485b16c039d3d7b44b8783f1391dbf2/analyzer/transactions/72239-1792772895860039.
+27:45 +643 ~1 -1: packages/ccrouter_test/generator_test/analyzer_installation_test.dart: rollback conflict preserves user edit and restores remaining files
+warning: analyzer install is a legacy management path. Prefer a normal Hosted dev_dependency after `ccrouter_analyzer_plugin` is published; no new management features will be added here.
+CCRouter Analyzer install
+  host: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-FStzJV
+  pub owner: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-FStzJV
+  bootstrap: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-FStzJV/tool/ccrouter_analyzer_host
+  source: hosted
+  identity: 1.0.0
+  managed: Host dev_dependency, analyzer.plugins, loader exclude when added, 4 bootstrap files and ownership record
+  preserved: unrelated YAML, unknown files, IDE/Pub caches and generated artifacts
+CCRouter Analyzer: resolve isolated bootstrap...
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source dependency: current (manifest/lock version identity)
+  cache artifact: absent (Analysis Server has not built this legacy cache entry)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
+CCRouter Analyzer: resolve Host dependencies (Pub Hook disabled)...
+error: Analyzer install failed: Bad state: Rollback preserved concurrent edits: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-test-FStzJV/pubspec.yaml. Original bytes remain in /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-install-coordination-HGylZS/coordination/v2/projects/ab68d0cfbc99e99ad18b5b1a2fa9583b5d36305d8235fd471eb480d5e0986dd7/analyzer/transactions/72239-1792772895871838.
+27:45 +644 ~1 -1: loading packages/ccrouter_test/generator_test/generation_watch_status_test.dart
+27:45 +644 ~1 -1: packages/ccrouter_test/generator_test/generation_watch_status_test.dart: (setUpAll)
+27:45 +644 ~1 -1: packages/ccrouter_test/generator_test/generation_watch_status_test.dart: watch status reports a missing local state without creating it
+27:46 +645 ~1 -1: packages/ccrouter_test/generator_test/generation_watch_status_test.dart: watch status and follow read an atomically published state
+27:46 +646 ~1 -1: packages/ccrouter_test/generator_test/generation_watch_status_test.dart: watch follow exits after an inactive startup failure
+27:47 +647 ~1 -1: packages/ccrouter_test/generator_test/generation_watch_status_test.dart: watch follow exits from a stable terminal session without a mirror
+27:47 +648 ~1 -1: packages/ccrouter_test/generator_test/generation_watch_status_test.dart: watch status rejects malformed local state
+27:47 +649 ~1 -1: packages/ccrouter_test/generator_test/generation_watch_status_test.dart: watch status persists failure diagnostics
+27:48 +650 ~1 -1: packages/ccrouter_test/generator_test/generation_watch_status_test.dart: watch status verifies active records against the owner lock
+27:49 +651 ~1 -1: packages/ccrouter_test/generator_test/generation_watch_status_test.dart: watch rejects unsupported observation actions and options
+27:49 +652 ~1 -1: packages/ccrouter_test/generator_test/generation_watch_status_test.dart: (tearDownAll)
+27:49 +652 ~1 -1: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

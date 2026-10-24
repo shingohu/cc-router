@@ -1,0 +1,78 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart
+00:00 +0: Managed: close retires retained Shell ownership exactly
+══╡ EXCEPTION CAUGHT BY FOUNDATION LIBRARY ╞════════════════════════════════════════════════════════
+The following assertion was thrown while dispatching notifications for _CCManagedRouterDelegate:
+setState() or markNeedsBuild() called during build.
+This Router<Object> widget cannot be marked as needing to build because the framework is already in
+the process of building widgets. A widget can be marked as needing to be built during the build
+phase only if one of its ancestors is currently building. This exception is allowed because the
+framework builds parent widgets before children, which means a dirty descendant will always be
+built. Otherwise, the framework might not visit this widget during this build phase.
+The widget on which setState() or markNeedsBuild() was called was:
+  Router<Object>
+The widget which was currently being built when the offending call was made was:
+  Builder
+
+When the exception was thrown, this was the stack:
+#0      Element.markNeedsBuild.<anonymous closure> (package:flutter/src/widgets/framework.dart:5373:9)
+#1      Element.markNeedsBuild (package:flutter/src/widgets/framework.dart:5385:6)
+#2      State.setState (package:flutter/src/widgets/framework.dart:1219:15)
+#3      _RouterState._handleRouterDelegateNotification (package:flutter/src/widgets/router.dart:833:5)
+#4      ChangeNotifier.notifyListeners (package:flutter/src/foundation/change_notifier.dart:432:24)
+#5      _CCManagedRouterDelegate._onStateChanged (package:ccrouter/src/managed_router.dart:2035:21)
+#6      CCManagedNavigationAdapter._notifyStateListeners (package:ccrouter/src/managed_router.dart:1322:15)
+#7      CCManagedNavigationAdapter._didPopRoute (package:ccrouter/src/managed_router.dart:1453:7)
+#8      _CCManagedNavigatorObserver.didPop (package:ccrouter/src/managed_router.dart:2482:13)
+#9      _NavigatorPopObservation.notify (package:flutter/src/widgets/navigator.dart:3619:14)
+#10     List.forEach (dart:core-patch/growable_array.dart:428:8)
+#11     NavigatorState._flushObserverNotifications (package:flutter/src/widgets/navigator.dart:4716:27)
+#12     NavigatorState._flushHistoryUpdates (package:flutter/src/widgets/navigator.dart:4657:5)
+#13     NavigatorState._updatePages (package:flutter/src/widgets/navigator.dart:4496:5)
+#14     NavigatorState.didUpdateWidget (package:flutter/src/widgets/navigator.dart:4079:7)
+#15     StatefulElement.update (package:flutter/src/widgets/framework.dart:5991:55)
+#16     Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)
+#17     ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5841:16)
+#18     Element.rebuild (package:flutter/src/widgets/framework.dart:5529:7)
+#19     StatelessElement.update (package:flutter/src/widgets/framework.dart:5895:5)
+#20     Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)
+#21     ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5841:16)
+#22     Element.rebuild (package:flutter/src/widgets/framework.dart:5529:7)
+#23     ProxyElement.update (package:flutter/src/widgets/framework.dart:6149:5)
+#24     Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)
+#25     ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5841:16)
+#26     Element.rebuild (package:flutter/src/widgets/framework.dart:5529:7)
+#27     ProxyElement.update (package:flutter/src/widgets/framework.dart:6149:5)
+#28     Element.updateChild (package:flutter/src/widgets/framework.dart:4037:15)
+#29     ComponentElement.performRebuild (package:flutter/src/widgets/framework.dart:5841:16)
+#30     StatefulElement.performRebuild (package:flutter/src/widgets/framework.dart:5982:11)
+#31     Element.rebuild (package:flutter/src/widgets/framework.dart:5529:7)
+#32     BuildScope._tryRebuild (package:flutter/src/widgets/framework.dart:2750:15)
+#33     BuildScope._flushDirtyElements (package:flutter/src/widgets/framework.dart:2807:11)
+#34     BuildOwner.buildScope (package:flutter/src/widgets/framework.dart:3111:18)
+#35     AutomatedTestWidgetsFlutterBinding.drawFrame (package:flutter_test/src/binding.dart:2132:19)
+#36     RendererBinding._handlePersistentFrameCallback (package:flutter/src/rendering/binding.dart:495:5)
+#37     SchedulerBinding._invokeFrameCallback (package:flutter/src/scheduler/binding.dart:1431:15)
+#38     SchedulerBinding.handleDrawFrame (package:flutter/src/scheduler/binding.dart:1346:9)
+#39     AutomatedTestWidgetsFlutterBinding.pump.<anonymous closure> (package:flutter_test/src/binding.dart:1961:9)
+#42     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#43     AutomatedTestWidgetsFlutterBinding.pump (package:flutter_test/src/binding.dart:1950:27)
+#44     WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:723:23)
+#47     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
+#48     WidgetTester.pumpAndSettle (package:flutter_test/src/widget_tester.dart:716:27)
+#49     main.<anonymous closure> (file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart:55:26)
+<asynchronous suspension>
+#50     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#51     TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 5 frames from dart:async and package:stack_trace)
+
+The _CCManagedRouterDelegate sending notification was:
+  Instance of '_CCManagedRouterDelegate'
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -1: Managed: close retires retained Shell ownership exactly [E]
+  Test failed. See exception logs above.
+  The test description was: Managed: close retires retained Shell ownership exactly
+  
+00:00 +0 -1: Some tests failed.

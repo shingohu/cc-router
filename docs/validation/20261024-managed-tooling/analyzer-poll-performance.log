@@ -1,0 +1,8 @@
+CCRouter analyzer exactPaths=100 polls=50 referenceP50=365us referenceP95=1205us candidateP50=404us candidateP95=1040us shardedP50=61us shardedP95=555us referenceChange=292us eventChange=219us
+CCRouter analyzer exactPaths=1000 polls=50 referenceP50=3001us referenceP95=7040us candidateP50=2857us candidateP95=5204us shardedP50=372us shardedP95=1191us referenceChange=2880us eventChange=62us
+CCRouter analyzer exactPaths=5000 polls=50 referenceP50=17519us referenceP95=22728us candidateP50=18192us candidateP95=25399us shardedP50=2339us shardedP95=4249us referenceChange=17880us eventChange=69us
+CCRouter analyzer exactPaths=10000 polls=50 referenceP50=36522us referenceP95=47134us candidateP50=35346us candidateP95=46783us shardedP50=4767us shardedP95=7746us referenceChange=37125us eventChange=52us
+CCRouter analyzer watch packages=10 polls=100 cachedAverage=314us doubleResolveAverage=5179us speedup=16.5x
+CCRouter analyzer watch packages=30 polls=100 cachedAverage=879us doubleResolveAverage=19317us speedup=22.0x
+CCRouter analyzer watch packages=50 polls=100 cachedAverage=2002us doubleResolveAverage=51837us speedup=25.9x
+CCRouter analyzer watch packages=100 polls=100 cachedAverage=3134us doubleResolveAverage=190638us speedup=60.8x

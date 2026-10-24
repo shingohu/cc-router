@@ -60,12 +60,15 @@ final class DemoFailurePage extends StatelessWidget {
                     const SizedBox(height: 20),
                     FilledButton.icon(
                       onPressed: () {
-                        if (CCRouter.navigator.canPop()) {
-                          CCRouter.navigator.pop();
+                        if (CCRouter.navigator.canPop(context: context)) {
+                          CCRouter.navigator.pop(context: context);
                         } else {
                           observeDemoOperation(
                             'Failure fallback 返回首页',
-                            CCRouter.navigator.open(Uri.parse('/')),
+                            CCRouter.navigator.open(
+                              Uri.parse('/'),
+                              context: context,
+                            ),
                           );
                         }
                       },

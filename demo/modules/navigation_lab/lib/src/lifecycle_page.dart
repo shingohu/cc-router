@@ -65,8 +65,9 @@ final class _DemoLifecyclePageState extends State<DemoLifecyclePage>
         padding: const EdgeInsets.all(24),
         children: [
           const Text(
-            '打开覆盖页会产生 Hide/Show；将 macOS App 切到后台再回来会产生 '
-            'Background/Foreground。Widget 创建和销毁仍使用 initState/dispose。',
+            '打开覆盖页会产生 Hide/Show；在 macOS 使用 Cmd+H 隐藏 Demo 后恢复会产生 '
+            'Background/Foreground，切换其他 App 只会进入 inactive。'
+            'Widget 创建和销毁仍使用 initState/dispose。',
           ),
           const SizedBox(height: 20),
           FilledButton.icon(
@@ -78,6 +79,7 @@ final class _DemoLifecyclePageState extends State<DemoLifecyclePage>
                   title: '生命周期覆盖页',
                   tags: const ['hide', 'show'],
                 ),
+                context: context,
               ),
             ),
             icon: const Icon(Icons.flip_to_front),

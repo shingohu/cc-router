@@ -18,6 +18,7 @@ final class CCManagedRouterBackendConfiguration {
     required this.host,
     required this.shellBindings,
     required this.initialLocation,
+    this.overridePlatformDefaultLocation = false,
     required this.additionalObservers,
     required this.enablePredictiveBack,
     this.initializeFromRouteInformation = true,
@@ -32,8 +33,11 @@ final class CCManagedRouterBackendConfiguration {
   /// Application-owned Shell renderers.
   final List<CCManagedShellBinding> shellBindings;
 
-  /// Trusted startup location, or null to consume the platform URI.
+  /// Trusted startup fallback, or null to always consume the platform URI.
   final String? initialLocation;
+
+  /// Forces the trusted fallback even when the platform supplies another URI.
+  final bool overridePlatformDefaultLocation;
 
   /// Additional observers installed on Managed Navigators.
   final List<NavigatorObserver> additionalObservers;
@@ -50,6 +54,7 @@ final class CCManagedRouterBackendConfiguration {
     host: host,
     shellBindings: shellBindings,
     initialLocation: initialLocation,
+    overridePlatformDefaultLocation: overridePlatformDefaultLocation,
     additionalObservers: additionalObservers,
     enablePredictiveBack: enablePredictiveBack,
     initializeFromRouteInformation: initializeFromRouteInformation,
@@ -76,6 +81,7 @@ final class CCManagedRouterApp extends StatefulWidget {
     this.host,
     this.shellBindings = const [],
     this.initialLocation = '/',
+    this.overridePlatformDefaultLocation = false,
     this.additionalObservers = const [],
     this.enablePredictiveBack = false,
     this.title = '',
@@ -120,8 +126,11 @@ final class CCManagedRouterApp extends StatefulWidget {
   /// Shell bindings used by the default Managed Backend.
   final Iterable<CCManagedShellBinding> shellBindings;
 
-  /// Trusted startup location, or null to consume the platform URI.
+  /// Trusted startup fallback, or null to always consume the platform URI.
   final String? initialLocation;
+
+  /// Explicitly ignores platform startup links in favor of [initialLocation].
+  final bool overridePlatformDefaultLocation;
 
   /// Additional observers installed on Managed Navigators.
   final Iterable<NavigatorObserver> additionalObservers;
@@ -247,6 +256,7 @@ final class _CCManagedRouterAppState extends State<CCManagedRouterApp> {
         widget.shellBindings,
       ),
       initialLocation: widget.initialLocation,
+      overridePlatformDefaultLocation: widget.overridePlatformDefaultLocation,
       additionalObservers: List<NavigatorObserver>.unmodifiable(
         widget.additionalObservers,
       ),
@@ -304,6 +314,8 @@ final class _CCManagedRouterAppState extends State<CCManagedRouterApp> {
     super.didUpdateWidget(oldWidget);
     if (!identical(widget.host, oldWidget.host) ||
         widget.initialLocation != oldWidget.initialLocation ||
+        widget.overridePlatformDefaultLocation !=
+            oldWidget.overridePlatformDefaultLocation ||
         widget.enablePredictiveBack != oldWidget.enablePredictiveBack ||
         !identical(widget.backendFactory, oldWidget.backendFactory) ||
         !identical(widget.shellBindings, oldWidget.shellBindings) ||

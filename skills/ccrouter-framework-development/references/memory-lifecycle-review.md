@@ -100,9 +100,49 @@ results in framework history or long-lived callbacks.
 - Attached backends are not disposed by CCRouter; framework-created backends are.
 - Route Services end with their exact managed RouteEntry, not PageHide or an
   unrelated backend Pop.
-- Bounded diagnostics and analytics queues must release queued callbacks and
+- A removed Entry may retain its Scope only through an exact backend-owned
+  outgoing render lifetime. It must leave the active stack immediately. Detach
+  render callbacks and cancel waits before shutdown joins Scope closures; never
+  await a UI frame during teardown or retain Runtime in an unfinished Route Future.
+- Bounded framework diagnostics queues must release queued callbacks and
   payload references on close.
 - Observer and Sink failures must not skip framework cleanup.
+- Exercise retained invocation, construction, navigation-operation and callback
+  Zones separately. Runtime identity must not be a Runtime back-reference;
+  construction owners must not keep ended Scopes or Route payloads alive.
+  Verify both ended Runtime and payload GC, plus live-owner dependency resolution
+  and original cancellation fences. Service disposal counts alone do not prove
+  these retaining paths are clear.
+- Test both detached callbacks after a method returns and the business-returned
+  Future itself remaining unfinished after framework cancellation. The latter
+  must release framework wait frames at the concrete owner's terminal boundary;
+  late errors still need consumers, without a second terminal observation.
+  Cross shared/new-instance readiness and Event fan-out with independent error
+  Zones. Keep live-owner and completed-work GC controls. MultiHost constructors
+  must preflight unique Adapter identity before adopting any child, independently
+  of the dynamic registration path and overloaded equality.
+- Keep the shared initializer's actual owner alive while cancelling independent
+  readiness waiters. A Future.any terminal result is insufficient: unregister
+  each consumer relay so the shared Future cannot retain its Zone. Check caller
+  payload GC before shared completion, Session/Route origin closure, distinct
+  error Zones, original shared failure/stack and unaffected live/late consumers.
+  MultiHost Entry identity must use one registration domain across every event,
+  snapshot, target, Guard and Pop/predictive outcome; namespace operations alone
+  cannot prevent cross-Host Scope cleanup. Isolate observers at each fan-out.
+- Pop/close wait relays must release their consumer Completer, owner listeners
+  and entry-removal timer on every terminal path. Only a relay without owner
+  references may remain on an uncooperative external Future. Test initial-stack
+  Host identity before any navigation, synchronous detach/replacement, separate
+  error Zones and live Runtime Entry replacement. Keep exact close receipts
+  ahead of an orphaned-entry fallback without awaiting an outgoing UI frame.
+- Retained Host tokens, Route/Session Scopes and cached readiness records must
+  use Host context rather than first-caller Zone. Keep owners alive while
+  checking caller payload GC after success, cached failure and cancellation;
+  also exercise detached factory callbacks, dependency chains and the original
+  framework decision reentrancy fence.
+- Cleanup tests must include concurrent, synchronously reentrant and late
+  awaiters across error Zones, with both success and failure. Assert completion
+  ordering, once-only cleanup and original error/stack delivery.
 
 ## Review Output
 

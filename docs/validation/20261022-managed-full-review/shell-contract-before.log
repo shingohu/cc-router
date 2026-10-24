@@ -1,0 +1,12 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_router_outlet_test.dart
+00:00 +0: Managed Shells reject root and shared Outlet ownership before mount
+00:00 +0 -1: Managed Shells reject root and shared Outlet ownership before mount [E]
+  Expected: throws <Instance of 'CCNavigationAdapterError'>
+    Actual: <Closure: () => void>
+     Which: returned <null>
+  
+  package:matcher                                                    expect
+  package:flutter_test/src/widget_tester.dart 477:18                 expect
+  packages/ccrouter_test/test/managed_router_outlet_test.dart 173:7  main.<fn>
+  
+00:00 +0 -1: Some tests failed.

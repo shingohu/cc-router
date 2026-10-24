@@ -1,0 +1,146 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/runtime_round_trip/repro.dart
+00:00 +0: A-B-A method single switch=false
+00:00 +1: A-B-A factory single switch=false
+00:00 +2: A-B-A initializer single switch=false
+00:00 +3: A-B-A method async switch=false
+00:00 +4: A-B-A factory async switch=false
+00:00 +5: A-B-A initializer async switch=false
+00:00 +6: A-B-A method syncProxy switch=false
+00:00 +7: A-B-A factory syncProxy switch=false
+00:00 +8: A-B-A initializer syncProxy switch=false
+00:00 +9: A-B-A method asyncProxy switch=false
+00:00 +10: A-B-A factory asyncProxy switch=false
+00:00 +11: A-B-A initializer asyncProxy switch=false
+00:00 +12: A-B-A method single switch=true
+00:00 +12 -1: A-B-A method single switch=true [E]
+  Expected: <Instance of 'CCInvocationCancelledError'>
+    Actual: <Instance of 'AccountResource'>
+     Which: is not an instance of 'CCInvocationCancelledError'
+  A still has an old Session ancestor beneath B
+  
+  package:matcher                                                                expect
+  package:flutter_test/src/widget_tester.dart 477:18                             expect
+  packages/ccrouter_test/test/review_repros/runtime_round_trip/repro.dart 80:13  main.<fn>
+  
+00:00 +12 -1: A-B-A factory single switch=true
+00:00 +12 -2: A-B-A factory single switch=true [E]
+  Expected: <Instance of 'CCInvocationCancelledError'>
+    Actual: <Instance of 'AccountResource'>
+     Which: is not an instance of 'CCInvocationCancelledError'
+  A still has an old Session ancestor beneath B
+  
+  package:matcher                                                                expect
+  package:flutter_test/src/widget_tester.dart 477:18                             expect
+  packages/ccrouter_test/test/review_repros/runtime_round_trip/repro.dart 80:13  main.<fn>
+  
+00:00 +12 -2: A-B-A initializer single switch=true
+00:00 +12 -3: A-B-A initializer single switch=true [E]
+  Expected: <Instance of 'CCInvocationCancelledError'>
+    Actual: <Instance of 'AccountResource'>
+     Which: is not an instance of 'CCInvocationCancelledError'
+  A still has an old Session ancestor beneath B
+  
+  package:matcher                                                                expect
+  package:flutter_test/src/widget_tester.dart 477:18                             expect
+  packages/ccrouter_test/test/review_repros/runtime_round_trip/repro.dart 80:13  main.<fn>
+  
+00:00 +12 -3: A-B-A method async switch=true
+00:00 +12 -4: A-B-A method async switch=true [E]
+  Expected: <Instance of 'CCInvocationCancelledError'>
+    Actual: <Instance of 'AccountResource'>
+     Which: is not an instance of 'CCInvocationCancelledError'
+  A still has an old Session ancestor beneath B
+  
+  package:matcher                                                                expect
+  package:flutter_test/src/widget_tester.dart 477:18                             expect
+  packages/ccrouter_test/test/review_repros/runtime_round_trip/repro.dart 80:13  main.<fn>
+  
+00:00 +12 -4: A-B-A factory async switch=true
+00:00 +12 -5: A-B-A factory async switch=true [E]
+  Expected: <Instance of 'CCInvocationCancelledError'>
+    Actual: <Instance of 'AccountResource'>
+     Which: is not an instance of 'CCInvocationCancelledError'
+  A still has an old Session ancestor beneath B
+  
+  package:matcher                                                                expect
+  package:flutter_test/src/widget_tester.dart 477:18                             expect
+  packages/ccrouter_test/test/review_repros/runtime_round_trip/repro.dart 80:13  main.<fn>
+  
+00:00 +12 -5: A-B-A initializer async switch=true
+00:00 +12 -6: A-B-A initializer async switch=true [E]
+  Expected: <Instance of 'CCInvocationCancelledError'>
+    Actual: <Instance of 'AccountResource'>
+     Which: is not an instance of 'CCInvocationCancelledError'
+  A still has an old Session ancestor beneath B
+  
+  package:matcher                                                                expect
+  package:flutter_test/src/widget_tester.dart 477:18                             expect
+  packages/ccrouter_test/test/review_repros/runtime_round_trip/repro.dart 80:13  main.<fn>
+  
+00:00 +12 -6: A-B-A method syncProxy switch=true
+00:00 +12 -7: A-B-A method syncProxy switch=true [E]
+  Expected: <Instance of 'CCInvocationCancelledError'>
+    Actual: 'new'
+     Which: is not an instance of 'CCInvocationCancelledError'
+  A still has an old Session ancestor beneath B
+  
+  package:matcher                                                                expect
+  package:flutter_test/src/widget_tester.dart 477:18                             expect
+  packages/ccrouter_test/test/review_repros/runtime_round_trip/repro.dart 80:13  main.<fn>
+  
+00:00 +12 -7: A-B-A factory syncProxy switch=true
+00:00 +12 -8: A-B-A factory syncProxy switch=true [E]
+  Expected: <Instance of 'CCInvocationCancelledError'>
+    Actual: 'new'
+     Which: is not an instance of 'CCInvocationCancelledError'
+  A still has an old Session ancestor beneath B
+  
+  package:matcher                                                                expect
+  package:flutter_test/src/widget_tester.dart 477:18                             expect
+  packages/ccrouter_test/test/review_repros/runtime_round_trip/repro.dart 80:13  main.<fn>
+  
+00:00 +12 -8: A-B-A initializer syncProxy switch=true
+00:00 +12 -9: A-B-A initializer syncProxy switch=true [E]
+  Expected: <Instance of 'CCInvocationCancelledError'>
+    Actual: 'new'
+     Which: is not an instance of 'CCInvocationCancelledError'
+  A still has an old Session ancestor beneath B
+  
+  package:matcher                                                                expect
+  package:flutter_test/src/widget_tester.dart 477:18                             expect
+  packages/ccrouter_test/test/review_repros/runtime_round_trip/repro.dart 80:13  main.<fn>
+  
+00:00 +12 -9: A-B-A method asyncProxy switch=true
+00:00 +12 -10: A-B-A method asyncProxy switch=true [E]
+  Expected: <Instance of 'CCInvocationCancelledError'>
+    Actual: 'new'
+     Which: is not an instance of 'CCInvocationCancelledError'
+  A still has an old Session ancestor beneath B
+  
+  package:matcher                                                                expect
+  package:flutter_test/src/widget_tester.dart 477:18                             expect
+  packages/ccrouter_test/test/review_repros/runtime_round_trip/repro.dart 80:13  main.<fn>
+  
+00:00 +12 -10: A-B-A factory asyncProxy switch=true
+00:00 +12 -11: A-B-A factory asyncProxy switch=true [E]
+  Expected: <Instance of 'CCInvocationCancelledError'>
+    Actual: 'new'
+     Which: is not an instance of 'CCInvocationCancelledError'
+  A still has an old Session ancestor beneath B
+  
+  package:matcher                                                                expect
+  package:flutter_test/src/widget_tester.dart 477:18                             expect
+  packages/ccrouter_test/test/review_repros/runtime_round_trip/repro.dart 80:13  main.<fn>
+  
+00:00 +12 -11: A-B-A initializer asyncProxy switch=true
+00:00 +12 -12: A-B-A initializer asyncProxy switch=true [E]
+  Expected: <Instance of 'CCInvocationCancelledError'>
+    Actual: 'new'
+     Which: is not an instance of 'CCInvocationCancelledError'
+  A still has an old Session ancestor beneath B
+  
+  package:matcher                                                                expect
+  package:flutter_test/src/widget_tester.dart 477:18                             expect
+  packages/ccrouter_test/test/review_repros/runtime_round_trip/repro.dart 80:13  main.<fn>
+  
+00:00 +12 -12: Some tests failed.

@@ -6,12 +6,11 @@ part of 'runtime.dart';
 /// an initializer that ignores cooperative cancellation cannot by itself keep
 /// every Scope-owned instance reachable after the Scope clears its map. A
 /// singleton shares this record; new-instance providers allocate a fresh one.
+/// Ending the concrete initializer owner settles readiness immediately and
+/// removes its listener; a late business Future cannot change that outcome.
 final class _ServiceReadinessRecord {
   /// Completion installed before initialization or dependency traversal starts.
-  final Completer<void> _completion = Completer<void>();
-
-  /// Readiness operation shared by concurrent callers.
-  Future<void> get future => _completion.future;
+  final _SharedResult<void> _completion = _SharedResult<void>();
 
   /// Whether the operation completed successfully before Scope cancellation.
   bool ready = false;
@@ -22,50 +21,65 @@ final class _ServiceReadinessRecord {
   /// Counted edges preserve overlapping resolutions of the same dependency.
   final Map<_ServiceReadinessRecord, int> _dependencies = {};
 
+  /// Detaches owner cancellation when readiness reaches its first terminal state.
+  void Function()? _removeCancellation;
+
   /// Starts initialization after its Future and incoming wait edge are installed.
   void start(
     Future<void> Function() initialize,
     CCCancellationToken token,
     String scopeId,
   ) {
-    final completion = _completion;
-    void deactivate() {
-      active = false;
-      _dependencies.clear();
+    final remove = token.addListener(
+      () => _fail(CCScopeClosedError(scopeId), StackTrace.current),
+    );
+    // Registration may synchronously observe an already-ended owner.
+    if (!active) {
+      remove();
+      return;
     }
-
-    final removeCancellation = token.addListener(deactivate);
-    void finish() {
-      deactivate();
-      removeCancellation();
-    }
-
+    _removeCancellation = remove;
     unawaited(
-      Future<void>.sync(initialize).then<void>(
-        (_) {
-          finish();
-          if (token.isCancelled) {
-            completion.completeError(CCScopeClosedError(scopeId));
-          } else {
-            ready = true;
-            completion.complete();
-          }
-        },
-        onError: (Object error, StackTrace stack) {
-          finish();
-          completion.completeError(error, stack);
-        },
-      ),
+      Future<void>.sync(initialize).then<void>(_succeed, onError: _fail),
     );
   }
 
-  /// Waits through a temporary edge, rejecting cycles between independent roots.
+  /// Releases wait edges and the owner listener before publishing an outcome.
+  void _deactivate() {
+    active = false;
+    _dependencies.clear();
+    final remove = _removeCancellation;
+    _removeCancellation = null;
+    remove?.call();
+  }
+
+  /// Accepts success only while the concrete initializer owner is still live.
+  void _succeed(void _) {
+    if (!active) return;
+    ready = true;
+    _deactivate();
+    _completion.complete(null);
+  }
+
+  /// Settles owner cancellation or failure once and consumes late failures.
+  void _fail(Object error, StackTrace stack) {
+    if (!active) return;
+    _deactivate();
+    _completion.fail(error, stack);
+  }
+
+  /// Waits through a removable relay and, for initializers, a temporary edge.
+  ///
+  /// Independent invocation cancellation releases its caller Zone without
+  /// ending shared initialization. Live dependency edges still reject cycles.
   Future<void> waitFor(
     _ServiceReadinessRecord? owner,
     String identity,
     CCCancellationToken waitCancellation,
   ) async {
-    if (owner == null || !owner.active || !active) return future;
+    if (owner == null || !owner.active || !active) {
+      return _completion.wait(cancellation: waitCancellation);
+    }
     if (_reaches(owner, {})) {
       throw CCCircularServiceDependencyError(identity);
     }
@@ -82,13 +96,9 @@ final class _ServiceReadinessRecord {
       }
     }
 
-    final cancelled = Completer<void>();
-    final remove = waitCancellation.addListener(() {
-      unlink();
-      cancelled.completeError(const CCInvocationCancelledError());
-    });
+    final remove = waitCancellation.addListener(unlink);
     try {
-      await Future.any([future, cancelled.future]);
+      await _completion.wait(cancellation: waitCancellation);
     } finally {
       unlink();
       remove();
@@ -133,6 +143,12 @@ final class CCScope {
   /// Stable diagnostic identity of this Scope.
   final String id;
 
+  /// Owning Host context for retained records and shared initializer producers.
+  ///
+  /// A Scope's first consumer may have a shorter lifetime and a different error
+  /// Zone. Cached completion Futures must not adopt that consumer's Zone.
+  final Zone _ownerZone = Zone.current;
+
   /// Cached singleton instances indexed by provider identity.
   final Map<Object, Object> _instances = {};
 
@@ -141,6 +157,9 @@ final class CCScope {
 
   /// Provider keys currently being constructed for cycle detection.
   final Set<Object> _constructing = {};
+
+  /// Joins synchronous factories that reentrantly request Scope closure.
+  Completer<void>? _constructionDrained;
 
   /// Single-flight readiness records retained for singleton providers.
   final Map<Object, _ServiceReadinessRecord> _serviceReadiness = {};
@@ -164,6 +183,8 @@ final class CCScope {
   ///
   /// Runtime service resolution uses this to enforce per-Scope singleton and
   /// factory ownership while detecting recursive construction.
+  /// A factory that closes this Scope still transfers its returned disposable
+  /// to cleanup before lookup fails. Closure joins all admitted constructions.
   T resolve<T extends Object>(
     Object key,
     T Function() create, {
@@ -176,11 +197,19 @@ final class CCScope {
       throw CCCircularServiceDependencyError(key.toString());
     }
     try {
-      final value = own(create());
+      final value = create();
+      // Construction may synchronously close this Scope. The reserved factory
+      // still transfers a returned resource into cleanup before lookup fails.
+      _retainDisposable(value);
+      _ensureActive();
       if (cache) _instances[key] = value;
       return value;
     } finally {
       _constructing.remove(key);
+      if (_constructing.isEmpty) {
+        _constructionDrained?.complete();
+        _constructionDrained = null;
+      }
     }
   }
 
@@ -190,11 +219,16 @@ final class CCScope {
   /// services so [CCDisposable] instances participate in Scope cleanup.
   T own<T extends Object>(T instance) {
     _ensureActive();
+    _retainDisposable(instance);
+    return instance;
+  }
+
+  /// Records exactly-once cleanup, including a closing factory's late return.
+  void _retainDisposable(Object instance) {
     if (instance is CCDisposable &&
         !_disposables.any((item) => identical(item, instance))) {
       _disposables.add(instance);
     }
-    return instance;
   }
 
   /// Whether the singleton identified by [key] completed initialization.
@@ -205,6 +239,8 @@ final class CCScope {
   /// Success and failure are both stable for this Scope lifetime. Runtime does
   /// not retry failed initialization implicitly because initializers may have
   /// externally visible side effects; retry belongs inside the initializer.
+  /// Retained records and shared producer execution use the Scope's Host Zone;
+  /// independent consumer waits still deliver results in their own error Zone.
   Future<void> ensureServiceReady(
     Object key,
     Future<void> Function(_ServiceReadinessRecord record) initialize, {
@@ -216,10 +252,12 @@ final class CCScope {
     final existing = _serviceReadiness[key];
     if (existing != null)
       return existing.waitFor(owner, identity, waitCancellation);
-    final record = _ServiceReadinessRecord();
+    final record = _ownerZone.run(_ServiceReadinessRecord.new);
     _serviceReadiness[key] = record;
     final waiting = record.waitFor(owner, identity, waitCancellation);
-    record.start(() => initialize(record), cancellation, id);
+    _ownerZone.run(
+      () => record.start(() => initialize(record), cancellation, id),
+    );
     return waiting;
   }
 
@@ -246,6 +284,10 @@ final class CCScope {
 
   /// Runs isolated, timeout-bounded disposal for every owned instance.
   Future<void> _dispose(Duration timeout) async {
+    if (_constructing.isNotEmpty) {
+      _constructionDrained ??= Completer<void>();
+      await _constructionDrained!.future;
+    }
     for (final disposable in _disposables.reversed) {
       try {
         await Future<void>.sync(disposable.dispose).timeout(timeout);

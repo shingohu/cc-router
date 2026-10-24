@@ -149,14 +149,6 @@ abstract final class CCRouter {
   get recentNavigationCapabilityFallbacks =>
       _runtime.recentNavigationCapabilityFallbacks;
 
-  /// Bounded evidence that a previous route state could have been restored.
-  ///
-  /// Events always report `unsupported`; they measure demand and contain no
-  /// replayable navigation state, URI parameters, arguments, or account IDs.
-  static List<CCRouteRestorationOpportunityEvent>
-  get recentRouteRestorationOpportunities =>
-      _runtime.recentRouteRestorationOpportunities;
-
   /// Bounded snapshot of managed Route Entry visibility transitions.
   ///
   /// Use this for page exposure, focus restoration, and diagnostics. Flutter
@@ -235,14 +227,6 @@ abstract final class CCRouter {
     CCNavigationCapabilityFallbackListener listener,
   ) => _runtime.addNavigationCapabilityFallbackListener(listener);
 
-  /// Subscribes to sanitized route-restoration demand observations.
-  ///
-  /// Analytics hosts use this to estimate whether full restoration is valuable.
-  /// The returned callback removes the listener without affecting the source.
-  static void Function() addRouteRestorationOpportunityListener(
-    CCRouteRestorationOpportunityListener listener,
-  ) => _runtime.addRouteRestorationOpportunityListener(listener);
-
   /// Subscribes to managed Route Entry visibility transitions.
   ///
   /// The returned callback removes the listener. Listener failures are
@@ -275,6 +259,12 @@ abstract final class CCRouter {
       _runtime.pendingNavigations;
 
   /// Resumes a pending navigation through the complete Runtime pipeline.
+  ///
+  /// Handle this Future in the restoring caller's Zone. Its replay result or
+  /// error is delivered independently from the original navigation caller,
+  /// including across error Zones. Host Failure Policy recovery remains owned
+  /// by the original pipeline; a successful recovery does not erase the replay
+  /// error returned here.
   static Future<Object?> resumePendingNavigation(String navigationId) =>
       _runtime.resumePendingNavigation(navigationId);
 
@@ -285,11 +275,30 @@ abstract final class CCRouter {
     String code = 'pending_cancelled',
   }) => _runtime.cancelPendingNavigation(navigationId, code: code);
 
+  /// Revalidates retained managed pages after application policy changes.
+  ///
+  /// Authentication, Session, permission, and feature-state owners call this
+  /// once after committing their new state. Runtime evaluates Host-registered
+  /// policies against an immutable Entry snapshot, then applies identity-fenced
+  /// `keep`, exact close, replace, or Host reset decisions. Calls are serialized;
+  /// this API never subscribes to an application `Listenable`.
+  ///
+  /// [reason] is a stable, non-sensitive identifier used for reports and system
+  /// navigation attribution. It must not contain account IDs, tokens, URIs, or
+  /// arbitrary user input.
+  static Future<CCRouteRevalidationReport> revalidateActiveRoutes({
+    required String reason,
+  }) => _runtime.revalidateActiveRoutes(reason: reason);
+
   /// Resolves the default or keyed implementation of service contract [T].
   ///
   /// Generated registration binds promoted contracts to their stable identity;
   /// callers select only the Dart contract type and optional [key]. Absence is
   /// a configuration error reported as [CCServiceNotFoundError].
+  /// Cancelled or expired invocation continuations and ended Service owners
+  /// cannot resolve fresh dependencies, including a replacement Session's
+  /// cached resources. Detached callbacks retain the original Scope lineage
+  /// even after parent methods return. Already held objects remain cooperative.
   static T service<T extends Object>({CCServiceKey<T>? key}) =>
       _runtime.service<T>(key: key);
 
@@ -333,7 +342,9 @@ abstract final class CCRouter {
   ///
   /// Capture during page setup, before async work or covering navigation. This
   /// does not subscribe to inherited changes or infer the current top entry.
-  /// Foreign, initial, or already removed pages return null.
+  /// Managed startup pages also own a handle. Contexts without a valid binding
+  /// to an active Entry in this Runtime return null, including removed pages.
+  /// Foreign Routes and local Outlet bases do not create their own binding.
   static CCRouteEntryHandle? routeEntryHandleOf(BuildContext context) {
     final binding = context
         .getInheritedWidgetOfExactType<_CCRouteServiceBinding>();
@@ -356,10 +367,15 @@ abstract final class CCRouter {
   /// Use this for page-instance resources such as draft controllers that must
   /// survive PageHide but be disposed after the concrete RouteEntry is removed.
   /// The Page must have been opened through `CCRouter.navigator` and assembled
-  /// by a Host that applies [CCRouterHostBinding.bindRouteEntry]. Initial or
-  /// foreign backend pages have no managed Route Scope and fail with
-  /// [CCServiceScopeUnavailableError]. This lookup uses an exact inherited
-  /// identity; it never guesses from the visible or top route.
+  /// by a Host that applies [CCRouterHostBinding.bindRouteEntry], including
+  /// initial pages opened by Managed startup. Foreign Routes and local Outlet
+  /// bases do not create their own managed Route Scope. A Context without a
+  /// managed binding fails with [CCServiceScopeUnavailableError]. This lookup
+  /// uses an exact inherited identity; it never guesses from the visible or
+  /// top route.
+  /// A backend-confirmed outgoing render lifetime keeps this exact Scope usable
+  /// until exit completes, even though its Entry is no longer active. Exact
+  /// close, empty anchors and Runtime shutdown do not extend that lifetime.
   static T routeService<T extends Object>(
     BuildContext context, {
     CCServiceKey<T>? key,
@@ -378,9 +394,10 @@ abstract final class CCRouter {
   /// Resolves an optional Route-scoped Service for the managed Page at
   /// [context].
   ///
-  /// Null means no matching Provider is registered. A foreign, initial,
-  /// removed, or disposed RouteEntry remains a lifecycle error and is never
-  /// converted to null.
+  /// Null means no matching Provider is registered. Missing managed ownership,
+  /// a fully exited Entry, or a disposed Scope remains a lifecycle error and is
+  /// never converted to null. Initial Managed pages and outgoing render Scopes
+  /// follow [routeService].
   static T? routeServiceOrNull<T extends Object>(
     BuildContext context, {
     CCServiceKey<T>? key,
@@ -398,8 +415,9 @@ abstract final class CCRouter {
 
   /// Resolves and readies a Route Service owned by [context]'s exact Page.
   ///
-  /// Removing the managed RouteEntry cancels pending readiness. The Context is
-  /// used only to read the immutable Navigation ID and never owns the Service.
+  /// Closing the Route Scope cancels pending readiness, after any backend-owned
+  /// outgoing render lifetime. The Context is used only to read the immutable
+  /// Navigation ID and never owns the Service.
   static Future<T> routeServiceAsync<T extends Object>(
     BuildContext context, {
     CCServiceKey<T>? key,
@@ -542,15 +560,16 @@ abstract final class CCRouterHostBinding {
 
   /// Reads a managed opening identity without exposing its payload wrapper.
   ///
-  /// Host adapters use this only to correlate exact declarative matches. It
-  /// returns null for foreign or initial state and retains no business Extra.
+  /// Host adapters use this only to correlate exact managed openings. It
+  /// returns null for values without a managed payload; Managed startup requests
+  /// carry an identity like later navigation. This lookup retains no Extra.
   static String? navigationIdForPayload(Object? payload) =>
       payload is _CCManagedNavigationPayload ? payload.navigationId : null;
 
   /// Returns the original business Extra from a managed backend [payload].
   ///
   /// Unmanaged values pass through unchanged so the same Host builder can
-  /// render initial, foreign, and CCRouter-managed locations.
+  /// render foreign and CCRouter-managed locations, including Managed startup.
   static Object? decodeRouteExtra(Object? payload) =>
       payload is _CCManagedNavigationPayload ? payload.extra : payload;
 
@@ -578,10 +597,13 @@ abstract final class CCRouterHostBinding {
   /// platform route information. [external] is true only for an untrusted
   /// platform location; current-session browser history remains internal while
   /// still rebuilding the target declarative partition with Go semantics.
+  /// The Host cancels [cancellation] when a newer location supersedes this
+  /// request. Cancellation fences policy, deferred replay and Backend dispatch.
   static Future<void> openRouteInformation(
     Uri uri, {
     required bool external,
     CCRoutePlacement? placementOverride,
+    CCCancellationToken? cancellation,
   }) => CCRouter._runtime.openRoute(
     uri,
     origin: external
@@ -589,6 +611,7 @@ abstract final class CCRouterHostBinding {
         : CCNavigationOrigin.internal,
     mode: CCDeepLinkOpenMode.go,
     placementOverride: placementOverride,
+    requestCancellation: cancellation,
   );
 
   /// Synchronously transfers one ready [adapter] into the active Runtime.

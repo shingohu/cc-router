@@ -24,9 +24,6 @@ enum CCDiagnosticCategory {
   /// Adapter and backend stack observations.
   backend,
 
-  /// Restoration demand observations.
-  restoration,
-
   /// Runtime timing and capacity observations.
   performance,
 }

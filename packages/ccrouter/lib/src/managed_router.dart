@@ -14,6 +14,8 @@ import 'flutter_route_factory.dart';
 import 'managed_predictive_back.dart';
 import 'route_catalog.dart';
 
+part 'foreign_route_bridge.dart';
+
 /// Builds an application-owned layout around managed Shell Outlet Navigators.
 ///
 /// The callback may place one Outlet for a compact tab layout or multiple
@@ -135,11 +137,15 @@ final class CCManagedShellScope {
 /// register the same Outlet key on [CCNavigationHost]. Pointer and focus events
 /// only select the fallback Back target; context-scoped navigation resolves the
 /// Outlet directly and does not depend on those events.
+/// Unmount releases rendering-only Routes, guards and foreign observations.
+/// Remount rebuilds the logical Stack with the same managed identities, pending
+/// results and Route Services; ordinary Widget State follows Flutter lifetime.
 final class CCManagedOutlet extends StatefulWidget {
   /// Creates a renderer for [outlet] in [backend].
   const CCManagedOutlet({
     required this.backend,
     required this.outlet,
+    this.baseBuilder,
     super.key,
   });
 
@@ -148,6 +154,14 @@ final class CCManagedOutlet extends StatefulWidget {
 
   /// Stable named Outlet registered by the backend Host.
   final String outlet;
+
+  /// Optional Host-owned local surface retained below this Outlet's Entries.
+  ///
+  /// It creates no managed Entry, result channel or Route Scope. Use it for an
+  /// adaptive pane's local list/detail UI; navigation from its Context still
+  /// resolves this exact Host/Outlet. Managed pages pop back to this surface.
+  /// Keep the builder stable to preserve its Widget State across stack changes.
+  final WidgetBuilder? baseBuilder;
 
   @override
   /// Creates the listener that projects Store revisions into a Navigator.
@@ -165,26 +179,37 @@ final class CCManagedOutlet extends StatefulWidget {
 final class CCManagedRouterBackend implements CCRouterAppBackend {
   /// Creates a single-Host managed Router backend.
   ///
-  /// When [initialLocation] is non-null it is treated as trusted Host
-  /// configuration. A null value consumes Flutter's platform default route and
-  /// applies external Deep Link policy. This first implementation accepts root
-  /// Outlet routes; Shell bindings and additional Outlet renderers are added by
-  /// the same backend without changing its state ownership model.
+  /// [initialLocation] is a trusted fallback. A non-root platform startup URI
+  /// takes precedence and passes external ingress policy unless
+  /// [overridePlatformDefaultLocation] explicitly forces the Host value.
+  /// Null consumes the platform URI, including `/`, as external input.
   CCManagedRouterBackend({
     required this.routeCatalog,
     CCNavigationHost? host,
     Iterable<CCManagedShellBinding> shellBindings = const [],
     String? initialLocation = '/',
+    bool overridePlatformDefaultLocation = false,
     Iterable<NavigatorObserver> additionalObservers = const [],
     bool enablePredictiveBack = false,
     bool initializeFromRouteInformation = true,
   }) : host = host ?? CCNavigationHost(),
-       _initialLocationIsExternal = initialLocation == null,
+       _initialLocationIsExternal =
+           initialLocation == null ||
+           (!overridePlatformDefaultLocation &&
+               WidgetsBinding.instance.platformDispatcher.defaultRouteName !=
+                   '/'),
        _routeInformationProvider = PlatformRouteInformationProvider(
          initialRouteInformation: RouteInformation(
            uri: Uri.parse(
-             initialLocation ??
-                 WidgetsBinding.instance.platformDispatcher.defaultRouteName,
+             initialLocation == null ||
+                     (!overridePlatformDefaultLocation &&
+                         WidgetsBinding
+                                 .instance
+                                 .platformDispatcher
+                                 .defaultRouteName !=
+                             '/')
+                 ? WidgetsBinding.instance.platformDispatcher.defaultRouteName
+                 : initialLocation,
            ),
          ),
        ) {
@@ -261,21 +286,27 @@ final class CCManagedRouterBackend implements CCRouterAppBackend {
 /// This is Host SPI exposed for diagnostics and composition tests. Feature code
 /// must navigate through `CCRouter.navigator`. The Adapter owns result channels,
 /// stack listeners, and temporary Navigator observations. Guarded Routes remain
-/// strongly referenced only while their Route-scoped PopEntry is registered;
-/// unmount, unbind, and disposal release both together. The Adapter never
-/// retains a `BuildContext` or Widget.
+/// referenced only by live renderer topology and Route-scoped PopEntry gates;
+/// renderer retirement releases both without closing the logical Stack. The
+/// Adapter never retains a `BuildContext` or Widget.
 final class CCManagedNavigationAdapter
     implements
         CCNavigationAdapter,
+        CCNavigationDispatchAdapter,
+        CCNavigationParentStackAdapter,
         CCNavigationTargetedCloseAdapter,
         CCNavigationAdapterHostBinding,
+        CCNavigationOutletVisibilityBinding,
+        CCNavigationRouteExitBinding,
         CCNavigationAdapterCapabilitySource,
         CCNavigationBackendEventSource,
         CCNavigationBackendSnapshotSource,
         CCNavigationPopCoordinator,
         CCNavigationScopedPopCoordinator,
         CCNavigationPopTargetSource,
+        CCNavigationScopedPopTargetSource,
         CCNavigationPopGuardBinding,
+        CCNavigationScopedPopGuardBinding,
         CCNavigationPredictiveBackSourceProvider {
   /// Creates an unattached Store for one [host] and generated [catalog].
   CCManagedNavigationAdapter({
@@ -290,10 +321,33 @@ final class CCManagedNavigationAdapter
        _additionalObservers = List.unmodifiable(additionalObservers),
        routeInformationSessionId = Object().hashCode.toRadixString(16) {
     _observers['root'] = _CCManagedNavigatorObserver(this, 'root');
+    foreignRouteBridge = CCForeignRouteBridge._(
+      allocateBackendEntryId: () {
+        _ensureAvailable();
+        return 'managed-bridge-${host.id}-${++_foreignSequence}';
+      },
+      publish: (kind, handle, previous) => _recordBridgedSurface(
+        kind: kind,
+        backendEntryId: handle.backendEntryId,
+        outlet: handle.navigatorOutlet,
+        hostId: handle.hostId,
+        location: handle.location,
+        previousBackendEntryId: previous?.backendEntryId,
+        owner: CCBackendEntryOwner.foreign,
+      ),
+      publishOpaque: (kind, handle) => _recordBridgedSurface(
+        kind: kind,
+        backendEntryId: handle.backendEntryId,
+        outlet: handle.navigatorOutlet,
+        hostId: handle.hostId,
+        location: handle.location,
+        owner: CCBackendEntryOwner.opaque,
+      ),
+    );
     if (enablePredictiveBack) {
       _predictiveBackBridge = CCManagedPredictiveBackBridge(
         hostId: host.id,
-        activeOutlet: () => _state.focusedOutlet,
+        activeOutlet: () => _popOutlet,
         navigatorForOutlet: _navigatorForOutlet,
         backendEntryIdForRoute: _backendEntryIdForRoute,
         hasLiveEntry: (backendEntryId) => _state.entries.any(
@@ -305,6 +359,44 @@ final class CCManagedNavigationAdapter
     } else {
       _predictiveBackBridge = null;
     }
+  }
+
+  /// Diagnostic-only reporting for third-party Navigators and non-Route UI.
+  ///
+  /// This bridge neither navigates nor creates a managed Entry, result or Scope.
+  /// The Adapter owns it and invalidates all handles and callbacks on disposal.
+  late final CCForeignRouteBridge foreignRouteBridge;
+
+  /// Publishes an explicit foreign/opaque lifecycle without rendering a Page.
+  void _recordBridgedSurface({
+    required CCNavigationBackendEventKind kind,
+    required String backendEntryId,
+    required String outlet,
+    required CCBackendEntryOwner owner,
+    String? hostId,
+    String? location,
+    String? previousBackendEntryId,
+  }) {
+    _ensureAvailable();
+    final sequence = ++_eventSequence;
+    _emit(
+      CCNavigationBackendEvent(
+        kind: kind,
+        timestamp: DateTime.now(),
+        backendEntryId: backendEntryId,
+        backendOperationId: '$_eventNamespace-$sequence',
+        sequence: sequence,
+        hostId: hostId ?? _host.id,
+        navigatorOutlet: outlet,
+        owner: owner,
+        location: location,
+        previousBackendEntryId: previousBackendEntryId,
+        placement: CCRoutePlacement(
+          hostId: hostId ?? _host.id,
+          navigatorOutlet: outlet,
+        ),
+      ),
+    );
   }
 
   /// Opaque process-local identity written to browser history state.
@@ -325,6 +417,9 @@ final class CCManagedNavigationAdapter
   /// Optional platform predictive-back bridge, allocated only when enabled.
   late final CCManagedPredictiveBackBridge? _predictiveBackBridge;
 
+  /// Empty structural Pages retained only while foreign Routes need their base.
+  final Map<String, ({int order, Page<Object?> page})> _foreignAnchors = {};
+
   /// Bounded Host diagnostics for declined predictive-back starts.
   final List<CCManagedPredictiveBackFallbackEvent> _predictiveBackFallbacks =
       [];
@@ -341,14 +436,32 @@ final class CCManagedNavigationAdapter
   /// Current immutable navigation state.
   _CCManagedNavigationState _state = const _CCManagedNavigationState.empty();
 
+  /// Whether Host layout, rather than navigation defaults, owns visibility.
+  bool _hasExplicitVisibleOutlets = false;
+
+  /// Payload-free exit signals owned only until Flutter finishes rendering.
+  final Map<String, _CCManagedRouteExit> _routeExits = {};
+
+  /// Frozen child projections owned only by an actually outgoing Shell Route.
+  final Map<Route<dynamic>, _CCManagedShellRenderExit> _shellRenderExits = {};
+
+  /// Exact removals whose synchronous Page callbacks must not defer disposal.
+  final Set<String> _immediateRemovals = {};
+
   /// Pending typed results keyed by Runtime navigation identity.
   final Map<String, Completer<Object?>> _results = {};
 
   /// Weak rendered Route references keyed by backend Entry identity.
   final Map<String, WeakReference<Route<dynamic>>> _renderedRoutes = {};
 
+  /// External Pops awaiting Flutter's actual result in the next microtask.
+  final Set<String> _externalPops = {};
+
   /// Runtime-owned synchronous guard evaluator while the Adapter is attached.
   CCPopGuardEvaluator? _popGuardEvaluator;
+
+  /// Exact native policy, preferred over the legacy focus-based binding.
+  CCScopedPopGuardEvaluator? _scopedPopGuardEvaluator;
 
   /// Conservative Flutter gates installed on guarded managed Routes.
   final Map<ModalRoute<Object?>, _CCManagedPopEntry> _managedPopGuardEntries =
@@ -357,8 +470,11 @@ final class CCManagedNavigationAdapter
   /// Routes awaiting a mounted ModalScope before PopEntry registration.
   final Set<Route<dynamic>> _pendingManagedPopGuardRoutes = {};
 
-  /// Whether a Runtime-approved Pop temporarily opened managed gates.
-  bool _runtimeGuardedPopInProgress = false;
+  /// Routes whose exact Runtime-approved Pop temporarily opened their gate.
+  final Set<Route<dynamic>> _runtimeGuardedPopRoutes = {};
+
+  /// Short-lived ownership prevents overlapping requests from claiming one Pop.
+  final Map<Route<dynamic>, _CCManagedPopOperation> _pendingPops = {};
 
   /// Store listeners owned by Router delegates and Outlet renderers.
   final Set<VoidCallback> _stateListeners = {};
@@ -369,11 +485,20 @@ final class CCManagedNavigationAdapter
   /// Adapter-supplied results awaiting exact Route removal confirmation.
   final Map<String, Object?> _pendingRemovalResults = {};
 
-  /// Monotonic backend event sequence scoped to this Host.
+  /// Allocates process-local Adapter identities without retaining retired Hosts.
+  static int _nextEventNamespace = 0;
+
+  /// Disjoint event namespace even when a logical Host ID is reused.
+  final String _eventNamespace = 'managed-${++_nextEventNamespace}';
+
+  /// Monotonic backend event sequence scoped to this Adapter instance.
   int _eventSequence = 0;
 
   /// Monotonic structural order shared by root Entries and Shell anchors.
   int _entrySequence = 0;
+
+  /// Monotonic identity source for live foreign Routes; never retains payloads.
+  int _foreignSequence = 0;
 
   /// Whether Runtime initialization completed.
   bool _initialized = false;
@@ -390,7 +515,7 @@ final class CCManagedNavigationAdapter
   CCNavigationAdapterCapabilities get capabilities =>
       CCNavigationAdapterCapabilities(
         supportsBackendVisibilityObservation: true,
-        supportsNestedNavigators: _host.navigatorKeys.length > 1,
+        supportsNestedNavigators: true,
         supportsStatefulShell: _shellBindings.isNotEmpty,
         supportsModalRoutes: true,
         supportsManagedPopObservation: true,
@@ -414,8 +539,24 @@ final class CCManagedNavigationAdapter
   @override
   void bindPopGuardEvaluator(CCPopGuardEvaluator? evaluator) {
     _popGuardEvaluator = evaluator;
-    _predictiveBackBridge?.bindPopGuardEvaluator(evaluator);
-    if (evaluator == null) {
+    _refreshPopGuardBinding();
+  }
+
+  @override
+  /// Binds native Route policy without changing global Host or Outlet focus.
+  void bindScopedPopGuardEvaluator(CCScopedPopGuardEvaluator? evaluator) {
+    _scopedPopGuardEvaluator = evaluator;
+    _refreshPopGuardBinding();
+  }
+
+  /// Reconciles native gates after either optional policy binding changes.
+  void _refreshPopGuardBinding() {
+    _predictiveBackBridge?.bindPopGuardEvaluator(
+      _hasPopGuardEvaluator
+          ? (trigger) => _evaluateNativePopGuard(trigger, activePopTarget)
+          : null,
+    );
+    if (!_hasPopGuardEvaluator) {
       _removeAllManagedPopGuards();
       return;
     }
@@ -428,6 +569,37 @@ final class CCManagedNavigationAdapter
         _installManagedPopGuard(route);
       }
     }
+  }
+
+  /// Whether either supported Runtime policy binding remains attached.
+  bool get _hasPopGuardEvaluator =>
+      _scopedPopGuardEvaluator != null || _popGuardEvaluator != null;
+
+  /// Uses the exact rendered identity; an unavailable guarded target fails closed.
+  CCPopGuardDecision _evaluateNativePopGuard(
+    CCPopTrigger trigger,
+    CCNavigationPopTarget? target,
+  ) {
+    if (target?.handlesPopInternally == true) return const CCPopAllow();
+    final scoped = _scopedPopGuardEvaluator;
+    if (scoped != null) {
+      return target == null
+          ? const CCPopDeny(code: 'pop_target_unavailable')
+          : scoped(trigger, target: target);
+    }
+    return _popGuardEvaluator?.call(trigger) ?? const CCPopAllow();
+  }
+
+  /// Captures the actual native Route, rather than a last-focused partition.
+  CCNavigationPopTarget? _nativePopTarget(Route<dynamic> route) {
+    final entry = _entryForRoute(route);
+    if (entry == null) return null;
+    return CCNavigationPopTarget(
+      hostId: _host.id,
+      navigatorOutlet: entry.request.placement.navigatorOutlet,
+      backendEntryId: entry.backendEntryId,
+      handlesPopInternally: route.willHandlePopInternally,
+    );
   }
 
   /// Current state revision used by Router and focused tests.
@@ -444,46 +616,63 @@ final class CCManagedNavigationAdapter
   ];
 
   /// Current URI projected to Flutter Router, or null before first navigation.
-  Uri? get _currentUri =>
-      _state.entries.isEmpty ? null : _state.entries.last.request.uri;
+  Uri? get _currentUri {
+    if (_state.entries.isEmpty) return null;
+    final shellId = _state.activeShellId;
+    final roots = _entriesForOutlet('root');
+    if (shellId == null) return _state.entries.last.request.uri;
+    if (roots.isNotEmpty && roots.last.order > _state.shellAnchorOrder!) {
+      return roots.last.request.uri;
+    }
+    final outlet =
+        _state.activeOutletsByShell[shellId] ?? _shells[shellId]!.initialOutlet;
+    final branch = _entriesForOutlet(outlet);
+    return branch.isEmpty ? null : branch.last.request.uri;
+  }
+
+  /// Visible stack partitions after root overlays mask the retained layout.
+  Set<String> get _effectiveVisibleOutlets {
+    final roots = _entriesForOutlet('root');
+    if (_foreignRootTop != null ||
+        (_state.activeShellId != null &&
+            roots.isNotEmpty &&
+            roots.last.order > _state.shellAnchorOrder!)) {
+      return const {'root'};
+    }
+    return _state.visibleOutlets;
+  }
 
   /// Outlet currently used for context-free Back and Pop operations.
   String get focusedOutlet => _state.focusedOutlet;
 
   /// Outlets currently visible in the Host layout.
-  Set<String> get visibleOutlets => _state.visibleOutlets;
+  Set<String> get visibleOutlets => Set.unmodifiable(_effectiveVisibleOutlets);
 
   /// Publishes the Outlets simultaneously visible in the current Host layout.
   ///
   /// Adaptive split-pane infrastructure calls this after layout selection. It
   /// does not push, remove, or focus a Page, and hidden branch stacks remain
   /// retained. The set must be non-empty and contain only registered Outlets.
+  /// Once supplied, layout selection survives navigation, focus and Shell
+  /// activation until the Host supplies another set. Covering root surfaces
+  /// temporarily mask this retained selection. Invalid input leaves it intact.
+  @override
   void updateVisibleOutlets(Iterable<String> outlets) {
     _ensureAvailable();
-    final next = outlets.toSet();
-    if (next.isEmpty || next.any((outlet) => !_host.containsOutlet(outlet))) {
+    final values = List<String>.of(outlets);
+    final next = values.toSet();
+    if (next.isEmpty ||
+        next.length != values.length ||
+        next.any((outlet) => !_host.containsOutlet(outlet))) {
       throw const CCNavigationAdapterError(
-        'Visible Outlets must be a non-empty subset of the managed Host.',
+        'Visible Outlets must be a non-empty unique subset of the managed Host.',
       );
     }
+    _hasExplicitVisibleOutlets = true;
     if (setEquals(next, _state.visibleOutlets)) return;
     _state = _copyState(entries: _state.entries, visibleOutlets: next);
+    _predictiveBackBridge?.invalidateInactiveOutlets();
     _notifyStateListeners();
-    _emit(
-      CCNavigationBackendEvent(
-        kind: CCNavigationBackendEventKind.outletsChanged,
-        timestamp: DateTime.now(),
-        backendOperationId: 'managed-${_host.id}-${++_eventSequence}',
-        hostId: _host.id,
-        navigatorOutlet: _state.focusedOutlet,
-        sequence: _eventSequence,
-        placement: CCRoutePlacement(
-          hostId: _host.id,
-          navigatorOutlet: _state.focusedOutlet,
-        ),
-        activeNavigatorOutlets: next.toList(growable: false),
-      ),
-    );
   }
 
   @override
@@ -510,6 +699,7 @@ final class CCManagedNavigationAdapter
         'Managed Shell bindings must match Runtime Shell contracts exactly.',
       );
     }
+    final claimedOutlets = <String>{'root'};
     for (final shell in shells) {
       final outlets = shell.outlets.toSet();
       if (outlets.length != shell.outlets.length ||
@@ -519,6 +709,12 @@ final class CCManagedNavigationAdapter
         );
       }
       for (final outlet in shell.outlets) {
+        if (!claimedOutlets.add(outlet)) {
+          throw CCNavigationAdapterError(
+            'Managed Shell "${shell.shellId}" cannot own root or share '
+            'Outlet "$outlet" with another Shell on Host "${_host.id}".',
+          );
+        }
         if (!_host.containsOutlet(outlet)) {
           throw CCNavigationAdapterError(
             'Managed Shell "${shell.shellId}" requires unregistered Outlet '
@@ -572,6 +768,16 @@ final class CCManagedNavigationAdapter
   Future<Object?> navigate(CCNavigationRequest request) {
     _ensureAvailable();
     _ensureRequest(request);
+    for (final parent in request.parentStack) {
+      _ensureRequest(parent);
+      if (parent.hostId != request.hostId ||
+          parent.placement.navigatorOutlet !=
+              request.placement.navigatorOutlet ||
+          parent.placement.shellId != request.placement.shellId ||
+          parent.parentStack.isNotEmpty) {
+        throw const CCNavigationAdapterError('Invalid managed parent plan.');
+      }
+    }
     switch (request.operation) {
       case CCNavigationOperation.push:
         return _push(request);
@@ -594,6 +800,15 @@ final class CCManagedNavigationAdapter
   }
 
   @override
+  /// Runtime constructs ancestors for this Backend's declarative transactions.
+  bool supportsParentStack(CCNavigationRequest request) => true;
+
+  @override
+  /// Proves synchronous Store acceptance independently of the later Pop result.
+  CCNavigationDispatch dispatchNavigation(CCNavigationRequest request) =>
+      CCNavigationDispatch(result: navigate(request));
+
+  @override
   /// Removes one exact managed Entry without selecting the active stack.
   Future<CCRouteCloseOutcome> closeNavigation({
     required String navigationId,
@@ -610,15 +825,52 @@ final class CCManagedNavigationAdapter
     }
     final route = _renderedRoutes[entry.backendEntryId]?.target;
     final navigator = route?.navigator;
-    if (route != null && route.isActive && navigator != null) {
+    final keepForeignRoot =
+        route != null &&
+        _entriesForOutlet(navigatorOutlet).length == 1 &&
+        (_observerFor(navigatorOutlet).foreignEntries.isNotEmpty ||
+            _coveringForeignRootRoute(navigatorOutlet) != null);
+    if (keepForeignRoot) {
+      final settings = route.settings;
+      Page<Object?>? anchor;
+      if (settings is _CCManagedGuardedPage) {
+        anchor = _CCManagedGuardedPage(
+          child: const SizedBox.shrink(),
+          presentation: settings.presentation,
+          adapter: this,
+          key: settings.key,
+        );
+      } else if (settings is _CCManagedPage) {
+        anchor = _CCManagedPage(
+          adapter: this,
+          child: const SizedBox.shrink(),
+          presentation: settings.presentation,
+          key: settings.key,
+        );
+      }
+      if (anchor != null) {
+        _foreignAnchors[navigatorOutlet] = (order: entry.order, page: anchor);
+      }
+      _removeManagedPopGuard(route);
+    }
+    if (!keepForeignRoot &&
+        route != null &&
+        route.isActive &&
+        navigator != null) {
       _pendingRemovalResults[entry.backendEntryId] = result;
-      navigator.removeRoute<Object?>(route, result);
+      _immediateRemovals.add(entry.backendEntryId);
+      try {
+        navigator.removeRoute<Object?>(route, result);
+      } finally {
+        _immediateRemovals.remove(entry.backendEntryId);
+      }
     }
     if (_entryForNavigation(navigationId) != null) {
       _removeEntry(
         entry,
         result: result,
         eventKind: CCNavigationBackendEventKind.remove,
+        preserveRenderLifetime: false,
       );
     }
     return const CCRouteCloseOutcome(CCRouteCloseStatus.closed);
@@ -651,48 +903,60 @@ final class CCManagedNavigationAdapter
     if (hostId != _host.id || !_host.containsOutlet(navigatorOutlet)) {
       return const CCPopOutcome(handled: false);
     }
-    final outlet = navigatorOutlet;
-    final coveringRootRoute = _coveringForeignRootRoute(outlet);
-    if (coveringRootRoute != null) {
-      final rootNavigator = _host.navigatorKey.currentState;
-      if (rootNavigator == null) return _unhandledPop;
-      final handled = await rootNavigator.maybePop<Object?>(result);
-      return CCPopOutcome(
-        handled: handled,
-        removedEntryOwner: handled
-            ? CCPopRemovedEntryOwner.foreign
-            : CCPopRemovedEntryOwner.none,
-        hostId: _host.id,
-        navigatorOutlet: 'root',
-      );
-    }
+    final outlet = _coveringForeignRootRoute(navigatorOutlet) == null
+        ? navigatorOutlet
+        : 'root';
     final navigator = _host.navigatorKeyFor(outlet).currentState;
     if (navigator == null) return _unhandledPop;
     final top = _observerFor(outlet).topRoute;
-    final managed = _entryForRoute(top);
-    if (managed != null) {
+    if (top == null) return _unhandledPop;
+    if (_pendingPops.containsKey(top)) {
+      return CCPopOutcome(
+        handled: true,
+        hostId: _host.id,
+        navigatorOutlet: outlet,
+      );
+    }
+    final operation = _CCManagedPopOperation();
+    _pendingPops[top] = operation;
+    final managed = _entryForRoute(top) ?? _topEntryForShellRoute(top);
+    // Normal Page results come from Route.popped. Only a structural Shell
+    // needs to associate the container result with its selected child.
+    if (managed != null && top.settings is _CCManagedShellPage) {
       _pendingRemovalResults[managed.backendEntryId] = result;
     }
-    _runtimeGuardedPopInProgress = true;
-    _setManagedPopEntriesCanPop(true);
+    // Internal history may disappear while willPop awaits. Keep the native
+    // gate closed so the actual exit still checks its exact Managed Guard.
+    final approveExit = !top.willHandlePopInternally;
+    if (approveExit) _setManagedPopEntryCanPop(top, true);
     late final bool handled;
     try {
-      handled = await navigator.maybePop<Object?>(result);
+      handled = await Future.any([
+        runZoned(
+          () => navigator.maybePop<Object?>(result),
+          zoneValues: {_CCManagedPopOperation.zoneKey: operation},
+        ),
+        operation.retired.future,
+      ]);
     } finally {
-      _setManagedPopEntriesCanPop(false);
-      _runtimeGuardedPopInProgress = false;
-    }
-    if (!handled || (top?.isCurrent ?? false)) {
+      _pendingPops.remove(top);
+      if (approveExit) _setManagedPopEntryCanPop(top, false);
       if (managed != null) {
         _pendingRemovalResults.remove(managed.backendEntryId);
       }
     }
+    if (!handled && _canPopShell(outlet)) {
+      return maybePopOutcomeAt(
+        hostId: hostId,
+        navigatorOutlet: 'root',
+        result: result,
+      );
+    }
     if (!handled) return _unhandledPop;
-    if (managed != null &&
-        _entryForNavigation(managed.request.navigationId) == null) {
+    if (operation.didPop && operation.removedBackendEntryId != null) {
       return CCPopOutcome(
         handled: true,
-        removedBackendEntryId: managed.backendEntryId,
+        removedBackendEntryId: operation.removedBackendEntryId,
         removedEntryOwner: CCPopRemovedEntryOwner.managed,
         hostId: _host.id,
         navigatorOutlet: outlet,
@@ -700,9 +964,9 @@ final class CCManagedNavigationAdapter
     }
     return CCPopOutcome(
       handled: true,
-      removedEntryOwner: top == null
-          ? CCPopRemovedEntryOwner.none
-          : CCPopRemovedEntryOwner.foreign,
+      removedEntryOwner: operation.didPop
+          ? CCPopRemovedEntryOwner.foreign
+          : CCPopRemovedEntryOwner.none,
       hostId: _host.id,
       navigatorOutlet: outlet,
     );
@@ -741,21 +1005,30 @@ final class CCManagedNavigationAdapter
     if (hostId != _host.id || !_host.containsOutlet(navigatorOutlet)) {
       return const CCPopOutcome(handled: false);
     }
-    final outlet = navigatorOutlet;
+    final outlet = _coveringForeignRootRoute(navigatorOutlet) == null
+        ? navigatorOutlet
+        : 'root';
     final navigator = _host.navigatorKeyFor(outlet).currentState;
-    if (navigator == null || !navigator.canPop()) return _unhandledPop;
+    if (navigator == null) return _unhandledPop;
+    if (!navigator.canPop()) {
+      return _canPopShell(outlet)
+          ? popOutcomeAt(
+              hostId: hostId,
+              navigatorOutlet: 'root',
+              result: result,
+            )
+          : _unhandledPop;
+    }
     final top = _observerFor(outlet).topRoute;
-    final managed = _entryForRoute(top);
+    final managed = _entryForRoute(top) ?? _topEntryForShellRoute(top);
     if (managed != null) {
       _pendingRemovalResults[managed.backendEntryId] = result;
     }
-    _runtimeGuardedPopInProgress = true;
-    _setManagedPopEntriesCanPop(true);
+    if (top != null) _setManagedPopEntryCanPop(top, true);
     try {
       navigator.pop<Object?>(result);
     } finally {
-      _setManagedPopEntriesCanPop(false);
-      _runtimeGuardedPopInProgress = false;
+      if (top != null) _setManagedPopEntryCanPop(top, false);
     }
     final removedManagedRoute = managed != null && !(top?.isCurrent ?? true);
     if (managed != null && !removedManagedRoute) {
@@ -797,14 +1070,76 @@ final class CCManagedNavigationAdapter
     if (hostId != _host.id || !_host.containsOutlet(navigatorOutlet)) {
       return false;
     }
-    return _host.navigatorKeyFor(navigatorOutlet).currentState?.canPop() ??
-        false;
+    if (_coveringForeignRootRoute(navigatorOutlet) != null) {
+      return _host.navigatorKey.currentState?.canPop() ?? false;
+    }
+    return (_host.navigatorKeyFor(navigatorOutlet).currentState?.canPop() ??
+            false) ||
+        _canPopShell(navigatorOutlet);
+  }
+
+  /// Whether an exhausted child can bubble Back to its current Shell anchor.
+  bool _canPopShell(String outlet) {
+    final shell = _shellForOutlet(outlet);
+    final top = _observerFor('root').topRoute;
+    return shell != null &&
+        top?.settings is _CCManagedShellPage &&
+        (top!.settings as _CCManagedShellPage).shellId == shell.shellId &&
+        (_host.navigatorKey.currentState?.canPop() ?? false);
+  }
+
+  /// Managed result/guard owner of a structural Shell Route's selected branch.
+  _CCManagedEntry? _topEntryForShellRoute(Route<dynamic>? route) {
+    final settings = route?.settings;
+    if (settings is! _CCManagedShellPage) return null;
+    final shell = _shells[settings.shellId];
+    if (shell == null) return null;
+    final outlet =
+        _state.activeOutletsByShell[shell.shellId] ?? shell.initialOutlet;
+    final entries = _entriesForOutlet(outlet);
+    return entries.isEmpty ? null : entries.last;
   }
 
   @override
-  /// Exact managed Entry targeted by the next root Pop, when rendered.
+  /// Live managed or foreign target selected for context-free Back.
   CCNavigationPopTarget? get activePopTarget {
-    final outlet = _popOutlet;
+    return popTargetAt(hostId: _host.id, navigatorOutlet: _popOutlet);
+  }
+
+  @override
+  /// Resolves actual ownership without changing Host focus or branch selection.
+  CCNavigationPopTarget? popTargetAt({
+    required String hostId,
+    required String navigatorOutlet,
+  }) {
+    if (_disposed ||
+        hostId != _host.id ||
+        !_host.containsOutlet(navigatorOutlet))
+      return null;
+    final outlet = _coveringForeignRootRoute(navigatorOutlet) == null
+        ? navigatorOutlet
+        : 'root';
+    final observer = _observerFor(outlet);
+    final settings = observer.topRoute?.settings;
+    if (settings is _CCManagedShellPage) {
+      final shell = _shells[settings.shellId];
+      if (shell != null) {
+        return popTargetAt(
+          hostId: hostId,
+          navigatorOutlet:
+              _state.activeOutletsByShell[shell.shellId] ?? shell.initialOutlet,
+        );
+      }
+    }
+    final foreignId = observer.foreignEntries[observer.topRoute];
+    if (foreignId != null) {
+      return CCNavigationPopTarget(
+        hostId: _host.id,
+        navigatorOutlet: outlet,
+        backendEntryId: foreignId,
+        owner: CCBackendEntryOwner.foreign,
+      );
+    }
     final entries = _entriesForOutlet(outlet);
     final entry =
         _entryForRoute(_observerFor(outlet).topRoute) ??
@@ -814,13 +1149,27 @@ final class CCManagedNavigationAdapter
       hostId: _host.id,
       navigatorOutlet: outlet,
       backendEntryId: entry.backendEntryId,
+      handlesPopInternally: observer.topRoute?.willHandlePopInternally ?? false,
     );
   }
 
   /// Outlet selected for a navigation command without call-site Context.
   String get _popOutlet {
+    final visible = _effectiveVisibleOutlets;
     final focused = _state.focusedOutlet;
-    if (_host.navigatorKeyFor(focused).currentState != null) return focused;
+    if (visible.contains(focused) &&
+        _host.navigatorKeyFor(focused).currentState != null)
+      return focused;
+    final shellId = _state.activeShellId;
+    final selected = _state.activeOutletsByShell[shellId];
+    if (selected != null &&
+        visible.contains(selected) &&
+        _host.navigatorKeyFor(selected).currentState != null)
+      return selected;
+    final mounted = visible.where(
+      (outlet) => _host.navigatorKeyFor(outlet).currentState != null,
+    );
+    if (mounted.length == 1) return mounted.single;
     return 'root';
   }
 
@@ -832,6 +1181,11 @@ final class CCManagedNavigationAdapter
   /// not foreign surfaces.
   Route<dynamic>? _coveringForeignRootRoute(String outlet) {
     if (outlet == 'root') return null;
+    return _foreignRootTop;
+  }
+
+  /// Real foreign root top, excluding implementation-owned structural Pages.
+  Route<dynamic>? get _foreignRootTop {
     final route = _observerFor('root').topRoute;
     if (route == null ||
         !route.isCurrent ||
@@ -860,17 +1214,17 @@ final class CCManagedNavigationAdapter
   void _removeStateListener(VoidCallback listener) =>
       _stateListeners.remove(listener);
 
-  /// Creates declarative Pages for the root Stack and active Shell anchor.
+  /// Creates root Pages and retained Shell anchors in their shared Stack order.
   List<Page<Object?>> _buildRootPages() {
     final layers = <({int order, Page<Object?> page})>[
+      if (_foreignAnchors['root'] case final anchor?) anchor,
       for (final entry in _entriesForOutlet('root'))
         (order: entry.order, page: _buildPage(entry)),
     ];
-    final shellId = _state.activeShellId;
-    final shellOrder = _state.shellAnchorOrder;
-    if (shellId != null && shellOrder != null) {
+    for (final anchor in _state.shellAnchors.entries) {
+      final shellId = anchor.key;
       layers.add((
-        order: shellOrder,
+        order: anchor.value,
         page: _CCManagedShellPage(
           key: ValueKey<String>('ccrouter.managed.shell.$shellId'),
           shellId: shellId,
@@ -890,16 +1244,34 @@ final class CCManagedNavigationAdapter
   }
 
   /// Creates Pages for one named Outlet partition.
-  List<Page<Object?>> _buildOutletPages(String outlet) {
+  List<Page<Object?>> _buildOutletPages(
+    String outlet, {
+    WidgetBuilder? baseBuilder,
+  }) {
     final entries = _entriesForOutlet(outlet);
+    final anchor = _foreignAnchors[outlet]?.page;
+    if (baseBuilder != null) {
+      return [
+        _CCManagedPlaceholderPage(
+          key: ValueKey<String>('ccrouter.managed.base.$outlet'),
+          builder: baseBuilder,
+        ),
+        if (anchor != null) anchor,
+        ...entries.map(_buildPage),
+      ];
+    }
     if (entries.isEmpty) {
+      if (anchor != null) return [anchor];
       return [
         _CCManagedPlaceholderPage(
           key: ValueKey<String>('ccrouter.managed.placeholder.$outlet'),
         ),
       ];
     }
-    return List.unmodifiable(entries.map(_buildPage));
+    return List.unmodifiable([
+      if (anchor != null) anchor,
+      ...entries.map(_buildPage),
+    ]);
   }
 
   /// Returns the immutable bottom-to-top Entries of [outlet].
@@ -939,7 +1311,8 @@ final class CCManagedNavigationAdapter
         predictiveBackHandler: _predictiveBackBridge,
       );
     }
-    return CCFlutterRouteFactory.createPage<Object?>(
+    return _CCManagedPage(
+      adapter: this,
       child: boundChild,
       presentation: presentation,
       key: entry.pageKey,
@@ -1026,13 +1399,11 @@ final class CCManagedNavigationAdapter
       previousBackendEntryId:
           previousBackendEntryId ?? previous?.backendEntryId,
     );
-    _emitTop(entry, previous: previous);
   }
 
   /// Applies Go to one partition or Reset to every partition of this Host.
   void _replaceAll(CCNavigationRequest request, {required bool resetHost}) {
     final outlet = request.placement.navigatorOutlet;
-    final activeShellId = _state.activeShellId;
     final removed = resetHost
         ? _state.entries
         : _state.entries
@@ -1040,24 +1411,34 @@ final class CCManagedNavigationAdapter
                 (entry) =>
                     entry.request.placement.navigatorOutlet == outlet ||
                     (outlet == 'root' &&
-                        activeShellId != null &&
-                        entry.request.placement.shellId == activeShellId),
+                        _shellForOutlet(
+                              entry.request.placement.navigatorOutlet,
+                            ) !=
+                            null),
               )
               .toList(growable: false);
     final retained = _state.entries
         .where((entry) => !removed.contains(entry))
         .toList(growable: true);
+    final parents = [
+      for (final parent in request.parentStack)
+        _CCManagedEntry(parent, order: ++_entrySequence),
+    ];
     final entry = _CCManagedEntry(request, order: ++_entrySequence);
-    retained.add(entry);
+    retained.addAll([...parents, entry]);
     _commitForNavigation(
       retained,
       entry,
       clearActiveShell: resetHost || outlet == 'root',
     );
     for (final old in removed.reversed) {
+      _retainRouteExit(old);
       _completeResult(old.request.navigationId, null);
       _renderedRoutes.remove(old.backendEntryId);
       _emitEntryEvent(CCNavigationBackendEventKind.remove, old);
+    }
+    for (final parent in parents) {
+      _emitEntryEvent(CCNavigationBackendEventKind.push, parent);
     }
     _emitEntryEvent(
       removed.isEmpty
@@ -1068,7 +1449,6 @@ final class CCManagedNavigationAdapter
           ? null
           : removed.last.backendEntryId,
     );
-    _emitTop(entry, previous: removed.isEmpty ? null : removed.last);
   }
 
   /// Removes [entry], completes its channel once, and reveals its partition top.
@@ -1077,35 +1457,59 @@ final class CCManagedNavigationAdapter
     Object? result,
     required CCNavigationBackendEventKind eventKind,
     bool notify = true,
+    bool preserveRenderLifetime = true,
   }) {
     if (!_state.entries.contains(entry)) return;
-    final partition = _entriesForOutlet(
-      entry.request.placement.navigatorOutlet,
-    );
-    final wasTop = partition.isNotEmpty && identical(partition.last, entry);
+    if (preserveRenderLifetime) _retainRouteExit(entry);
     final next = [..._state.entries]..remove(entry);
-    final shellId = entry.request.placement.shellId;
-    final shellStillHasEntries =
-        shellId != null &&
-        next.any((candidate) => candidate.request.placement.shellId == shellId);
-    _state = _copyState(
-      entries: next,
-      clearActiveShell:
-          shellId != null &&
-          _state.activeShellId == shellId &&
-          !shellStillHasEntries,
-    );
+    _state = _copyState(entries: next);
     _renderedRoutes.remove(entry.backendEntryId);
     _pendingRemovalResults.remove(entry.backendEntryId);
     _completeResult(entry.request.navigationId, result);
     _emitEntryEvent(eventKind, entry);
-    final nextPartition = _entriesForOutlet(
-      entry.request.placement.navigatorOutlet,
-    );
-    if (wasTop && nextPartition.isNotEmpty) {
-      _emitTop(nextPartition.last, previous: entry);
-    }
     if (notify) _notifyStateListeners();
+  }
+
+  /// Tracks only a live outgoing transition, never a retained empty anchor.
+  void _retainRouteExit(
+    _CCManagedEntry entry, {
+    TransitionRoute<Object?>? outerRoute,
+  }) {
+    final navigationId = entry.request.navigationId;
+    if (_routeExits.containsKey(navigationId)) return;
+    final route = outerRoute ?? _renderedRoutes[entry.backendEntryId]?.target;
+    if (_immediateRemovals.contains(entry.backendEntryId) ||
+        route is! TransitionRoute<Object?> ||
+        _foreignAnchors.values.any(
+          (anchor) => anchor.page.key == entry.pageKey,
+        )) {
+      return;
+    }
+    final exit = _CCManagedRouteExit(
+      outlet: outerRoute == null
+          ? entry.request.placement.navigatorOutlet
+          : 'root',
+      onComplete: () => _routeExits.remove(navigationId),
+    );
+    _routeExits[navigationId] = exit;
+    // The Future retains only this detachable signal, not Adapter or payload.
+    unawaited(
+      route.completed.then<void>(
+        (_) => exit.complete(),
+        onError: (Object _, StackTrace __) => exit.complete(),
+      ),
+    );
+  }
+
+  @override
+  /// Keeps a removed page's Scope usable only through its pending render exit.
+  void Function()? addRouteExitListener({
+    required String navigationId,
+    required String hostId,
+    required void Function() onExited,
+  }) {
+    if (_disposed || hostId != _host.id) return null;
+    return _routeExits[navigationId]?.addListener(onExited);
   }
 
   /// Commits one navigation transaction and updates structural Shell state.
@@ -1115,64 +1519,141 @@ final class CCManagedNavigationAdapter
     bool clearActiveShell = false,
   }) {
     final placement = entry.request.placement;
-    final shellId = placement.shellId;
-    var activeShellId = clearActiveShell ? null : _state.activeShellId;
-    var shellAnchorOrder = clearActiveShell ? null : _state.shellAnchorOrder;
+    final shellId = _shellForOutlet(placement.navigatorOutlet)?.shellId;
+    if (shellId != null) {
+      for (final exit in _shellRenderExits.values) {
+        if (exit.shellId == shellId) exit.retireProjection();
+      }
+    }
+    final anchors = clearActiveShell
+        ? <String, int>{}
+        : {..._state.shellAnchors};
     final activeOutlets = {..._state.activeOutletsByShell};
     var visibleOutlets = {..._state.visibleOutlets};
     if (shellId != null) {
-      if (activeShellId != shellId) shellAnchorOrder = entry.order;
-      activeShellId = shellId;
+      if (_state.activeShellId != shellId || !anchors.containsKey(shellId)) {
+        anchors[shellId] = entry.order;
+      }
       activeOutlets[shellId] = placement.navigatorOutlet;
       visibleOutlets = {placement.navigatorOutlet};
     } else if (placement.navigatorOutlet == 'root') {
-      visibleOutlets = {'root'};
+      if (anchors.isEmpty) visibleOutlets = {'root'};
     } else {
       visibleOutlets.add(placement.navigatorOutlet);
     }
     _state = _CCManagedNavigationState(
       revision: _state.revision + 1,
       entries: entries,
-      activeShellId: activeShellId,
-      shellAnchorOrder: shellAnchorOrder,
+      shellAnchors: anchors,
       focusedOutlet: placement.navigatorOutlet,
-      visibleOutlets: visibleOutlets,
+      visibleOutlets: _hasExplicitVisibleOutlets
+          ? _state.visibleOutlets
+          : visibleOutlets,
       activeOutletsByShell: activeOutlets,
     );
     _notifyStateListeners();
   }
 
-  /// Copies Store state while optionally clearing its active Shell anchor.
+  /// Copies state, retiring empty Shell anchors and restoring the revealed one.
   _CCManagedNavigationState _copyState({
     required List<_CCManagedEntry> entries,
     bool clearActiveShell = false,
     String? focusedOutlet,
     Set<String>? visibleOutlets,
     Map<String, String>? activeOutletsByShell,
-  }) => _CCManagedNavigationState(
-    revision: _state.revision + 1,
-    entries: entries,
-    activeShellId: clearActiveShell ? null : _state.activeShellId,
-    shellAnchorOrder: clearActiveShell ? null : _state.shellAnchorOrder,
-    focusedOutlet: focusedOutlet ?? _state.focusedOutlet,
-    visibleOutlets: visibleOutlets ?? _state.visibleOutlets,
-    activeOutletsByShell: activeOutletsByShell ?? _state.activeOutletsByShell,
-  );
+  }) {
+    final anchors = <String, int>{
+      if (!clearActiveShell)
+        for (final anchor in _state.shellAnchors.entries)
+          if (entries.any(
+                (entry) => _shells[anchor.key]!.outlets.contains(
+                  entry.request.placement.navigatorOutlet,
+                ),
+              ) ||
+              _shells[anchor.key]!.outlets.any(_foreignAnchors.containsKey))
+            anchor.key: anchor.value,
+    };
+    final activeShell = _CCManagedNavigationState.topShell(anchors);
+    final shellChanged = activeShell != _state.activeShellId;
+    final revealedOutlet = activeShell == null
+        ? 'root'
+        : (_state.activeOutletsByShell[activeShell] ??
+              _shells[activeShell]!.initialOutlet);
+    return _CCManagedNavigationState(
+      revision: _state.revision + 1,
+      entries: entries,
+      shellAnchors: anchors,
+      focusedOutlet:
+          focusedOutlet ??
+          (shellChanged ? revealedOutlet : _state.focusedOutlet),
+      visibleOutlets:
+          visibleOutlets ??
+          (shellChanged && !_hasExplicitVisibleOutlets
+              ? {revealedOutlet}
+              : _state.visibleOutlets),
+      activeOutletsByShell: activeOutletsByShell ?? _state.activeOutletsByShell,
+    );
+  }
 
   /// Notifies a stable copy so listeners may detach during callbacks.
   void _notifyStateListeners() {
-    CCPageLifecycleHostBridge.setActiveOutlets(
-      hostId: _host.id,
-      outlets: _disposed ? const <String>[] : _state.visibleOutlets,
-    );
+    _emitVisibleOutlets();
     for (final listener in _stateListeners.toList()) {
       listener();
     }
   }
 
+  /// Resolves structural ownership independently of a page's declared metadata.
+  CCNavigationShell? _shellForOutlet(String outlet) {
+    for (final shell in _shells.values) {
+      if (shell.outlets.contains(outlet)) return shell;
+    }
+    return null;
+  }
+
+  /// Publishes the same layout projection consumed by Flutter lifecycle hooks.
+  void _emitVisibleOutlets() {
+    CCPageLifecycleHostBridge.setActiveOutlets(
+      hostId: _host.id,
+      outlets: _disposed ? const <String>[] : _effectiveVisibleOutlets,
+    );
+    if (_disposed) return;
+    _emit(
+      CCNavigationBackendEvent(
+        kind: CCNavigationBackendEventKind.outletsChanged,
+        timestamp: DateTime.now(),
+        backendOperationId: '$_eventNamespace-${++_eventSequence}',
+        hostId: _host.id,
+        sequence: _eventSequence,
+        activeNavigatorOutlets: _effectiveVisibleOutlets,
+      ),
+    );
+  }
+
   /// Returns the stable observer owned by one registered Outlet.
   _CCManagedNavigatorObserver _observerFor(String outlet) => _observers
       .putIfAbsent(outlet, () => _CCManagedNavigatorObserver(this, outlet));
+
+  /// Starts a fresh renderer generation without altering the logical Stack.
+  _CCManagedNavigatorObserver _attachRenderer(String outlet) {
+    _observers[outlet]?.retire();
+    final observer = _CCManagedNavigatorObserver(this, outlet);
+    _observers[outlet] = observer;
+    return observer;
+  }
+
+  /// Retires only this generation; an older disposal cannot clear a new mount.
+  void _detachRenderer(_CCManagedNavigatorObserver observer) {
+    observer.retire();
+    if (identical(_observers[observer.outlet], observer)) {
+      if (observer.outlet == 'root') {
+        for (final exit in _shellRenderExits.values.toList()) {
+          exit.complete();
+        }
+      }
+      _observers.remove(observer.outlet);
+    }
+  }
 
   /// Selects [outlet] for context-free Back without changing Shell activation.
   void _focusOutlet(String outlet) {
@@ -1198,7 +1679,9 @@ final class CCManagedNavigationAdapter
     _state = _copyState(
       entries: _state.entries,
       focusedOutlet: outlet,
-      visibleOutlets: {outlet},
+      visibleOutlets: _hasExplicitVisibleOutlets
+          ? _state.visibleOutlets
+          : {outlet},
       activeOutletsByShell: activeOutlets,
     );
     _predictiveBackBridge?.invalidateInactiveOutlets();
@@ -1210,7 +1693,7 @@ final class CCManagedNavigationAdapter
         kind: CCNavigationBackendEventKind.outletActivated,
         timestamp: DateTime.now(),
         backendEntryId: top?.backendEntryId,
-        backendOperationId: 'managed-${_host.id}-${++_eventSequence}',
+        backendOperationId: '$_eventNamespace-${++_eventSequence}',
         hostId: _host.id,
         navigatorOutlet: outlet,
         sequence: _eventSequence,
@@ -1224,9 +1707,10 @@ final class CCManagedNavigationAdapter
               shellId: shellId,
               navigatorOutlet: outlet,
             ),
-        activeNavigatorOutlets: [outlet],
+        activeNavigatorOutlets: _effectiveVisibleOutlets,
       ),
     );
+    _emitVisibleOutlets();
   }
 
   /// Reports whether one declared Shell Outlet already owns managed Entries.
@@ -1239,16 +1723,15 @@ final class CCManagedNavigationAdapter
       );
     }
     return _state.entries.any(
-      (entry) =>
-          entry.request.placement.shellId == shellId &&
-          entry.request.placement.navigatorOutlet == outlet,
+      (entry) => entry.request.placement.navigatorOutlet == outlet,
     );
   }
 
   /// Handles a Page-driven Pop or gesture after Flutter accepted it.
   void _didRemovePage(Page<Object?> page) {
+    if (page is! _CCManagedPage && page is! _CCManagedGuardedPage) return;
     final entry = _entryForPageKey(page.key);
-    if (entry == null) return;
+    if (entry == null || _externalPops.contains(entry.backendEntryId)) return;
     _removeEntry(
       entry,
       result: _pendingRemovalResults.remove(entry.backendEntryId),
@@ -1258,8 +1741,94 @@ final class CCManagedNavigationAdapter
 
   /// Applies one Navigator-confirmed Pop before its Route correlation is lost.
   void _didPopRoute(Route<dynamic> route) {
+    final settings = route.settings;
+    if (settings is _CCManagedShellPage) {
+      final outlets = _shells[settings.shellId]?.outlets;
+      if (outlets == null) return;
+      final removed = _state.entries
+          .where(
+            (entry) =>
+                outlets.contains(entry.request.placement.navigatorOutlet),
+          )
+          .toList();
+      // A declarative removal only confirms an already committed transaction;
+      // do not notify Router from Navigator.didUpdateWidget/build again.
+      if (removed.isEmpty) return;
+      final selected = _topEntryForShellRoute(route);
+      if (route is TransitionRoute<Object?>) {
+        final shell = _shells[settings.shellId]!;
+        final exit = _CCManagedShellRenderExit(
+          shellId: shell.shellId,
+          activeOutlet:
+              _state.activeOutletsByShell[shell.shellId] ?? shell.initialOutlet,
+          pages: {
+            for (final outlet in outlets)
+              outlet: List<Page<Object?>>.of(
+                _host.navigatorKeyFor(outlet).currentState?.widget.pages ??
+                    [
+                      _CCManagedPlaceholderPage(
+                        key: ValueKey('ccrouter.managed.placeholder.$outlet'),
+                      ),
+                    ],
+              ),
+          },
+          onComplete: () => _shellRenderExits.remove(route),
+        );
+        _shellRenderExits[route] = exit;
+        unawaited(
+          route.completed.then<void>(
+            (_) => exit.complete(),
+            onError: (Object _, StackTrace __) => exit.complete(),
+          ),
+        );
+        for (final entry in removed) {
+          if (_renderedRoutes[entry.backendEntryId]?.target != null) {
+            _retainRouteExit(entry, outerRoute: route);
+          }
+        }
+      }
+      void removeEntries(Object? result) {
+        if (_disposed) return;
+        for (final entry in removed.reversed) {
+          _removeEntry(
+            entry,
+            result: identical(entry, selected) ? result : null,
+            eventKind: CCNavigationBackendEventKind.pop,
+            notify: false,
+          );
+        }
+        _notifyStateListeners();
+      }
+
+      if (selected != null &&
+          _pendingRemovalResults.containsKey(selected.backendEntryId)) {
+        removeEntries(_pendingRemovalResults.remove(selected.backendEntryId));
+      } else {
+        unawaited(route.popped.then(removeEntries));
+      }
+      return;
+    }
     final entry = _entryForRoute(route);
     if (entry == null) return;
+    // Native Pop results arrive in a microtask, after observer unmount. Capture
+    // the exit signal now so outgoing rebuilds retain their exact Scope.
+    _retainRouteExit(entry);
+    if (!_pendingRemovalResults.containsKey(entry.backendEntryId)) {
+      _externalPops.add(entry.backendEntryId);
+      unawaited(
+        route.popped.then((result) {
+          _externalPops.remove(entry.backendEntryId);
+          if (!_disposed) {
+            _removeEntry(
+              entry,
+              result: result,
+              eventKind: CCNavigationBackendEventKind.pop,
+            );
+          }
+        }),
+      );
+      return;
+    }
     _removeEntry(
       entry,
       result: _pendingRemovalResults.remove(entry.backendEntryId),
@@ -1269,9 +1838,7 @@ final class CCManagedNavigationAdapter
 
   /// Retains a weak correlation while [route] belongs to a managed Page.
   void _didMountRoute(Route<dynamic> route) {
-    final entry = _entryForPageKey(
-      route.settings is Page ? (route.settings as Page<dynamic>).key : null,
-    );
+    final entry = _entryForRoute(route);
     if (entry != null) {
       _renderedRoutes[entry.backendEntryId] = WeakReference(route);
       if (_routeRequiresPopGuard(entry.request.routeId)) {
@@ -1282,6 +1849,7 @@ final class CCManagedNavigationAdapter
 
   /// Drops a rendered correlation without mutating Store ownership.
   void _didUnmountRoute(Route<dynamic> route) {
+    _pendingPops[route]?.retire();
     _removeManagedPopGuard(route);
     final entry = _entryForRoute(route);
     if (entry != null) _renderedRoutes.remove(entry.backendEntryId);
@@ -1291,29 +1859,34 @@ final class CCManagedNavigationAdapter
   bool _routeRequiresPopGuard(String routeId) =>
       _routes[routeId]?.hasPopGuard ?? false;
 
-  /// Temporarily opens or closes every guarded Route for an approved Pop.
-  void _setManagedPopEntriesCanPop(bool value) {
-    for (final entry in _managedPopGuardEntries.values) {
-      entry.canPopNotifier.value = value;
+  /// Opens only the exact approved Route; another Outlet keeps its own gate.
+  void _setManagedPopEntryCanPop(Route<dynamic> route, bool value) {
+    if (value) {
+      _runtimeGuardedPopRoutes.add(route);
+    } else {
+      _runtimeGuardedPopRoutes.remove(route);
     }
+    _managedPopGuardEntries[route]?.canPopNotifier.value = value;
   }
 
   /// Opens one guarded Route only when gesture-time Runtime policy allows it.
   bool _prepareManagedPopGesture(Route<dynamic> route) {
-    final evaluator = _popGuardEvaluator;
     final modalRoute = route is ModalRoute<Object?> ? route : null;
     final entry = modalRoute == null
         ? null
         : _managedPopGuardEntries[modalRoute];
     if (_disposed ||
-        evaluator == null ||
+        !_hasPopGuardEvaluator ||
         modalRoute == null ||
         entry == null ||
         !modalRoute.isCurrent) {
       return false;
     }
     if (entry.canPopNotifier.value) return true;
-    final decision = evaluator(CCPopTrigger.gesture);
+    final decision = _evaluateNativePopGuard(
+      CCPopTrigger.gesture,
+      _nativePopTarget(route),
+    );
     if (decision is! CCPopAllow ||
         _disposed ||
         !modalRoute.isCurrent ||
@@ -1358,29 +1931,31 @@ final class CCManagedNavigationAdapter
   /// gate closed; a rejected system back reaches the PopEntry callback, which
   /// evaluates policy and retries only the same current Route when allowed.
   void _installManagedPopGuard(Route<dynamic> route) {
-    if (_popGuardEvaluator == null || route is! ModalRoute<Object?>) return;
+    if (!_hasPopGuardEvaluator || route is! ModalRoute<Object?>) return;
     if (_managedPopGuardEntries.containsKey(route) ||
         _pendingManagedPopGuardRoutes.contains(route)) {
       return;
     }
     _pendingManagedPopGuardRoutes.add(route);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _pendingManagedPopGuardRoutes.remove(route);
-      if (_disposed || _popGuardEvaluator == null || !route.isActive) return;
+      if (!_pendingManagedPopGuardRoutes.remove(route)) return;
+      if (_disposed || !_hasPopGuardEvaluator || !route.isActive) return;
       _attachManagedPopGuard(route);
     });
   }
 
   /// Registers one closed PopEntry after the Route's ModalScope is mounted.
   void _attachManagedPopGuard(ModalRoute<Object?> route) {
-    if (_popGuardEvaluator == null ||
-        _managedPopGuardEntries.containsKey(route)) {
+    if (!_hasPopGuardEvaluator || _managedPopGuardEntries.containsKey(route)) {
       return;
     }
     late final _CCManagedPopEntry entry;
     entry = _CCManagedPopEntry(
       onInvoked: (didPop, result) {
-        if (didPop || _runtimeGuardedPopInProgress || entry.retrying) return;
+        if (didPop ||
+            _runtimeGuardedPopRoutes.contains(route) ||
+            entry.retrying)
+          return;
         _retryManagedSystemPop(route, entry, result);
       },
     );
@@ -1394,17 +1969,19 @@ final class CCManagedNavigationAdapter
     _CCManagedPopEntry entry,
     Object? result,
   ) {
-    final evaluator = _popGuardEvaluator;
     final navigator = route.navigator;
     if (_disposed ||
-        evaluator == null ||
+        !_hasPopGuardEvaluator ||
         navigator == null ||
         !route.isCurrent) {
       return;
     }
     entry.retrying = true;
     try {
-      final decision = evaluator(CCPopTrigger.system);
+      final decision = _evaluateNativePopGuard(
+        CCPopTrigger.system,
+        _nativePopTarget(route),
+      );
       if (decision is! CCPopAllow ||
           _disposed ||
           !route.isCurrent ||
@@ -1445,10 +2022,42 @@ final class CCManagedNavigationAdapter
     }
   }
 
-  /// Returns the managed Entry rendered by [route], if any.
+  /// Retires empty boundaries only after both local and covering popups leave.
+  void _releaseForeignAnchors() {
+    if (_disposed || _foreignAnchors.isEmpty) return;
+    final rootHasForeign = _observerFor('root').foreignEntries.isNotEmpty;
+    final removed = _foreignAnchors.keys
+        .where(
+          (outlet) =>
+              !rootHasForeign && _observerFor(outlet).foreignEntries.isEmpty,
+        )
+        .toList();
+    if (removed.isEmpty) return;
+    for (final outlet in removed) {
+      _foreignAnchors.remove(outlet);
+    }
+    _state = _copyState(entries: _state.entries);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_disposed) _notifyStateListeners();
+    });
+    WidgetsBinding.instance.scheduleFrame();
+  }
+
+  /// Returns only framework-created Pages; a copied key never conveys ownership.
   _CCManagedEntry? _entryForRoute(Route<dynamic>? route) {
-    if (route == null || route.settings is! Page) return null;
-    return _entryForPageKey((route.settings as Page<dynamic>).key);
+    if (route == null ||
+        (route.settings is! _CCManagedPage &&
+            route.settings is! _CCManagedGuardedPage))
+      return null;
+    final settings = route.settings;
+    final owner = settings is _CCManagedPage
+        ? settings.adapter
+        : (settings as _CCManagedGuardedPage).adapter;
+    if (!identical(owner, this)) return null;
+    final entry = _entryForPageKey((settings as Page<dynamic>).key);
+    if (entry == null) return null;
+    final rendered = _renderedRoutes[entry.backendEntryId]?.target;
+    return rendered == null || identical(rendered, route) ? entry : null;
   }
 
   /// Returns the Entry with an exact stable Page key.
@@ -1486,7 +2095,7 @@ final class CCManagedNavigationAdapter
         kind: kind,
         timestamp: DateTime.now(),
         backendEntryId: entry.backendEntryId,
-        backendOperationId: 'managed-${_host.id}-${++_eventSequence}',
+        backendOperationId: '$_eventNamespace-${++_eventSequence}',
         previousBackendEntryId: previousBackendEntryId,
         hostId: _host.id,
         navigatorOutlet: request.placement.navigatorOutlet,
@@ -1495,7 +2104,7 @@ final class CCManagedNavigationAdapter
         navigationId: request.navigationId,
         routeId: request.routeId,
         uri: request.uri,
-        placement: request.placement,
+        placement: _concretePlacement(request.placement),
         location: request.uri.toString(),
         origin: request.origin,
         source: request.source,
@@ -1503,7 +2112,16 @@ final class CCManagedNavigationAdapter
     );
   }
 
-  /// Emits a confirmed current Entry after a Store transaction.
+  /// Resolves the Host alias for diagnostics without losing structural placement.
+  CCRoutePlacement _concretePlacement(CCRoutePlacement placement) =>
+      CCRoutePlacement(
+        hostId: _host.id,
+        shellId: placement.shellId,
+        parentRouteId: placement.parentRouteId,
+        navigatorOutlet: placement.navigatorOutlet,
+      );
+
+  /// Publishes a managed top only after the Navigator confirms that Route.
   void _emitTop(_CCManagedEntry entry, {_CCManagedEntry? previous}) {
     final request = entry.request;
     _emit(
@@ -1511,7 +2129,7 @@ final class CCManagedNavigationAdapter
         kind: CCNavigationBackendEventKind.topChanged,
         timestamp: DateTime.now(),
         backendEntryId: entry.backendEntryId,
-        backendOperationId: 'managed-${_host.id}-${++_eventSequence}',
+        backendOperationId: '$_eventNamespace-${++_eventSequence}',
         previousBackendEntryId: previous?.backendEntryId,
         hostId: _host.id,
         navigatorOutlet: request.placement.navigatorOutlet,
@@ -1520,7 +2138,7 @@ final class CCManagedNavigationAdapter
         navigationId: request.navigationId,
         routeId: request.routeId,
         uri: request.uri,
-        placement: request.placement,
+        placement: _concretePlacement(request.placement),
         location: request.uri.toString(),
         origin: request.origin,
         source: request.source,
@@ -1603,11 +2221,29 @@ final class CCManagedNavigationAdapter
       if (!completer.isCompleted) completer.completeError(error, stackTrace);
     }
     _results.clear();
+    foreignRouteBridge._dispose();
     _routes.clear();
     _popGuardEvaluator = null;
+    _scopedPopGuardEvaluator = null;
     _removeAllManagedPopGuards();
     _renderedRoutes.clear();
+    _externalPops.clear();
+    for (final exit in _routeExits.values.toList()) {
+      exit.complete();
+    }
+    _routeExits.clear();
+    for (final exit in _shellRenderExits.values.toList()) {
+      exit.complete();
+    }
+    _shellRenderExits.clear();
+    _immediateRemovals.clear();
+    _foreignAnchors.clear();
     _pendingRemovalResults.clear();
+    for (final operation in _pendingPops.values) {
+      operation.retire();
+    }
+    _pendingPops.clear();
+    _runtimeGuardedPopRoutes.clear();
     for (final observer in _observers.values) {
       observer.clear();
     }
@@ -1628,12 +2264,12 @@ final class _CCManagedNavigationState {
   _CCManagedNavigationState({
     required this.revision,
     required List<_CCManagedEntry> entries,
-    required this.activeShellId,
-    required this.shellAnchorOrder,
+    required Map<String, int> shellAnchors,
     required this.focusedOutlet,
     required Set<String> visibleOutlets,
     required Map<String, String> activeOutletsByShell,
-  }) : entries = List.unmodifiable(entries),
+  }) : shellAnchors = Map.unmodifiable(shellAnchors),
+       entries = List.unmodifiable(entries),
        visibleOutlets = Set.unmodifiable(visibleOutlets),
        activeOutletsByShell = Map.unmodifiable(activeOutletsByShell);
 
@@ -1641,8 +2277,7 @@ final class _CCManagedNavigationState {
   const _CCManagedNavigationState.empty()
     : revision = 0,
       entries = const [],
-      activeShellId = null,
-      shellAnchorOrder = null,
+      shellAnchors = const {},
       focusedOutlet = 'root',
       visibleOutlets = const {'root'},
       activeOutletsByShell = const {};
@@ -1653,11 +2288,27 @@ final class _CCManagedNavigationState {
   /// Managed root Entries in bottom-to-top order.
   final List<_CCManagedEntry> entries;
 
-  /// Shell currently mounted as one structural root Page.
-  final String? activeShellId;
+  /// Retained structural root layers, each owned by its Shell's live Entries.
+  final Map<String, int> shellAnchors;
+
+  /// Uppermost retained Shell, independently of root overlay coverage.
+  String? get activeShellId => topShell(shellAnchors);
+
+  /// Selects the latest structural layer without relying on insertion order.
+  static String? topShell(Map<String, int> anchors) {
+    String? selected;
+    var order = -1;
+    for (final anchor in anchors.entries) {
+      if (anchor.value > order) {
+        selected = anchor.key;
+        order = anchor.value;
+      }
+    }
+    return selected;
+  }
 
   /// Global order used to place the active Shell among root overlays.
-  final int? shellAnchorOrder;
+  int? get shellAnchorOrder => shellAnchors[activeShellId];
 
   /// Outlet selected for operations that have no call-site Context.
   final String focusedOutlet;
@@ -1672,8 +2323,11 @@ final class _CCManagedNavigationState {
 /// Immutable managed Stack entry with stable Flutter and backend identities.
 final class _CCManagedEntry {
   /// Creates one Entry from a Runtime-validated [request].
-  _CCManagedEntry(this.request, {required this.order})
-    : backendEntryId = 'managed-${request.navigationId}',
+  _CCManagedEntry(CCNavigationRequest request, {required this.order})
+    : request = request.parentStack.isEmpty
+          ? request
+          : request.withParentStack(const []),
+      backendEntryId = 'managed-${request.navigationId}',
       pageKey = ValueKey<String>('ccrouter.managed.${request.navigationId}');
 
   /// Monotonic Host-local structural order.
@@ -1762,6 +2416,12 @@ final class _CCManagedRouterDelegate
   /// Whether this delegate already released its Store listener.
   bool _disposed = false;
 
+  /// Prevents a retained RouterConfig remount from replaying startup as a Go.
+  bool _initialRoutePathApplied = false;
+
+  /// Owns only the pending location; a newer location cancels it before dispatch.
+  CCCancellationToken? _routeInformationCancellation;
+
   /// Root Navigator identity shared with Host context resolution.
   GlobalKey<NavigatorState> get navigatorKey => adapter._host.navigatorKey;
 
@@ -1779,27 +2439,51 @@ final class _CCManagedRouterDelegate
     CCManagedRouteConfiguration configuration,
   ) async {
     if (!initializeFromRouteInformation) return;
-    await CCRouterHostBinding.openRouteInformation(
-      configuration.uri,
+    if (_initialRoutePathApplied) return setNewRoutePath(configuration);
+    await _applyRouteInformation(
+      configuration,
       external: initialLocationIsExternal,
-      placementOverride: CCRoutePlacement(hostId: adapter.hostId),
     );
+    _initialRoutePathApplied = true;
   }
 
   @override
   /// Applies browser and platform locations through one Runtime Go transaction.
-  Future<void> setNewRoutePath(
-    CCManagedRouteConfiguration configuration,
-  ) async {
+  Future<void> setNewRoutePath(CCManagedRouteConfiguration configuration) =>
+      _applyRouteInformation(
+        configuration,
+        external: !configuration.trustedHistory,
+      );
+
+  /// Supersedes policy/defer waits even when the new URI is already current.
+  Future<void> _applyRouteInformation(
+    CCManagedRouteConfiguration configuration, {
+    required bool external,
+  }) async {
+    _routeInformationCancellation?.cancel();
+    _routeInformationCancellation = null;
+    if (_disposed || adapter._disposed) return;
     if (adapter._currentUri == configuration.uri &&
         adapter.requests.isNotEmpty) {
       return;
     }
-    await CCRouterHostBinding.openRouteInformation(
-      configuration.uri,
-      external: !configuration.trustedHistory,
-      placementOverride: CCRoutePlacement(hostId: adapter.hostId),
-    );
+    final cancellation = CCCancellationToken();
+    _routeInformationCancellation = cancellation;
+    try {
+      await CCRouterHostBinding.openRouteInformation(
+        configuration.uri,
+        external: external,
+        placementOverride: CCRoutePlacement(hostId: adapter.hostId),
+        cancellation: cancellation,
+      );
+    } on CCRouteCancelledError {
+      if (!cancellation.isCancelled && !_disposed && CCRouter.isInitialized)
+        rethrow;
+    } finally {
+      if (identical(_routeInformationCancellation, cancellation)) {
+        _routeInformationCancellation = null;
+      }
+    }
   }
 
   @override
@@ -1810,12 +2494,8 @@ final class _CCManagedRouterDelegate
 
   @override
   /// Builds one declarative root Navigator from the latest immutable state.
-  Widget build(BuildContext context) => Navigator(
-    key: navigatorKey,
-    pages: adapter._buildRootPages(),
-    observers: adapter._rootObservers,
-    onDidRemovePage: adapter._didRemovePage,
-  );
+  Widget build(BuildContext context) =>
+      _CCManagedNavigatorRenderer(adapter: adapter, outlet: 'root');
 
   /// Rebuilds Router and reports a possible URL projection change.
   void _onStateChanged() {
@@ -1827,6 +2507,8 @@ final class _CCManagedRouterDelegate
   void dispose() {
     if (_disposed) return;
     _disposed = true;
+    _routeInformationCancellation?.cancel();
+    _routeInformationCancellation = null;
     adapter._removeStateListener(_onStateChanged);
     super.dispose();
   }
@@ -1906,9 +2588,18 @@ final class _CCManagedShellSurfaceState extends State<_CCManagedShellSurface> {
   @override
   /// Invokes the application binding with managed Outlet Navigators.
   Widget build(BuildContext context) {
+    // The structural Route may rebuild during its exit after Runtime shutdown.
+    // Its Store has retired; never call a Host binding with cleared metadata.
+    if (widget.adapter._disposed) return const SizedBox.shrink();
+    final exit = widget.adapter._shellRenderExits[ModalRoute.of(context)];
+    // Re-entry transfers these Outlet keys to the new structural Route. Keep
+    // this tombstone until the old outer Route completes so it cannot rebuild
+    // the live Store and become a second Navigator owner.
+    if (exit?.projectionRetired ?? false) return const SizedBox.shrink();
     final shell = widget.adapter._shells[widget.shellId]!;
     final binding = widget.adapter._shellBindings[widget.shellId]!;
     final activeOutlet =
+        exit?.activeOutlet ??
         widget.adapter._state.activeOutletsByShell[widget.shellId] ??
         shell.initialOutlet;
     final navigators = <String, Widget>{
@@ -1916,6 +2607,7 @@ final class _CCManagedShellSurfaceState extends State<_CCManagedShellSurface> {
         outlet: _CCManagedOutletNavigator(
           adapter: widget.adapter,
           outlet: outlet,
+          frozenPages: exit?.pages?[outlet],
         ),
     };
     return binding.builder(
@@ -1985,6 +2677,7 @@ final class _CCManagedOutletState extends State<CCManagedOutlet> {
   Widget build(BuildContext context) => _CCManagedOutletNavigator(
     adapter: widget.backend.adapter,
     outlet: widget.outlet,
+    baseBuilder: widget.baseBuilder,
   );
 }
 
@@ -1994,6 +2687,8 @@ final class _CCManagedOutletNavigator extends StatelessWidget {
   const _CCManagedOutletNavigator({
     required this.adapter,
     required this.outlet,
+    this.baseBuilder,
+    this.frozenPages,
   });
 
   /// Store projected by the child Navigator.
@@ -2001,6 +2696,12 @@ final class _CCManagedOutletNavigator extends StatelessWidget {
 
   /// Host-registered Outlet identity.
   final String outlet;
+
+  /// Host-local bottom surface, without managed identity or Scope ownership.
+  final WidgetBuilder? baseBuilder;
+
+  /// Projection retained only while its outer Shell is visibly exiting.
+  final List<Page<Object?>>? frozenPages;
 
   @override
   /// Wraps interaction only to select context-free Back fallback.
@@ -2012,21 +2713,111 @@ final class _CCManagedOutletNavigator extends StatelessWidget {
       behavior: HitTestBehavior.translucent,
       onPointerDown: (_) => adapter._focusOutlet(outlet),
       child: HeroControllerScope.none(
-        child: Navigator(
-          key: adapter._host.navigatorKeyFor(outlet),
-          pages: adapter._buildOutletPages(outlet),
-          observers: [adapter._observerFor(outlet)],
-          onDidRemovePage: adapter._didRemovePage,
+        child: _CCManagedNavigatorRenderer(
+          adapter: adapter,
+          outlet: outlet,
+          baseBuilder: baseBuilder,
+          frozenPages: frozenPages,
         ),
       ),
     ),
   );
 }
 
+/// Moves renderer ownership with its Navigator during same-frame reparenting.
+///
+/// A private key type prevents collisions with Host-created GlobalObjectKeys.
+final class _CCManagedRendererKey
+    extends GlobalObjectKey<_CCManagedNavigatorRendererState> {
+  /// Uses the exact Host Navigator key as a stable, payload-free identity.
+  const _CCManagedRendererKey(super.value);
+}
+
+/// Owns one actual Navigator generation, independently of retained Entries.
+final class _CCManagedNavigatorRenderer extends StatefulWidget {
+  /// Projects one Outlet; root additionally supplies Host observers and Shells.
+  _CCManagedNavigatorRenderer({
+    required this.adapter,
+    required this.outlet,
+    this.baseBuilder,
+    this.frozenPages,
+  }) : super(key: _CCManagedRendererKey(adapter._host.navigatorKeyFor(outlet)));
+
+  /// Logical Stack owner, which can outlive this mounted renderer.
+  final CCManagedNavigationAdapter adapter;
+
+  /// Exact partition rendered by this Navigator.
+  final String outlet;
+
+  /// Optional non-business base for a named Outlet.
+  final WidgetBuilder? baseBuilder;
+
+  /// Outgoing Shell projection, independent of the already committed Store.
+  final List<Page<Object?>>? frozenPages;
+
+  @override
+  /// Creates deterministic attach/detach ownership for this renderer.
+  State<_CCManagedNavigatorRenderer> createState() =>
+      _CCManagedNavigatorRendererState();
+}
+
+/// Fences observer callbacks across unmount, replacement and same-frame remount.
+final class _CCManagedNavigatorRendererState
+    extends State<_CCManagedNavigatorRenderer> {
+  /// Observer identity doubles as the generation token.
+  late _CCManagedNavigatorObserver _observer;
+
+  @override
+  /// Attaches before Flutter can mount any child Route.
+  void initState() {
+    super.initState();
+    _observer = widget.adapter._attachRenderer(widget.outlet);
+  }
+
+  @override
+  /// Moves ownership if a Host reuses this Widget position for another Outlet.
+  void didUpdateWidget(covariant _CCManagedNavigatorRenderer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.adapter, widget.adapter) ||
+        oldWidget.outlet != widget.outlet) {
+      oldWidget.adapter._detachRenderer(_observer);
+      _observer = widget.adapter._attachRenderer(widget.outlet);
+    }
+  }
+
+  @override
+  /// Drops all rendering-only ownership, preserving business Entries/results.
+  void dispose() {
+    widget.adapter._detachRenderer(_observer);
+    super.dispose();
+  }
+
+  @override
+  /// Builds Pages from the current logical revision with this generation.
+  Widget build(BuildContext context) => Navigator(
+    key: widget.adapter._host.navigatorKeyFor(widget.outlet),
+    pages:
+        widget.frozenPages ??
+        (widget.outlet == 'root'
+            ? widget.adapter._buildRootPages()
+            : widget.adapter._buildOutletPages(
+                widget.outlet,
+                baseBuilder: widget.baseBuilder,
+              )),
+    observers: widget.outlet == 'root'
+        ? widget.adapter._rootObservers
+        : [_observer],
+    onDidRemovePage: widget.adapter._didRemovePage,
+  );
+}
+
 /// Internal page displayed only while the first Runtime location is unresolved.
 final class _CCManagedPlaceholderPage extends Page<Object?> {
   /// Creates the stable non-business placeholder Page.
-  const _CCManagedPlaceholderPage({super.key});
+  const _CCManagedPlaceholderPage({super.key, this.builder});
+
+  /// Optional local Host surface; null produces the startup placeholder.
+  final WidgetBuilder? builder;
 
   @override
   /// Creates a zero-duration Route with no managed Entry or payload.
@@ -2034,8 +2825,214 @@ final class _CCManagedPlaceholderPage extends Page<Object?> {
     settings: this,
     transitionDuration: Duration.zero,
     reverseTransitionDuration: Duration.zero,
-    pageBuilder: (_, _, _) => const SizedBox.shrink(),
+    pageBuilder: (context, _, _) =>
+        (ModalRoute.of(context)!.settings as _CCManagedPlaceholderPage).builder
+            ?.call(context) ??
+        const SizedBox.shrink(),
   );
+}
+
+/// Correlates one maybePop continuation with the actual Navigator callback.
+final class _CCManagedPopOperation {
+  /// Creates an uncommitted claim for a single live Navigator Route.
+  _CCManagedPopOperation();
+
+  /// Correlates Flutter's async maybePop continuation with its actual observer.
+  static final Object zoneKey = Object();
+
+  /// True only when this operation's Zone produced the exact didPop callback.
+  bool didPop = false;
+
+  /// Managed identity observed at commit, including a Shell's selected child.
+  String? removedBackendEntryId;
+
+  /// Ends only the framework wait if Flutter's willPop outlives its renderer.
+  final Completer<bool> retired = Completer<bool>();
+
+  /// Consumes teardown as handled without claiming an unconfirmed removal.
+  void retire() {
+    if (!retired.isCompleted) retired.complete(true);
+  }
+}
+
+/// Holds an outgoing Shell's Pages until its outer Route finishes rendering.
+final class _CCManagedShellRenderExit {
+  /// Captures existing Pages without allocating new Managed Entries or Scopes.
+  _CCManagedShellRenderExit({
+    required this.shellId,
+    required this.activeOutlet,
+    required this.pages,
+    required VoidCallback onComplete,
+  }) : _onComplete = onComplete;
+
+  /// Identifies the Outlet owner whose keys must transfer on Shell re-entry.
+  final String shellId;
+
+  /// Suppresses an outgoing surface after a new instance claims its Outlets.
+  bool projectionRetired = false;
+
+  /// Keeps the selected branch stable while the active Store reveals its parent.
+  final String activeOutlet;
+
+  /// Exact existing child Pages; cleared on Route completion or renderer detach.
+  Map<String, List<Page<Object?>>>? pages;
+
+  /// Detachable bookkeeping callback, never retained after teardown.
+  VoidCallback? _onComplete;
+
+  /// Drops old Pages while retaining the tombstone through outer completion.
+  void retireProjection() {
+    projectionRetired = true;
+    pages = null;
+  }
+
+  /// Releases all payload-bearing Pages before dropping Adapter bookkeeping.
+  void complete() {
+    pages = null;
+    final onComplete = _onComplete;
+    _onComplete = null;
+    onComplete?.call();
+  }
+}
+
+/// Detachable render-exit signal that never retains a Flutter Route or payload.
+final class _CCManagedRouteExit {
+  /// Registers Adapter bookkeeping cleanup without retaining it after exit.
+  _CCManagedRouteExit({required this.outlet, required VoidCallback onComplete})
+    : _onComplete = onComplete;
+
+  /// Renderer partition whose teardown must also finish this wait.
+  final String outlet;
+
+  /// Callback removed before any subscriber runs, including Adapter disposal.
+  VoidCallback? _onComplete;
+
+  /// Runtime callbacks explicitly detachable before a delayed Flutter exit.
+  final Set<VoidCallback> _listeners = {};
+
+  /// Adds one subscriber while rendering remains pending.
+  VoidCallback? addListener(VoidCallback listener) {
+    if (_onComplete == null) return null;
+    _listeners.add(listener);
+    return () => _listeners.remove(listener);
+  }
+
+  /// Releases all ownership once and then signals waiting Scope closures.
+  void complete() {
+    final onComplete = _onComplete;
+    if (onComplete == null) return;
+    _onComplete = null;
+    onComplete();
+    final listeners = _listeners.toList();
+    _listeners.clear();
+    for (final listener in listeners) {
+      listener();
+    }
+  }
+}
+
+/// Keeps Route content synchronized even when Flutter caches a covered Page.
+final class _CCManagedRouteContent extends StatefulWidget {
+  /// Observes only Store revision; business content remains in current settings.
+  const _CCManagedRouteContent({required this.adapter});
+
+  /// Store that retires anchor content while Flutter owns ordinary exit timing.
+  final CCManagedNavigationAdapter adapter;
+
+  @override
+  /// Creates a listener with the same lifetime as the rendered Route subtree.
+  State<_CCManagedRouteContent> createState() => _CCManagedRouteContentState();
+}
+
+/// Releases its Store subscription when Flutter removes the Route subtree.
+final class _CCManagedRouteContentState extends State<_CCManagedRouteContent> {
+  @override
+  /// Subscribes once; the owning Adapter is immutable for this Route.
+  void initState() {
+    super.initState();
+    widget.adapter._addStateListener(_changed);
+  }
+
+  /// Rebuilds the dynamic Page content after its managed ownership changes.
+  void _changed() {
+    if (mounted) setState(() {});
+  }
+
+  @override
+  /// Preserves Flutter's outgoing subtree while dropping retired anchor content.
+  Widget build(BuildContext context) => _managedPageChild(context);
+
+  @override
+  /// Removes the exact callback before releasing the content State.
+  void dispose() {
+    widget.adapter._removeStateListener(_changed);
+    super.dispose();
+  }
+}
+
+/// Keeps outgoing animation content until Flutter disposes its Route subtree.
+///
+/// Store removal ends the result immediately; the render-exit binding keeps
+/// its Scope available until the reverse transition ends. Retained foreign
+/// anchors and disposed backends clear content early because they can outlive
+/// every business Entry.
+Widget _managedPageChild(BuildContext context) {
+  final settings = ModalRoute.of(context)!.settings;
+  final adapter = switch (settings) {
+    final _CCManagedPage page => page.adapter,
+    final _CCManagedGuardedPage page => page.adapter,
+    _ => null,
+  };
+  if (adapter == null ||
+      adapter._disposed ||
+      adapter._foreignAnchors.values.any(
+        (anchor) => anchor.page.key == (settings as Page).key,
+      )) {
+    return const SizedBox.shrink();
+  }
+  return switch (settings) {
+    final _CCManagedPage page => page.child,
+    final _CCManagedGuardedPage page => page.child,
+    _ => const SizedBox.shrink(),
+  };
+}
+
+/// Private Page identity distinguishes owned entries from arbitrary copied keys.
+final class _CCManagedPage extends Page<Object?> {
+  /// Creates one immutable destination projection or empty foreign-route anchor.
+  const _CCManagedPage({
+    required this.adapter,
+    required this.child,
+    required this.presentation,
+    this.predictiveBackHandler,
+    super.key,
+    super.name,
+    super.arguments,
+    super.restorationId,
+  });
+
+  /// Current content; empty anchors retain neither payload nor Route Scope.
+  final Widget child;
+
+  /// Owning Store distinguishing live/outgoing content from empty anchors.
+  final CCManagedNavigationAdapter adapter;
+
+  /// Backend-neutral rendering contract for this entry.
+  final CCRoutePresentation presentation;
+
+  /// Optional Host coordinator for default Android Material routes.
+  final CCFlutterPredictiveBackHandler? predictiveBackHandler;
+
+  @override
+  /// Builds through shared presentation logic while reading updated Page content.
+  Route<Object?> createRoute(BuildContext context) =>
+      CCFlutterRouteFactory.createRoute<Object?>(
+        context: context,
+        child: _CCManagedRouteContent(adapter: adapter),
+        presentation: presentation,
+        settings: this,
+        predictiveBackHandler: predictiveBackHandler,
+      );
 }
 
 /// Managed Page that evaluates PopGuard immediately before an iOS edge swipe.
@@ -2072,20 +3069,26 @@ final class _CCManagedGuardedPage extends CCFlutterPage<Object?> {
     if (value.transition != CCPageTransitionType.platformDefault ||
         !value.opaque ||
         !usesInteractiveIosTransition) {
-      return super.createRoute(context);
+      return CCFlutterRouteFactory.createRoute<Object?>(
+        context: context,
+        child: _CCManagedRouteContent(adapter: adapter),
+        presentation: presentation,
+        settings: this,
+        predictiveBackHandler: predictiveBackHandler,
+      );
     }
     if (useCupertino) {
       return _CCManagedGuardedCupertinoPageRoute<Object?>(
         settings: this,
         fullscreenDialog: value.fullscreenDialog,
-        builder: (_) => child,
+        builder: (_) => _CCManagedRouteContent(adapter: adapter),
         preparePopGesture: adapter._prepareManagedPopGesture,
       );
     }
     return _CCManagedGuardedMaterialPageRoute<Object?>(
       settings: this,
       fullscreenDialog: value.fullscreenDialog,
-      builder: (_) => child,
+      builder: (_) => _CCManagedRouteContent(adapter: adapter),
       preparePopGesture: adapter._prepareManagedPopGesture,
     );
   }
@@ -2193,39 +3196,120 @@ final class _CCManagedNavigatorObserver extends NavigatorObserver {
   /// Current top Route used to distinguish managed and foreign Pop ownership.
   Route<dynamic>? topRoute;
 
+  /// Live foreign identities, released on exact Pop/Remove/Replace or disposal.
+  final Map<Route<dynamic>, String> foreignEntries = {};
+
+  /// Routes owned by this renderer, released even without didPop/didRemove.
+  final Set<Route<dynamic>> _liveRoutes = {};
+
+  /// Prevents delayed Flutter callbacks from republishing a retired generation.
+  bool _retired = false;
+
+  /// Whether a Route is an implementation-owned anchor rather than a popup.
+  bool _isStructural(Route<dynamic> route) =>
+      route.settings is _CCManagedShellPage ||
+      route.settings is _CCManagedPlaceholderPage;
+
+  /// Reports a foreign lifecycle transition without settings or payload data.
+  void _emitForeign(CCNavigationBackendEventKind kind, Route<dynamic> route) {
+    final id = foreignEntries[route];
+    if (id == null || adapter._disposed) return;
+    adapter._emit(
+      CCNavigationBackendEvent(
+        kind: kind,
+        timestamp: DateTime.now(),
+        backendEntryId: id,
+        backendOperationId:
+            '${adapter._eventNamespace}-${++adapter._eventSequence}',
+        sequence: adapter._eventSequence,
+        hostId: adapter.hostId,
+        navigatorOutlet: outlet,
+        owner: CCBackendEntryOwner.foreign,
+        placement: CCRoutePlacement(
+          hostId: adapter.hostId,
+          navigatorOutlet: outlet,
+        ),
+      ),
+    );
+  }
+
+  /// Mounts only real application Routes in the foreign ledger.
+  void _mount(Route<dynamic> route) {
+    adapter._didMountRoute(route);
+    if (adapter._disposed ||
+        adapter._entryForRoute(route) != null ||
+        _isStructural(route))
+      return;
+    foreignEntries[route] =
+        'managed-foreign-${adapter.hostId}-${++adapter._foreignSequence}';
+    _emitForeign(CCNavigationBackendEventKind.push, route);
+  }
+
   @override
   /// Associates newly rendered managed Page Routes with their Entry identity.
   void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
-    adapter._didMountRoute(route);
+    if (_retired) return;
+    _liveRoutes.add(route);
+    _mount(route);
     topRoute = route;
   }
 
   @override
   /// Re-closes a gesture-time PopEntry after commit or cancellation.
   void didStopUserGesture() {
+    if (_retired) return;
     adapter._didStopUserGesture(topRoute);
   }
 
   @override
   /// Releases a popped Route correlation and remembers the revealed top.
   void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (_retired) return;
+    final operation = adapter._pendingPops[route];
+    if (operation != null &&
+        identical(Zone.current[_CCManagedPopOperation.zoneKey], operation)) {
+      operation.didPop = true;
+      operation.removedBackendEntryId =
+          (adapter._entryForRoute(route) ??
+                  adapter._topEntryForShellRoute(route))
+              ?.backendEntryId;
+    }
     adapter._didPopRoute(route);
+    _emitForeign(CCNavigationBackendEventKind.pop, route);
+    foreignEntries.remove(route);
+    adapter._releaseForeignAnchors();
     adapter._didUnmountRoute(route);
+    _liveRoutes.remove(route);
     topRoute = previousRoute;
   }
 
   @override
   /// Releases an exactly removed Route correlation.
   void didRemove(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    if (_retired) return;
+    _emitForeign(CCNavigationBackendEventKind.remove, route);
+    foreignEntries.remove(route);
+    adapter._releaseForeignAnchors();
     adapter._didUnmountRoute(route);
+    _liveRoutes.remove(route);
     if (identical(topRoute, route)) topRoute = previousRoute;
   }
 
   @override
   /// Rebinds a replacement Route while releasing its predecessor.
   void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
-    if (oldRoute != null) adapter._didUnmountRoute(oldRoute);
-    if (newRoute != null) adapter._didMountRoute(newRoute);
+    if (_retired) return;
+    if (oldRoute != null) {
+      _emitForeign(CCNavigationBackendEventKind.remove, oldRoute);
+      foreignEntries.remove(oldRoute);
+      adapter._didUnmountRoute(oldRoute);
+      _liveRoutes.remove(oldRoute);
+    }
+    if (newRoute != null) {
+      _liveRoutes.add(newRoute);
+      _mount(newRoute);
+    }
+    adapter._releaseForeignAnchors();
     if (identical(topRoute, oldRoute)) topRoute = newRoute;
   }
 
@@ -2233,8 +3317,18 @@ final class _CCManagedNavigatorObserver extends NavigatorObserver {
   /// Tracks Flutter's confirmed current Route, including foreign Popups.
   void didChangeTop(Route<dynamic> topRoute, Route<dynamic>? previousTopRoute) {
     super.didChangeTop(topRoute, previousTopRoute);
+    if (_retired) return;
     this.topRoute = topRoute;
     if (adapter._disposed) return;
+    final entry = adapter._entryForRoute(topRoute);
+    if (entry != null) {
+      adapter._emitTop(
+        entry,
+        previous: adapter._entryForRoute(previousTopRoute),
+      );
+    }
+    _emitForeign(CCNavigationBackendEventKind.topChanged, topRoute);
+    adapter._emitVisibleOutlets();
     CCPageLifecycleHostBridge.didChangeTop(
       hostId: adapter.hostId,
       outlet: outlet,
@@ -2246,6 +3340,36 @@ final class _CCManagedNavigatorObserver extends NavigatorObserver {
     }
   }
 
+  /// Ends rendering ownership without completing any still-managed result.
+  void retire() {
+    if (_retired) return;
+    _retired = true;
+    final top = topRoute;
+    if (top != null) {
+      CCPageLifecycleHostBridge.didDetachOutlet(
+        hostId: adapter.hostId,
+        outlet: outlet,
+        previousTopRoute: top,
+      );
+    }
+    for (final route in _liveRoutes) {
+      _emitForeign(CCNavigationBackendEventKind.remove, route);
+      adapter._didUnmountRoute(route);
+    }
+    clear();
+    for (final exit
+        in adapter._routeExits.values
+            .where((exit) => exit.outlet == outlet)
+            .toList()) {
+      exit.complete();
+    }
+    adapter._releaseForeignAnchors();
+  }
+
   /// Clears any Route retained while the owning Navigator is tearing down.
-  void clear() => topRoute = null;
+  void clear() {
+    topRoute = null;
+    foreignEntries.clear();
+    _liveRoutes.clear();
+  }
 }

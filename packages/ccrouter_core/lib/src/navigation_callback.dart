@@ -1,5 +1,20 @@
 part of 'runtime.dart';
 
+/// Installs one callback identity and returns cleanup for that registration only.
+///
+/// Simultaneous duplicate adds keep the existing deduplication semantics. Once
+/// removed, a later add gets a fresh token so old queued events and removers
+/// cannot affect the new subscription. The closure retains only this registry.
+void Function() _subscribeNavigationObserver<T>(
+  Map<T, Object> registry,
+  T listener,
+) {
+  final token = registry.putIfAbsent(listener, Object.new);
+  return () {
+    if (identical(registry[listener], token)) registry.remove(listener);
+  };
+}
+
 /// One queued batch of observational callbacks for the same framework event.
 final class _QueuedNavigationObservation {
   /// Creates a batch whose callbacks share one priority and diagnostic label.
@@ -22,10 +37,11 @@ extension CCRouterRuntimeNavigationCallbacks on CCRouterRuntime {
   /// Decision callbacks and observers execute in a Runtime-specific Zone. The
   /// Zone also follows asynchronous work spawned by the callback, preventing a
   /// delayed recursive operation from bypassing the same ownership boundary.
+  /// Its identity token cannot keep an ended Runtime reachable on its own.
   void _ensureNavigationCanStart() {
     if (identical(
       Zone.current[CCRouterRuntime._navigationCallbackZoneKey],
-      this,
+      _zoneIdentity,
     )) {
       throw const CCNavigationReentrancyError();
     }
@@ -37,7 +53,7 @@ extension CCRouterRuntimeNavigationCallbacks on CCRouterRuntime {
   /// whether to fail closed, wrap the failure, or propagate it.
   T _runNavigationDecisionCallback<T>(T Function() callback) => runZoned(
     callback,
-    zoneValues: {CCRouterRuntime._navigationCallbackZoneKey: this},
+    zoneValues: {CCRouterRuntime._navigationCallbackZoneKey: _zoneIdentity},
   );
 
   /// Executes one asynchronous framework decision inside the protected Zone.
@@ -48,7 +64,7 @@ extension CCRouterRuntimeNavigationCallbacks on CCRouterRuntime {
     FutureOr<T> Function() callback,
   ) => runZoned(
     () => Future<T>.sync(callback),
-    zoneValues: {CCRouterRuntime._navigationCallbackZoneKey: this},
+    zoneValues: {CCRouterRuntime._navigationCallbackZoneKey: _zoneIdentity},
   );
 
   /// Bounds a decision wait by Runtime lifetime and an optional deadline.
@@ -59,10 +75,30 @@ extension CCRouterRuntimeNavigationCallbacks on CCRouterRuntime {
   Future<T> _awaitNavigationDecision<T>(
     FutureOr<T> Function() callback, {
     CCCancellationToken? cancellation,
+    CCCancellationToken? requestCancellation,
+    Duration? timeout,
+    CCRouterError? timeoutError,
+  }) => _awaitRuntimeWork(
+    () => _runAsyncNavigationDecisionCallback(callback),
+    cancellation: cancellation,
+    requestCancellation: requestCancellation,
+    timeout: timeout,
+    timeoutError: timeoutError,
+  );
+
+  /// Joins owned work until completion, timeout, or Runtime cancellation.
+  ///
+  /// Unlike policy callbacks, backend transactions run outside the decision
+  /// Zone. Late results/errors are consumed and cannot resume the caller after
+  /// shutdown; arbitrary Dart work itself remains owned by the Backend.
+  Future<T> _awaitRuntimeWork<T>(
+    FutureOr<T> Function() callback, {
+    CCCancellationToken? cancellation,
+    CCCancellationToken? requestCancellation,
     Duration? timeout,
     CCRouterError? timeoutError,
   }) async {
-    if (_disposed) throw const CCRouteCancelledError('runtime_disposed');
+    _ensureNavigationRequestAlive(requestCancellation);
     final interrupted = Completer<T>();
     void interrupt(CCRouterError error) {
       if (interrupted.isCompleted) return;
@@ -79,20 +115,40 @@ extension CCRouterRuntimeNavigationCallbacks on CCRouterRuntime {
     final remove = appScope.cancellation.addListener(
       () => interrupt(const CCRouteCancelledError('runtime_disposed')),
     );
+    final removeRequest = requestCancellation?.addListener(
+      () => interrupt(
+        const CCRouteCancelledError('route_information_superseded'),
+      ),
+    );
+    final removeHost = _navigationOperation?.cancellation.addListener(
+      () => interrupt(const CCRouteCancelledError('host_detached')),
+    );
     final timer = timeout == null
         ? null
         : Timer(timeout, () => interrupt(timeoutError!));
     try {
-      final work = _runAsyncNavigationDecisionCallback(callback);
+      final work = Future<T>.sync(callback);
       final value = await Future.any([work, interrupted.future]);
-      if (_disposed) throw const CCRouteCancelledError('runtime_disposed');
+      _ensureNavigationRequestAlive(requestCancellation);
       return value;
     } catch (_) {
       _ensureNavigationAlive(cancellation);
+      _ensureNavigationRequestAlive(requestCancellation);
       rethrow;
     } finally {
       timer?.cancel();
       remove();
+      removeRequest?.call();
+      removeHost?.call();
+    }
+  }
+
+  /// Fences a Host-owned ingress before any late policy or mutation step.
+  void _ensureNavigationRequestAlive(CCCancellationToken? cancellation) {
+    _ensureNavigationAlive();
+    _navigationOperation?.ensureAlive();
+    if (cancellation?.isCancelled == true) {
+      throw const CCRouteCancelledError('route_information_superseded');
     }
   }
 
@@ -109,12 +165,32 @@ extension CCRouterRuntimeNavigationCallbacks on CCRouterRuntime {
     throw const CCRouteCancelledError('runtime_disposed');
   }
 
-  /// Enqueues one event for a snapshot of observational subscribers.
+  /// Enqueues cancellable callbacks bound to their exact registration tokens.
   ///
-  /// [isActive] is evaluated immediately before each callback, so removing a
-  /// listener before the next event-loop turn also cancels queued delivery.
+  /// Registration identity is checked immediately before each callback, so
+  /// removing and re-adding the same listener cannot revive queued delivery.
   /// [critical] is reserved for terminal lifecycle transitions that must not
   /// be discarded during queue overflow.
+  void _enqueueRegisteredNavigationObserverBatch<T>(
+    Map<T, Object> observers,
+    void Function(T observer) notify, {
+    required String failureLabel,
+    bool critical = false,
+  }) {
+    _enqueueNavigationObserverBatch(
+      observers.entries,
+      (registration) => notify(registration.key),
+      isActive: (registration) =>
+          identical(observers[registration.key], registration.value),
+      failureLabel: failureLabel,
+      critical: critical,
+    );
+  }
+
+  /// Enqueues a snapshot, retaining duplicate static Aspect callbacks in order.
+  ///
+  /// [isActive] runs immediately before each delivery. Dynamic subscriptions
+  /// supply registration-token checks through the registered wrapper above.
   void _enqueueNavigationObserverBatch<T>(
     Iterable<T> observers,
     void Function(T observer) notify, {
@@ -245,7 +321,7 @@ extension CCRouterRuntimeNavigationCallbacks on CCRouterRuntime {
     try {
       runZoned(
         callback,
-        zoneValues: {CCRouterRuntime._navigationCallbackZoneKey: this},
+        zoneValues: {CCRouterRuntime._navigationCallbackZoneKey: _zoneIdentity},
       );
     } catch (error) {
       _recordNavigationCallbackFailure(

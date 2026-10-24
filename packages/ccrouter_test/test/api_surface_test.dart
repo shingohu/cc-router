@@ -7,9 +7,13 @@ import 'package:test/test.dart';
 
 const _adapterSpiNames = <String>{
   'CCNavigationAdapter',
+  'CCNavigationDispatch',
+  'CCNavigationDispatchAdapter',
+  'CCNavigationParentStackAdapter',
   'CCNavigationAdapterCapabilities',
   'CCNavigationAdapterCapabilitySource',
   'CCNavigationAdapterHostBinding',
+  'CCNavigationOutletVisibilityBinding',
   'CCInitialBackendEntrySnapshot',
   'CCNavigationBackendEvent',
   'CCNavigationBackendEventListener',
@@ -17,30 +21,31 @@ const _adapterSpiNames = <String>{
   'CCNavigationBackendSnapshotSource',
   'CCNavigationHostCapabilitySource',
   'CCNavigationManagedEntryReleaseSink',
+  'CCNavigationRouteExitBinding',
   'CCNavigationPopCoordinator',
   'CCNavigationScopedPopCoordinator',
   'CCNavigationTargetedCloseAdapter',
   'CCNavigationPopGuardBinding',
+  'CCNavigationScopedPopGuardBinding',
   'CCNavigationPopTarget',
   'CCNavigationPopTargetSource',
+  'CCNavigationScopedPopTargetSource',
   'CCNavigationPredictiveBackSource',
   'CCNavigationPredictiveBackSourceProvider',
   'CCNavigationRoute',
   'CCNavigationRequest',
   'CCNavigationShell',
   'CCPopGuardEvaluator',
+  'CCScopedPopGuardEvaluator',
   'CCPredictiveBackEvent',
   'CCPredictiveBackEventListener',
   'CCPredictiveBackPhase',
-  'CCRouteRestorationOpportunitySignal',
-  'CCRouteRestorationOpportunitySource',
 };
 
 const _hostContractNames = <String>{
   ..._adapterSpiNames,
   'CCRouteCloseOutcome',
   'CCRouteCloseStatus',
-  'CCRouteRestorationOpportunityReason',
   'CCContractBundleDescriptor',
   'CCContractCompatibilityCode',
   'CCContractCompatibilityError',
@@ -56,24 +61,34 @@ const _businessHiddenContractNames = <String>{
 };
 
 const _hostSpiTypes = <Type>[
+  host.CCForeignRouteBridge,
+  host.CCForeignRouteHandle,
+  host.CCOpaqueUiHandle,
   host.CCNavigationAdapter,
+  host.CCNavigationDispatch,
+  host.CCNavigationDispatchAdapter,
+  host.CCNavigationParentStackAdapter,
   host.CCNavigationAdapterCapabilities,
   host.CCNavigationAdapterCapabilitySource,
   host.CCNavigationAdapterHostBinding,
+  host.CCNavigationOutletVisibilityBinding,
   host.CCInitialBackendEntrySnapshot,
   host.CCNavigationBackendEvent,
   host.CCNavigationBackendEventSource,
   host.CCNavigationBackendSnapshotSource,
   host.CCNavigationHostCapabilitySource,
   host.CCNavigationManagedEntryReleaseSink,
+  host.CCNavigationRouteExitBinding,
   host.CCNavigationPopCoordinator,
   host.CCNavigationScopedPopCoordinator,
   host.CCNavigationTargetedCloseAdapter,
   host.CCRouteCloseOutcome,
   host.CCRouteCloseStatus,
   host.CCNavigationPopGuardBinding,
+  host.CCNavigationScopedPopGuardBinding,
   host.CCNavigationPopTarget,
   host.CCNavigationPopTargetSource,
+  host.CCNavigationScopedPopTargetSource,
   host.CCNavigationPredictiveBackSource,
   host.CCNavigationPredictiveBackSourceProvider,
   host.CCNavigationRoute,
@@ -83,7 +98,6 @@ const _hostSpiTypes = <Type>[
   host.CCPredictiveBackCoordinator,
   host.CCPredictiveBackFallbackReason,
   host.CCPredictiveBackRouteIdentity,
-  host.CCRouteRestorationOpportunityReason,
   host.CCGeneratedPackageBundle,
   host.CCHostAssembly,
   host.CCRouterHost,
@@ -156,6 +170,7 @@ void main() {
         final probe = File('${fixture.path}/probe.dart');
         probe.writeAsStringSync("""
 import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter_contracts/ccrouter_contracts.dart' as contracts;
 void probe() {
   CCRouter.initialize();
   CCRouter.shutdown();
@@ -164,6 +179,13 @@ void probe() {
   print(CCHostAssembly);
   print(CCFlutterPredictiveBackHandler);
   print(CCPredictiveBackCoordinator);
+  print(CCNavigationDispatch);
+  print(CCNavigationDispatchAdapter);
+  print(CCNavigationParentStackAdapter);
+  print(CCNavigationScopedPopTargetSource);
+  print(contracts.CCNavigationTelemetryContext);
+  print(contracts.CCRouteRestorationOpportunitySource);
+  print(contracts.CCAdaptiveLayoutPolicy);
 }
 """);
         final rejected = await Process.run(dartExecutable, [
@@ -181,6 +203,13 @@ void probe() {
           'CCHostAssembly',
           'CCFlutterPredictiveBackHandler',
           'CCPredictiveBackCoordinator',
+          'CCNavigationDispatch',
+          'CCNavigationDispatchAdapter',
+          'CCNavigationParentStackAdapter',
+          'CCNavigationScopedPopTargetSource',
+          'CCNavigationTelemetryContext',
+          'CCRouteRestorationOpportunitySource',
+          'CCAdaptiveLayoutPolicy',
         ]) {
           expect(errors, contains(name));
         }
@@ -228,7 +257,7 @@ Future<void> probe() async {
     ).readAsStringSync();
 
     expect(_contractCombinatorNames(hostBarrel, 'show'), _hostContractNames);
-    expect(_hostSpiTypes, hasLength(38));
+    expect(_hostSpiTypes, hasLength(47));
     expect(
       _HostTargetedCloseAdapter(),
       isA<host.CCNavigationTargetedCloseAdapter>(),

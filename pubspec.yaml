@@ -5,16 +5,14 @@ environment:
 
 dev_dependencies:
   build_runner: ^2.10.0
+  markdown: ^7.3.0
   test: ^1.26.0
 
 workspace:
   - packages/ccrouter_contracts
-  - packages/ccrouter_analytics
-  - packages/ccrouter_analytics_flutter
   - packages/ccrouter_core
   - packages/ccrouter
   - packages/ccrouter_ui
-  - packages/ccrouter_go_router
   - packages/ccrouter_generator
   - packages/ccrouter_devtools
   - packages/ccrouter_devtools_protocol
@@ -22,6 +20,8 @@ workspace:
   - packages/ccrouter_test
   - demo
   - demo/modules/network
+  - demo/modules/analytics
+  - demo/modules/analytics_flutter
   - demo/modules/analytics_firebase
   - demo/modules/kv_storage
   - demo/modules/order

@@ -1,0 +1,38 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart
+00:00 +0: old pending Runtime Pop cannot desynchronize replacement, history=0 scoped=false
+00:00 +0 -1: old pending Runtime Pop cannot desynchronize replacement, history=0 scoped=false [E]
+  Expected: empty
+    Actual: Set:['right']
+  
+  package:matcher                                                                           expect
+  package:flutter_test/src/widget_tester.dart 477:18                                        expect
+  packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart 645:11  main.<fn>
+  
+00:00 +0 -1: old pending Runtime Pop cannot desynchronize replacement, history=0 scoped=true
+00:00 +0 -2: old pending Runtime Pop cannot desynchronize replacement, history=0 scoped=true [E]
+  Expected: empty
+    Actual: Set:['right']
+  
+  package:matcher                                                                           expect
+  package:flutter_test/src/widget_tester.dart 477:18                                        expect
+  packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart 645:11  main.<fn>
+  
+00:00 +0 -2: old pending Runtime Pop cannot desynchronize replacement, history=4 scoped=false
+00:00 +0 -3: old pending Runtime Pop cannot desynchronize replacement, history=4 scoped=false [E]
+  Expected: empty
+    Actual: Set:['right']
+  
+  package:matcher                                                                           expect
+  package:flutter_test/src/widget_tester.dart 477:18                                        expect
+  packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart 645:11  main.<fn>
+  
+00:00 +0 -3: old pending Runtime Pop cannot desynchronize replacement, history=4 scoped=true
+00:00 +0 -4: old pending Runtime Pop cannot desynchronize replacement, history=4 scoped=true [E]
+  Expected: empty
+    Actual: Set:['right']
+  
+  package:matcher                                                                           expect
+  package:flutter_test/src/widget_tester.dart 477:18                                        expect
+  packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart 645:11  main.<fn>
+  
+00:00 +0 -4: Some tests failed.

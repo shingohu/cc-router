@@ -203,8 +203,10 @@ final class CCNavigationRequest {
     this.placement = const CCRoutePlacement.root(),
     this.extra,
     this.source,
+    Iterable<CCNavigationRequest> parentStack = const [],
     Map<String, String> pathParameters = const {},
   }) : pathParameters = Map.unmodifiable(pathParameters),
+       parentStack = List.unmodifiable(parentStack),
        assert(
          operation == CCNavigationOperation.open
              ? openMode != null
@@ -274,6 +276,37 @@ final class CCNavigationRequest {
 
   /// Optional product attribution supplied for telemetry.
   final CCNavigationSource? source;
+
+  /// Validated ancestors installed atomically before this declarative leaf.
+  ///
+  /// Only Backends implementing `CCNavigationParentStackAdapter` receive this
+  /// plan. Each ancestor has its own Runtime navigation identity and Scope;
+  /// it has no caller waiting for a Pop result. Ancestor Extra is never inferred
+  /// from the leaf. The list is root-to-parent and contains no nested plans.
+  final List<CCNavigationRequest> parentStack;
+
+  /// Copies transient parent planning metadata without changing leaf identity.
+  ///
+  /// Runtime and Backends strip the plan when retaining an accepted leaf, so
+  /// closing an ancestor releases its arguments independently of covering pages.
+  CCNavigationRequest withParentStack(Iterable<CCNavigationRequest> parents) =>
+      CCNavigationRequest(
+        navigationId: navigationId,
+        operation: operation,
+        routeId: routeId,
+        uri: uri,
+        arguments: arguments,
+        presentation: presentation,
+        origin: origin,
+        openMode: openMode,
+        ownerComponentId: ownerComponentId,
+        hostId: hostId,
+        placement: placement,
+        extra: extra,
+        source: source,
+        pathParameters: pathParameters,
+        parentStack: parents,
+      );
 }
 
 /// Supplies the default Host identity served by one navigation Adapter.
@@ -285,6 +318,24 @@ final class CCNavigationRequest {
 abstract interface class CCNavigationAdapterHostBinding {
   /// Stable non-empty Host identity used for default route placement.
   String get hostId;
+}
+
+/// Optional Host-only binding for application-owned Outlet visibility.
+///
+/// A multi-Host composition forwards layout selection to the owning Adapter
+/// through this SPI instead of maintaining a competing visibility snapshot.
+/// Business navigation must not call it. Adapters without the binding retain
+/// the aggregate's lifecycle/event-only fallback.
+abstract interface class CCNavigationOutletVisibilityBinding {
+  /// Applies a copied, non-empty set of unique registered Outlet identities.
+  ///
+  /// Reject invalid input before mutation. The selection remains authoritative
+  /// across navigation and focus changes until the Host supplies another set;
+  /// temporary covering surfaces may mask it without replacing it. Preserve
+  /// hidden entries, Scopes and results. The Adapter owns publication of its
+  /// effective visibility to backend observers and page lifecycle consumers;
+  /// an unchanged effective selection may be a no-op.
+  void updateVisibleOutlets(Iterable<String> outlets);
 }
 
 /// Adapter-neutral navigation backend contract owned by one Runtime.
@@ -312,6 +363,14 @@ abstract interface class CCNavigationAdapter {
   ///
   /// Push and Replace complete with the eventual Pop result, while Go, Reset,
   /// and Open complete after the backend accepts the operation.
+  /// A pending Future alone is not proof of acceptance: legacy Adapters may
+  /// reject it before a page opens. Hosts that support early, identity-sensitive
+  /// replacement also implement the optional `CCNavigationDispatchAdapter` SPI.
+  /// Runtime rechecks its admitted lifetime after this synchronous call and
+  /// after old Scope cleanup during commit. Ending the Host or Runtime in those
+  /// callbacks cancels the uncommitted operation; a return cannot revive it.
+  /// Adapters still own rollback of their own mutations and cancellation of
+  /// application work that outlives that rejection.
   Future<Object?> navigate(CCNavigationRequest request);
 
   /// Asks the backend to handle a Pop and reports whether it was handled.
@@ -321,6 +380,10 @@ abstract interface class CCNavigationAdapter {
   /// managed route, a foreign route, or a LocalHistoryEntry; callers must not
   /// infer managed Route Entry removal from this Boolean alone. A `false`
   /// result means that the backend declined the request.
+  /// Runtime calls and observes this producer in its creation Host Zone and
+  /// releases its wait on Host/Runtime retirement. Implementations still own
+  /// external work cancellation; returned error Futures must be deliverable in
+  /// that Host error Zone under Dart's normal producer-zone rules.
   Future<bool> maybePop({Object? result});
 
   /// Removes the current route and optionally completes it with [result].

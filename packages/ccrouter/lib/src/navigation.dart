@@ -33,7 +33,8 @@ abstract interface class CCNavigator {
   /// veto the Pop. A `true` result may mean that a LocalHistoryEntry or foreign
   /// PopupRoute consumed the request; it does not prove that a CCRouter Route
   /// Entry was removed. It is distinct from [canPop], which cannot account for
-  /// a backend Pop guard.
+  /// a backend Pop guard. Host/Runtime retirement also consumes a pending
+  /// request without removal, preventing Back fallback into a replacement Host.
   Future<bool> maybePop<R>({R? result, BuildContext? context});
 
   /// Coordinates a Pop and reports whether a Managed or foreign entry moved.
@@ -42,6 +43,8 @@ abstract interface class CCNavigator {
   /// diagnostics. [trigger] records whether the request came from system back,
   /// a gesture, or another host integration. For ordinary back handling,
   /// [maybePop] remains sufficient.
+  /// Losing the original Host/Runtime settles with handled and no removed
+  /// owner; late backend results cannot mutate a replacement registration.
   Future<CCPopOutcome> maybePopOutcome<R>({
     R? result,
     CCPopTrigger trigger = CCPopTrigger.system,
@@ -87,7 +90,8 @@ abstract interface class CCNavigator {
   ///
   /// Capture a handle from [CCRouter.routeEntryHandleOf] during page setup.
   /// Unsupported adapters return an explicit outcome and never pop another
-  /// page.
+  /// page. A pending close ends with `notFound` if its original Entry, Host or
+  /// Runtime ends. Already completing exact receipts keep their actual outcome.
   Future<CCRouteCloseOutcome> close<R>(CCRouteEntryHandle handle, {R? result});
 
   /// Whether the configured adapter can currently pop one route.

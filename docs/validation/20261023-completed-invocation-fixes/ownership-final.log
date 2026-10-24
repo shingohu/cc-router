@@ -1,0 +1,198 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/invocation_ownership_test.dart
+00:00 +0: returned CCServiceScope.session nested=false optional=false CCServiceCreationPolicy.singleton cached=false fences keyed lookup
+00:00 +1: returned CCServiceScope.session nested=false optional=false CCServiceCreationPolicy.singleton cached=true fences keyed lookup
+00:00 +2: returned CCServiceScope.session nested=false optional=false CCServiceCreationPolicy.newInstance cached=false fences keyed lookup
+00:00 +3: returned CCServiceScope.session nested=false optional=false CCServiceCreationPolicy.newInstance cached=true fences keyed lookup
+00:00 +4: returned CCServiceScope.session nested=false optional=true CCServiceCreationPolicy.singleton cached=false fences keyed lookup
+00:00 +5: returned CCServiceScope.session nested=false optional=true CCServiceCreationPolicy.singleton cached=true fences keyed lookup
+00:00 +6: returned CCServiceScope.session nested=false optional=true CCServiceCreationPolicy.newInstance cached=false fences keyed lookup
+00:00 +7: returned CCServiceScope.session nested=false optional=true CCServiceCreationPolicy.newInstance cached=true fences keyed lookup
+00:00 +8: returned CCServiceScope.session nested=true optional=false CCServiceCreationPolicy.singleton cached=false fences keyed lookup
+00:00 +9: returned CCServiceScope.session nested=true optional=false CCServiceCreationPolicy.singleton cached=true fences keyed lookup
+00:00 +10: returned CCServiceScope.session nested=true optional=false CCServiceCreationPolicy.newInstance cached=false fences keyed lookup
+00:00 +11: returned CCServiceScope.session nested=true optional=false CCServiceCreationPolicy.newInstance cached=true fences keyed lookup
+00:00 +12: returned CCServiceScope.session nested=true optional=true CCServiceCreationPolicy.singleton cached=false fences keyed lookup
+00:00 +13: returned CCServiceScope.session nested=true optional=true CCServiceCreationPolicy.singleton cached=true fences keyed lookup
+00:00 +14: returned CCServiceScope.session nested=true optional=true CCServiceCreationPolicy.newInstance cached=false fences keyed lookup
+00:00 +15: returned CCServiceScope.session nested=true optional=true CCServiceCreationPolicy.newInstance cached=true fences keyed lookup
+00:00 +16: App child of returned CCServiceScope.session readiness=false close=false retains pending cancellation
+00:00 +17: App child of returned CCServiceScope.session readiness=false close=true retains pending cancellation
+00:00 +18: App child of returned CCServiceScope.session readiness=true close=false retains pending cancellation
+00:00 +19: App child of returned CCServiceScope.session readiness=true close=true retains pending cancellation
+00:00 +20: retained nested Zone releases closed CCServiceScope.session Service
+00:00 +21: returned CCServiceScope.route nested=false optional=false CCServiceCreationPolicy.singleton cached=false fences keyed lookup
+00:00 +21 -1: returned CCServiceScope.route nested=false optional=false CCServiceCreationPolicy.singleton cached=false fences keyed lookup [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 122:31  main.<fn>
+  
+00:00 +21 -1: returned CCServiceScope.route nested=false optional=false CCServiceCreationPolicy.singleton cached=true fences keyed lookup
+00:00 +21 -2: returned CCServiceScope.route nested=false optional=false CCServiceCreationPolicy.singleton cached=true fences keyed lookup [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 122:31  main.<fn>
+  
+00:00 +21 -2: returned CCServiceScope.route nested=false optional=false CCServiceCreationPolicy.newInstance cached=false fences keyed lookup
+00:00 +21 -3: returned CCServiceScope.route nested=false optional=false CCServiceCreationPolicy.newInstance cached=false fences keyed lookup [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 122:31  main.<fn>
+  
+00:00 +21 -3: returned CCServiceScope.route nested=false optional=false CCServiceCreationPolicy.newInstance cached=true fences keyed lookup
+00:00 +21 -4: returned CCServiceScope.route nested=false optional=false CCServiceCreationPolicy.newInstance cached=true fences keyed lookup [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 122:31  main.<fn>
+  
+00:00 +21 -4: returned CCServiceScope.route nested=false optional=true CCServiceCreationPolicy.singleton cached=false fences keyed lookup
+00:00 +21 -5: returned CCServiceScope.route nested=false optional=true CCServiceCreationPolicy.singleton cached=false fences keyed lookup [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 122:31  main.<fn>
+  
+00:00 +21 -5: returned CCServiceScope.route nested=false optional=true CCServiceCreationPolicy.singleton cached=true fences keyed lookup
+00:00 +21 -6: returned CCServiceScope.route nested=false optional=true CCServiceCreationPolicy.singleton cached=true fences keyed lookup [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 122:31  main.<fn>
+  
+00:00 +21 -6: returned CCServiceScope.route nested=false optional=true CCServiceCreationPolicy.newInstance cached=false fences keyed lookup
+00:00 +21 -7: returned CCServiceScope.route nested=false optional=true CCServiceCreationPolicy.newInstance cached=false fences keyed lookup [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 122:31  main.<fn>
+  
+00:00 +21 -7: returned CCServiceScope.route nested=false optional=true CCServiceCreationPolicy.newInstance cached=true fences keyed lookup
+00:00 +21 -8: returned CCServiceScope.route nested=false optional=true CCServiceCreationPolicy.newInstance cached=true fences keyed lookup [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 122:31  main.<fn>
+  
+00:00 +21 -8: returned CCServiceScope.route nested=true optional=false CCServiceCreationPolicy.singleton cached=false fences keyed lookup
+00:00 +21 -9: returned CCServiceScope.route nested=true optional=false CCServiceCreationPolicy.singleton cached=false fences keyed lookup [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 122:31  main.<fn>
+  
+00:00 +21 -9: returned CCServiceScope.route nested=true optional=false CCServiceCreationPolicy.singleton cached=true fences keyed lookup
+00:00 +21 -10: returned CCServiceScope.route nested=true optional=false CCServiceCreationPolicy.singleton cached=true fences keyed lookup [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 122:31  main.<fn>
+  
+00:00 +21 -10: returned CCServiceScope.route nested=true optional=false CCServiceCreationPolicy.newInstance cached=false fences keyed lookup
+00:00 +21 -11: returned CCServiceScope.route nested=true optional=false CCServiceCreationPolicy.newInstance cached=false fences keyed lookup [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 122:31  main.<fn>
+  
+00:00 +21 -11: returned CCServiceScope.route nested=true optional=false CCServiceCreationPolicy.newInstance cached=true fences keyed lookup
+00:00 +21 -12: returned CCServiceScope.route nested=true optional=false CCServiceCreationPolicy.newInstance cached=true fences keyed lookup [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 122:31  main.<fn>
+  
+00:00 +21 -12: returned CCServiceScope.route nested=true optional=true CCServiceCreationPolicy.singleton cached=false fences keyed lookup
+00:00 +21 -13: returned CCServiceScope.route nested=true optional=true CCServiceCreationPolicy.singleton cached=false fences keyed lookup [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 122:31  main.<fn>
+  
+00:00 +21 -13: returned CCServiceScope.route nested=true optional=true CCServiceCreationPolicy.singleton cached=true fences keyed lookup
+00:00 +21 -14: returned CCServiceScope.route nested=true optional=true CCServiceCreationPolicy.singleton cached=true fences keyed lookup [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 122:31  main.<fn>
+  
+00:00 +21 -14: returned CCServiceScope.route nested=true optional=true CCServiceCreationPolicy.newInstance cached=false fences keyed lookup
+00:00 +21 -15: returned CCServiceScope.route nested=true optional=true CCServiceCreationPolicy.newInstance cached=false fences keyed lookup [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 122:31  main.<fn>
+  
+00:00 +21 -15: returned CCServiceScope.route nested=true optional=true CCServiceCreationPolicy.newInstance cached=true fences keyed lookup
+00:00 +21 -16: returned CCServiceScope.route nested=true optional=true CCServiceCreationPolicy.newInstance cached=true fences keyed lookup [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 122:31  main.<fn>
+  
+00:00 +21 -16: App child of returned CCServiceScope.route readiness=false close=false retains pending cancellation
+00:00 +21 -17: App child of returned CCServiceScope.route readiness=false close=false retains pending cancellation [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 186:27  main.<fn>
+  
+00:00 +21 -17: App child of returned CCServiceScope.route readiness=false close=true retains pending cancellation
+00:00 +21 -18: App child of returned CCServiceScope.route readiness=false close=true retains pending cancellation [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 186:27  main.<fn>
+  
+00:00 +21 -18: App child of returned CCServiceScope.route readiness=true close=false retains pending cancellation
+00:00 +21 -19: App child of returned CCServiceScope.route readiness=true close=false retains pending cancellation [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 186:27  main.<fn>
+  
+00:00 +21 -19: App child of returned CCServiceScope.route readiness=true close=true retains pending cancellation
+00:00 +21 -20: App child of returned CCServiceScope.route readiness=true close=true retains pending cancellation [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 186:27  main.<fn>
+  
+00:00 +21 -20: retained nested Zone releases closed CCServiceScope.route Service
+00:00 +21 -21: retained nested Zone releases closed CCServiceScope.route Service [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 799:7                  CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 789:5                  CCRouterRuntime.registerService
+  packages/ccrouter_test/test/invocation_ownership_test.dart 32:11   _runtime
+  packages/ccrouter_test/test/invocation_ownership_test.dart 262:23  main.<fn>
+  
+00:00 +21 -21: shared App factory outlives its closed Session caller
+00:00 +22 -21: shared App initializer outlives its closed Session caller
+00:00 +23 -21: CCServiceCreationPolicy.singleton initializer preserves its intended caller lifetime
+00:00 +24 -21: root factory shutdown CCServiceCreationPolicy.singleton preserves cleanup error
+00:00 +25 -21: CCServiceCreationPolicy.newInstance initializer preserves its intended caller lifetime
+00:00 +26 -21: root factory shutdown CCServiceCreationPolicy.newInstance preserves cleanup error
+00:00 +27 -21: an old Runtime Zone does not fence an independent Runtime
+00:00 +28 -21: Some tests failed.

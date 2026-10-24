@@ -32,8 +32,6 @@ final class CCRouterDevToolsSnapshot {
     List<CCNavigationBackendDiagnosticEvent> backendEvents = const [],
     List<CCInitTaskSnapshot> initTasks = const [],
     List<CCPendingNavigation> pendingNavigations = const [],
-    List<CCRouteRestorationOpportunityEvent> restorationOpportunities =
-        const [],
   }) : components = List.unmodifiable(components),
        routeEntries = List.unmodifiable(routeEntries),
        backendEntries = List.unmodifiable(backendEntries),
@@ -44,8 +42,7 @@ final class CCRouterDevToolsSnapshot {
        visibilityEvents = List.unmodifiable(visibilityEvents),
        backendEvents = List.unmodifiable(backendEvents),
        initTasks = List.unmodifiable(initTasks),
-       pendingNavigations = List.unmodifiable(pendingNavigations),
-       restorationOpportunities = List.unmodifiable(restorationOpportunities);
+       pendingNavigations = List.unmodifiable(pendingNavigations);
 
   /// Creates an empty snapshot used when a Host has no active Runtime.
   factory CCRouterDevToolsSnapshot.empty({
@@ -96,9 +93,6 @@ final class CCRouterDevToolsSnapshot {
 
   /// Navigation requests waiting for an external policy decision.
   final List<CCPendingNavigation> pendingNavigations;
-
-  /// Bounded evidence of unsupported restoration demand.
-  final List<CCRouteRestorationOpportunityEvent> restorationOpportunities;
 
   /// Converts this widget-facing view into the versioned tooling protocol.
   ///

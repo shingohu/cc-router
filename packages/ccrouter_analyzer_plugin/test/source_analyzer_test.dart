@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
@@ -18,6 +19,32 @@ void main() {
     Directory(path.join(packageRoot, 'lib', 'src')).createSync(recursive: true);
   });
   tearDown(() => root.deleteSync(recursive: true));
+
+  final routeCases =
+      jsonDecode(
+            File(
+              '../ccrouter_test/fixtures/route_configuration_cases.json',
+            ).readAsStringSync(),
+          )
+          as List;
+  for (final entry in routeCases.cast<Map<String, dynamic>>()) {
+    test('shared Generator configuration: ${entry['name']}', () {
+      final diagnostics = CCRouterSourceAnalyzer.analyze(
+        source:
+            "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\n"
+            "@CCRoute<void>(id: 'sample.home', pattern: CCPathPattern('/'), ${entry['arguments']}) class Home {}",
+        filePath: path.join(packageRoot, 'lib/src/home.dart'),
+        packageRoot: packageRoot,
+        packageName: 'sample_component',
+      );
+      expect(
+        diagnostics
+            .where((d) => d.code.startsWith('ccrouter_route_'))
+            .map((d) => d.code),
+        unorderedEquals(entry['codes'] as List),
+      );
+    });
+  }
 
   test('component cannot explicitly import or re-export Host lifecycle', () {
     File(path.join(packageRoot, 'pubspec.yaml')).writeAsStringSync(
@@ -175,6 +202,106 @@ Completion receiveAlias(Object event) async {}
       diagnostics.map((item) => item.code),
       contains('ccrouter_cross_package_generated_import'),
     );
+  });
+
+  test('checks every conditional import and export at its exact URI', () {
+    const foreign = 'package:other/src/ccrouter_generated/host/x.dart';
+    for (final directive in ['import', 'export']) {
+      final source =
+          "$directive 'safe.dart' if (dart.library.io) '$foreign' "
+          "if (dart.library.html) '$foreign';";
+      final issues = CCRouterSourceAnalyzer.analyze(
+        source: source,
+        filePath: path.join(packageRoot, 'lib/src/page.dart'),
+        packageRoot: packageRoot,
+        packageName: 'sample_component',
+      ).where((d) => d.code == 'ccrouter_cross_package_generated_import');
+      expect(issues, hasLength(2));
+      for (final issue in issues) {
+        expect(
+          source.substring(issue.offset, issue.offset + issue.length),
+          "'$foreign'",
+        );
+      }
+    }
+  });
+
+  test('own generated and public conditional barrels remain allowed', () {
+    final issues = CCRouterSourceAnalyzer.analyze(
+      source:
+          "export 'public.dart' if (dart.library.io) "
+          "'package:sample_component/src/ccrouter_generated/route/x.dart';",
+      filePath: path.join(packageRoot, 'lib/src/page.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+    );
+    expect(issues, isEmpty);
+  });
+
+  test('route placement and policy literals fail before generation', () {
+    const source = '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart' as cc;
+@cc.CCRoute<void>(id: 'sample.home', pattern: cc.CCPathPattern('/'),
+  placement: cc.CCRoutePlacement(hostId: 'Bad Host', navigatorOutlet: '',
+    shellId: 'bad..shell', parentRouteId: 'sample.home'),
+  interceptors: ['auth.check', 'auth.check', 'bad id'],
+  popGuards: ['dirty.check', 'dirty.check'])
+class Home {}
+''';
+    final issues = CCRouterSourceAnalyzer.analyze(
+      source: source,
+      filePath: path.join(packageRoot, 'lib/src/page.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+    );
+    expect(
+      issues.where((d) => d.code == 'ccrouter_route_placement_invalid'),
+      hasLength(3),
+    );
+    expect(
+      issues.where((d) => d.code == 'ccrouter_route_parent_self'),
+      hasLength(1),
+    );
+    expect(
+      issues.where((d) => d.code == 'ccrouter_route_policy_duplicate'),
+      hasLength(2),
+    );
+    expect(
+      issues.where((d) => d.code == 'ccrouter_route_policy_invalid'),
+      hasLength(1),
+    );
+    final invalidHost = issues.firstWhere(
+      (d) => d.code == 'ccrouter_route_placement_invalid',
+    );
+    expect(
+      source.substring(
+        invalidHost.offset,
+        invalidHost.offset + invalidHost.length,
+      ),
+      "'Bad Host'",
+    );
+  });
+
+  test('unknown route configuration expressions and constructors defer', () {
+    for (final placement in [
+      'placementValue',
+      'makePlacement()',
+      'foreign.CCRoutePlacement(hostId: "Bad Host")',
+    ]) {
+      final issues = CCRouterSourceAnalyzer.analyze(
+        source:
+            "import 'package:ccrouter_contracts/ccrouter_contracts.dart' as cc;\n"
+            "@cc.CCRoute<void>(id: 'sample.home', placement: $placement, "
+            'interceptors: policies, popGuards: [unknownId]) class Home {}',
+        filePath: path.join(packageRoot, 'lib/src/page.dart'),
+        packageRoot: packageRoot,
+        packageName: 'sample_component',
+      );
+      expect(
+        issues.where((d) => d.code.startsWith('ccrouter_route_')),
+        isEmpty,
+      );
+    }
   });
 
   test('warns when a route output is missing', () {

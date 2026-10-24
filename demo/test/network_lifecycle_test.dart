@@ -11,6 +11,20 @@ void main() {
   final demoNetworkComponentManifest = ccrouterGeneratedHostAssembly
       .componentManifests
       .singleWhere((manifest) => manifest.id == demoNetworkComponentId.value);
+
+  test('all Demo environments expose the shared anything endpoint', () {
+    expect(
+      demoNetworkEnvironments.map(
+        (environment) => Uri.parse(environment.baseUrl).resolve('anything'),
+      ),
+      [
+        Uri.parse('https://httpbin.org/anything'),
+        Uri.parse('https://httpbingo.org/anything'),
+        Uri.parse('https://httpbin.org/anything'),
+      ],
+    );
+  });
+
   test(
     'generated network service releases authentication at App Scope end',
     () async {

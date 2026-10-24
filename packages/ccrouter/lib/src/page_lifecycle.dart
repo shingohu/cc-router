@@ -228,6 +228,24 @@ abstract final class CCPageLifecycleHostBridge {
     record.reconcileRoute(topRoute);
   }
 
+  /// Releases one rendered top only if it still belongs to this generation.
+  ///
+  /// Unmounting a Navigator hides its pages but does not close managed Entries.
+  /// The identity fence prevents delayed teardown from hiding a replacement.
+  static void didDetachOutlet({
+    required String hostId,
+    required String outlet,
+    required Route<dynamic> previousTopRoute,
+  }) {
+    final record = _hosts[hostId];
+    if (record == null ||
+        !identical(record.topRoutes[outlet], previousTopRoute)) {
+      return;
+    }
+    record.topRoutes.remove(outlet);
+    record.reconcileRoute(previousTopRoute);
+  }
+
   /// Declares which Navigator Outlets currently participate in page display.
   ///
   /// Root-only Hosts are active by default. Stateful Shell integrations call

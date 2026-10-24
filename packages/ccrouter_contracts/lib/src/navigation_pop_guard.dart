@@ -89,3 +89,22 @@ abstract interface class CCNavigationPopGuardBinding {
   /// Installs [evaluator], or clears the previous binding when it is null.
   void bindPopGuardEvaluator(CCPopGuardEvaluator? evaluator);
 }
+
+/// Runtime policy for an exact native Back target, independent of Host focus.
+///
+/// Only Host bridges retain this callback. The immutable target must identify
+/// the actual Route being considered, including its concrete Host and Outlet.
+typedef CCScopedPopGuardEvaluator =
+    CCPopGuardDecision Function(
+      CCPopTrigger trigger, {
+      required CCNavigationPopTarget target,
+    });
+
+/// Optional Host SPI for native Back on independently interactive Navigators.
+///
+/// Runtime prefers this binding over [CCNavigationPopGuardBinding]. Legacy
+/// Adapters remain compatible; multi-Host bridges preserve the child's target.
+abstract interface class CCNavigationScopedPopGuardBinding {
+  /// Installs exact-target policy, or detaches Runtime ownership with null.
+  void bindScopedPopGuardEvaluator(CCScopedPopGuardEvaluator? evaluator);
+}

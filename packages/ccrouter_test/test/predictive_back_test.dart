@@ -3,8 +3,7 @@ import 'dart:io';
 
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
-// ignore: deprecated_member_use
-import 'package:ccrouter_go_router/ccrouter_go_router.dart';
+import 'support/managed_test_home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -25,6 +24,7 @@ class _HarnessRegistrar implements CCComponentRegistrar {
 
   @override
   void register(CCRegistry registry) {
+    registry.registerRoute(testHomeDefinition());
     registry.registerRoute(definition);
     registry.registerService<_Resource>(
       CCServiceProvider(
@@ -75,7 +75,12 @@ class _Harness {
   final life = <String>[];
   final results = <String?>[];
   final errors = <Object>[];
-  late CCGoRouterBackend backend;
+  late CCManagedRouterBackend backend;
+  late final CCManagedRouterBackend Function(
+    CCManagedRouterBackendConfiguration,
+  )
+  backendFactory = (configuration) =>
+      backend = configuration.createManagedBackend();
 
   List<CCPredictiveBackPhase> get phases =>
       events.map((event) => event.phase).toList();
@@ -85,13 +90,10 @@ class _Harness {
   Future<void> mount(
     WidgetTester tester, {
     bool enabled = true,
-    bool attached = false,
-    bool wireAttached = true,
     bool globalGuard = false,
     CCPagePresentation presentation = const CCPagePresentation(),
     TargetPlatform platform = TargetPlatform.android,
     PageTransitionsTheme? transitions,
-    int lifecycleEventCapacity = 1000,
   }) async {
     final definition = CCRouteDefinition<String, String>(
       routeId: 'probe.detail',
@@ -108,6 +110,7 @@ class _Harness {
         ),
       ],
       routeCatalog: CCFlutterRouteCatalog([
+        testHomeDestination(),
         CCFlutterRouteDestination.fromDefinition(
           definition: definition,
           builder: (arguments) => Builder(
@@ -137,55 +140,13 @@ class _Harness {
           : const [],
     );
     await tester.pumpWidget(
-      CCGoRouterApp(
+      CCManagedRouterApp(
         enablePredictiveBack: enabled,
-        lifecycleEventCapacity: lifecycleEventCapacity,
         theme: ThemeData(
           platform: platform,
           pageTransitionsTheme: transitions ?? const PageTransitionsTheme(),
         ),
-        hostRoutes: [GoRoute(path: '/', builder: (_, _) => const Text('home'))],
-        backendFactory: (configuration) {
-          if (!attached) return backend = configuration.createManagedBackend();
-          final host = CCNavigationHost();
-          final observer = CCGoRouterNavigationObserver(outlet: 'root');
-          final binding = GoRoute(
-            path: '/probe/:id',
-            pageBuilder: (_, state) => ccGoRouterPage(
-              child: CCRouterHostBinding.bindRouteEntry(
-                payload: state.extra,
-                child: configuration.catalog
-                    .destinationFor('probe.detail')!
-                    .build(CCRouteCodecValues(path: state.pathParameters)),
-              ),
-              presentation: presentation,
-              key: state.pageKey,
-              name: 'probe.detail',
-              predictiveBackHandler: wireAttached
-                  ? backend.adapter.predictiveBackBridge
-                  : null,
-            ),
-          );
-          final router = GoRouter(
-            navigatorKey: host.navigatorKey,
-            observers: [observer],
-            routes: [
-              GoRoute(path: '/', builder: (_, _) => const Text('home')),
-              binding,
-            ],
-          );
-          addTearDown(router.dispose);
-          return backend = CCGoRouterBackend.attach(
-            catalog: configuration.catalog,
-            host: host,
-            router: router,
-            observers: [observer],
-            enablePredictiveBack: enabled,
-            bindings: [
-              CCGoRouterRouteBinding(routeId: 'probe.detail', goRoute: binding),
-            ],
-          );
-        },
+        backendFactory: backendFactory,
       ),
     );
     await tester.pumpAndSettle();
@@ -214,6 +175,9 @@ class _Harness {
   }
 }
 
+Iterable<CCRouteEntrySnapshot> get _detailEntries => CCRouter.activeRouteEntries
+    .where((entry) => entry.routeId == 'probe.detail');
+
 void _boundaryTests() {
   for (final enabled in [false, true]) {
     testWidgets('Theme platform change preserves system fallback: $enabled', (
@@ -224,7 +188,8 @@ void _boundaryTests() {
       harness.push();
       await tester.pumpAndSettle();
       await tester.pumpWidget(
-        CCGoRouterApp(
+        CCManagedRouterApp(
+          backendFactory: harness.backendFactory,
           enablePredictiveBack: enabled,
           themeAnimationDuration: Duration.zero,
           theme: ThemeData(platform: TargetPlatform.iOS),
@@ -244,7 +209,7 @@ void _boundaryTests() {
       if (enabled) {
         expect(
           harness.backend.adapter.predictiveBackFallbacks.single.reason,
-          CCGoRouterPredictiveBackFallbackReason.unsupportedTransition,
+          CCManagedPredictiveBackFallbackReason.unsupportedTransition,
         );
       }
       await harness.close(tester);
@@ -266,7 +231,8 @@ void _boundaryTests() {
           await _event(tester, 'updateBackGestureProgress');
           expect(route.animation!.value, closeTo(.6, .001));
           await tester.pumpWidget(
-            CCGoRouterApp(
+            CCManagedRouterApp(
+              backendFactory: harness.backendFactory,
               enablePredictiveBack: true,
               themeAnimationDuration: Duration.zero,
               theme: ThemeData(
@@ -295,7 +261,8 @@ void _boundaryTests() {
             // A replacement detector must not revive a cancelled preview even
             // when the supported Theme returns before the platform commits.
             await tester.pumpWidget(
-              CCGoRouterApp(
+              CCManagedRouterApp(
+                backendFactory: harness.backendFactory,
                 enablePredictiveBack: true,
                 themeAnimationDuration: Duration.zero,
                 theme: ThemeData(platform: TargetPlatform.android),
@@ -309,10 +276,11 @@ void _boundaryTests() {
           expect(harness.results, isEmpty);
           expect(harness.resources.single.disposeCount, 0);
           expect(harness.life, before);
-          expect(CCRouter.activeRouteEntries, hasLength(1));
+          expect(_detailEntries, hasLength(1));
           // Returning to a supported Theme must not revive the old preview.
           await tester.pumpWidget(
-            CCGoRouterApp(
+            CCManagedRouterApp(
+              backendFactory: harness.backendFactory,
               enablePredictiveBack: true,
               themeAnimationDuration: Duration.zero,
               theme: ThemeData(platform: TargetPlatform.android),
@@ -406,28 +374,26 @@ void _boundaryTests() {
         ),
         predictive
             ? isEmpty
-            : [CCGoRouterPredictiveBackFallbackReason.unsupportedTransition],
+            : [CCManagedPredictiveBackFallbackReason.unsupportedTransition],
       );
       await harness.close(tester);
     });
   }
 
-  testWidgets('predictive fallback diagnostics use lifecycle capacity', (
-    tester,
-  ) async {
+  testWidgets('predictive fallback diagnostics remain bounded', (tester) async {
     final harness = _Harness();
-    await harness.mount(tester, lifecycleEventCapacity: 2);
+    await harness.mount(tester);
     harness.push();
     await tester.pumpAndSettle();
-    for (var index = 0; index < 3; index++) {
+    for (var index = 0; index < 101; index++) {
       await _event(tester, 'startBackGesture', button: true);
     }
 
-    expect(harness.backend.adapter.predictiveBackFallbacks, hasLength(2));
+    expect(harness.backend.adapter.predictiveBackFallbacks, hasLength(100));
     expect(
       harness.backend.adapter.predictiveBackFallbacks.every(
         (event) =>
-            event.reason == CCGoRouterPredictiveBackFallbackReason.buttonEvent,
+            event.reason == CCManagedPredictiveBackFallbackReason.buttonEvent,
       ),
       isTrue,
     );
@@ -448,7 +414,7 @@ void _boundaryTests() {
     expect(harness.phases, isEmpty);
     expect(
       harness.backend.adapter.predictiveBackFallbacks.single.reason,
-      CCGoRouterPredictiveBackFallbackReason.buttonEvent,
+      CCManagedPredictiveBackFallbackReason.buttonEvent,
     );
     await harness.close(tester);
   });
@@ -550,7 +516,7 @@ void _boundaryTests() {
       await _event(tester, 'commitBackGesture');
       await tester.pumpAndSettle();
       expect(harness.results, [null]);
-      expect(CCRouter.activeRouteEntries, hasLength(1));
+      expect(_detailEntries, hasLength(1));
       await _event(tester, 'startBackGesture');
       await _event(tester, 'commitBackGesture');
       await tester.pumpAndSettle();
@@ -563,7 +529,7 @@ void _boundaryTests() {
         harness.phases.where((p) => p == CCPredictiveBackPhase.committed),
         hasLength(2),
       );
-      expect(CCRouter.activeRouteEntries, isEmpty);
+      expect(_detailEntries, isEmpty);
       await harness.close(tester);
     },
   );
@@ -652,66 +618,12 @@ void _boundaryTests() {
     await _event(tester, 'updateBackGestureProgress');
     await _event(tester, 'commitBackGesture');
     await tester.pumpAndSettle();
-    expect(find.text('detail:1'), findsOneWidget);
+    expect(find.text('detail:1'), findsNothing);
     expect(harness.phases, phases);
     expect(harness.errors.single, isA<CCNavigationAdapterError>());
     await harness.close(tester);
     expect(harness.resources.single.disposeCount, 1);
   });
-
-  for (final enabled in [false, true]) {
-    testWidgets('attached Router survives Adapter disposal, enabled=$enabled', (
-      tester,
-    ) async {
-      final harness = _Harness();
-      await harness.mount(tester, attached: true, enabled: enabled);
-      harness.push();
-      await tester.pumpAndSettle();
-      harness.backend.adapter.dispose();
-      await tester.pumpAndSettle();
-      await _event(tester, 'startBackGesture');
-      await _event(tester, 'commitBackGesture');
-      await tester.pumpAndSettle();
-      expect(find.text('detail:1'), findsNothing);
-      expect(harness.phases, isEmpty);
-      expect(harness.errors.single, isA<CCNavigationAdapterError>());
-      await harness.close(tester);
-      expect(harness.resources.single.disposeCount, 1);
-    });
-  }
-
-  for (final terminal in ['commitBackGesture', 'cancelBackGesture']) {
-    testWidgets('attached Router recovers after retired gesture $terminal', (
-      tester,
-    ) async {
-      final harness = _Harness();
-      await harness.mount(tester, attached: true);
-      harness.push();
-      await tester.pumpAndSettle();
-      await _event(tester, 'startBackGesture');
-      await _event(tester, 'updateBackGestureProgress');
-      harness.backend.adapter.dispose();
-      await tester.pumpAndSettle();
-      await _event(tester, terminal);
-      await tester.pumpAndSettle();
-      expect(find.text('detail:1'), findsOneWidget);
-      expect(harness.route(tester).animation!.value, 1);
-      expect(
-        harness.backend.host.navigatorKey.currentState!.userGestureInProgress,
-        isFalse,
-      );
-      await _event(tester, 'startBackGesture');
-      await _event(tester, 'commitBackGesture');
-      await tester.pumpAndSettle();
-      expect(find.text('detail:1'), findsNothing);
-      expect(harness.phases, [
-        CCPredictiveBackPhase.started,
-        CCPredictiveBackPhase.updated,
-      ]);
-      await harness.close(tester);
-      expect(harness.resources.single.disposeCount, 1);
-    });
-  }
 
   testWidgets('replaced Host consumes the previous gesture commit', (
     tester,
@@ -765,37 +677,6 @@ void _boundaryTests() {
         CCPredictiveBackPhase.committed,
       ]);
       await current.close(tester);
-    });
-  }
-
-  for (final wire in [false, true]) {
-    testWidgets('attached router requires explicit Page wiring: $wire', (
-      tester,
-    ) async {
-      final harness = _Harness();
-      await harness.mount(tester, attached: true, wireAttached: wire);
-      harness.push();
-      await tester.pumpAndSettle();
-      await _event(tester, 'startBackGesture');
-      await _event(tester, 'commitBackGesture');
-      await tester.pumpAndSettle();
-      expect(harness.results, [null]);
-      expect(harness.resources.single.disposeCount, 1);
-      expect(
-        harness.phases,
-        wire
-            ? [CCPredictiveBackPhase.started, CCPredictiveBackPhase.committed]
-            : isEmpty,
-      );
-      expect(
-        harness.backend.adapter.predictiveBackFallbacks.map(
-          (event) => event.reason,
-        ),
-        wire
-            ? isEmpty
-            : [CCGoRouterPredictiveBackFallbackReason.noEligibleRoute],
-      );
-      await harness.close(tester);
     });
   }
 
@@ -898,6 +779,7 @@ class _Registrar implements CCComponentRegistrar {
   final _Resource resource;
   @override
   void register(CCRegistry registry) {
+    registry.registerRoute(testHomeDefinition());
     registry.registerRoute(definition);
     registry.registerRoutePopGuard('probe.guard', guard);
     registry.registerService<_Resource>(
@@ -933,60 +815,57 @@ Future<void> _event(
 
 void main() {
   tearDown(CCRouterHost.shutdown);
-  for (final terminal in ['commitBackGesture', 'cancelBackGesture']) {
-    testWidgets(
-      'eligibility query preserves retired gesture fence: $terminal',
-      (tester) async {
-        final harness = _Harness();
-        await harness.mount(tester, attached: true);
-        harness.push();
-        await tester.pumpAndSettle();
-        final route = harness.route(tester);
-        await _event(tester, 'startBackGesture');
-        harness.backend.adapter.dispose();
-        // A Host capability query must not change the in-flight gesture owner.
-        expect(route.popGestureEnabled, isTrue);
+  for (final terminal in ['commitBackGesture', 'cancelBackGesture', 'lost']) {
+    testWidgets('shared coordinator retires the gesture fence: $terminal', (
+      tester,
+    ) async {
+      final key = GlobalKey<NavigatorState>();
+      final bridge = CCManagedPredictiveBackBridge(
+        hostId: 'standalone',
+        activeOutlet: () => 'root',
+        navigatorForOutlet: (_) => key.currentState,
+        backendEntryIdForRoute: (_) => 'standalone-detail',
+        hasLiveEntry: (_) => true,
+        recordFallback: (_) {},
+      )..attach();
+      addTearDown(bridge.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          navigatorKey: key,
+          theme: ThemeData(platform: TargetPlatform.android),
+          home: const Text('standalone-home'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final route =
+          CCFlutterRouteFactory.createRoute<void>(
+                context: key.currentContext!,
+                child: const Text('standalone-detail'),
+                presentation: const CCPagePresentation(),
+                predictiveBackHandler: bridge,
+              )
+              as PageRoute<void>;
+      key.currentState!.push(route);
+      await tester.pumpAndSettle();
+      await _event(tester, 'startBackGesture');
+      await _event(tester, 'updateBackGestureProgress');
+      expect(route.animation!.value, closeTo(.6, .001));
+      bridge.dispose();
+      expect(() => route.popGestureEnabled, returnsNormally);
+      expect(route.animation!.value, closeTo(.6, .001));
+      if (terminal != 'lost') {
         await _event(tester, terminal);
         await tester.pumpAndSettle();
-        expect(find.text('detail:1'), findsOneWidget);
+        expect(find.text('standalone-detail'), findsOneWidget);
         expect(route.animation!.value, 1);
-        expect(
-          harness.backend.host.navigatorKey.currentState!.userGestureInProgress,
-          isFalse,
-        );
-        await _event(tester, 'startBackGesture');
-        await _event(tester, 'commitBackGesture');
-        await tester.pumpAndSettle();
-        expect(find.text('detail:1'), findsNothing);
-        await harness.close(tester);
-        expect(harness.resources.single.disposeCount, 1);
-      },
-    );
+      }
+      await _event(tester, 'startBackGesture');
+      await _event(tester, 'commitBackGesture');
+      await tester.pumpAndSettle();
+      expect(find.text('standalone-detail'), findsNothing);
+      expect(find.text('standalone-home'), findsOneWidget);
+    });
   }
-  testWidgets('new start replaces retired gesture with a lost terminal', (
-    tester,
-  ) async {
-    final harness = _Harness();
-    await harness.mount(tester, attached: true);
-    harness.push();
-    await tester.pumpAndSettle();
-    final route = harness.route(tester);
-    await _event(tester, 'startBackGesture');
-    harness.backend.adapter.dispose();
-
-    // An eligibility read keeps the old commit fence, but the next platform
-    // start is a new sequence and must retire the abandoned one.
-    expect(route.popGestureEnabled, isTrue);
-    await _event(tester, 'startBackGesture');
-    expect(route.navigator!.userGestureInProgress, isTrue);
-    await _event(tester, 'commitBackGesture');
-    await tester.pumpAndSettle();
-
-    expect(find.text('detail:1'), findsNothing);
-    expect(harness.phases, [CCPredictiveBackPhase.started]);
-    await harness.close(tester);
-    expect(harness.resources.single.disposeCount, 1);
-  });
   _boundaryTests();
   final cases = [
     (
@@ -1081,16 +960,18 @@ void main() {
             ),
           ),
         ],
-        routeCatalog: CCFlutterRouteCatalog([destination]),
+        routeCatalog: CCFlutterRouteCatalog([
+          testHomeDestination(),
+          destination,
+        ]),
       );
       CCRouterHost.initialize(hostAssembly: assembly);
-      late CCGoRouterBackend backend;
+      late CCManagedRouterBackend backend;
       await tester.pumpWidget(
-        CCGoRouterApp(
+        CCManagedRouterApp(
           enablePredictiveBack: spec.bridge,
           theme: ThemeData(platform: TargetPlatform.android),
           backendFactory: (config) => backend = config.createManagedBackend(),
-          hostRoutes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
         ),
       );
       await tester.pumpAndSettle();
@@ -1115,7 +996,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      expect(CCRouter.activeRouteEntries, hasLength(1));
+      expect(_detailEntries, hasLength(1));
       if (spec.foreign) {
         unawaited(
           showDialog<void>(
@@ -1127,12 +1008,8 @@ void main() {
       }
       final before = List<String>.of(life);
       await _event(tester, 'startBackGesture');
-      final interactive = backend
-          .router
-          .routerDelegate
-          .navigatorKey
-          .currentState!
-          .userGestureInProgress;
+      final interactive =
+          backend.host.navigatorKey.currentState!.userGestureInProgress;
       expect(interactive, !spec.guarded && !spec.local && !spec.foreign);
       await _event(tester, 'updateBackGestureProgress');
       await _event(tester, 'cancelBackGesture');
@@ -1140,7 +1017,7 @@ void main() {
       expect(life, before);
       expect(resource.disposeCount, 0);
       expect(completed, isFalse);
-      expect(CCRouter.activeRouteEntries, hasLength(1));
+      expect(_detailEntries, hasLength(1));
       await _event(tester, 'startBackGesture');
       await _event(tester, 'updateBackGestureProgress');
       await _event(tester, 'commitBackGesture');
@@ -1151,7 +1028,7 @@ void main() {
       expect(completionCount, popsManaged ? 1 : 0);
       expect(returnedValue, isNull);
       expect(resource.disposeCount, popsManaged ? 1 : 0);
-      expect(CCRouter.activeRouteEntries, hasLength(popsManaged ? 0 : 1));
+      expect(_detailEntries, hasLength(popsManaged ? 0 : 1));
       expect(
         phases,
         spec.bridge && interactive

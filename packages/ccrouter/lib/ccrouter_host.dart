@@ -17,11 +17,15 @@ export 'package:ccrouter_contracts/ccrouter_contracts.dart'
         CCContractRequirement,
         CCNavigationAdapter,
         CCNavigationTargetedCloseAdapter,
+        CCNavigationDispatch,
+        CCNavigationDispatchAdapter,
+        CCNavigationParentStackAdapter,
         CCRouteCloseOutcome,
         CCRouteCloseStatus,
         CCNavigationAdapterCapabilities,
         CCNavigationAdapterCapabilitySource,
         CCNavigationAdapterHostBinding,
+        CCNavigationOutletVisibilityBinding,
         CCInitialBackendEntrySnapshot,
         CCNavigationBackendEvent,
         CCNavigationBackendEventListener,
@@ -29,23 +33,24 @@ export 'package:ccrouter_contracts/ccrouter_contracts.dart'
         CCNavigationBackendSnapshotSource,
         CCNavigationHostCapabilitySource,
         CCNavigationManagedEntryReleaseSink,
+        CCNavigationRouteExitBinding,
         CCNavigationPopCoordinator,
         CCNavigationScopedPopCoordinator,
         CCNavigationPopGuardBinding,
+        CCNavigationScopedPopGuardBinding,
         CCNavigationPopTarget,
         CCNavigationPopTargetSource,
+        CCNavigationScopedPopTargetSource,
         CCNavigationPredictiveBackSource,
         CCNavigationPredictiveBackSourceProvider,
         CCNavigationRoute,
         CCNavigationRequest,
         CCNavigationShell,
         CCPopGuardEvaluator,
+        CCScopedPopGuardEvaluator,
         CCPredictiveBackEvent,
         CCPredictiveBackEventListener,
-        CCPredictiveBackPhase,
-        CCRouteRestorationOpportunityReason,
-        CCRouteRestorationOpportunitySignal,
-        CCRouteRestorationOpportunitySource;
+        CCPredictiveBackPhase;
 export 'src/app.dart' show CCRouterAppBackend, CCPageLifecycleHostBridge;
 export 'src/facade.dart' show CCRouterHost, CCRouterHostBinding;
 export 'src/flutter_route_factory.dart';
@@ -58,5 +63,4 @@ export 'src/managed_multi_host.dart';
 export 'src/managed_predictive_back.dart';
 export 'src/managed_router_app.dart';
 export 'src/predictive_back_coordinator.dart';
-export 'src/restoration_diagnostics.dart';
 export 'src/route_catalog.dart';

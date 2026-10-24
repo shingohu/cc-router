@@ -6,7 +6,7 @@
 
 [简体中文](README.md) | [English](README.en.md) · [查看图标设计](docs/brand/ccrouter-icon-v1/README.md)
 
-CCRouter 是一个面向 Flutter 大型应用的组件化运行时与类型安全路由框架。它把组件装配、路由契约、导航策略、生命周期、跨组件能力调用和诊断统一到稳定的 Core Contract。默认 Managed Backend 使用 Flutter `RouterDelegate + Navigator.pages`，GoRouter 作为独立兼容 Adapter 保留。
+CCRouter 是一个面向 Flutter 大型应用的组件化运行时与类型安全路由框架。它把组件装配、路由契约、导航策略、生命周期、跨组件能力调用和诊断统一到稳定的 Core Contract。默认 Managed Backend 使用 Flutter `RouterDelegate + Navigator.pages`，不再依赖 GoRouter。
 
 第一次接入或验证真实业务时，先阅读[首次接入指南](skills/ccrouter-integration-development/references/first-integration.md)，
 完成一个 typed Route 的生成、调用、失败与释放闭环，再按需要查阅下文的高级能力和工具维护规则。
@@ -22,7 +22,7 @@ README/CHANGELOG、Hosted 分发和干净消费者回归等阻塞项见
 
 - **组件边界明确**：组件只通过 Manifest、Route Contract、Service Contract、Command 和 Event 协作，不依赖其他组件页面实现。
 - **导航类型安全**：生成的 Intent 编译期约束参数与返回值，避免散落的字符串 Path 和 `Map<String, dynamic>`。
-- **后端可替换**：业务只调用 `CCRouter.navigator`；GoRouter 由独立 Adapter Package 接入。
+- **后端可替换**：业务只调用 `CCRouter.navigator`；Host 可通过后端中立 SPI 接入自定义导航实现。
 - **生命周期可控**：Runtime、Session、Route Entry、Service 与 Adapter 均有明确 Owner 和销毁顺序。
 - **策略与观察分离**：Interceptor/PopGuard 负责决策，Aspect、Lifecycle 与诊断事件负责观察。
 - **生成优先**：路由注册、Package Index、Host Catalog 和文档由统一命令生成，不使用运行时反射。
@@ -34,12 +34,9 @@ README/CHANGELOG、Hosted 分发和干净消费者回归等阻塞项见
 | Package | 用途 | 业务是否直接依赖 |
 | --- | --- | --- |
 | `ccrouter_contracts` | Pure Dart Route、Service、Command、Event、错误与导航契约 | 仅独立 contracts Package |
-| `ccrouter_analytics` | Provider-neutral 分析事件、脱敏属性、有界 Sink 与 Route PV/Leave 桥接 | 按需接入 |
-| `ccrouter_analytics_flutter` | 显式点击、滚动和曝光采集 Target | 按需接入 |
 | `ccrouter_core` | Runtime、Registry、Scope、调度和诊断实现 | 否 |
 | `ccrouter` | Flutter 业务门面、`CCRouterApp`、页面生命周期 | 是 |
 | `ccrouter_ui` | 可选的类型化 UI Fragment、Renderer 与静态 Host 装配 | 按需接入 |
-| `ccrouter_go_router` | 已 deprecated 的 GoRouter 兼容 Backend；仅保留迁移回归与存量 Host 接入 | 仅存量 Host |
 | `ccrouter_generator` | 注解处理、Host 聚合、校验、查找与清理 CLI | 仅 dev dependency |
 | `ccrouter_analyzer_plugin` | Analysis Server 实时边界与生成物诊断 | 仅 dev dependency，需显式启用 |
 | `ccrouter_devtools` | 可嵌入的只读 Component/Route/Trace/Failure/InitTask 诊断面板 | 按需作为 Flutter dependency 接入 |
@@ -59,9 +56,7 @@ Firebase callback，不属于 CCRouter 框架 Package，也不构成框架对 Fi
 import 'package:ccrouter/ccrouter.dart';
 ```
 
-只有存量应用的 Composition Root 可以在迁移期导入已 deprecated 的 `ccrouter_go_router`；新 Host
-直接使用 `ccrouter` 的 Managed Backend。`package:ccrouter/ccrouter_host.dart` 仍仅限 Composition
-Root。业务代码不得导入 `ccrouter_core/src/*`、Adapter 或 Host SPI。
+Composition Root 导入 `ccrouter_host.dart` 装配 Managed Backend；业务页面只导入 `ccrouter.dart`。
 
 `CCRouterHost.initialize`、`CCRouterHost.shutdown` 和 `CCRouterHost.runInitTasks` 只从
 `ccrouter_host.dart` 提供；装配类型 `CCHostAssembly` 也只属于 Host API。业务入口 `CCRouter`
@@ -95,6 +90,9 @@ scalar 只能用于 DTO 字段，不能直接作为 Action 类型。
 UI 层允许类型化 `onAction`，不放宽 Service 对 Widget、BuildContext、callback、Stream
 的限制。实例身份、更新和释放遵循 Flutter Key/State；`active` 是宿主许可，不是自动曝光。
 Runtime 关闭立即使旧 Action 失效；重新初始化后 Host 必须显式重挂 UI 子树。
+实例卸载或 capability identity 更新会撤销旧 Action，并解除其对消费方回调的引用；
+仅保留失效 Action 不会继续保留 Fragment State/Props。B 仍须取消自己拥有的异步工作，
+并释放自己保存的 render input、Props、controller 和 subscription。
 
 普通无业务 UI 仍用公共 Flutter Package；完整路由页面使用 Route。详见
 [UI Fragment 设计与实施](docs/CCRouter-ui-fragment-design.md)。Demo 首页“展示”中的
@@ -105,7 +103,7 @@ Runtime 关闭立即使旧 Action 失效；重新初始化后 Host 必须显式�
 渲染多个实例只声明一次依赖，以 Key 区分实例。B 私有加载列表后，可通过 DTO Action
 回传所选项 ID；enum 仍适合无 payload 通知。enum 改 DTO 是破坏性变更，需 major SemVer
 并重生成 A/B/Host。DTO 使用 UI schema 2 / Package Index schema 4，旧工具明确拒绝。
-[易用性与收敛审查](docs/CCRouter-ui-fragment-usability-review.md)区分已有能力、接入成本和待设计扩展。
+[UI Fragment 规范](docs/CCRouter-ui-fragment-design.md)统一维护已有能力、接入边界和待设计扩展。
 可选 Analyzer Plugin 提供 UI alias、重复依赖、明显非法版本范围、enum/DTO Action、
 Renderer 签名及 Host/Generated SPI 越界检查；缺少 required Owner 可在公共常量已导入时
 提供保守 Quick Fix。Host 完整性错误通过有效的 Generator 结构化快照进入 IDE；
@@ -118,7 +116,7 @@ Owner 按声明 Library 和符号区分；Renderer 必须声明在 Library 顶�
 再按输出补齐显式依赖，并在 Consumer 组件定义中导入公共契约和 `package:ccrouter_ui/ccrouter_ui.dart`；
 生成后用 `find <ui-id> <host-root> --usage <consumer-id>`
 查询真实 Client 和接入步骤。旧索引缺少公共导出或 alias 证据时需重新生成。
-脚手架默认生成 enum Action；动态选择结果可按[DTO Action 设计与验证](docs/CCRouter-ui-fragment-action-payload-design.md)改为受限 DTO。
+脚手架默认生成 enum Action；动态选择结果可按[Action schema 与兼容](docs/CCRouter-ui-fragment-design.md#action-schema-与兼容)改为受限 DTO。
 参与生成的 Contract、A、B 各包都需声明 `ccrouter_generator` 开发依赖，Host 还需 `build_runner`。
 `ccrouter_ui` 属于框架依赖，无需业务组件的 Package Index 或 Portable State；
 生成与 `find` 忽略框架依赖遗留的索引，分发业务组件的原有校验继续保留。
@@ -238,7 +236,7 @@ exclude 报告为未完成配置。新安装统一写入现有 Dart 工具目录
 `CCROUTER_USE_LEGACY_DART_TOOL_LOCKS=1` 可把它们临时切回 Pub owner 的 `.dart_tool` 做 A/B；
 新旧模式检测到对方仍持锁时会 fail-fast。Demo 仍保持手工 bootstrap 和现有远端 pin。
 Analyzer 装配不得隐式挂入 `generate`、Pub Hook 或组件脚手架。详见
-[Analyzer CLI 指南](docs/CCRouter-analyzer-cli-plan.md)。
+[IDE / Analysis Server 与 CLI 规范](docs/CCRouter-ide-analysis-server.md)。
 
 ### DevTools 只读面板
 
@@ -270,15 +268,14 @@ Managed/Backend Entries、Trace Timeline、Failure/Fallback、InitTask DAG 和�
 | 页面展示 | 已支持 | 平台默认、Material、Cupertino、fade、scale、bottom-up、透明全屏 |
 | Modal Route | 已支持 | Dialog、modal bottom sheet，可选择是否纳入 CCRouter 契约与生命周期 |
 | 导航操作 | 已支持 | `push`、`replace`、`go`、`reset`、`open`、`pop`、`maybePop`、`canPop`、实例级 `close`（可选 Adapter 能力） |
-| Managed Router Backend | 已支持 | `RouterDelegate + Navigator.pages`，Runtime Managed Stack 为唯一事实来源 |
-| GoRouter Backend | 已支持 | 作为兼容 Adapter 支持已有 GoRouter attach/渐进迁移 |
+| Managed Router Backend | 已支持 | Managed Adapter 持有分区 Stack，`RouterDelegate + Navigator.pages` 负责投影，Runtime 管理 Entry/result/Scope |
 | Shell / StatefulShell / Outlet | 已支持 | Managed Shell binding、分区 Stack、分支 lazy-init/状态保留、多 Outlet 与调用级 Context 定位 |
 | Deep Link | 已支持 | Platform、Notification、QR 入口，Host allowlist 与 Route policy 双重校验 |
 | Interceptor / Redirect / Defer | 已支持 | 全局与路由级策略、超时、取消、Pending 恢复 |
+| Active Route Revalidation | 已支持 | 状态拥有者显式触发，按 Entry identity 执行 keep/close/replace/Host reset；不订阅任意 Listenable |
 | PopGuard | 已支持 | 业务 Pop、系统返回、Cupertino 手势和预测返回进入统一判断 |
 | Aspect / Trace / Telemetry | 已支持 | 有界、脱敏、观察异常隔离 |
-| Provider-neutral Analytics | 已支持 | Route PV/Leave、稳定事件契约、属性校验和有界异步 Sink；不绑定第三方 SDK |
-| Widget 点击/滑动/曝光采集 | 部分支持 | `CCAnalyticsTarget`、`ccrouter_analytics_flutter` 提供显式点击、滚动聚合和曝光；全局 Widget 猜测仍不支持 |
+| 产品 PV、点击/滑动/曝光采集 | 应用负责 | 框架提供导航观察；Demo 应用侧包演示埋点，不属于框架能力 |
 | 页面生命周期 | 已支持 | `PageShow/PageHide` 与前后台，Mixin 和 Listener 两种形式 |
 | Service | 已支持 | App/Session/Route Scope，singleton/newInstance，Key、稳定 Contract ID、lazy async readiness |
 | Namespace-aware KV Storage Demo | 已支持（Demo） | 基本类型、JSON Map、全局/游客/用户/API 环境/硬件命名空间和可替换 Backend 抽象 |
@@ -289,22 +286,21 @@ Managed/Backend Entries、Trace Timeline、Failure/Fallback、InitTask DAG 和�
 | 生成索引和源码定位 | 已支持 | Package/Host Catalog、`ccrouter find` |
 | DevTools 只读可视化 | 已支持 | 生成式 Host 自动装配、Catalog/Runtime 联动、源码定位、组件依赖聚焦、能力调用链、纯 Dart 协议和官方 Extension |
 | Navigator 1.0 Backend | 暂不支持 | 2.0 阶段候选 |
-| 通用 Navigator 2.0 Backend | 暂不支持 | 2.0 阶段候选 |
+| 接管任意已有 Router 的通用 attach | 暂不支持 | 原生 Managed 已使用 Navigator 2.0；自定义 Backend 由 Host SPI 接入 |
 | 动态组件安装/卸载 | 暂不支持 | 当前组件集合在 `initialize` 时固定 |
 | Action Pipeline | 暂不支持 | 等真实优先级、短路、白名单场景成熟后再设计 |
-| 完整状态恢复 | 暂不支持 | 当前只记录脱敏的 restoration opportunity |
+| 完整状态恢复 | 暂不支持 | 需求采集由应用实现，框架不保存恢复机会或可重放状态 |
 | Service 注解生成 | 已支持 | `@CCService` 自动绑定唯一直接 Contract，并生成简单 Provider registration |
 | Command 注解生成 | 已支持 | Contract、Handler、Owner/Consumer Client、稳定 ID、metadata 与 Catalog 自动生成 |
 | Event 注解生成 | 已支持 | Contract、静态 Subscription、Owner Publication Client、稳定 ID、metadata 与 Catalog 自动生成 |
 | InitTask 注解生成 | 已支持 | Task Contract、Handler、类型化依赖、自动注册、DAG/Catalog 与 Workspace 校验 |
 
-GoRouter 当前无法可靠提供原子 `pushAndRemoveUntil`、精确 `removeRoute/removeRouteBelow` 和 `replaceRouteBelow`。CCRouter 不公开语义不完整的替代方法，也不会把它们静默拆成多个普通操作。
+CCRouter 不公开原始栈索引或 Flutter Route 移除 API。精确退出使用 `close(handle)`；跳转与策略撤销分别使用 typed navigation 和 `revalidateActiveRoutes`。
 
 ## 环境要求
 
 - Dart SDK `^3.10.0`
 - Flutter SDK：本仓库默认使用 FVM 配置的 Flutter/OHOS Flutter SDK
-- GoRouter `^17.5.0`
 
 首次运行：
 
@@ -453,8 +449,9 @@ Demo / 应用层，不是 CCRouter 框架的存储契约。
 
 ### 5. 初始化 Host
 
-Host 使用生成的 Manifest 与 Catalog。新项目默认使用 Managed Router Backend；它直接把
-Runtime 的 Managed Stack 投影到 Flutter `Navigator.pages`，不维护 GoRouter match tree：
+Host 使用生成的 Manifest 与 Catalog。新项目默认使用 Managed Router Backend；Managed
+Adapter 持有各 Host/Outlet 的 Stack，并投影到 Flutter `Navigator.pages`。Runtime 负责契约、
+Entry、结果与 Scope，后端同步导航事件，不维护 GoRouter match tree：
 
 Host 自己的公共 barrel 只需转发生成的
 `src/ccrouter_generated/ccrouter_host.api.g.dart`；不要直接导出 `host/` 下的内部聚合文件或
@@ -464,7 +461,7 @@ Host-only Binding 使用其中的 Catalog，避免重复传参或混用不同代
 `CCRouterHost.initialize` 只接受一个必填 `CCHostAssembly`。已有工程需要手写装配时使用
 `CCHostAssembly.fromComponents(components: ...)`，不要把 Component、Contract、Catalog
 和 Tool Integration 拆成多组初始化参数。手写 Host 自己提供页面目录时，也必须通过
-`fromComponents(routeCatalog: ...)` 放入同一个 Assembly；`CCGoRouterApp` 不提供覆盖入口。
+`fromComponents(routeCatalog: ...)` 放入同一个 Assembly；`CCManagedRouterApp` 不提供 Catalog 覆盖入口。
 
 ```dart
 import 'package:ccrouter/ccrouter.dart';
@@ -490,30 +487,28 @@ Composition Root 显式调用；全局拦截器、Deep Link 白名单、Aspect�
 `backendFactory`。底层显式创建 `CCManagedRouterBackend` 并组合
 `CCRouterApp.managed` 的写法仍保留给高级 Host 和测试。
 
-`ccrouter_go_router` 的公共 library 已标记 deprecated，不再增加导航能力。已有 GoRouter 工程
-可以在迁移期继续使用 `CCGoRouterApp` 或 `CCGoRouterBackend.attach`，先保持业务 Intent 不变，
-再按 Host 切换到 `CCManagedRouterBackend`。兼容包尚未删除，但不应作为新 Host 的依赖。
+`ccrouter_go_router` 兼容包、旧 Host API 与 GoRouter Demo 入口已移除。业务 Intent、
+`CCRouter.navigator`、结果通道和 Route Service 保持原有调用方式；Composition Root 迁移到
+`CCManagedRouterApp` 或显式 Managed Backend。现有项目可先在局部功能区挂载
+`CCManagedOutlet`，逐步迁移，不再提供接管外部 GoRouter 的 attach API。
 
-Demo 默认 `lib/main.dart` 已使用 Managed Backend。冻结的对照路径只能从
-`lib/main_go_router_compat.dart` 或 `lib/main_go_router_predictive_back.dart` 显式启动；共享 feature
-matrix 继续双跑，用于证明迁移没有破坏 Shell、Outlet、typed result 和 `close`，不代表兼容
-Backend 仍是一等架构。
+Demo 的功能矩阵、精确关闭和返回手势回归均直接验证原生 Managed。
 
 ```dart
 CCRouterHost.initialize(
   hostAssembly: ccrouterGeneratedHostAssembly,
   globalInterceptors: const [...],
+  routeRevalidationPolicies: const [...],
 );
 final initResult = await CCRouterHost.runInitTasks(
   gate: CCInitTaskGate.appStarted,
 );
 // 仅无法降级的 Host 才显式选择 fail-fast：
 // initResult.throwIfRequiredFailed();
-// 仅存量 Host 的迁移期兼容写法；新 Host 使用 CCManagedRouterApp。
-runApp(const CCGoRouterApp());
+runApp(const CCManagedRouterApp());
 ```
 
-`CCManagedRouterApp` 和已 deprecated 的 `CCGoRouterApp` 都直接提供 `MaterialApp.router` 的非路由配置，包括主题、高对比度主题、
+`CCManagedRouterApp` 直接提供 `MaterialApp.router` 的非路由配置，包括主题、高对比度主题、
 国际化、`ScaffoldMessenger`、快捷键/Action、Restoration、滚动行为和调试开关。普通 Host
 不需要为了设置 `locale` 再手写一层 `MaterialApp.router`：
 
@@ -552,11 +547,38 @@ runApp(
 `CCManagedRouterBackend` 的高级 Host 或渐进式接入才显式传递 Catalog；业务代码
 不能通过 `CCRouter` 读取路由表。
 
+Managed 的 `initialLocation` 默认是可信 Host fallback `/`；平台提供非 `/` 的启动地址时，
+默认优先消费平台地址，并按 external ingress 校验 Host allowlist、目标 Deep Link 和拦截策略。
+明确要忽略平台启动链接时设置 `overridePlatformDefaultLocation: true`；显式传入
+`initialLocation: null` 则始终将平台地址视为外部输入。自定义 `backendFactory` 需同时转交
+configuration 的 `initialLocation` 和 `overridePlatformDefaultLocation`，不能把平台链接改成内部导航。
+该 fallback 地址必须能解析到当前 Host 已注册的 Route，并满足其参数与策略要求；默认 `/`
+不会创建首页。首次接入前应注册该首页，或将 fallback 改为实际入口地址。
+
 同一个 Flutter View 确实需要多个独立 Router Host 时，优先使用
-`CCManagedMultiHostBackend.managed` 聚合原生 Managed Host；已有 GoRouter 项目只能在迁移期继续使用
-已 deprecated 的 `CCGoRouterMultiHostBackend.managed`。两者都会复用初始化时安装的同一份 Catalog、
-校验 Host ID、聚合 `CCMultiHostNavigationAdapter`，并在 Runtime shutdown 后统一释放各子 Router。
-Managed 子 Host 各自维护 Stack 和 `RouterConfig`，不会修改 GoRouter match tree。应用仍然负责
+`CCManagedMultiHostBackend.managed` 聚合原生 Managed Host。它复用初始化时的 Catalog、
+校验 Host ID、聚合 `CCMultiHostNavigationAdapter`，在 Runtime shutdown 后释放各子 Router。
+手动构造聚合 Adapter 时，每个 Host 必须使用不同的 Adapter 实例；构造器在接管前完整
+校验输入，重复实例或无效 Host 配置被拒绝时不会初始化或销毁任何传入的 Adapter。
+子 Adapter 的 backend Entry ID 只需在自身生命周期内唯一（包括其所有 Outlet）；聚合器按
+注册轮次统一转换事件、快照、Pop/Guard target 和预测返回回执的 ID。同名 Host 重开使用
+新的身份域。Host 诊断应将聚合 ID 视为不透明标识，不与子 Adapter 的原始 ID 混用；
+预测返回的某个 observer 抛错不会阻断其他 observer。
+Pop 在执行 Guard 前即建立具体 Host 的生命周期身份，包括只有初始栈、尚未发生 Runtime
+导航的场景；同步 Guard 间接触发同名 Host 重建也不会将旧 Back 交给 replacement。
+Host 或 Runtime 退役会及时结束外部 Adapter 的 Pop 等待，以 `handled: true` 消费原返回请求、
+不移除任何 Entry，也不把 Back 转交同名新 Host。`close` 的原 Entry、Host 或 Runtime 结束时，
+挂起等待返回 `notFound`；已在完成的精确关闭事务仍保留其实际回执。迟到成功或失败被消费，
+不能修改 replacement 的状态或失同步诊断。框架不负责停止 Adapter 自己的外部任务。
+Pop/close producer 在 Runtime 创建时的 Host Zone 调用和观察，错误在各调用者自己的 error
+Zone 交付；自定义 Adapter 的外部错误 Future 也必须遵守 Dart 的 producer error Zone 规则。
+Route/Session Scope、Host token、缓存 readiness 记录及 Scope-owned factory / singleton
+initializer 使用 Host 上下文，不保留首次调用者的任意 Zone 值。Trace、依赖链、Scope 准入和
+框架回调的导航重入限制仍有效；`newInstance` 初始化继续保留其调用者的取消链。业务上下文
+应显式传递，不能依赖首次调用者的 Zone 来配置共享 Service。
+Widget 测试应在 `testWidgets` 回调内创建 Runtime，让 Host-owned 工作使用测试虚拟时钟；
+包含 Timer 的启动任务要推进虚拟时钟等待完成，不能在真实 Zone 的 `setUp` 创建后只依赖 `pumpAndSettle`。
+各 Host 独立维护 Stack 与 `RouterConfig`，应用负责
 Router surface 的布局和 active Host 选择：
 
 ```dart
@@ -581,13 +603,18 @@ placement 导航 fallback。业务页面不应自行选择 Host；需要精确�
 `push`、`replace`、`go`、`reset`、`open`、`maybePop`、`pop` 或 `canPop` 应传入调用点
 `BuildContext`，Managed Adapter 会把 Context 同步解析为稳定 Host/Outlet ID，不保存 Context。
 
+一次导航固定其默认 Host：有 Context 时使用调用点归属，无 Context 时快照开始时的 active
+Host；初始目标显式声明 Host 时以该目标为准。异步 Interceptor redirect、Failure Policy
+recovery 和 defer/resume 不会因为之后切换焦点而改投另一个 Host。后续目标显式声明的
+Host 仍有效，默认目标继续使用本次操作的归属，Shell/Outlet/parent 拓扑不会被强制改为 root。
+初始 URI 解析失败时，recovery 使用调用开始时的 Host；Host 已注销则失败，不自动改投其它 Host。
+
 这不是大屏分栏、Bottom Tab 或 Shell 的默认方案；这些场景通常使用一个 Host 下的多个
 Outlet。聚合器也不代表平台 Window，不负责 macOS、Windows 或 iPadOS 原生窗口生命周期。
 
 #### Runtime 生命周期
 
-`CCRouterHost.initialize` 同步完成全局配置和启动组件注册；`CCManagedRouterApp` 与 deprecated
-`CCGoRouterApp` 都不会在卸载时隐式 shutdown Runtime。应用 Composition Root 结束默认 Runtime
+`CCRouterHost.initialize` 同步完成全局配置和启动组件注册；`CCManagedRouterApp` 不会在卸载时隐式 shutdown Runtime。应用 Composition Root 结束默认 Runtime
 时执行（包括使用生产装配入口的集成测试）：
 
 ```dart
@@ -605,7 +632,7 @@ Runtime，原始启动异常和 StackTrace 仍同步抛出。重试前可 `await
 该 Future 后再传递结果；直接把可能失败的 Future 跨 error Zone 传递仍受 Dart 规则约束。
 门禁在任一等待者返回前解除，该等待者可以初始化新 Host；旧轮次的返回不会改动新轮次门禁。
 
-不要在页面 Pop、组件页面销毁、App 后台或 Session 关闭时 shutdown。Runtime 会先销毁它拥有的 Adapter，再释放 managed Backend 创建的 GoRouter；attach 模式不会销毁应用自己创建的 GoRouter。Backend 销毁、动态 Host 注销或 Backend 初始化失败时采用 best-effort 结构化清理：某个 listener remover、PopGuard 解绑或子 Adapter 抛错不会跳过其它资源，清理调用方最终收到首个失败。Runtime 启动回滚仍保留上文的原始启动异常。
+不要在页面 Pop、组件页面销毁、App 后台或 Session 关闭时 shutdown。Runtime 会先销毁它拥有的 Adapter，再释放 Managed Backend 的 RouterDelegate 和 RouteInformationProvider。Backend 销毁、动态 Host 注销或 Backend 初始化失败时采用 best-effort 结构化清理：某个 listener remover、PopGuard 解绑或子 Adapter 抛错不会跳过其它资源，清理调用方最终收到首个失败。Runtime 启动回滚仍保留上文的原始启动异常。
 
 取消 Listener 抛错也不会截断其余通知和资源释放。Token 通知结束后重抛首个错误；Scope 将
 取消错误与 Service dispose 错误一起留在内部清理记录中，继续逆序释放。Runtime 在早期
@@ -618,12 +645,13 @@ Listener 之前建立门禁，重复调用只等待同一轮清理；即使回�
 `dispose`。`CCRouterHost.runInitTasks(gate: ...)` 打开一个 `CCInitTaskGate` 并等待零到多个新就绪
 任务，它不会再次初始化或替换 Runtime，也不会重试已完成或失败的任务。调用方应 await 或显式
 处理 `shutdown()` 返回的 Future；需要重新初始化时，先等待该轮清理完成。
+同步重入打开 Gate 也加入已发布的同一轮 DAG drain，每个任务只执行一次，新开的 Gate
+工作结束后才完成等待；不要在 InitTask 内 await 自己所属的 drain。不同 error Zone 的
+Gate 调用者各自得到取消结果，shutdown 可以跨 error Zone 等待任务清理。
 
-已有 GoRouter 工程在迁移期可使用 deprecated `CCGoRouterBackend.attach`，把生成 bindings、Host
-和已经安装到 Router 的 Observer 显式交给 CCRouter。新 Host 不应采用该路径。只有需要完全
-自定义应用 Widget 树时才直接使用 `CCRouterApp.managed`。Managed Shell/Outlet 示例见
-[`demo/lib/demo_managed_router_backend.dart`](demo/lib/demo_managed_router_backend.dart)，冻结对照实现在
-[`demo/lib/demo_router_backend.dart`](demo/lib/demo_router_backend.dart)。
+自定义 `MaterialApp.router` 接入时，创建 `CCManagedRouterBackend`，使用
+`CCRouterApp.managed(backend: backend, child: MaterialApp.router(routerConfig: backend.routerConfig))`。
+Managed Shell/Outlet 示例见 [`demo/lib/demo_managed_router_backend.dart`](demo/lib/demo_managed_router_backend.dart)。
 
 Stateful Shell 的 Host 在分支点击时先读取 `shell.hasEntries(outlet)`：未初始化分支先
 `activateOutlet` 再导航到分支根页；返回已有分支只执行 `activateOutlet`，以保留该分支的
@@ -634,84 +662,40 @@ lazy-init/reselect 策略，不是业务页面查询导航栈的接口。
 快照由 Runtime 的实际命中 Pattern 或 typed Codec 产生，能保留 URI alias、Regex 与约束语义；
 Adapter 不应基于 primary pattern 再次解析 `request.uri`。
 
+### 应用布局与恢复需求
+
+产品布局断点、单双栏选择和折叠屏策略由应用决定。多 Host 的 Composition Root 调用
+`CCMultiHostNavigationAdapter.setActiveOutlets(hostId: ..., outlets: ...)` 同步已决定的
+可见 Outlet；框架保留 Stack identity、可见性和生命周期，不自动选用 600/840 断点。
+原生 Managed 将该选择同步到所属 Host 的 Store，后续 push、焦点或 Shell 分支切换不会
+自行展开隐藏的 Outlet；根级覆盖层只临时遮蔽该选择。自定义 Adapter 可实现 Host-only
+`CCNavigationOutletVisibilityBinding`，未实现时保留生命周期与事件转发。
+Demo 的 `DemoAdaptive…` 类型位于 `demo/lib/adaptive_layout.dart`，不属于框架 API。
+
+完整路由状态恢复尚未支持。可选需求收集参考 `demo/lib/restoration_demand.dart`，
+由应用 Host 自行创建、记录真实平台信号并 dispose；Runtime 和 DevTools 不参与统计。
+
 ### 分析事件与页面埋点
 
-`ccrouter_analytics` 只提供不绑定供应商的事件契约和页面生命周期桥接。它会把 CCRouter 管理的 Route
-`arrival/show/hide` 转换成 `page.view.*` 和 `page.leave.*`，并通过有界异步 Dispatcher 交给应用自己的
-Firebase、ThinkingData、Sentry 或日志 Adapter。Sink 异常不会改变导航结果，队列满时会丢弃最旧的非关键分析事件。
+产品埋点属于应用基础设施。CCRouter 只提供 `CCNavigationAspect`、页面生命周期和稳定的
+Route/Host/Outlet 关联信息；应用自行决定 PV、停留时长、点击、滚动和曝光口径，以及
+Consent、采样、队列、持久化和上传。Core/Host 不接收访客或埋点 Session ID。
+Demo 埋点桥通过应用 `identityProvider` 在首个异步观察交付时快照身份；这不是导航调用瞬间的
+身份。Consent 或账号切换前调用 `resetTracking()`；失败或 Entry 移除时释放快照，
+bridge.dispose 兜底清空并阻止旧回调。框架诊断 `CCDiagnosticSink` 不代替产品埋点。
 
-需要减少页面重复传递上下文时，可选依赖 `ccrouter_analytics_flutter` 的
-`CCAnalyticsScope`：根 Scope 注入应用拥有的 Dispatcher，页面 Scope 增量提供稳定的
-`CCAnalyticsContext`，业务通过 `CCAnalyticsScope.trackerOf(context)` 获得值对象 Tracker。
-Scope 不关闭 Dispatcher，也不扫描 Widget、Route 或 Foreign Popup；没有稳定上下文时应省略归因字段。
-导航桥接器还为每次 managed Arrival/Show 生成有界 `visit_id`，在 Hide 时记录总停留和
-前台停留毫秒数。Host 生命周期回调应调用 `onBackground/onForeground`，Host 销毁时调用
-`bridge.dispose()`；它不会把 Foreign Popup 当作页面访问。
+Host 可把应用自己的观察器注册到 `navigationAspects`，通过 Arrival/Show/Hide 等事实
+对接已有埋点服务。应用负责观察器、前后台计时和发送端的生命周期，埋点失败不得改变导航结果。
+PageShow/PageHide 表示导航状态，不代表像素可见性，也不直接等于 PV/曝光。
 
-```dart
-final analytics = CCAnalyticsEventDispatcher(
-  sinks: [applicationAnalyticsSink],
-);
-final navigationAnalytics = CCNavigationAnalyticsBridge(
-  dispatcher: analytics,
-);
-
-CCRouterHost.initialize(
-  hostAssembly: ccrouterGeneratedHostAssembly,
-  navigationAspects: [navigationAnalytics.createAspect()],
-);
-
-// 隐私授权完成后再开启分析；撤销授权会取消尚未开始的投递。
-analytics.updatePolicy(
-  CCAnalyticsPolicy(consentGranted: true, sampleRate: .25),
-);
-```
-
-分析属性必须使用 `CCAnalyticsProperty` 声明，禁止放入 Token、完整 URI、Widget、异常对象或任意业务对象。
-支持的 String/num 列表在属性创建时复制为不可变快照，调用方或某个 Sink 的修改不能污染其他 Sink。
-每个字符串最多 256 个字符、列表最多 32 项、单个事件最多 64 个属性，属性值保守总大小最多 4096
-字符，数值必须有限；黑名单和节流状态也有固定上限。超限会在构造阶段抛出 `ArgumentError`，便于尽早发现错误。
-撤销 Consent 或禁用分析会清空队列，并阻止当前事件继续投递到尚未开始的 Sink；立即重新授权也不会恢复旧事件。
-已经开始的 Sink 写入无法撤回，网络取消和供应商缓存清理由应用 Adapter 负责。
-
-`dispatch` 只负责入队，首个 Sink 也在后续事件循环启动。Composition Root 结束时应等待
-`analytics.close()`，它会停止接收并等待已接受的投递；不要在 Sink 自己的 `write` 中等待 `close()`，
-否则形成自身等待。对不可靠的应用 Sink 可以配置 `sinkWriteTimeout`；超时后该 Sink 会被隔离，
-`close()` 的等待有界，但 Dart Future 不可撤销，Sink 自身仍应支持取消。默认不配置超时，保持等待
-写入完成的语义。异步分发不等于后台线程，Sink 仍应避免在 UI isolate 执行耗时同步计算。
-任意 Button、列表项点击和滚动不由 Core 猜测；使用 `CCAnalyticsTarget` 包装现有回调，自动 UI 采集只能作为默认关闭的独立插件接入。
-需要滚动会话或曝光时，按需依赖 `ccrouter_analytics_flutter`，显式包裹
-`CCAnalyticsScrollable` 或 `CCAnalyticsExposureTarget`；曝光默认按可见比例、最小停留
-时间和目标生命周期去重，不读取 Widget 文本，也不注册全局手势监听。
-Target 自动监听祖先滚动与分析策略；可见比例取 View 和祖先裁剪区域的交集，不判断任意
-Overlay 遮挡或像素透明度。Consent 拒绝、后台或暂时移出树会取消本次停留计时，恢复后
-必须重新满足完整时长。`once` 只在 Dispatcher 接受事件后生效，不保证 Sink 已成功写入；
-采样、黑名单或节流拒绝不会消耗一次额度，也不会逐帧重试。
-
-分析 Dispatcher 还提供不含事件内容的压力指标：`acceptedEventCount`、`pendingEventCount`、
-`peakQueueDepth`、`droppedEventCount`，以及慢 Sink 的 `timedOutSinkWriteCount`、
-`quarantinedSinkCount`。`dispatcher.snapshot` 还提供按 Sink 索引的成功/失败/超时和累计耗时
-快照。它们只用于性能/健康诊断，不是审计日志或事件回放接口；可用
-`packages/ccrouter_test/benchmark/analytics_dispatcher.dart` 在同一 SDK 和平台下输出入队延迟、队列压力
-与 RSS 趋势。
-
-当前 Demo 的事件字段已经由原语校验、Context/Scope 和应用层 Adapter 覆盖；没有真实跨项目
-消费者前，框架不额外引入强制事件 Schema 或分类采样规则。需要更严格字段时由业务 Contract
-或 Adapter 校验，避免把产品字段表固化进框架。
-
-```dart
-final confirmTarget = CCAnalyticsTarget(
-  tracker: tracker,
-  eventId: 'order.detail.confirm',
-);
-
-FilledButton(
-  onPressed: () => confirmTarget.run(submitOrder),
-  child: const Text('确认订单'),
-);
-```
-
-完整边界和分阶段计划见 [`docs/CCRouter-analytics-and-auto-track-design.md`](docs/CCRouter-analytics-and-auto-track-design.md)。
+Demo 提供两个不发布的应用侧参考包：
+[`demo_analytics`](demo/modules/analytics/README.md) 和
+[`demo_analytics_flutter`](demo/modules/analytics_flutter/README.md)，另有
+[Firebase callback 映射](demo/modules/analytics_firebase/README.md)。
+它们不是框架 API，应用可采用自己的实现，无需引入这些包。
+迁移边界见 [应用侧埋点设计](docs/CCRouter-analytics-and-auto-track-design.md)。
+身份、恢复需求与布局策略的本轮变更见
+[框架与应用职责收口](docs/validation/20261023-framework-boundaries/README.md)。
 
 ## 类型安全导航
 
@@ -735,11 +719,46 @@ CCRouter.navigator.pop(result: 'confirmed');
 
 - `push`：在当前栈上新增 Entry，并在该 Entry 被移除时返回强类型结果。
 - `replace`：替换当前 CCRouter 管理的 Entry。
-- `go`：采用后端 declarative location 语义，与 GoRouter `go` 对齐；可能重建匹配栈。
+- `go`：按目标 location 重建当前 Managed Host 的声明式栈，包含声明的父路由链；跨 Shell 本身不要求使用 `go`，需要保留访问前返回历史时使用 `push`。
 - `reset`：明确把目标设置为新的根位置。
 - `open`：匹配应用内部动态 URI，默认以 push 方式打开，不提供 typed Pop result。
 - `maybePop`：尊重 PopGuard、Flutter `PopScope`、LocalHistory 与 foreign popup，返回后端是否处理。
 - `pop`：业务主动返回；返回值必须与 Route 的结果类型一致，否则抛出标准导航错误且页面不会被错误移除。
+
+原生 Managed 对同一个实际 Route 的并发 `maybePop` 只接受一项未完成操作；重复请求被消费，
+不会排队弹出下一页，也不会覆盖结果。只有实际触发移除的操作获得 managed/foreign 移除回执；
+不同 Outlet 可独立返回。等待期间发生 push、close 或 renderer 卸载时，不能把其它操作的移除
+归给原请求；卸载和 shutdown 会结束框架等待，不依赖应用的 `willPop` Future 完成。
+MultiHost 的 Pop 回执保留发起操作的 Host 和子后端实际处理的 Outlet，等待中的焦点切换、
+Host 注销或 shutdown 不会重写归属；named Outlet 上方的 root Popup 被关闭时，回执为 root。
+
+Host 可通过 `CCRouterHost.initialize(navigationConcurrencyPolicy: ...)` 配置重叠导航：
+默认 `allow` 独立执行；`singleFlight` 共享同类未完成请求；`rejectDuplicate` 拒绝同类重复请求。
+同类判断包含精确 origin、Host/Outlet、operation、Open mode、routeId 和 URI；内部、平台、
+通知和扫码来源互不合并，仍分别运行其 Interceptor。`CCNavigationSource` 仅供产品归因，
+不是信任来源；携带 Extra 的请求不参与去重，完成或失败后的调用也不受抑制。
+共享执行以内部 outcome 传递，`singleFlight` 的调用者即使处于不同 error Zone，
+也能收到同一原始失败对象与堆栈；各调用者应在自己的 Zone 中处理返回 Future。
+共享调用各有独立导航观察身份；原请求被取消时，它们的 Aspect 终态同样为 cancelled。
+
+动态 Host 注销会以 `CCRouteCancelledError('host_detached')` 结束该实例尚未提交的
+策略等待、Failure Policy 和 deferred continuation，并释放相关并发 gate。相同 Host ID
+重新注册代表新实例，旧操作不会迁入，新请求独立准入；取消不再触发 Failure Policy 恢复。
+Host Composition Root 应先卸载旧 `CCRouterApp`，再挂载相同 ID 的新实例，避免两个
+Widget 同时占用同一逻辑 Host。多 Host Demo 的“Host 生命周期”提供关闭/重开与晚到策略验收。
+辅助 Host 若需要固定首页，应保留初始路由初始化，并明确设置可信 `initialLocation`
+和 `overridePlatformDefaultLocation: true`，避免重复消费主 Host 的平台启动链接。
+验收需覆盖连续多次重建及离开后再进入：旧请求保持取消、新页面身份不变、退出后无活动残留。
+
+自定义 Adapter 的同步调用和旧 Scope 清理回调也是生命周期边界：若回调结束原 Host
+或 Runtime，返回后不能继续提交新 Entry；晚到的 Backend Future 错误会被消费。
+动态 `registerHost` 在参数/生命周期校验后接管尚未被持有的 Adapter，重复 ID、初始化或绑定
+失败都会释放该次接管的资源；重用已被接管的同一 Adapter 会被拒绝，但不会销毁原 Owner。
+同 ID 初始化重入被拒绝，绑定期间注销后建立的新注册不会被旧事务回滚删除。绑定完成前
+不能将该 Host 激活为默认目标；初始化前加入的 Adapter 只在正式初始化时绑定一次。
+聚合初始化事务执行期间拒绝再次初始化或注册 Host，避免改变正在配置的集合。
+注销先完成旧实例的 detach 通知，再调用外部解绑/销毁回调；detach 投递期间拒绝同 ID
+注册，投递结束后的清理回调可建立替代实例，旧清理不会取消替代实例的新导航。
 
 禁止业务代码直接调用 `Navigator.push/pop`、`GoRouter.push/go` 或 Adapter 来操作 CCRouter 管理的页面。临时、局部且不需要组件契约的 Flutter Dialog/BottomSheet 可以继续使用原生 API；它们属于 foreign/overlay，不应改变 Managed Route Scope。
 
@@ -765,11 +784,9 @@ if (handle != null) {
 重复、伪造和跨 Runtime 的句柄不能关闭同路由的新实例。句柄不持有 Context、Route、Scope
 或参数；关闭只完成目标结果并启动一次 Scope 释放，不等待异步 Service disposal。
 
-GoRouter 支持已挂载且有 Observer 身份的 push/replace 实例及安全的嵌套 Shell Outlet；
-声明式 go/reset、保留的非当前分支、移除后会清空 Shell 的结构，以及包含外部
-`GoRoute.onExit` 的配置返回 `unsupported`。自定义 Adapter 可选择实现 Host-only
-`CCNavigationTargetedCloseAdapter`；旧 Adapter 无需改动，普通 pop 行为不变。
-详见 [精确关闭的边界与验证](docs/CCRouter-targeted-close-design.md)。
+原生 Managed 支持 push/replace、声明式 go/reset、保留分支与 Shell 中的精确关闭。
+关闭最后一个页面时，覆盖它的 foreign Popup 仍保持存活，目标结果和 Scope 只结束一次。
+自定义 Adapter 可选择实现 Host-only `CCNavigationTargetedCloseAdapter`。
 
 ### BuildContext 与 Outlet
 
@@ -863,6 +880,17 @@ export 'src/ccrouter_generated/order_contracts.contracts.api.g.dart'
     show OrderDetailRoute;
 ```
 
+实现组件需要的手写 `OrderDetailRouteContract` 由独立组件作者入口显式导出，例如
+`order_contracts_owner.dart`：
+
+```dart
+export 'order_contracts.dart'; // 按需保留业务 Consumer API
+export 'src/order_detail_route_contract.dart' show OrderDetailRouteContract;
+```
+
+页面实现从该 Owner 入口取得 schema，用于 `@CCRouteImplementation`。生成的 Consumer 入口
+不包含该手写声明，不能用它替代；也不应为此导出 generated Arguments、Definition 或 Codec。
+
 该稳定入口只聚合公开 Route Consumer 的生成类型；`RouteArguments`、Definition 和 Codec 属于
 generated Owner SPI，不从业务 barrel 导出。authored Service、Command、Event 和 InitTask
 契约仍由 public barrel 使用独立 `export/show` 明确暴露。`show` 是 Package 的公开 API 边界，
@@ -934,6 +962,11 @@ await CCDeepLinkIngress.fromQrCode(uri);
 
 外部入口默认使用 push，保留固定首页或主 Tab 的返回路径；Host 可显式选择 `CCDeepLinkOpenMode.go` 来重建 declarative Shell location。选择栈行为不会绕过安全策略。
 
+Managed 的平台/浏览器 location 采用每 Host 的新请求取代旧请求：即使新 URI 已经是当前
+location，也会取消该 Host 尚未提交的旧请求。取消贯穿异步策略、redirect、defer/resume 和
+Failure Policy recovery；晚到结果不能重新提交。此规则不改变普通业务 push 的并发策略，
+也不取消其它 Host 的入口请求。
+
 平台模拟和手工验证入口见 [`demo/README.md`](demo/README.md)。
 
 ## Interceptor、Defer 与失败恢复
@@ -960,6 +993,51 @@ Runtime shutdown 会取消正在等待的 Interceptor 和 Failure Policy，以 `
 恢复会重新校验并执行拦截链：Typed 请求保留 arguments/Extra 对象，动态 URI 重新匹配和解码；
 保留原具体 Host、调用级 Outlet、操作和返回类型，切换 active Host 不会把待恢复页面送往新 Host。
 重定向目标显式声明的 Host/Outlet 仍优先；待恢复数据只在进程内保留，应配置超时或主动取消。
+原导航和每次 Resume 的 Future 都应在各自调用的 Zone 中处理。即使 error Zone 不同，
+重复 defer、超时或 Owner 取消也会分别交付结果/错误，不再等待另一个 Zone 的错误 Future。
+Failure Policy 恢复属于原导航流水线；原调用可以恢复成功，Resume 调用仍收到本次重放的
+错误，两者需要分别处理。
+
+## 已打开页面的策略重校验
+
+Interceptor 只决定一次新导航能否开始；登录、权限或 Feature Flag 在页面打开后变化时，由状态
+拥有者提交新状态后显式调用：
+
+```dart
+final report = await CCRouter.revalidateActiveRoutes(
+  reason: 'authentication_changed',
+);
+```
+
+Host 在 `CCRouterHost.initialize` 注册 `CCGlobalRouteRevalidationPolicy`。Policy 只读取应用状态和
+脱敏的 immutable Entry snapshot，返回 `CCRouteRevalidationKeep`、`Close`、`Replace` 或
+`Reset`；不得导航、操作 UI、写日志/Analytics、保留 Context，异步实现应配置 timeout 并观察
+`context.cancellation`。Runtime 不订阅 `ChangeNotifier`、Stream 或状态管理框架，避免隐式刷新、
+重复触发和生命周期泄漏。
+
+每次触发串行执行，并使用新的 Entry 快照。所有 policy 成功后才开始应用变更；policy 抛错或
+超时不会改变任何页面。并发导航通过 Entry object identity fence 处理，失效目标报告 `stale`，
+不会按索引或 routeId 猜测替代项。`close` 是 Host 安全策略撤销，精确移除目标并绕过
+PopGuard/`PopScope`；Backend 不支持 targeted close 时报告 `unsupported`，绝不退化为普通 Pop。
+`replace` 只作用于仍是原 Host/Outlet 栈顶的 Entry；每个 Host 最上层的 `reset` 决策会覆盖该
+Host 的其它决策，即使该 reset 最终为 `stale/unsupported` 也不会降级执行较低优先级动作；它
+不会切换或清空其它 Host。目标 Intent、Interceptor redirect 和 Failure
+Policy recovery 的最终请求都受同一 operation/placement fence 约束，改变决策操作或越过原分区时
+报告 `unsupported`。默认 placement 也固定到 Entry 被接收时解析出的 concrete Host，不随之后的
+焦点或 active Host 变化。Revalidation mutation 不与普通业务导航共享 `singleFlight`；replace 在
+新 Entry 实际 commit 后返回报告，不等待该页面最终 Pop result。
+该提前返回需要 Host-only `CCNavigationDispatchAdapter` 提供同步事务提交凭据；原生 Managed 和
+Memory Adapter 已实现，MultiHost 按所选子 Host 转发。旧 Adapter 缺少凭据时，重校验 replace
+在导航前返回 `unsupported`，普通 `push/replace/go` 仍沿原接口执行。不要将表示异步接纳的
+Future 包装成提交凭据。默认 Host 的固定独立于 Shell/Parent/命名 Outlet，显式 Host 与结构声明
+始终保留。shutdown 也会中断 Backend close/reset 等待并消费迟到结果；Backend 仍负责停止自身
+异步工作，Runtime 不会因此等待无法结束的 Future。
+Backend close 的非框架异常统一包装为脱敏 `CCNavigationAdapterError`，不透传原始 message。
+跨 Backend 的应用阶段不是可回滚事务，调用方应
+检查 `CCRouteRevalidationReport`，并在后续状态变化时再次触发。
+
+完整契约和失败/并发边界见
+[`docs/CCRouter-route-revalidation-design.md`](docs/CCRouter-route-revalidation-design.md)。
 
 ## PopGuard
 
@@ -967,69 +1045,48 @@ PopGuard 用于页面离开前可同步判断的规则，例如内存中的未�
 
 系统返回、普通 Pop、Cupertino 手势和 Android predictive back 进入统一协调；foreign Popup 或 `LocalHistoryEntry` 消费返回时不会关闭底层 Managed Route Scope。
 
+`LocalHistoryEntry` 只消费页内历史时，不执行 Managed 离页 Guard；历史耗尽后的真正离页才
+执行 Guard。如果历史在异步返回等待中被移除，后续离页仍须重新检查实际目标的 Guard。
+Flutter 本地 `PopScope` / `Form` 的拒绝语义保持有效。
+
 系统返回或 `maybePop` 中，框架 Guard 返回 allow 只表示通过框架策略，页面自身的
 `PopScope(canPop: false)` / `Form(canPop: false)` 仍可拒绝退出。页面和结果 Future 会保持
 存活，本地拒绝回调可负责确认 UI。确认后主动调用 `pop` 仍是显式返回操作。原生 Managed
 Backend 的默认不透明 iOS 页面会在边缘手势开始前同步执行 Guard：deny 时不启动动画，allow
 时由 Flutter 保持跟手并只提交一次 Pop。允许状态不会跨越取消、未启动手势、Route 移除或
 Backend dispose；本地 `PopScope` / `Form` 仍可拒绝手势。自定义转场、Modal 和无法精确关联
-Route 的场景继续 fail closed。GoRouter 兼容 Backend 的 guarded 页面仍使用非交互 fallback；
-该兼容层已冻结，不再为计划移除的路径扩展 iOS guarded 手势能力。
+Route 的场景继续 fail closed。
+
+原生 AppBar/语义返回、iOS 手势和预测返回按实际 Route 的 Host、Outlet、backend identity
+评估 Guard，不依赖另一侧面板的焦点或全局 active Host。自定义 Backend 可实现 Host-only
+`CCNavigationScopedPopGuardBinding`；旧的一参数 Guard binding 仍兼容。
 
 ### Android 预测返回（可选自动桥）
 
-Host 可使用 `CCManagedRouterApp(enablePredictiveBack: true)`、
-`CCManagedRouterBackend(enablePredictiveBack: true)`；存量 Host 迁移期也可使用 deprecated
-GoRouter 兼容路径的同名配置。
-默认 `false` 保留原有 Route 类型、返回处理和 Flutter 自带预测动画，不创建 CCRouter
-预测桥、手势观察者或阶段状态机。Managed 页面在开关关闭时继续遵循 Flutter 自身的
-Route/Pop 返回行为，开关打开时自动接入 Host bridge。
+Host 使用 `CCManagedRouterApp(enablePredictiveBack: true)` 或
+`CCManagedRouterBackend(enablePredictiveBack: true)` 开启观察；默认关闭，不改变 Flutter
+原有 Route 类型与预测动画。Android Host 还需在有效 `<application>` 设置
+`android:enableOnBackInvokedCallback="true"`。
 
-开启后，自动装配的默认 Android Material 页面报告 start/update/cancel/confirmed commit，
-Flutter 仍唯一驱动动画和实际 Pop。取消不触发正式 PageShow/PageHide、不完成 typed result、
-不销毁 Route Scope；提交依据具体 backendEntryId 确认，不能再次调用业务 pop。
-Managed 与 deprecated GoRouter 兼容 Backend 共用 `ccrouter_host.dart` 中的
-`CCPredictiveBackCoordinator` 状态机；各 Backend 只负责解析 Route/Entry/Outlet 身份、确认
-Backend 事件和保存脱敏 fallback。Feature 不导入或持有该 Host SPI。协调器在 Adapter 关闭或
-构造回滚时统一释放 Observer、Timer、Route、listener、PopGuard 和 Backend callback 引用。
-手势中发生导航或提交时 PopScope/Form 禁止退出，会终止预览；这种取消不自动弹业务确认框。
-开启时，祖先 Navigator 的弹窗会阻止底下嵌套页面接受新手势；手势中弹出后，即使弹窗先关闭，
-旧提交也不会退出底下页面。attach 模式销毁 Adapter 后，旧手势失效，存续 Router 的新手势恢复
-Flutter 返回行为。读取 `Route.popGestureEnabled` 不会提前解除旧手势的提交保护。
-旧 commit/cancel 到达时结束原序列；若平台丢失终态，下一次 start 会先取消残留预览，再按
-当前 handler 活性开启新序列。已销毁 Adapter 的 handler 此时解除，存续 Router 恢复 Flutter 返回。
+默认 Android Material 页面自动接线，Flutter 唯一驱动动画与 Pop。Host-only
+`CCPredictiveBackCoordinator` 按精确 Entry/Outlet 协调阶段，Feature 不导入或手动转发。
+取消不结束结果或 Scope，重复终态、导航打断、覆盖弹窗、Theme 切换及已退役手势均有回归。
+手势被本地门禁拒绝时不会自动弹业务确认框。自建 Route 可通过
+`CCFlutterRouteFactory` 的 `predictiveBackHandler` 显式接入，不能重复接线。
 
-自动桥按当前 `Theme.platform` 校验实际转场。手势中切换到非 Android 平台或非预测转场时，
-原预览会取消并恢复动画、释放 Navigator 手势状态；迟到 commit 不退出页面，新手势按当前
-Theme 处理。恢复预测 Theme 不会重新激活旧预览。
+支持 Flutter 的 `PredictiveBackPageTransitionsBuilder` 和
+`PredictiveBackFullscreenPageTransitionsBuilder`。Android Guard、Modal、LocalHistory、
+自定义转场及非预测 Theme 保留相应 fallback。iOS 默认不透明页面在 Guard 允许时使用
+Flutter 跟手返回；取消与提交不得重复移除页面。
 
-Android predictive-back 下的 PopGuard 页面仍走非交互系统 fallback，即使 Guard 最终 allow；
-Dialog、BottomSheet、LocalHistory、自定义转场和非预测 Theme 保留各自返回路径。支持的 Android Theme 转场为 Flutter
-内置 `PredictiveBackPageTransitionsBuilder` 和 `PredictiveBackFullscreenPageTransitionsBuilder`。
-框架不会改写应用 Manifest。Android Host 必须在有效 `<application>` 上设置
-`android:enableOnBackInvokedCallback="true"`，并在目标设备验证系统版本、embedding、
-最终 Manifest 合并结果和手势导航配置；Demo Android Host 已提供该配置。
+`adapter.predictiveBackFallbacks` 最多保留 100 条 reason、Host、Outlet、timestamp，
+不含 URI、参数、Context 或结果，关闭后为空。通用导航诊断使用
+`CCRouter.recentBackendNavigationEvents`，不再提供旧 Adapter 的 `lifecycleEvents`。
+Adapter 销毁释放观察者、Timer、Routes、listener 和 backend callback。
 
-应用自建 GoRouter、override 或 Shell Page 不会被改写，Host 须将
-`adapter.predictiveBackBridge` 传给 `ccGoRouterPage` / `CCFlutterRouteFactory.createPage`
-的 `predictiveBackHandler`。该 SPI 仅从 `ccrouter_host.dart` 导入；Feature 无需修改。
-不要为同一路由同时手动转发和自动接线。`supportsPredictiveBack` 表示桥可用，不代表所有自定义
-Route 或系统返回桌面动画均已接入。现有 Runtime 不提供全阶段业务观察 API。
-
-Host 可读取 `adapter.predictiveBackFallbacks` 定位自动桥为何未接受某次 start，例如三键返回、
-未接线 Page、非预测 Theme、本地门禁、非活动 Outlet 或未知 managed Entry。该只读历史与
-`lifecycleEventCapacity` 共用容量，只记录稳定 reason、Host、Outlet 和 timestamp，不包含 URI、
-arguments、Extra、Widget、BuildContext 或业务结果；关闭开关时始终为空且不分配历史。
-Adapter 构造期间的 Observer/listener 注册失败会原子回滚。自定义
-`CCFlutterPredictiveBackHandler.isActive` 抛错时，空闲 Route 会解除该 handler 并恢复 Flutter
-原有返回路径；进行中的手势仍保留原提交保护，直到终态到达或下一次 start 先取消旧序列。
-
-Demo 默认入口保持关闭；从 `demo/` 使用
-`fvm flutter run -t lib/main_predictive_back.dart` 验证原生 Managed Backend，使用
-`fvm flutter run -t lib/main_go_router_predictive_back.dart` 做已 deprecated GoRouter Backend 的
-迁移回归。`lib/main_managed_predictive_back.dart` 仅保留为 Managed 入口的兼容别名。
-两个入口共享场景但必须分别完成平台手势验收。支持范围、接线和回归见
-[预测返回接入说明](docs/CCRouter-predictive-back.md)。
+从 Demo 执行 `fvm flutter run -t lib/main_predictive_back.dart`；Managed 别名
+`main_managed_predictive_back.dart` 仍可用。Android/iOS 手势需要在目标设备单独验收，
+不能以 Widget 或 macOS 测试替代。详见 [预测返回说明](docs/CCRouter-predictive-back.md)。
 
 ## Aspect、Trace、Telemetry 与生命周期
 
@@ -1037,14 +1094,14 @@ Host 诊断容量按容器分别计算：`traceCapacity` 默认 1000，分别约
 `navigationDiagnosticCapacity` 默认 1000，分别约束七份导航历史及已移除 Backend Entry 的保留，
 不是所有历史共用的 1000 条总预算。设为 0 关闭对应历史，但不会关闭 live listener、活动路由、
 去重或运行队列。该值还关联最小 64 的观察队列和去重窗口；Sink 未单独配置 `queueCapacity` 时也沿用该容量，调整前应验证突发负载。
-`CCGoRouterApp` / Backend / Adapter 的 `lifecycleEventCapacity` 是独立的每 Host 配置，默认 1000；
-设为 0 只关闭该 Adapter 的历史。`adapter.lifecycleEvents` 现在返回
-`List<CCGoRouterNavigationEventSnapshot>`，保留 `kind`、`hostId`、`outlet`、`location`，并提供
-`previousLocation`，不再保留 `route` / `previousRoute`。需要 Route 的 Host 逻辑放在同步 Observer
-回调中，勿保存原始事件。location 仍可能包含实际路径，仅供本地排查；生产日志使用脱敏 Sink。
-容量评估、建议与验证边界见 [导航历史与容量评估](docs/validation/navigation-history-capacity-20261019.md)。
+导航历史统一读取脱敏 Runtime 快照，不能保留 Route、Widget、Context、参数或业务结果。
+Host 如需同步原生 Route 回调，可配置 `additionalObservers`，但不应保存回调对象。
 
 `CCNavigationAspect` 只观察导航阶段，不做决策。它适合 PV/UV 与来源归因、route found/arrival/completion/failure 观察、耗时、跨 Host/Outlet 链路追踪和脱敏日志。Aspect 回调异常会被隔离；回调中不得同步重入导航。请求参数、完整 URI、Extra、Token 和业务返回对象不会进入默认诊断记录。
+
+导航 Lifecycle、Entry、Visibility、Failure、Backend 和 Capability 的 Listener remover
+可重复调用，只取消原订阅及其未开始的投递。取消后重新订阅同一函数，不会收到旧队列
+事件，也不会被旧 remover 删除；同时重复 add 同一函数仍去重，任一对应 remover 可取消它。
 
 Runtime 还可以把 Command、Event、Service、InitTask、导航失败和后端降级统一投递到 Host 注入的 `CCDiagnosticSink`：
 
@@ -1150,6 +1207,19 @@ CCPageLifecycleListener(
 
 `PageShow/PageHide` 表示 PageRoute 是否为其 active Outlet 的当前主 Route，不代表物理像素是否仍可见。Widget 创建与销毁仍使用 Flutter `initState/dispose`。资源所有权不要交给曝光回调；页面实例资源应使用 Route Service。
 
+原生 Managed 的普通 Pop 在逻辑移除时完成结果并移出 active Entries，正文与 Route Scope
+保留到 Flutter 退场结束，支持动画期间的 Widget 重建。精确 `close` 和 foreign Popup 下的
+空锚点及时关闭业务 Scope；空锚点不保留业务正文，最后一个 Popup 经 Pop、remove 或 replace
+离开后回收。Host shutdown 会取消退场等待并关闭 Scope，不等待下一帧。
+自定义 Backend 可通过 Host-only `CCNavigationRouteExitBinding` 接入渲染结束通知；
+业务页面不直接使用这些 SPI，也不应在退场期间启动新的业务工作。
+
+自适应布局卸载 Navigator 与关闭逻辑 Entry 是不同操作：卸载清理该渲染实例的 Route、
+Guard、foreign Popup 记录及 PageLifecycle top，保留 Managed identity、待返回结果和 Route
+Service；重挂载重新投影栈。Widget State 随 Flutter 生命周期结束，已销毁的 foreign 弹窗
+不会恢复。复用 RouterConfig 重挂载不会重放已处理的初始 Go。焦点 Outlet 被隐藏后，无 Context
+的 Back 可落到唯一可见且已挂载的 Outlet；多侧同时可用时仍由 Host 明确选择，根弹层优先。
+
 ## Host、Shell 与 Outlet
 
 `CCNavigationHost` 是框架对一个独立 Flutter navigation tree / Flutter View 的映射，不等同于平台 Window：
@@ -1161,13 +1231,48 @@ CCPageLifecycleListener(
 - Dialog、BottomSheet、Popup：属于当前 Host 的 Route 或 Overlay，不是新 Window。
 
 真实 macOS/Windows/iPadOS 多窗口可以映射为多个 Host；当前提供
-`CCManagedMultiHostBackend` 与 `CCGoRouterMultiHostBackend` 聚合、底层隔离和接入能力，
+`CCManagedMultiHostBackend` 聚合、底层隔离和接入能力，
 但不宣称已经完成所有平台多窗口生命周期集成。
 
 Shell 与 nested route 是 Host 拓扑，生成器不会猜测。Managed Backend 使用
-`CCManagedShellBinding` 和 `CCManagedOutlet` 显式装配；已有 GoRouter Host 使用
-`CCGoRouterRouteOverride`、`CCGoRouterShellBinding` 和 Outlet Observer。两条路径都由
+`CCManagedShellBinding` 和 `CCManagedOutlet` 显式装配，由
 Runtime 保存 Host/Outlet 分区 Stack，业务页面仍只使用 `CCRouter.navigator`。
+
+Managed 的 `go`、`reset`、`open` 的 Go 模式以及启动/浏览器地址重建会按 `parentRouteId`
+构建完整父链。Runtime 用子路由的 Path/Query 经过父路由自身 Codec 重建参数，按祖先到目标
+执行拦截策略，再一次性提交；父参数缺失、必须依赖 Extra 或策略取消时，原栈不变。
+父页具有独立 Entry identity 和 Route Scope，没有调用方等待它的 Pop 结果。普通 push/replace
+保留原栈，不自动补入祖先。外部入口仍只开放显式允许 Deep Link 的目标，结构父页不是额外
+开放的外部入口，但其拦截器和 Entry 保留原始外部 origin。自定义 Backend 通过 Host-only
+`CCNavigationParentStackAdapter` 选择接受此计划。
+
+Shell 容器的存活由 Outlet 中的实际 Entry 决定，因此关闭被覆盖的种子页不会撤掉 Context
+导航产生的覆盖页。直接业务导航与 Tab 激活使用同一可见性投影；保留分支切回时 URL 跟随
+选中的分支，独立 pane 的指针焦点仅改变默认 Back 目标。普通 Flutter Dialog/BottomSheet
+以 foreign identity 观察，返回先处理真正的顶部 Route，不让底下页面的 PopGuard 拦截弹窗；
+foreign Route 不创建 Managed Scope，也不把 Flutter Route 或业务参数留在诊断历史中。
+
+Managed 跨不同 Shell 的 push 保留原 Shell 的分支栈与 Widget State；子 Outlet 无可弹出页面时，
+返回可退出当前 Shell 并揭示原 Shell 或调用首页。Root Context 的返回也解析到当前 Shell 的
+选中 Outlet，先检查真正目标的 PopGuard。每个 Shell ID 对应一个保留容器，重复进入同一
+Shell 使用其已有分区栈，不创建第二套相同 Outlet Navigator。
+Shell 返回时，业务 Entry 和结果先结束，实际已渲染的分支内容与 Scope 保持到外层转场完成。
+退出途中重新进入同一 Shell 会把 Outlet 渲染权交给新容器，旧容器停止投影，避免争用同一
+Navigator Key；退出等待也会在 renderer 卸载或 shutdown 时释放。
+同一 Host 的各 Shell 必须独占各自的命名 Outlet，且不能使用保留的 `root`；不合法的配置
+在 Managed Adapter 初始化时拒绝，避免挂载后出现重复 Navigator Key 或返回目标递归。
+
+独立自适应 pane 可用 Host-only `CCManagedOutlet(baseBuilder: ...)` 承载本地列表或详情作为
+底层 surface；该 surface 不创建 Managed Entry、结果通道或 Route Scope。从其 Context
+push 的页面仍由同一个 Outlet 的 Managed Stack 渲染，pop 后回到本地 surface。不要为同一
+Outlet 再创建手写 Navigator；需要 Route Service 的页面应注册为 Managed Route。
+
+当前能力与 Demo 入口、自动化和 macOS 实窗结果的逐项对应见
+[2026-10-22 全量能力审查](docs/validation/managed_full_review_20261022.md)；后续修复、
+最新源码回归与真实平台记录统一从[验证索引](docs/validation/README.md)查阅。
+2026-10-24 源码回归包含 Flutter 1537 项、Dart 55 项与 Generator API 隔离专项 4 项通过，
+不表示重跑 Generator 全量、独立 Analyzer Plugin、真机手势或长期性能/heap 验收。
+历史平台结论只适用于各报告注明的源码与环境，不将测试通过等同于所有平台全面更优。
 
 ## Service
 
@@ -1178,6 +1283,32 @@ Service 表达可重复调用、可能持有状态或资源的长期能力。选
 | `app` | 首次解析到 Runtime shutdown | 配置、网络门面、全局缓存 |
 | `session` | 登录 Session 内首次解析到 logout/account switch | 用户资料、账号缓存、鉴权能力 |
 | `route` | 某个 Managed RouteEntry 内首次解析到 Entry 永久移除 | 页面 Controller、草稿、页面订阅 |
+
+自定义 factory 成功返回 `CCDisposable` 后，框架负责接管或回收。若所属 Scope 在构造期间
+被同步重入关闭，解析抛 `CCScopeClosedError`，关闭过程仍等待返回资源的有界销毁，并按
+依赖的逆序清理；清理异常不跳过其它资源。认证生命周期应在 factory 外管理，被销毁
+对象不能反过来等待拥有它的关闭流程，以免自等待。
+
+同步 `service`、`serviceOrNull` 和 `services` 同样检查当前 Invocation 的取消/deadline
+及 Service 构造 Owner 的生命周期，缓存命中和 Key 查找也不例外。旧 Session 的方法或
+initializer 在账号切换后恢复，不能重新解析新账号的资源；独立的新调用仍正常工作。
+方法成功返回后遗留的异步回调仍继承原调用链的 Scope 生命周期，包括经 App Service
+嵌套的调用。原 Session/Route Scope 关闭后，即使目标仍可用，这些回调发起的 Service
+解析、代理调用、Command 和 Event 也以 `CCInvocationCancelledError` 拒绝；
+在原 Scope 活跃时仍正常工作。
+这不撤销业务已持有的对象，也不会强制停止已进入的 Dart 代码。共享 singleton initializer
+使用自己的 Scope 生命周期，首个等待者取消/超时不会禁止它继续解析合法依赖。
+App Service factory 和 singleton initializer 使用其实际所属 Scope；`newInstance`
+initializer 同时保留调用链生命周期。若同步 factory 内重入 Runtime shutdown，根级
+同步解析同样拒绝交付，成功构造的 disposable 仍由原 Scope 清理一次。
+
+初始化所属的实际 Scope 关闭时，readiness 立即终结；已进入的等待调用统一以
+`CCInvocationCancelledError` 结束，包括不同 error Zone 的等待者。即使业务 initializer
+或 Event Subscriber 返回的 Future 一直不完成，框架也会释放已结束的 Runtime／Route
+等待上下文，并消费其迟到错误，不重复记录终态。业务闭包直接捕获的对象、已进入的
+副作用及第三方资源仍由业务负责取消和释放；单个等待者取消不终结共享 singleton 初始化。
+共享初始化仍运行时，单个等待者的取消、超时或原 Session/Route 关闭也会注销其内部等待，
+释放框架所保留的调用者 Zone，不必等共享任务完成。其他活跃及后加入的调用者仍共享原结果。
 
 零参数同步构造的简单 Service 使用注解，由生成器自动注册：
 
@@ -1252,6 +1383,11 @@ initializer；`Future<T>` 方法会等待 readiness。生成器支持普通实�
 FutureOr、callback、Flutter 类型、Contract 继承和未从公共 barrel 暴露的 `src` 类型会在生成期
 失败。生成器会避开业务参数和泛型名称，为内部回调和导入分配不冲突的名字；业务无需回避
 `service` 等名称。组件内部 Service 仍直接使用 `CCRouter.service<T>()`，不需要声明或生成 Proxy。
+
+异步 Proxy 在 readiness 返回后、进入业务方法前重新检查取消、所属 Scope 和 deadline。
+即使没有 initializer 或已完成初始化，调用方取消、Session 关闭或 Runtime shutdown 也不能
+启动尚未进入的方法。已经进入的应用工作仍需协作取消，框架不会强制中断 Dart 代码；一个
+调用方取消不会终止其他调用方共享的 singleton 初始化。
 Route 与 Service Proxy 的集合默认值保留实际 List/Set/Map 类型及泛型参数，包括 `Object`
 参数下的空集合和嵌套集合；默认值涉及的枚举和类型也必须能被生成库公开导入。
 描述中的 `$`、引号和换行按普通文本保留；生成的 Host DevTools Catalog 不会将描述当作 Dart 插值。
@@ -1266,6 +1402,8 @@ Route、Service、Command、Event、InitTask Contract 都有独立的 Contract S
 Contract、Owner 不匹配、版本范围不满足、指纹漂移、重复实现和陈旧生成物；不会在运行时
 下载、协商或静默降级旧 Contract。当前 `0.x` 阶段仍不承诺跨版本自动兼容；修改公共形状时
 应显式升级版本，破坏性变更使用新的 Contract ID。
+版本范围支持 exact、`*`、caret、tilde，以及单个或 whitespace 分隔的
+`>=`/`>`/`<=`/`<` 比较器（包括 Tab/换行）；解析后的 SemVer prerelease 标识只读。
 
 生成的 Host Assembly 暴露只读 `contractBundle`。标准启动代码将它和组件 Manifest 一起交给
 `CCRouterHost.initialize`，因此业务不需要手写版本字符串：
@@ -1315,6 +1453,8 @@ final controller = CCRouter.routeService<OrderDraftController>(context);
 - 同一 Singleton 的并发调用共享初始化；跨独立调用根的 A→B→A 等等待环也会报
   `CCCircularServiceDependencyError`。调用者超时/取消会撤销自己的等待关系，不破坏共享初始化；
   初始化本身失败在当前 Scope 内保持失败，不隐式重试。
+  不同 error Zone 的等待者同样收到共享 readiness 的同一失败对象与堆栈，
+  既有 `CCServiceInitializationError` 包装规则不变，取消单个等待不重启初始化。
 - 多实现使用 `CCServiceKey<T>`；跨组件调用使用生成 Client。统一名称配置在
   `CCServiceContract.alias`，单个消费者或 Key 的覆盖配置在 `CCServiceDependency.alias`；组件内部
   解析仍使用 `CCRouter.service<T>()`。
@@ -1369,6 +1509,10 @@ Runtime 会再次确认生成 Client 的 caller 已安装、Command ID 与已注
 `CCResolutionError`，且不会记录伪造的组件调用归属。
 
 适合创建订单、提交支付、刷新远端数据等一对一操作。状态读取或多次方法调用使用 Service；“已经发生”的广播使用 Event。取消是协作式的，框架可以结束等待并发出 cancellation，但不能强制停止同步 Dart 代码或回滚已发生的副作用。
+
+Runtime 超时仍向调用方返回原始 `CCInvocationTimeoutError`；取消监听器抛出的清理异常
+只进入脱敏诊断，不替换超时结果。显式调用 `CCCancellationToken.cancel()` 仍会在通知
+所有监听器后抛出首个异常，Owner 必须保证后续清理继续执行。
 
 ## Event
 
@@ -1488,9 +1632,12 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --watch
 fvm dart run --verbosity=error ccrouter_generator:ccrouter watch status demo
 fvm dart run --verbosity=error ccrouter_generator:ccrouter watch follow demo
 
-# Runtime/Service/Analytics/生成器性能与资源回收基准
+# Runtime/Service/生成器性能与资源回收基准
 fvm dart run packages/ccrouter_test/benchmark/performance_regression.dart
 fvm dart run packages/ccrouter_test/benchmark/performance_regression.dart --full
+
+# 应用侧 Demo 埋点队列基准，独立于框架性能门禁
+fvm dart run demo/modules/analytics/benchmark/analytics_dispatcher.dart
 
 # 按能力 ID 查找 Route/Service/Command/Event/InitTask，Route 也支持 Pattern
 fvm dart run --verbosity=error ccrouter_generator:ccrouter find order.detail demo
@@ -1568,7 +1715,14 @@ package-local 成功会合并自己的 cache entry，不会驱逐其它 Host/Pac
 顶层 `CCComponent` Descriptor 和 Package barrel。`--with-example` 还会通过当前 Flutter SDK 的
 官方 app template 创建 `example/`，显式依赖组件、`ccrouter` 与 `ccrouter_generator`；其
 `project_type: app` 因而默认按独立 Host 生成与校验。Workspace 场景会提示同时登记组件和
-example，非 Workspace 场景使用 `path: ..` 连接组件。
+example，非 Workspace 场景使用 `path: ..` 连接组件。Example 已装配
+`CCRouterHost.initialize`、生成的 Host Assembly 和 `CCManagedRouterApp`，并声明自己的 `/`
+首页；无需手写 Registrar 或导航 Backend。组件与 Example 都声明可证明来源的 `build_runner`
+及同 SDK 的 Flutter 测试依赖。独立组件同时启用 Portable State：先从组件目录执行 Pub get 和
+`ccrouter portable prepare .`，再从 Example 执行 Pub get、`ccrouter generate .`；以后修改组件
+声明也按此顺序刷新。只读父组件不会由 Example 越权生成。若独立 lockfile 的生成工具链不同，
+先对齐依赖解析再重新 prepare，不能跳过 Portable 校验。
+组件与 Example 按同一份创建快照继承工具依赖；SDK 范围和 Git ref 按需引用，保留 YAML 字符串类型。
 `create page` 只创建带 `@CCRoute` 的最小 Flutter Page；`create service`、`create command`、
 `create event` 和 `create init-task` 分别创建真实注解的 Service/Command/Event/InitTask 起始模板。
 内部 Service 默认是带稳定 ID 的 concrete `@CCService`，不会提前创建跨组件 Contract。Event
@@ -1981,6 +2135,10 @@ Package Graph 变化后的正确性优先调度和团队构建加速方案见
 
 框架使用者的测试能力统一放在 `ccrouter_test`，生产代码不要访问 Runtime 私有构造器。测试至少覆盖 Route Intent、Interceptor、PopGuard、Scope 销毁、Command 取消/超时、Event 失败隔离、InitTask DAG 和 Host/Outlet 混合导航。
 
+`CCRouterTestHost.dispose()` 的并发、同步重入和后续调用都等待同一次清理，并在各调用者的 error Zone 中交付原始失败与堆栈。每个调用者都应处理自己返回的 Future；若测试已主动验证清理失败，后续 teardown 也应显式验证该失败。资源的 `dispose` 不得等待所属 Host 的清理，否则会等待自身。
+
+框架遗留的调用、构造和导航 Zone 仅保留身份与生命周期信号，不通过其身份或构造所有者强持有已结束的 Runtime、Scope 或 RouteEntry。旧调用链的取消校验仍保留；业务自行捕获的对象、Timer 和订阅仍需业务管理。
+
 完整回归：
 
 ```bash
@@ -1988,6 +2146,8 @@ fvm dart analyze
 fvm flutter test packages/ccrouter_test/test
 fvm dart test --concurrency=1 packages/ccrouter_test/generator_test
 fvm flutter test demo
+fvm dart test demo/modules/analytics/test demo/modules/analytics_firebase/test
+fvm flutter test demo/modules/analytics_flutter/test
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --check
 ```
 
@@ -2005,6 +2165,10 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --check
 - 不把完整 URI、Token、Extra、参数或返回对象写入日志和 Telemetry。
 
 生成器与 Analyzer 会尽量把 Route ID、Pattern、Codec、参数、跨 Package import 和内部 API 误用提前到构建期，但 `src` 目录本身不是 Dart 的强私有边界；CI 必须保留 analyze 与 `generate --check`。
+
+Analyzer 对跨 Package generated 内部引用检查 import/export 的每个条件 URI；对能证明框架
+身份的 Route/Contract，提前诊断直接字面量 placement ID、自引用父路由及重复/非法 policy ID。
+计算常量、未知表达式、父链闭包与 Host/Shell/Outlet 装配仍由 Generator/Validator 判定。
 
 ## AI 集成开发 Skill
 
@@ -2091,6 +2255,16 @@ Skill 使用主文件和按需 reference，既适合日常编码，也可用于�
 - [`docs/CCRouter-event-design.md`](docs/CCRouter-event-design.md)：Event 设计
 - [`docs/CCRouter-initialization-task-design.md`](docs/CCRouter-initialization-task-design.md)：InitTask 设计
 - [`docs/CCRouter-core-principles-audit.md`](docs/CCRouter-core-principles-audit.md)：核心价值回归
-- [`docs/CCRouter-pre-release-capability-plan.md`](docs/CCRouter-pre-release-capability-plan.md)：正式发布前 Contract、DevTools、Analytics、脚手架与质量回归计划
+- [Contract 版本与兼容规范](docs/CCRouter-contract-compatibility.md)：版本范围、指纹与三层兼容门禁
+- [后续工作与触发条件](docs/CCRouter-future-work-plan.md)：未完成工作，不重复发布阻塞表
+- [文档合并归档](docs/archive/20261024-consolidation/README.md)：历史计划、验收快照与现行映射
 
 设计文档用于解释约束与演进方向；实际可用 API 以当前 public barrel、生成器校验和 Demo 回归为准。
+
+### 第三方导航与非 Route UI 诊断
+
+Host 可使用 `backend.adapter.foreignRouteBridge`（Host-only `CCForeignRouteBridge`）
+上报独立第三方 Navigator 的 push/replace/pop/remove，或通过 pushOpaque/removeOpaque
+上报 Overlay、菜单等非 Route UI。句柄只用于诊断，不导航，不创建 Route Entry、Scope 或结果；
+重复、跨 Bridge 或销毁后的句柄会被拒绝。普通 Managed Navigator 上的 foreign Route 自动观察，
+不应再手动重复上报。Adapter 销毁使句柄失效并释放所有 callback。

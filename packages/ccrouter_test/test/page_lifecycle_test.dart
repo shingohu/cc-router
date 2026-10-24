@@ -1,7 +1,6 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
-// ignore: deprecated_member_use
-import 'package:ccrouter_go_router/ccrouter_go_router.dart';
+import 'support/lifecycle_test_observer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -10,10 +9,7 @@ void main() {
     'Mixin follows current PageRoute and application lifecycle transitions',
     (tester) async {
       final host = CCNavigationHost(id: 'window.mixin');
-      final observer = CCGoRouterNavigationObserver(
-        hostId: host.id,
-        outlet: 'root',
-      );
+      final observer = LifecycleTestObserver(hostId: host.id, outlet: 'root');
       final rootEvents = <String>[];
       final detailEvents = <String>[];
       BuildContext? rootContext;
@@ -93,10 +89,7 @@ void main() {
     'Listener tracks foreign PopupRoutes and ignores widget rebuilds',
     (tester) async {
       final host = CCNavigationHost(id: 'window.listener');
-      final observer = CCGoRouterNavigationObserver(
-        hostId: host.id,
-        outlet: 'root',
-      );
+      final observer = LifecycleTestObserver(hostId: host.id, outlet: 'root');
       final events = <String>[];
       final rebuild = ValueNotifier(0);
       BuildContext? pageContext;
@@ -212,7 +205,7 @@ void main() {
         child: MaterialApp(
           navigatorKey: firstHost.navigatorKey,
           navigatorObservers: [
-            CCGoRouterNavigationObserver(hostId: firstHost.id, outlet: 'root'),
+            LifecycleTestObserver(hostId: firstHost.id, outlet: 'root'),
           ],
           home: CCPageLifecycleListener(
             onPageShow: () => firstEvents.add('show'),
@@ -237,7 +230,7 @@ void main() {
         child: MaterialApp(
           navigatorKey: secondHost.navigatorKey,
           navigatorObservers: [
-            CCGoRouterNavigationObserver(hostId: secondHost.id, outlet: 'root'),
+            LifecycleTestObserver(hostId: secondHost.id, outlet: 'root'),
           ],
           home: CCPageLifecycleListener(
             onPageShow: () => secondEvents.add('show'),

@@ -1,0 +1,15 @@
+{
+  "frameworkVersion": "3.41.10-ohos-1.0.0",
+  "channel": "[user-branch]",
+  "repositoryUrl": "https://gitcode.com/CPF-Flutter/flutter_flutter.git",
+  "frameworkRevision": "62357a93d653bf844f730bb1f4b7cc9e2139d14e",
+  "frameworkCommitDate": "2026-09-24 18:28:11 +0800",
+  "engineRevision": "42d3d75a56efe1a2e9902f52dc8006099c45d937",
+  "engineCommitDate": "2026-04-28 17:31:55.000Z",
+  "engineContentHash": "9161402dc0e134b3fb5adee5046b6e84b1a5e1c1",
+  "engineBuildDate": "2026-04-29 03:37:18.442",
+  "dartSdkVersion": "3.11.5",
+  "devToolsVersion": "2.54.1",
+  "flutterVersion": "3.41.10-ohos-1.0.0",
+  "flutterRoot": "/Users/shingo/fvm/versions/ohos/oh-3.41.9-release"
+}

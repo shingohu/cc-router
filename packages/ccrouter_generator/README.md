@@ -236,7 +236,14 @@ Host 需要在 Flutter Hvigor `FlutterTask` 前调用同一 `pub-hook run --pub-
 `pubspec.yaml`、`project_type: package` metadata、Package barrel 和
 `lib/src/<package>_component.dart`；Descriptor 不会从根 barrel 导出。可选 example 由当前
 Flutter SDK 的 app template 生成，直接依赖组件与 CCRouter 工具，`project_type: app` 默认是
-Host。Workspace 需要按 `Next steps` 同时登记组件和 example。
+Host。入口已安装生成的 Assembly 和 `CCManagedRouterApp`，Example 自己声明 `/` 首页。
+组件和 Example 均有可证明来源的 `build_runner` 和同 SDK 的 Flutter 测试依赖。
+Workspace 需要按 `Next steps` 同时登记组件和 example。独立组件还会启用 Portable State：
+先在组件目录 Pub get、`ccrouter portable prepare .`，再在 Example Pub get、`ccrouter generate .`。
+组件变更后重新 prepare；Example 不会写入其只读父组件。独立解析的工具链不一致时先对齐
+依赖版本，不能绕过 Portable 校验。
+Example 从组件 staging manifest 重算依赖，不在 Flutter 创建后重新读取上游工具版本。
+SDK 范围和看似数字、布尔值或 alias 的 Git ref 会按解析后的实际类型决定是否引用，保留字符串身份。
 `create page <PageName> [component-directory]` 会生成
 `lib/src/<page>_page.dart`、内部 `@CCRoute<void>`、稳定默认 Route ID 和 `/page` Path。
 新 Component 的 manifest 优先继承目标目录最近 Package/Workspace 的 Dart SDK 约束及
@@ -600,9 +607,9 @@ Extra 或业务返回值。
 
 Managed Route 的 PopGuard 会在业务 Pop、系统返回、Cupertino 手势和预测返回进入后端提交前
 执行。Foreign Route、PopupRoute 和 `LocalHistoryEntry` 消费返回时不会关闭 CCRouter 的
-Managed Route Scope。当前 Flutter/Cupertino 的保守语义是：只要 Managed Route 安装了 PopGuard，
-交互式侧滑会被禁用，以防手势绕过 Guard；Guard 允许时恢复侧滑仍是后续 Flutter Route API
-能力候选，不应由业务页面自行补一套拦截逻辑。
+Managed Route Scope。原生 Managed 默认 opaque iOS 页面会在侧滑开始前同步评估 Guard：
+拒绝时不启动动画，允许时保留 Flutter 跟手转场；取消和提交分别保持与结束精确实例。
+自定义转场保留保守 fallback，不应由业务页面自行补一套拦截逻辑。
 
 组件 Registrar 由统一 `generate` 命令自动生成到
 `lib/src/ccrouter_generated/component/<component-id>.component.g.dart`。它按稳定 ID 和源文件顺序
@@ -611,11 +618,10 @@ Managed Route Scope。当前 Flutter/Cupertino 的保守语义是：只要 Manag
 被删除。Package 没有任何生成能力时不创建 `ccrouter_generated`，最后一个受管产物移除后只
 清理真正为空的目录。CI 应使用 `generate --check` 阻止陈旧生成物合入。
 
-Catalog 只包含 Flutter 页面工厂和 `CCNavigationRoute`，不包含 `GoRoute`。GoRouter
-宿主使用 `CCGoRouterAssembler` 同源生成 `routes` 与 `bindings`；以后接入 Navigator
-1.0、其他 Navigator 2.0 实现或自定义后端时，可以复用同一 Catalog，仅替换
-Assembler/Adapter。Shell、嵌套路由、完整 Regex 兼容入口等后端特有结构必须由宿主
-提供显式 Override，不能被自动扁平化。
+Catalog 只包含 Flutter 页面工厂和 `CCNavigationRoute`，不包含 `GoRoute`。原生 Managed
+Host 将 Catalog 投影为 Navigator.pages；自定义 Backend 可通过 Host SPI 复用同一 Catalog。
+原生 Managed 的 Shell/Outlet 由 Host 显式装配，声明的 parentRouteId 由 Runtime 解析为
+祖先链；自定义后端仍须自行提供对应拓扑能力，不能自动扁平化。
 
 路由契约/注册 bridge 使用 `.route.g.dart`，Flutter 页面构造 bridge 使用
 `.route_binding.g.dart`，独立路由契约使用 `.route.contract.g.dart`，Service Token 使用

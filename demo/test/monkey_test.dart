@@ -9,46 +9,48 @@ import 'package:demo_navigation_lab/demo_navigation_lab.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/demo_startup.dart';
+
 const _seeds = <int>[20260928, 0xCC2026, 314159];
 const _stepsPerSeed = 120;
 
-void main() {
-  setUp(() async {
-    demoNavigationLabStore
-      ..blockDetailGlobally = false
-      ..dirtyForm = true
-      ..allowDeferredOnce = false
-      ..clear();
-    demoDiagnosticsSink.clear();
-    demoApplicationLogger.clear();
-    CCRouterHost.initialize(
-      hostAssembly: ccrouterGeneratedHostAssembly,
-      deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
-      globalInterceptors: const [
-        CCGlobalNavigationInterceptor(
-          id: DemoHostIds.globalNavigationInterceptor,
-          interceptor: DemoGlobalNavigationInterceptor(),
-        ),
-      ],
-      navigationFailurePolicy: const DemoNavigationFailurePolicy(),
-      navigationAspects: [
-        demoNavigationAspect,
-        demoNavigationAnalytics.createAspect(),
-      ],
-      telemetryContextProvider: const DemoNavigationTelemetryProvider(),
-      diagnostics: CCDiagnosticsConfig(
-        sink: demoDiagnosticsSink,
-        defaultMinimumLevel: CCDiagnosticLevel.debug,
+Future<void> _initializeDemoHost(WidgetTester tester) async {
+  demoNavigationLabStore
+    ..blockDetailGlobally = false
+    ..dirtyForm = true
+    ..allowDeferredOnce = false
+    ..clear();
+  demoDiagnosticsSink.clear();
+  demoApplicationLogger.clear();
+  CCRouterHost.initialize(
+    hostAssembly: ccrouterGeneratedHostAssembly,
+    deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
+    globalInterceptors: const [
+      CCGlobalNavigationInterceptor(
+        id: DemoHostIds.globalNavigationInterceptor,
+        interceptor: DemoGlobalNavigationInterceptor(),
       ),
-    );
-    await CCRouterHost.runInitTasks(gate: CCInitTaskGate.appStarted);
-  });
+    ],
+    navigationFailurePolicy: const DemoNavigationFailurePolicy(),
+    navigationAspects: [
+      demoNavigationAspect,
+      demoNavigationAnalytics.createAspect(),
+    ],
+    diagnostics: CCDiagnosticsConfig(
+      sink: demoDiagnosticsSink,
+      defaultMinimumLevel: CCDiagnosticLevel.debug,
+    ),
+  );
+  await pumpDemoStartup(tester);
+}
 
+void main() {
   tearDown(CCRouterHost.shutdown);
 
   testWidgets('PopGuard remains usable in a small desktop window', (
     tester,
   ) async {
+    await _initializeDemoHost(tester);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     tester.view
       ..physicalSize = const Size(980, 700)
@@ -76,6 +78,7 @@ void main() {
   testWidgets('failure fallback remains usable in a small desktop window', (
     tester,
   ) async {
+    await _initializeDemoHost(tester);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     tester.view
       ..physicalSize = const Size(980, 700)
@@ -133,6 +136,7 @@ final class _SemanticMonkey {
   final List<String> _history = <String>[];
 
   Future<void> mount() async {
+    await _initializeDemoHost(tester);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     tester.view
       ..physicalSize = _sizes[2]

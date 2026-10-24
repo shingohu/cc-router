@@ -150,6 +150,7 @@ Command、Event、初始化任务与 Service 生命周期交互实验页。
   - `/lab/detail/:id` (CCPathPattern, primary)
     - Constraints: `{"id":"\\d+"}`
   - `/lab/item/:id` (CCPathPattern)
+  - `^/lab/regex/(?<id>[^/]+)$` (CCRegexPattern)
   - `ccrouter://lab/detail/:id` (CCUriPattern)
   - `https://ccrouter.example/lab/detail/:id` (CCUriPattern)
 - Parameters:
@@ -748,8 +749,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.detail`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/detail_page.dart:26:13` (`DemoDetailPage`)
-- Implementation: `package:demo_navigation_lab/src/detail_page.dart:26:13` (`DemoDetailPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/detail_page.dart:27:13` (`DemoDetailPage`)
+- Implementation: `package:demo_navigation_lab/src/detail_page.dart:27:13` (`DemoDetailPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/detail_page.route.g.dart` (`_DemoDetailPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/detail_page.route_binding.g.dart` (`ccrouterBuildDemoDetailPageRoute`)
@@ -757,8 +758,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.extra`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/shell_pages.dart:224:13` (`DemoExtraPage`)
-- Implementation: `package:demo_navigation_lab/src/shell_pages.dart:224:13` (`DemoExtraPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/shell_pages.dart:238:13` (`DemoExtraPage`)
+- Implementation: `package:demo_navigation_lab/src/shell_pages.dart:238:13` (`DemoExtraPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/shell_pages.route.g.dart` (`_DemoExtraPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/shell_pages.route_binding.g.dart` (`ccrouterBuildDemoExtraPageRoute`)
@@ -856,8 +857,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.presentation.sheet`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/presentation_pages.dart:168:13` (`DemoBottomSheetPage`)
-- Implementation: `package:demo_navigation_lab/src/presentation_pages.dart:168:13` (`DemoBottomSheetPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/presentation_pages.dart:172:13` (`DemoBottomSheetPage`)
+- Implementation: `package:demo_navigation_lab/src/presentation_pages.dart:172:13` (`DemoBottomSheetPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/presentation_pages.route.g.dart` (`_DemoBottomSheetPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/presentation_pages.route_binding.g.dart` (`ccrouterBuildDemoBottomSheetPageRoute`)
@@ -901,8 +902,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.shell.detail`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/shell_pages.dart:60:13` (`DemoShellDetailPage`)
-- Implementation: `package:demo_navigation_lab/src/shell_pages.dart:60:13` (`DemoShellDetailPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/shell_pages.dart:63:13` (`DemoShellDetailPage`)
+- Implementation: `package:demo_navigation_lab/src/shell_pages.dart:63:13` (`DemoShellDetailPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/shell_pages.route.g.dart` (`_DemoShellDetailPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/shell_pages.route_binding.g.dart` (`ccrouterBuildDemoShellDetailPageRoute`)
@@ -919,8 +920,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.shell.settings`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/shell_pages.dart:89:13` (`DemoShellSettingsPage`)
-- Implementation: `package:demo_navigation_lab/src/shell_pages.dart:89:13` (`DemoShellSettingsPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/shell_pages.dart:92:13` (`DemoShellSettingsPage`)
+- Implementation: `package:demo_navigation_lab/src/shell_pages.dart:92:13` (`DemoShellSettingsPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/shell_pages.route.g.dart` (`_DemoShellSettingsPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/shell_pages.route_binding.g.dart` (`ccrouterBuildDemoShellSettingsPageRoute`)
@@ -928,8 +929,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.stack`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/stack_page.dart:12:13` (`DemoStackPage`)
-- Implementation: `package:demo_navigation_lab/src/stack_page.dart:12:13` (`DemoStackPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/stack_page.dart:15:13` (`DemoStackPage`)
+- Implementation: `package:demo_navigation_lab/src/stack_page.dart:15:13` (`DemoStackPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/stack_page.route.g.dart` (`_DemoStackPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/stack_page.route_binding.g.dart` (`ccrouterBuildDemoStackPageRoute`)
@@ -964,8 +965,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.workspace.activity`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/shell_pages.dart:172:13` (`DemoWorkspaceActivityPage`)
-- Implementation: `package:demo_navigation_lab/src/shell_pages.dart:172:13` (`DemoWorkspaceActivityPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/shell_pages.dart:186:13` (`DemoWorkspaceActivityPage`)
+- Implementation: `package:demo_navigation_lab/src/shell_pages.dart:186:13` (`DemoWorkspaceActivityPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/shell_pages.route.g.dart` (`_DemoWorkspaceActivityPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/shell_pages.route_binding.g.dart` (`ccrouterBuildDemoWorkspaceActivityPageRoute`)
@@ -973,8 +974,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.workspace.detail`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/shell_pages.dart:143:13` (`DemoWorkspaceDetailPage`)
-- Implementation: `package:demo_navigation_lab/src/shell_pages.dart:143:13` (`DemoWorkspaceDetailPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/shell_pages.dart:147:13` (`DemoWorkspaceDetailPage`)
+- Implementation: `package:demo_navigation_lab/src/shell_pages.dart:147:13` (`DemoWorkspaceDetailPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/shell_pages.route.g.dart` (`_DemoWorkspaceDetailPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/shell_pages.route_binding.g.dart` (`ccrouterBuildDemoWorkspaceDetailPageRoute`)
@@ -982,8 +983,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.workspace.home`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/shell_pages.dart:109:13` (`DemoWorkspaceHomePage`)
-- Implementation: `package:demo_navigation_lab/src/shell_pages.dart:109:13` (`DemoWorkspaceHomePage`)
+- Contract/declaration: `package:demo_navigation_lab/src/shell_pages.dart:112:13` (`DemoWorkspaceHomePage`)
+- Implementation: `package:demo_navigation_lab/src/shell_pages.dart:112:13` (`DemoWorkspaceHomePage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/shell_pages.route.g.dart` (`_DemoWorkspaceHomePageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/shell_pages.route_binding.g.dart` (`ccrouterBuildDemoWorkspaceHomePageRoute`)
@@ -991,8 +992,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.workspace.profile`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/shell_pages.dart:208:13` (`DemoWorkspaceProfilePage`)
-- Implementation: `package:demo_navigation_lab/src/shell_pages.dart:208:13` (`DemoWorkspaceProfilePage`)
+- Contract/declaration: `package:demo_navigation_lab/src/shell_pages.dart:222:13` (`DemoWorkspaceProfilePage`)
+- Implementation: `package:demo_navigation_lab/src/shell_pages.dart:222:13` (`DemoWorkspaceProfilePage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/shell_pages.route.g.dart` (`_DemoWorkspaceProfilePageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/shell_pages.route_binding.g.dart` (`ccrouterBuildDemoWorkspaceProfilePageRoute`)

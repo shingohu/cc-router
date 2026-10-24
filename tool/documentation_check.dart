@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-final _markdownLink = RegExp(r'''!?\[[^\]]*\]\(([^)\n]+)\)''');
+import 'markdown_links.dart';
 
 void main() {
   final rootResult = Process.runSync('git', ['rev-parse', '--show-toplevel']);
@@ -11,53 +11,62 @@ void main() {
     return;
   }
   final root = Directory('${rootResult.stdout}'.trim());
-  final trackedResult = Process.runSync(
+  final filesResult = Process.runSync(
     'git',
-    ['ls-files', '-z', '*.md'],
+    [
+      'ls-files',
+      '--cached',
+      '--others',
+      '--exclude-standard',
+      '-z',
+      '--',
+      '*.md',
+    ],
     workingDirectory: root.path,
     stdoutEncoding: const SystemEncoding(),
   );
-  if (trackedResult.exitCode != 0) {
-    stderr.writeln('Unable to enumerate tracked Markdown files.');
+  if (filesResult.exitCode != 0) {
+    stderr.writeln('Unable to enumerate current Markdown files.');
     exitCode = 2;
     return;
   }
 
-  final markdownPaths = '${trackedResult.stdout}'
+  final markdownPaths = '${filesResult.stdout}'
       .split('\u0000')
       .where((path) => path.isNotEmpty)
+      .toSet()
+      // Include new authored files before staging; ignore deleted tracked
+      // paths and excluded scratch files, matching the current worktree.
+      .where((path) => File('${root.path}/$path').existsSync())
       .toList(growable: false);
   final findings = <String>[];
   for (final path in markdownPaths) {
-    final file = File('${root.path}${Platform.pathSeparator}$path');
+    final file = File('${root.path}/$path');
     final source = utf8.decode(file.readAsBytesSync(), allowMalformed: true);
-    for (final match in _markdownLink.allMatches(source)) {
-      final target = _localTarget(match.group(1)!);
-      if (target == null) continue;
-      final targetPath = target.split('#').first;
-      if (targetPath.isEmpty) continue;
-      late final String decoded;
+    for (final reference in markdownReferences(source)) {
+      Uri? target;
       try {
-        decoded = Uri.decodeComponent(targetPath);
+        target = localMarkdownTarget(reference.target, file.absolute.uri);
       } on FormatException {
-        final line =
-            '\n'.allMatches(source.substring(0, match.start)).length + 1;
-        findings.add('$path:$line: malformed local link `$targetPath`');
+        findings.add('$path: malformed local link `${reference.target}`');
         continue;
       }
-      final resolved = File(
-        '${file.parent.path}${Platform.pathSeparator}$decoded',
-      ).absolute;
-      if (!resolved.existsSync() && !Directory(resolved.path).existsSync()) {
-        final line =
-            '\n'.allMatches(source.substring(0, match.start)).length + 1;
-        findings.add('$path:$line: missing local link target `$targetPath`');
+      if (target == null) continue;
+      if (!File.fromUri(target).existsSync() &&
+          !Directory.fromUri(target).existsSync()) {
+        findings.add('$path: missing local link target `${reference.target}`');
       }
     }
   }
 
-  _checkIndexCoverage(root, 'docs', 'docs/README.md', findings);
-  _checkIndexCoverage(root, 'demo/docs', 'demo/README.md', findings);
+  _checkIndexCoverage(root, markdownPaths, 'docs', 'docs/README.md', findings);
+  _checkIndexCoverage(
+    root,
+    markdownPaths,
+    'demo/docs',
+    'demo/README.md',
+    findings,
+  );
 
   if (findings.isEmpty) {
     stdout.writeln(
@@ -72,40 +81,37 @@ void main() {
   exitCode = 1;
 }
 
-String? _localTarget(String rawTarget) {
-  var target = rawTarget.trim();
-  if (target.startsWith('<')) {
-    final end = target.indexOf('>');
-    if (end < 0) return null;
-    target = target.substring(1, end);
-  } else {
-    target = target.split(RegExp(r'\s+')).first;
-  }
-  if (target.isEmpty || target.startsWith('#')) return null;
-  final uri = Uri.tryParse(target);
-  if (uri != null && uri.hasScheme) return null;
-  return target;
-}
-
 void _checkIndexCoverage(
   Directory root,
+  List<String> markdownPaths,
   String directoryPath,
   String indexPath,
   List<String> findings,
 ) {
-  final directory = Directory('${root.path}/$directoryPath');
   final index = File('${root.path}/$indexPath');
   if (!index.existsSync()) {
     findings.add('$indexPath: missing documentation index');
     return;
   }
-  final indexSource = index.readAsStringSync();
-  for (final entity in directory.listSync()) {
-    if (entity is! File || !entity.path.endsWith('.md')) continue;
-    final name = entity.uri.pathSegments.last;
-    if (entity.absolute.path == index.absolute.path) continue;
-    if (!indexSource.contains(name)) {
-      findings.add('$indexPath: does not reference $directoryPath/$name');
+  final linkedTargets = <Uri>{};
+  for (final reference in markdownReferences(index.readAsStringSync())) {
+    if (reference.isImage) continue;
+    try {
+      final target = localMarkdownTarget(reference.target, index.absolute.uri);
+      if (target != null) linkedTargets.add(target);
+    } on FormatException {
+      // The main link check already reports malformed local destinations.
+    }
+  }
+  // Use the same Git-selected current files as the link check: ignored scratch
+  // documents must not become index requirements, while new authored files do.
+  final prefix = '$directoryPath/';
+  for (final path in markdownPaths) {
+    if (path == indexPath || !path.startsWith(prefix)) continue;
+    if (path.substring(prefix.length).contains('/')) continue;
+    final target = File('${root.path}/$path').absolute.uri.normalizePath();
+    if (!linkedTargets.contains(target)) {
+      findings.add('$indexPath: does not reference $path');
     }
   }
 }

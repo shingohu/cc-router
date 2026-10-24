@@ -1,81 +1,10 @@
-# CCRouter 类型化 UI Fragment 设计与实施计划
+# CCRouter 类型化 UI Fragment 规范
 
-## 文档状态
+本文统一维护 UI Fragment 的契约、Action schema、生成装配、生命周期与兼容规则。它适用于跨组件局部 UI；普通共享 Widget 继续放在公共 Flutter Package，完整页面使用 Route。
 
-- 版本：v0.3（静态 UI 与受限 DTO 增量记录）
-- 日期：设计 2026-10-13，首次实施 2026-10-15，状态收口 2026-10-20
-- 状态：静态装配、enum/受限 DTO Action 和接入工具已实现；公开 API 未最终冻结，尚未正式发布
-- 分类：跨组件 UI 契约与静态装配属于新的通用框架能力；具体 UI 和业务状态仍由组件负责
-- 适用范围：Flutter Widget 树内的跨组件局部 UI 组合
-- 推荐方案：可选 `ccrouter_ui` 模块，采用 UI Contract + generated Client + Renderer 静态注册
+首次接入按[UI 接入指南](../skills/ccrouter-integration-development/references/ui-fragments.md)操作。实施过程、早期取舍与当时的验证数字保留在[合并前快照](archive/20261024-consolidation/CCRouter-ui-fragment-design.md)和[归档索引](archive/20261024-consolidation/README.md)；当前证据统一由[验证索引](validation/README.md)导航。本文不表示 API 已冻结或正式发布门禁已关闭。
 
-本文保留设计依据与分阶段门禁，并同步当前实现边界。文中的 v1 指静态组合架构，
-不等于 Package 1.0 发布、UI schema 1 或公开 API 最终冻结。当前公开能力以
-[文档索引](README.md)、[接入指导](../skills/ccrouter-integration-development/references/ui-fragments.md)
-和生产代码为准。实施选择 UI Assembly wrapper，未让 Core Bundle 承载 Widget factory。
-实际 API、回归证据、核心价值和剩余边界见
-[实施验收记录](CCRouter-ui-fragment-acceptance.md)。
-该记录为 2026-10-15 历史快照；后续变更见
-[Action payload 设计与验证](CCRouter-ui-fragment-action-payload-design.md)及
-[独立首次接入验证](validation/ui-fragment-adoption-20261020/README.md)。
-当前用法以接入指南为入口；新人可用性、正式分发、真实平台及长期内存/性能不在已完成范围。
-
-## 1. 问题分析与能力边界
-
-### 1.1 生产场景
-
-A 的页面需要展示 B 提供的推荐列表、订单摘要或设备状态卡片。B 负责该 UI 的布局、
-加载、刷新和局部交互，A 负责摆放位置、输入参数和收到动作后的页面级决策。
-A 不应导入 B 的内部 Widget、页面或 Renderer，也不应复制 B 的展示逻辑。
-
-当前 Service 可以提供数据，但不能表达“B 拥有并输出完整的局部 UI”。直接导入 B 的
-Widget 虽然可运行，却使 A 依赖 B 的实现 Package，绕过 Contract、依赖校验和 Host 装配。
-将 Widget 放入 Service 返回值则会污染业务服务契约，并绕过现有生成器类型约束。
-
-缺失的是跨组件 UI 的类型化组合边界，不是 Flutter 缺少 Widget 组合能力。
-仅共享颜色、按钮或无业务状态的布局时，普通公共 Flutter UI Package 已足够。
-只有需要隐藏组件实现、校验消费依赖、由 Host 选择实现时，才使用本能力。
-
-### 1.2 与现有能力的关系
-
-| 场景 | 推荐机制 | 生命周期与职责 |
-| --- | --- | --- |
-| A 只需要 B 的数据，自行展示 | Service Contract | Service Scope 管理业务资源 |
-| A 需要 B 的一块完整局部 UI | 本文 UI Fragment | Flutter Element/State 管理实例 |
-| 多页面共享普通展示控件 | 公共 Flutter UI Package | 普通 Widget 组合 |
-| B 的完整页面成为 A 的 Tab | Host-owned Route Mount | Managed Route、Outlet、Route Scope |
-| 多组件给一个区域贡献卡片并排序 | 后续 Slot 扩展 | v1 不提供多贡献者装配 |
-
-UI Fragment 不创建 RouteEntry、导航栈、Route Scope 或 Fragment Scope。它不自带
-Deep Link、PopGuard、页面结果通道，也不冒充 Managed Route。完整页面组合继续使用
-[Host-owned Route Mount](CCRouter-host-owned-route-mount-design.md)。
-
-## 2. 候选方案与推荐
-
-| 方案 | 收益 | 代价与风险 | 决策 |
-| --- | --- | --- | --- |
-| A 导入 B 的 Widget | 最少代码，直接利用 Flutter | 实现耦合，无法独立替换和校验 | 小应用可用，不作为框架方案 |
-| 公共 UI Package + Service 数据 | 简单、现有能力即可支持 | A 接管 UI 编排，B 无法完整封装业务 UI | 保留为轻量选择 |
-| Service 返回 Widget/Builder | 看似可复用现有代理 | 污染服务契约，混入 Context、回调和视图生命周期 | 拒绝 |
-| 可选 UI Contract 与 Renderer | 类型安全、实现隔离、静态校验，可独立回退 | 增加生成、装配与生命周期边界 | 推荐 |
-| Core 内置动态 Slot/插件管理器 | 可做排序、热替换和动态发现 | 复杂度高，扩大 Core，当前场景不需要 | 延期 |
-
-推荐先实现单契约单实现的静态闭环。它提供可复用的业务 UI 边界，但不成为通用
-状态管理框架或 Android FragmentManager 的 Flutter 版本。
-
-## 3. 业界参考与取舍
-
-| 参考 | 借鉴 | 不照搬的部分 |
-| --- | --- | --- |
-| [Backstage Extensions](https://backstage.io/docs/frontend-system/architecture/extensions/) | 明确的类型化输入/输出、factory 与应用装配 | 插件树、动态贡献和通用扩展系统不进入 v1 |
-| [Compose API Guidelines](https://github.com/androidx/androidx/blob/androidx-main/compose/docs/compose-api-guidelines.md) | 显式输入、状态提升、清晰的实例身份 | 不要求 B 将全部业务状态提升到 A |
-| [Android Fragment Lifecycle](https://developer.android.com/guide/fragments/lifecycle) | 视图资源与长期业务资源分离，视图结束后清理引用 | 不新增 FragmentManager、事务或原生 Fragment 生命周期 |
-| [Flutter State Lifecycle](https://api.flutter.dev/flutter/widgets/State-class.html) | Element/State、Key、didUpdateWidget 和 dispose 是实例基础 | 不以路由事件或 Runtime shutdown 代替 State.dispose |
-
-这些参考支持契约与实现分离、装配与渲染分离、显式资源归属。CCRouter 的实现必须遵守
-Flutter 的实例和重建规则，不能把其他平台的容器模型直接迁移过来。
-
-## 4. 目标与 v1 非目标
+## 1. 目标与 v1 非目标
 
 目标是让 A 通过生成的类型化 Client 构建普通 Widget，B 通过 Renderer 提供实现，
 Host 在启动前完成确定性装配。配置错误应在生成或初始化阶段被拒绝。
@@ -93,9 +22,9 @@ v1 不提供动态 install/uninstall、运行时替换 Renderer、多贡献者 S
 上的 Flutter Widget 可按平台验证；原生 Fragment/ViewController/ArkUI 挂载不在承诺内。
 v1 不支持泛型 UI 契约、多个独立 Action 通道、集合、sealed Action 或任意函数型 Props。
 
-## 5. Package、API 与依赖分层
+## 2. Package、API 与依赖分层
 
-### 5.1 分层
+### 2.1 分层
 
 | 层 | 实现位置 | 可见内容与使用者 |
 | --- | --- | --- |
@@ -109,10 +38,10 @@ v1 不支持泛型 UI 契约、多个独立 Action 通道、集合、sealed Acti
 Pure Dart 契约、兼容算法与元数据不引入 Flutter。不得把 Widget factory 塞进现有
 Service Registry，也不得向业务暴露 Runtime、Host adapter 或通用 registry 查询。
 
-独立 UI 入口是新增的显式 API 层，实施时需同步 Integration Skill 的 import 白名单。
+独立 UI 入口是新增的显式 API 层，接入必须遵守 Integration Skill 的 import 白名单。
 它不意味着业务可以导入 `src` 或 Host/Generated SPI。
 
-### 5.2 应用依赖方向
+### 2.2 应用依赖方向
 
 ```text
 A implementation ----> B public contracts + generated UI Client
@@ -125,11 +54,11 @@ B 的 Renderer implementation 不从公开 Contract barrel 导出。Host 聚合�
 贡献，A 的生成 Client 只能依赖公开契约和 `ccrouter_ui`。普通共享 UI Package 不受此装配
 流程约束。
 
-## 6. 契约与消费 API
+## 3. 契约与消费 API
 
 以下展示当前已实现的声明形式；应用类型和 Owner 常量由实际 contracts Package 提供。
 
-### 6.1 B 声明 UI Contract
+### 3.1 B 声明 UI Contract
 
 ```dart
 @CCUIFragmentContract<OrderSummaryProps, OrderSummaryAction>(
@@ -147,10 +76,10 @@ final class OrderSummaryProps {
 enum OrderSummaryAction { openDetails, retry }
 ```
 
-后续 DTO 增量：Action 也可使用与 Props 相同约束的单一不可变 DTO，以返回 B 私有加载的
+Action 也可使用与 Props 相同约束的单一不可变 DTO，以返回 B 私有加载的
 selectedId/deviceId。该路径采用 UI schema 2 / Package Index schema 4；enum-only 保持原格式。
 enum 改 DTO 需要 major SemVer 与 A/B/Host 重生成，sealed union 继续不支持。完整约束与验证
-见 [Action payload 设计与验证](CCRouter-ui-fragment-action-payload-design.md)。
+见 [Action schema 与兼容](#action-schema-与兼容)。
 
 Contract marker 必须公开且非泛型；Props 为 final class，只提供 const generative constructor，
 不含继承、mixin、interface 或自定义方法；enum Action 和 DTO 中的 enum 均只能声明枚举值，
@@ -167,7 +96,7 @@ v1 每份 Props 必须有明确字段 schema，所有存储字段公开且 final
 修改字段期待 UI 自动刷新。更新应传入新的 Props；B 显式比较影响数据请求的字段。
 复杂对象、通用外部库类型、递归 schema 和 sealed Action 暂不开放。
 
-### 6.2 A 声明消费依赖
+### 3.2 A 声明消费依赖
 
 ```dart
 const accountComponent = CCComponent(
@@ -187,7 +116,7 @@ const accountComponent = CCComponent(
 不提供返回 null 的 optional Client。组件图记录 A 消费 B 的 UI 契约，禁止手写 identity
 或借其他组件的 Client 规避依赖声明。业务可见性判断仍由 A 决定。
 
-### 6.3 B 实现 Renderer
+### 3.3 B 实现 Renderer
 
 ```dart
 @CCUIFragmentRenderer(OrderSummaryFragmentContract)
@@ -210,7 +139,7 @@ Renderer 的 BuildContext 由返回 Widget 在自身 build 中获取，不存进
 B 可以在内部使用 Provider、Riverpod、Bloc 或普通 State；框架不强制状态管理库。
 它继续通过 B 自己的 generated Service Client 调用 App/Session Service。
 
-### 6.4 A 构建 Fragment
+### 3.4 A 构建 Fragment
 
 ```dart
 AFragments.orderSummary(
@@ -231,9 +160,9 @@ v1 不生成 BuildContext 参数，不将实例挂到全局 registry。
 `onAction` 是 UI 层的类型化 callback，不属于 Service Contract；现有 Service 对
 callback、Stream 和 Flutter 类型的限制保持不变。
 
-## 7. 生成与 Host 静态装配
+## 4. 生成与 Host 静态装配
 
-### 7.1 生成路径
+### 4.1 生成路径
 
 1. 解析 Contract 的 Owner、ID、版本、Props/Action schema 与 Renderer 签名。
 2. 生成契约描述与 shape fingerprint、消费依赖和消费组件专属 Client。
@@ -253,7 +182,7 @@ Host 的声明不能代替成员包。生成后用 `find <ui-id> <host-root> --u
 `ccrouter_ui` 是框架依赖，不需要业务组件 Portable State；外部分发业务组件仍需验证该状态。
 完整命令和配置见[接入指南](../skills/ccrouter-integration-development/references/ui-fragments.md)。
 
-### 7.2 避免反向依赖
+### 4.2 避免反向依赖
 
 实施选择 UI Assembly wrapper：`CCUIHostAssembly.attach` 先校验独立 Renderer/requirement
 列表，再通过 Host-only `CCHostAssembly.withLifecycleBindings` 保留原 Assembly 的全部输入，
@@ -262,7 +191,7 @@ Core 只负责通用 binding 的 attach、初始化失败回滚和 shutdown deta
 `ccrouter_ui -> ccrouter` 单向依赖；业务 `CCRegistry` 权限不变。
 Host 仍只把最终的一个 Assembly 交给 `CCRouterHost.initialize`。
 
-### 7.3 装配不变量
+### 4.3 装配不变量
 
 - 契约 identity 由 Owner component ID 与 contract ID 确定，实例 Key 不参与契约身份。
 - required 契约必须且只能有一个 Renderer；重复、缺失、Owner 不匹配均拒绝启动。
@@ -271,9 +200,9 @@ Host 仍只把最终的一个 Assembly 交给 `CCRouterHost.initialize`。
 - Host 不能在运行中更改映射；A/B 对比通过不同 Host Assembly 构建选择实现。
 - 替换实现仍属于同一 Owner 的部署选择；不能注册两个实现后“取第一个”。
 
-## 8. 生命周期、并发与资源归属
+## 5. 生命周期、并发与资源归属
 
-### 8.1 实例身份与更新
+### 5.1 实例身份与更新
 
 包装 Widget 与 B 的内部 Widget 保持稳定类型。相同位置、类型和 Key 下，Flutter 保留
 State；Props/active/callback 更新通过正常 Widget 更新路径传入。
@@ -285,7 +214,7 @@ Key 改变或树移除时由 Flutter dispose 旧实例。没有 Key 时遵循 Fl
 B 的异步请求必须使用请求 revision/token，防止旧 Props 的结果覆盖新 Props。
 只检查 mounted 不足以解决同一 State 中的请求竞争。
 
-### 8.2 active、隐藏与销毁
+### 5.2 active、隐藏与销毁
 
 `active` 默认 true，表示宿主允许当前实例执行活动行为，不表示像素曝光、应用前台
 或可见比例。A 在 Tab/Offstage/KeepAlive 场景中显式传递它；无法判断时不冒称自动检测。
@@ -295,7 +224,7 @@ B 的异步请求必须使用请求 revision/token，防止旧 Props 的结果�
 隐藏不会触发 dispose，恢复 active 不应无条件重建所有状态。
 `deactivate` 可能只是 GlobalKey 移动，不作为终止生命周期。
 
-### 8.3 Owner 与清理路径
+### 5.3 Owner 与清理路径
 
 | 资源 | Owner | 终止与清理 |
 | --- | --- | --- |
@@ -309,7 +238,7 @@ B 的异步请求必须使用请求 revision/token，防止旧 Props 的结果�
 初始化失败、请求晚到和 callback 抛错都不能跳过清理。Dart Future 不保证可强制取消，
 框架只保证失效结果不被接受；B 负责使用具体客户端的取消能力。
 
-### 8.4 Action、Session 与 Runtime 终止
+### 5.4 Action、Session 与 Runtime 终止
 
 Action 分发要求实例仍 mounted、active 且 Runtime generation 未失效。
 失效 Action 被丢弃并给出有界诊断，不重试、不转为全局 CCEvent。
@@ -327,14 +256,14 @@ shutdown 不能直接调用 B 的 State.dispose；资源释放最终由实际 un
 `runtimeGenerationMismatch`，不能静默迁入新 Runtime。旧 generation 的回调继续无效，
 不能自动重放旧 Action 或复活已关闭的 Service。
 
-### 8.5 Scope 与继承环境
+### 5.5 Scope 与继承环境
 
 Fragment 使用所在 Widget 树的 Theme、Locale、MediaQuery 和应用 Provider。
 B 不依赖 A 的私有 Provider schema；必要输入进入 Props 或明确的公共契约。
 Fragment 不建立额外 Scope。A 自己在确切 Route Context 内使用本地 Route Service
 仍遵守现有规则；跨组件 Route-scoped Service Proxy 仍不因此获得支持。
 
-## 9. 失败、诊断与可观测性
+## 6. 失败、诊断与可观测性
 
 契约/装配错误 fail closed，不静默显示空 Widget，也不退回任意候选实现。
 B 的业务加载错误由 B 展示 retry/empty/error UI；A 决定是否隐藏整个区域。
@@ -355,9 +284,9 @@ build 错误报告；其后代的异步/布局/事件错误仍由各自错误路
 
 诊断只记录 component/contract identity、版本、generation 和错误码，不记录 Props、
 Action payload、账号、Context、Widget 或 callback。只在绑定、mount/结束摘要及失败
-边界产生有界记录，不逐帧记录 build；性能与点击/曝光仍使用既有显式 Analytics 能力。
+边界产生有界记录，不逐帧记录 build；业务性能与点击/曝光由应用自有系统显式采集，框架不提供产品 Analytics。
 
-## 10. 兼容性与现有功能影响
+## 7. 兼容性与现有功能影响
 
 可选模块可以隔离运行路径，但不是零改造。影响主要集中在契约注解、Package Bundle、
 Host 聚合、生成器 metadata 和依赖校验；不需要修改导航 dispatch 或 Service 类型规则。
@@ -385,94 +314,58 @@ UI shape fingerprint 覆盖 identity、Props 字段/类型/必填与默认语义
 不能声明任意版本的新旧工具可以混用。enum-only 保留 UI schema 1 / Package Index 3，
 DTO 使用 UI schema 2 / Package Index 4；混合文档声明所需最高版本。
 enum 改 DTO 需要 major Contract SemVer、消费范围更新和 A/B/Host 重生成；
-配套来源与验证边界见[Action payload 记录](CCRouter-ui-fragment-action-payload-design.md)。
+配套来源与验证边界见[Action schema 与兼容](#action-schema-与兼容)。
 
-## 11. 实施顺序与验证门禁（原计划，执行结果见验收记录）
+## Action schema 与兼容
 
-以下 P0–P5 保留原实施顺序，其中“冻结”指当时的实现基线，不代表当前 API 已最终冻结。
-已执行项目及未验证边界分别以对应验收记录和独立接入报告为准。
+| 方案 | 收益 | 代价与决定 |
+| --- | --- | --- |
+| 保持 enum，使用普通 Widget | 无框架改动，支持普通数据型 callback | 缺少 Fragment 契约版本和静态实现装配；继续支持这种选型 |
+| 允许单个不可变 DTO Action | 两个单一选择结果可直接表达；复用 Props schema 校验 | 新增兼容和生成规则；当前支持此范围 |
+| sealed union Action | 多种动作携带不同 payload，可避免非法字段组合 | 类型闭包、穷尽性、指纹和代码生成成本更高；以真实异构动作需求触发 |
+| Object、Map 或任意 callback | 表面上通用 | 丢失静态契约与兼容证明，不采用 |
 
-### P0：冻结契约与基线
+当前范围：保留 enum；新增 public final class、const 生成构造器和 public final 存储字段的
+单 DTO Action。示意结果是 `RecommendationSelected(selectedId: ...)`，而不是多个动作共享
+`kind + nullable fields`。Generator 与 Plugin 均识别该受限类型。
+根 Action 只允许普通 enum 或受限不可变 DTO；scalar 不能直接作为 Action。
+DTO 字段仅接受受限 Pure Dart scalar、普通 enum 和嵌套 DTO，继续排除 Flutter 对象、Object/dynamic、
+函数、Future/Stream、泛型集合及带行为成员的类型。对多种异构输出先评估 union，
+不把单 DTO 宣称为已解决全部 Action 建模。
 
-建立 A 消费 B 订单摘要的最小夹具，比较直接 Widget 方案与 UI 契约方案。
-用编译夹具确认注解、DTO 白名单、Client 命名、导出路径与独立诊断 family。
-冻结 Bundle capability bridge 或 UI Assembly wrapper 中的一种路径。
-记录旧五类 fingerprint、无 UI 生成输出及启动/生成性能基线。
+### 契约、版本与发布
 
-### P1：契约生成与静态校验
+- 业务仍通过自身生成 Client 的 `onAction` 收到精确类型；不新增字符串 dispatcher、全局
+  payload store、Event 桥接或业务可访问的 Host/Registry。
+- enum-only 契约保留 UI schema 1 及原指纹算法和生成签名，作为兼容对照。
+- DTO Action 使用 UI schema 2；涉及该形状的 Contract、Renderer 和 consumer metadata
+  都带匹配版本。混合文档应声明其所需最高 UI schema；旧 Generator 必须明确拒绝。
+  DTO Package Index 升至 schema 4：真实旧 schema 3 读取器会直接接受 Index 3 的 metadata，
+  因此仅改变内部 UI 版本不能保证只读查询拒绝新能力。旧读取器已验证明确拒绝 Index 4。
+- Action 字段类型、nullable、构造参数/default、嵌套类型与公共导出纳入 shape fingerprint。
+  指纹记录形状，不包含运行时业务值。enum 改为 DTO 是破坏性契约变更，需要 major SemVer，
+  更新消费范围并重生成 A/B/Host；不会自动把原 enum 解释成 DTO。
+- Generator、Analyzer、运行时 UI 包和分发来源必须按验证过的组合发布；不静默升级 SDK
+  或 analyzer 约束。新 Plugin 行为仍走独立提交、远程 SHA、Demo pin 两阶段流程。
 
-实现 Props/Action schema、依赖声明、Renderer 签名验证、Client 和 opt-in metadata。
-覆盖非法类型、重复 identity、缺失依赖、Owner/版本错误与确定性生成测试。
-验证旧生成 fixture 字节稳定，声明 UI 的 Package 对旧工具明确失败。
+### 所有权、时序与失败
 
-### P2：Host 装配与 UI binding
+- B 创建不可变 Action 值；A 的实例局部同步 callback 接收值并决定业务操作。
+  Action 不持有 Context、State、资源所有权或释放句柄，不需要框架 dispose。
+- 保持 mount、active、Runtime generation 防护。隐藏时停止分发；卸载、shutdown 或
+  旧 generation 的 callback 不得影响新挂载。恢复后不重放期间丢弃的 Action。
+- 保持现有“调用最新 callback”语义。Props 更新本身不代表旧请求结果仍有效；B 根据
+  请求相关 Props 和 revision 取消工作或丢弃旧结果。A 若有异步决策，也需检查当前账号/实例。
+- Session 变化由应用清理私有数据、失效请求或更换子树 Key；不在 payload 中隐式引入
+  框架 Session、Fragment Scope 或导航结果 Future。
+- callback 抛错遵循现有 Flutter 错误处理，不吞错、不重试、不转 Event。
+  加载失败、空列表、取消、超时与重试仍由 B 的业务 UI 和请求所有者处理。
+- catalog、诊断、Trace 不保存 payload、selectedId、Context 或 callback。热路径直接传递
+  类型化值，无 JSON 编解码；跨进程、持久化及 Deep Link 不在范围内。
 
-实现不可变 catalog、原子兼容验证和 Host/Runtime generation binding。
-验证重复/缺失实现、失败回滚、shutdown/reinitialize、Host detach 与绑定隔离。
-业务仅通过 generated Client；测试支持放在明确测试入口，不公开 Runtime 构造能力。
 
-### P3：Widget 生命周期闭环
+## 验证与扩展边界
 
-验证相同 Key 更新 Props 保留 State、Key 改变释放资源、多个实例状态隔离、callback 更新、
-请求乱序与晚到结果、KeepAlive/隐藏/恢复、GlobalKey 移动、Session 切换和 Runtime 失效。
-为实际拥有的资源增加释放计数或定向 leak tracking；未验证真实设备长期 Heap 时不宣称
-已经证明无泄漏。对 idle 重建检查无重复 I/O、监听或全局实例缓存。
+[独立首次接入技术验证](validation/ui-fragment-adoption-20261020/README.md)保留 enum/DTO 两条路径的复现源码、日志和条件化成本；它不等于未参与实现者的可用性研究。历史实施验收、易用性审查及 Action 增量记录统一保留在[归档索引](archive/20261024-consolidation/README.md)。
 
-### P4：Demo 与接入指导
-
-Demo 契约和组件放在 `demo/modules/`，平台目录保留在 Host。
-至少演示订单摘要与推荐列表两个独立场景、列表中多实例、Tab KeepAlive 和业务 error UI。
-完成后同步根 README、文档状态、Integration Skill 及相关 references、DartDoc；
-对 Analyzer 的新诊断另按其独立验证与 Demo pin 流程实施，不冒称 IDE 已支持。
-
-### P5：回归、试用与发布门禁
-
-执行以下现有入口，并补齐新 UI 模块适用的 analyze/test 命令：
-
-```bash
-fvm flutter test packages/ccrouter_test/test
-fvm dart test --concurrency=1 packages/ccrouter_test/generator_test
-fvm dart run tool/documentation_check.dart
-fvm dart run tool/release_sensitivity_check.dart
-```
-
-从真实 Host `demo/` 执行生成检查和 Demo analyze/test；不要把仓库聚合根视作 Host。
-依赖解析若必须在根执行，使用 `CCROUTER_PUB_HOOK_DISABLE=1 fvm flutter pub get`，
-之后单独执行 `ccrouter generate demo --check`。
-生成 fixture、测试数量、命令与平台 smoke 以实施时实际结果为准。
-
-## 12. 灰度、回退与完成标准
-
-优先独立提交契约/生成、装配、Widget 层和 Demo，维持无 UI 路径可单独验证。
-生产首次接入只选一个局部区域，通过 Host 构建配置选择旧公共 Widget 路径或新 Fragment
-路径，不能在运行中替换 catalog。比较资源释放、滚动/重建与交互表现，再扩大接入。
-性能门槛以 P0 基线设定，不在没有测量时承诺固定启动或帧耗时。
-
-回退应用接入时切回旧组合路径，并重新生成不含 UI 声明的 Assembly；回退框架版本前
-必须同步恢复对应源码与生成物，不能仅降级运行库而保留新 UI metadata。
-不引入持久化 schema 迁移或业务数据修改。
-
-后续实施完成须同时满足：
-
-- A 不导入 B 实现，B 可在不同 A/Host 中复用，单实例和多实例均经验证。
-- 契约/依赖/版本/Renderer 错误有静态或初始化门禁，无静默 fallback。
-- Flutter 生命周期、Session 与 Runtime generation 的清理和晚到保护有回归证据。
-- 旧 Route、Service 及五类 Contract 的兼容目标和原子启动行为通过回归。
-- 实际开发者指导、Demo、API 注释与能力状态同步，发布版本要求明确。
-
-## 13. 后续扩展触发条件与代码依据
-
-仅当多个生产区域都需要独立贡献者、排序、过滤和冲突规则时再设计 Slot。
-动态注册与 Native UI 容器分别需要独立生命周期和平台协议，不从本方案推导为已支持。
-Host-owned Route Mount 与 UI Fragment 可以独立实施，彼此不作为前置依赖。
-
-实施复核入口：
-
-- [Component 注解与依赖模型](../packages/ccrouter_contracts/lib/src/component.dart)
-- [既有 Contract kind、SemVer 与兼容检查](../packages/ccrouter_contracts/lib/src/contract_compatibility.dart)
-- [Package Bundle 与 Host Assembly](../packages/ccrouter/lib/src/generated_package_bundle.dart)
-- [业务 API barrel](../packages/ccrouter/lib/ccrouter.dart)
-- [Service Proxy 类型边界](CCRouter-service-proxy-generation-design.md)
-- [生产场景演进流程](CCRouter-production-adoption-workflow.md)
-- [框架开发与 API 隔离规则](../skills/ccrouter-framework-development/SKILL.md)
-- [内存与生命周期审查](../skills/ccrouter-framework-development/references/memory-lifecycle-review.md)
+回归至少覆盖无 UI 组件兼容、required Owner/Renderer、指纹与旧 schema 拒绝、多实例/重排、Props 竞争、最新 callback、active、Runtime generation、卸载后晚到 Action 和引用释放。UI DevTools Catalog、集合、sealed Action、动态 Slot 与热替换尚未支持。新能力按[后续工作与触发条件](CCRouter-future-work-plan.md)评估；API 冻结、正式分发、平台矩阵与长期性能门禁只在[Release Readiness](CCRouter-release-readiness.md)维护。

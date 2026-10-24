@@ -1266,6 +1266,7 @@ void main() {
       Future<int> invoke({
         Duration? timeout,
         CCCancellationToken? cancellation,
+        Completer<void>? entered,
       }) => runtime.invokeService<ComponentService, int>(
         contractToken: contract,
         methodId: 'wait',
@@ -1273,6 +1274,7 @@ void main() {
         cancellation: cancellation,
         call: (_, context) {
           contexts.add(context);
+          entered?.complete();
           final completer = Completer<int>();
           pending.add(completer);
           return completer.future;
@@ -1287,7 +1289,9 @@ void main() {
       pending.first.complete(1);
 
       final token = CCCancellationToken();
-      final cancelled = invoke(cancellation: token);
+      final entered = Completer<void>();
+      final cancelled = invoke(cancellation: token, entered: entered);
+      await entered.future;
       token.cancel();
       await expectLater(cancelled, throwsA(isA<CCInvocationCancelledError>()));
       expect(contexts.last.cancellation.isCancelled, isTrue);

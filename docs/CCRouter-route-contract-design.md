@@ -6,8 +6,9 @@
 - 状态：统一 Contract-first 公开契约已实现并与当前生成器对齐
 
 本文只定义路由契约的 Package 边界和 Promotion 规则。路由整体语义以
-[路由子系统设计](CCRouter-route-design.md)为准，完成状态以
-[路由完成计划](CCRouter-route-completion-plan.md)为准。
+[Managed 路由与混合导航规范](CCRouter-route-design.md)为准，当前能力与验证边界以
+[文档索引](README.md)及[验证索引](validation/README.md)为准；版本门禁见
+[Contract 兼容规范](CCRouter-contract-compatibility.md)。
 
 ## 背景
 
@@ -94,10 +95,12 @@ demo_order/
 用 `@CCRouteImplementation(OrderDetailRouteContract)` 绑定页面。contracts Package 只依赖
 `ccrouter_contracts`，不能依赖 Flutter、实现组件或具体导航后端。
 
-业务与 owner barrel 都应转发同一个稳定 `<package>.contracts.api.g.dart`，但分别用 `show`
-控制实际公开符号。该 generated barrel 只包含 Route Consumer；Arguments、Definition 和 Codec
-属于 generated Owner SPI；authored Service、
-Command、Event 与 InitTask Contract 继续从其源文件显式导出。生成器校验转发链最终到达
+业务 barrel 从稳定 `<package>.contracts.api.g.dart` 显式导出 Route Consumer。Owner integration
+library 则从手写源文件显式导出 `OrderDetailRouteContract`，供实现组件使用
+`@CCRouteImplementation`；可按需转发业务 barrel，但生成的 Consumer 入口不能替代手写 schema。
+该 generated barrel 只包含 Route Consumer；Arguments、Definition 和 Codec 属于 generated
+Owner SPI，不通过手写 owner barrel 暴露。authored Service、Command、Event 与 InitTask Contract
+继续从其源文件显式导出。生成器校验转发链最终到达
 `lib/` 顶层 public library，`lib/src` 中间 barrel 本身不构成公开 API。`clean` 或首次生成时，
 CLI 会在 Builder 前为 authored barrel 的显式引用创建受管 placeholder，并在聚合阶段覆盖，
 避免 public barrel 与待生成文件形成首次构建循环。

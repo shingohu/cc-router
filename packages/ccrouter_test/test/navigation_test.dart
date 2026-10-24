@@ -87,26 +87,6 @@ final class TestIntent<R> implements CCRouteIntent<R> {
   final Object arguments;
 }
 
-final class TestTelemetryContextProvider
-    implements CCNavigationTelemetryContextProvider {
-  const TestTelemetryContextProvider(this.context);
-
-  final CCNavigationTelemetryContext? context;
-
-  @override
-  CCNavigationTelemetryContext? currentContext() => context;
-}
-
-final class MutableTelemetryContextProvider
-    implements CCNavigationTelemetryContextProvider {
-  MutableTelemetryContextProvider(this.context);
-
-  CCNavigationTelemetryContext? context;
-
-  @override
-  CCNavigationTelemetryContext? currentContext() => context;
-}
-
 final class FailingNavigationAdapter implements CCNavigationAdapter {
   @override
   void initialize(
@@ -2403,12 +2383,6 @@ void main() {
       final observed = <CCNavigationAspectEvent>[];
       final runtime = CCRouterRuntime.forTesting(
         navigationAdapter: CCMemoryNavigationAdapter(),
-        telemetryContextProvider: const TestTelemetryContextProvider(
-          CCNavigationTelemetryContext(
-            anonymousVisitorId: 'visitor-opaque',
-            applicationSessionId: 'app-session-opaque',
-          ),
-        ),
         globalInterceptors: [
           CCGlobalNavigationInterceptor(
             id: 'timed.policy',
@@ -2464,14 +2438,6 @@ void main() {
       expect(childFound.request.ownerComponentId, 'orders');
       expect(childFound.request.referrerRouteId, 'orders.detail');
       expect(childFound.request.redirectChain, ['orders.detail']);
-      expect(
-        childFound.request.telemetryContext?.anonymousVisitorId,
-        'visitor-opaque',
-      );
-      expect(
-        childFound.request.telemetryContext?.applicationSessionId,
-        'app-session-opaque',
-      );
       expect(childFound.request.toString(), isNot(contains('20002')));
       expect(childFound.timing?.resolve, isNotNull);
 
@@ -3117,72 +3083,6 @@ void main() {
             .where((error) => error.message.contains('invalid stable ID'))
             .length,
         invalidSources.length,
-      );
-      expect(
-        runtime.subscriberErrors.map((error) => error.message).join(),
-        isNot(contains('example.com')),
-      );
-      await runtime.dispose();
-    },
-  );
-
-  test(
-    'telemetry context accepts opaque IDs and drops malformed snapshots',
-    () async {
-      final provider = MutableTelemetryContextProvider(
-        const CCNavigationTelemetryContext(
-          anonymousVisitorId: '123e4567-e89b-12d3-a456-426614174000',
-          applicationSessionId: 'run_2026.09-20',
-        ),
-      );
-      final observed = <CCNavigationAspectEvent>[];
-      final runtime = CCRouterRuntime.forTesting(
-        navigationAdapter: CCMemoryNavigationAdapter(),
-        telemetryContextProvider: provider,
-        navigationAspects: [
-          CCNavigationAspect(id: 'telemetry', onFound: observed.add),
-        ],
-        components: [
-          routeComponent(
-            'orders',
-            (registry) => registry.registerRoute(pathRoute()),
-          ),
-        ],
-      );
-      runtime.initialize();
-
-      await runtime.goRoute(
-        const TestIntent<void>('orders.detail', RouteArgs('200')),
-      );
-      await Future<void>.delayed(Duration.zero);
-      expect(
-        observed.last.request.telemetryContext?.anonymousVisitorId,
-        '123e4567-e89b-12d3-a456-426614174000',
-      );
-
-      final invalidContexts = <CCNavigationTelemetryContext>[
-        const CCNavigationTelemetryContext(
-          anonymousVisitorId: 'account@example.com',
-        ),
-        const CCNavigationTelemetryContext(
-          anonymousVisitorId: 'anonymous',
-          applicationSessionId: 'https://example.com/session',
-        ),
-        CCNavigationTelemetryContext(anonymousVisitorId: 'v${'x' * 64}'),
-      ];
-      for (var index = 0; index < invalidContexts.length; index++) {
-        provider.context = invalidContexts[index];
-        await runtime.goRoute(
-          TestIntent<void>('orders.detail', RouteArgs('${201 + index}')),
-        );
-        await Future<void>.delayed(Duration.zero);
-        expect(observed.last.request.telemetryContext, isNull);
-      }
-      expect(
-        runtime.subscriberErrors
-            .where((error) => error.message.contains('invalid anonymous ID'))
-            .length,
-        invalidContexts.length,
       );
       expect(
         runtime.subscriberErrors.map((error) => error.message).join(),
@@ -4695,7 +4595,10 @@ void main() {
       final pushed = runtime.pushRoute<void>(
         const TestIntent<void>('orders.detail', RouteArgs('42')),
       );
-      pushed.then<void>((_) {}, onError: (Object _, StackTrace __) {});
+      final pushedAssertion = expectLater(
+        pushed,
+        throwsA(isA<CCNavigationInterceptorError>()),
+      );
       await Future<void>.delayed(Duration.zero);
       final pending = runtime.pendingNavigations.single;
       failResume = true;
@@ -4704,6 +4607,9 @@ void main() {
         runtime.resumePendingNavigation(pending.navigationId),
         throwsA(isA<CCNavigationInterceptorError>()),
       );
+      // Failure diagnostics and optional recovery belong to the original
+      // pipeline; Resume now completes independently in its caller's Zone.
+      await pushedAssertion;
       final failure = runtime.recentNavigationFailures.last.context;
       expect(failure.attempt, CCNavigationFailureAttempt.pendingResume);
       expect(failure.reason, CCNavigationFailureReason.interceptorFailed);

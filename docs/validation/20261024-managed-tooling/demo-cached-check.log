@@ -1,0 +1,10 @@
+CCRouter generation fast path hit; inputs and outputs are unchanged.
+CCRouter generated artifacts are up to date.
+CCRouter profile fast-path=hit
+CCRouter profile build-plan suggested=unchanged actual=unchanged reasons=verified-fast-path
+CCRouter profile input-delta=unchanged
+CCRouter profile output-delta={"files":0,"artifacts":{"dart":{"added":0,"removed":0,"modified":0},"metadata":{"added":0,"removed":0,"modified":0},"documentation":{"added":0,"removed":0,"modified":0},"state":{"added":0,"removed":0,"modified":0},"other":{"added":0,"removed":0,"modified":0}}}
+CCRouter profile total=451ms
+CCRouter profile trace={"schemaVersion":1,"command":"generate","outcome":"success","totalUs":451313,"spans":[{"name":"argument-resolution","startUs":0,"durationUs":4226,"status":"ok"},{"name":"build-context-resolution","startUs":5189,"durationUs":35895,"status":"ok"},{"name":"project-role-resolution","startUs":41095,"durationUs":5813,"status":"ok"},{"name":"generation-lock-wait","startUs":54408,"durationUs":16028,"status":"ok"},{"name":"workspace-load","startUs":70458,"durationUs":24495,"status":"ok","counts":{"packages":47}},{"name":"fast-path-inspection","startUs":95023,"durationUs":354231,"status":"ok"},{"name":"build-plan-inspection","startUs":451057,"durationUs":0,"status":"skipped"},{"name":"build-runner-process","startUs":451058,"durationUs":0,"status":"skipped"},{"name":"workspace-aggregation","startUs":451058,"durationUs":0,"status":"skipped"},{"name":"generation-lock-release","startUs":451072,"durationUs":218,"status":"ok"}]}
+CCRouter profile report=.dart_tool/ccrouter/v1/profiles/2a97516c354b6884/latest.json
+CCRouter generation finished: elapsed=451ms.

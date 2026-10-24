@@ -1,6 +1,8 @@
+import 'dart:async';
+
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
-import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart';
 
 final class _RecordedEvent implements CCEvent {
   const _RecordedEvent();
@@ -58,6 +60,59 @@ final class _InvalidInitializationRegistrar implements CCComponentRegistrar {
 }
 
 void main() {
+  testWidgets(
+    'timeout cleanup isolates throwing listeners and sanitizes diagnostics',
+    (tester) async {
+      final sink = _RecordingSink();
+      final runtime = CCRouterRuntime.forTesting(
+        diagnostics: CCDiagnosticsConfig(
+          sink: sink,
+          defaultMinimumLevel: CCDiagnosticLevel.debug,
+        ),
+      );
+      addTearDown(runtime.dispose);
+      final late = Completer<String>();
+      final started = Completer<void>();
+      final notifications = <int>[];
+      runtime.registerCommand<_RecordedCommand, String>((_, context) {
+        context.cancellation.addListener(() {
+          notifications.add(1);
+          throw StateError('private cleanup payload');
+        });
+        context.cancellation.addListener(() => notifications.add(2));
+        started.complete();
+        return late.future;
+      });
+      runtime.initialize();
+      final assertion = expectLater(
+        runtime.command(
+          const _RecordedCommand(),
+          // Fake time drives expiry after explicit handler admission. A short
+          // real deadline could expire before entry under parallel suite load,
+          // testing a different boundary and leaving `late` unobserved.
+          timeout: const Duration(minutes: 1),
+        ),
+        throwsA(isA<CCInvocationTimeoutError>()),
+      );
+      await started.future;
+      await tester.pump(const Duration(minutes: 1, seconds: 1));
+      await assertion;
+      late.completeError(StateError('private late payload'));
+      await tester.pump();
+      expect(notifications, [1, 2]);
+      expect(runtime.recentTraces.single.status, 'timedOut');
+      expect(runtime.recentTraces.single.errorType, 'CCInvocationTimeoutError');
+      final cleanup = sink.events.singleWhere(
+        (event) => event.operation == 'invocationCancellation',
+      );
+      expect(cleanup.errorType, 'StateError');
+      expect(
+        cleanup.invocationId,
+        runtime.recentTraces.single.context.invocationId,
+      );
+      expect(cleanup.target, isNull);
+    },
+  );
   test(
     'component assembly and Runtime startup emit full diagnostics',
     () async {

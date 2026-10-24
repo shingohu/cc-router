@@ -1,0 +1,50 @@
+Resolving dependencies...
+Downloading packages...
+  _fe_analyzer_shared 93.0.0 (110.0.0 available)
+  analyzer 10.0.1 (14.6.0 available)
+  app_links 7.0.0 (7.2.2 available)
+  app_links_linux 1.0.3 (1.0.4 available)
+  app_links_platform_interface 2.0.2 (2.0.4 available)
+  app_links_web 1.0.4 (1.0.5 available)
+  build 4.0.7 (5.0.0 available)
+  build_config 1.3.3 (1.4.0 available)
+  build_daemon 4.1.6 (4.1.7 available)
+  build_runner 2.15.1 (2.17.1 available)
+  build_test 3.5.16 (3.5.23 available)
+  built_collection 5.1.1 (5.1.2 available)
+  clock 1.1.2 (1.1.3 available)
+  coverage 1.15.1 (1.16.0 available)
+  dart_style 3.1.7 (3.1.14 available)
+  devtools_app_shared 0.4.0 (0.5.1 available)
+  devtools_extensions 0.4.0 (0.5.1 available)
+  devtools_shared 12.1.0 (14.0.0 available)
+  frontend_server_client 4.0.0 (4.2.0 available)
+  http_multi_server 3.2.2 (3.2.3 available)
+  matcher 0.12.19 (0.12.20 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.17.0 (1.19.0 available)
+  package_config 2.2.0 (3.0.0 available)
+  platform 3.1.6 (3.2.0 available)
+  pubspec_parse 1.6.0 (1.7.0 available)
+  shelf 1.4.2 (1.4.3 available)
+  shelf_static 1.1.3 (1.2.0 available)
+  source_gen 4.2.4 (4.3.1 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  test 1.30.0 (1.33.0 available)
+  test_api 0.7.10 (0.7.15 available)
+  test_core 0.6.16 (0.6.21 available)
+  unified_analytics 8.0.18 (8.3.0 available)
+  url_launcher 6.3.2 (6.3.3 available)
+  url_launcher_android 6.3.30 (6.3.33 available)
+  vector_math 2.2.0 (2.4.3 available)
+  vm_service 15.3.0 (15.4.0 available)
+  web 1.1.1 (1.1.2 available)
+  webview_flutter_android 4.12.0 (4.14.1 available)
+  webview_flutter_wkwebview 3.25.1 (3.27.2 available)
+Got dependencies!
+41 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/backend_wait_boundaries_test.dart
+00:00 +0: PopGuard Host replacement cannot receive the old Back async=false
+00:00 +1: PopGuard Host replacement cannot receive the old Back async=true
+00:00 +2: All tests passed!

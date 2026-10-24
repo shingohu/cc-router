@@ -1,8 +1,7 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart' as host;
 import 'package:ccrouter_core/ccrouter_core.dart';
-// ignore: deprecated_member_use
-import 'package:ccrouter_go_router/ccrouter_go_router.dart';
+import 'support/lifecycle_test_observer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:leak_tracker/leak_tracker.dart' show forceGC;
@@ -54,25 +53,23 @@ final class _LifecycleRegistrar implements CCComponentRegistrar {
 }
 
 void _attemptFailedPredictiveAdapterConstruction() {
-  final host = CCNavigationHost(id: 'predictive.construction.failure');
-  final observer = CCGoRouterNavigationObserver(
-    hostId: host.id,
-    outlet: 'root',
-  );
-  final router = GoRouter(
-    navigatorKey: host.navigatorKey,
-    observers: [observer],
-    routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
-  );
-  router.dispose();
   expect(
-    () => CCGoRouterAdapter(
-      router: router,
-      host: host,
-      observers: [observer],
+    () => host.CCManagedNavigationAdapter(
+      host: CCNavigationHost(),
+      catalog: host.CCFlutterRouteCatalog(const []),
       enablePredictiveBack: true,
+      shellBindings: [
+        host.CCManagedShellBinding(
+          shellId: 'duplicate',
+          builder: (_, _) => const SizedBox(),
+        ),
+        host.CCManagedShellBinding(
+          shellId: 'duplicate',
+          builder: (_, _) => const SizedBox(),
+        ),
+      ],
     ),
-    throwsA(anything),
+    throwsArgumentError,
   );
 }
 
@@ -110,6 +107,20 @@ _disposedManagedPredictiveBridge() {
 void main() {
   LeakTesting.enable();
   LeakTracking.warnForUnsupportedPlatforms = false;
+  testWidgets('retained disposed foreign bridge releases its Adapter owner', (
+    tester,
+  ) async {
+    final retained = _disposedForeignBridge();
+    await tester.pump();
+    await tester.runAsync(
+      () => forceGC(fullGcCycles: 3, timeout: const Duration(seconds: 20)),
+    );
+    expect(retained.owner.target, isNull);
+    expect(
+      () => retained.bridge.push(),
+      throwsA(isA<CCNavigationAdapterError>()),
+    );
+  });
   final leakSettings = LeakTesting.settings.withTrackedAll().withIgnored(
     createdByTestHelpers: true,
   );
@@ -161,10 +172,7 @@ void main() {
     experimentalLeakTesting: leakSettings,
     (tester) async {
       final host = CCNavigationHost(id: 'lifecycle.leak');
-      final observer = CCGoRouterNavigationObserver(
-        hostId: host.id,
-        outlet: 'root',
-      );
+      final observer = LifecycleTestObserver(hostId: host.id, outlet: 'root');
 
       await tester.pumpWidget(
         CCRouterApp(
@@ -208,11 +216,11 @@ void main() {
             value != CCPageTransitionType.platformDefault &&
             value != CCPageTransitionType.none,
       )) {
-        final page = CCGoRouterPage<void>(
+        final route = host.CCFlutterRouteFactory.createRoute<void>(
+          context: navigatorKey.currentContext!,
           child: Text(transition.name),
           presentation: CCPagePresentation(transition: transition),
         );
-        final route = page.createRoute(navigatorKey.currentContext!);
         navigatorKey.currentState!.push<void>(route);
         await tester.pumpAndSettle();
         navigatorKey.currentState!.pop();
@@ -245,4 +253,19 @@ void main() {
       expect(retained.owner.target, isNull);
     },
   );
+}
+
+({
+  host.CCForeignRouteBridge bridge,
+  WeakReference<host.CCManagedNavigationAdapter> owner,
+})
+_disposedForeignBridge() {
+  final adapter = host.CCManagedNavigationAdapter(
+    host: CCNavigationHost(),
+    catalog: host.CCFlutterRouteCatalog(const []),
+  )..initialize(const []);
+  final bridge = adapter.foreignRouteBridge;
+  bridge.pushOpaque(location: 'fixture');
+  adapter.dispose();
+  return (bridge: bridge, owner: WeakReference(adapter));
 }

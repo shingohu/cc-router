@@ -2,12 +2,10 @@ import 'dart:async';
 
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
-// ignore: deprecated_member_use
-import 'package:ccrouter_go_router/ccrouter_go_router.dart';
+import 'support/managed_test_home.dart';
 import 'package:ccrouter_test/ccrouter_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:go_router/go_router.dart';
 
 final class _Args {
   const _Args(this.id);
@@ -76,7 +74,7 @@ final class _Resource implements CCDisposable {
 
 final class _Harness {
   _Harness(this.backend, this.contexts, this.resources);
-  final CCGoRouterBackend backend;
+  final CCManagedRouterBackend backend;
   final Map<String, BuildContext> contexts;
   final Map<String, _Resource> resources;
   CCRouteEntryHandle handle(String id) =>
@@ -86,7 +84,7 @@ final class _Harness {
 
 Future<_Harness> _mount(
   WidgetTester tester, {
-  bool externalExit = false,
+  bool denyClose = false,
   bool nested = false,
 }) async {
   final placement = nested
@@ -98,10 +96,16 @@ Future<_Harness> _mount(
         CCComponentManifest(
           id: 'close',
           version: '1.0.0',
-          registrar: _Registrar(placement: placement),
+          registrar: WithTestHome(
+            _Registrar(placement: placement),
+            placement: placement,
+          ),
         ),
       ],
     ),
+    globalPopGuards: denyClose
+        ? [CCGlobalPopGuard(id: 'close.deny', guard: _DenyClose())]
+        : const [],
   );
   final contexts = <String, BuildContext>{};
   final resources = <String, _Resource>{};
@@ -110,92 +114,100 @@ Future<_Harness> _mount(
     builder: (args) => Builder(
       builder: (context) {
         final id = args.path['id']!;
-        contexts[id] = context;
-        resources[id] = CCRouter.routeService<_Resource>(context);
+        final resource = CCRouter.routeService<_Resource>(context);
+        if (ModalRoute.of(context)!.isCurrent) {
+          contexts[id] = context;
+          resources[id] = resource;
+        }
         return Text('page-$id');
       },
     ),
   );
-  final shellKey = GlobalKey<NavigatorState>();
-  final shellObserver = CCGoRouterNavigationObserver(outlet: 'content');
-  final nestedDetail = GoRoute(
-    path: '/detail/:id',
-    pageBuilder: (_, state) => CCGoRouterPage<Object?>(
-      key: state.pageKey,
-      name: 'close.detail',
-      presentation: const CCPagePresentation(),
-      child: CCRouterHostBinding.bindRouteEntry(
-        payload: state.extra,
-        child: Builder(
-          builder: (context) {
-            final id = state.pathParameters['id']!;
-            contexts[id] = context;
-            resources[id] = CCRouter.routeService<_Resource>(context);
-            return Text('page-$id');
-          },
-        ),
-      ),
-    ),
-  );
-  final shell = ShellRoute(
-    navigatorKey: shellKey,
-    observers: [shellObserver],
-    builder: (_, _, child) => child,
-    routes: [
-      GoRoute(path: '/nested-home', builder: (_, _) => const Text('home')),
-      nestedDetail,
-    ],
-  );
-  final backend = CCGoRouterBackend.managed(
+  final backend = CCManagedRouterBackend(
     host: nested
-        ? CCNavigationHost(navigatorKeys: {'content': shellKey})
+        ? CCNavigationHost(
+            navigatorKeys: {'content': GlobalKey<NavigatorState>()},
+          )
         : null,
-    initialLocation: nested ? '/nested-home' : '/',
-    overrides: nested
-        ? {
-            'close.detail': CCGoRouterRouteOverride(
-              binding: CCGoRouterRouteBinding(
-                routeId: 'close.detail',
-                goRoute: nestedDetail,
-              ),
-              includeInRootRoutes: false,
-            ),
-          }
-        : const {},
-    shells: nested
+    routeCatalog: CCFlutterRouteCatalog(
+      [testHomeDestination(placement: placement), destination],
+      componentVersions: const {'close': '1.0.0'},
+    ),
+    shellBindings: nested
         ? [
-            CCGoRouterShellBinding(
+            CCManagedShellBinding(
               shellId: 'workspace',
-              route: shell,
-              initialOutlet: 'content',
-              outlets: {'content': shellKey},
+              builder: (_, shell) => shell.navigatorFor('content'),
             ),
           ]
         : const [],
-    outletObservers: nested ? [shellObserver] : const [],
-    catalog: CCFlutterRouteCatalog(
-      [destination],
-      componentVersions: const {'close': '1.0.0'},
-    ),
-    hostRoutes: [
-      GoRoute(
-        path: '/',
-        onExit: externalExit ? (_, _) async => true : null,
-        builder: (_, _) => const Text('home'),
-      ),
-    ],
   );
   await tester.pumpWidget(
     CCRouterApp.managed(
       backend: backend,
-      child: MaterialApp.router(routerConfig: backend.router),
+      child: MaterialApp.router(routerConfig: backend.routerConfig),
     ),
   );
   await tester.pumpAndSettle();
   return _Harness(backend, contexts, resources);
 }
 
+final class _DenyClose implements CCPopGuard {
+  @override
+  CCPopGuardDecision evaluate(CCPopGuardContext context) =>
+      const CCPopDeny(code: 'close_denied');
+}
+
+Iterable<CCRouteEntrySnapshot> get _detailEntries => CCRouter.activeRouteEntries
+    .where((entry) => entry.routeId == 'close.detail');
+
 void main() {
+  for (final nested in [false, true]) {
+    for (final rootPopup in nested ? [false, true] : [true]) {
+      testWidgets(
+        'last declarative close retains foreign popup: nested=$nested root=$rootPopup',
+        (tester) async {
+          final h = await _mount(tester, nested: nested);
+          await CCRouter.navigator.go(const _Intent('A'));
+          await tester.pumpAndSettle();
+          final target = h.handle('A');
+          final oldContext = h.contexts['A']!;
+          var popupDone = false;
+          final popup =
+              showDialog<String>(
+                context: oldContext,
+                useRootNavigator: rootPopup,
+                builder: (_) =>
+                    const AlertDialog(content: Text('last-entry-popup')),
+              ).then((value) {
+                popupDone = true;
+                return value;
+              });
+          await tester.pumpAndSettle();
+          expect(
+            (await CCRouter.navigator.close(target)).status,
+            CCRouteCloseStatus.closed,
+          );
+          await tester.pumpAndSettle();
+          expect(_detailEntries, isEmpty);
+          expect(popupDone, isFalse);
+          expect(find.text('last-entry-popup'), findsOneWidget);
+          expect(h.resources['A']!.disposals, 1);
+          expect(oldContext.mounted, isFalse);
+          final popupContext = tester.element(find.text('last-entry-popup'));
+          Navigator.of(popupContext).pop('foreign-result');
+          expect(await popup, 'foreign-result');
+          await tester.pumpAndSettle();
+          expect(find.text('last-entry-popup'), findsNothing);
+          expect(
+            (await CCRouter.navigator.close(target)).status,
+            CCRouteCloseStatus.notFound,
+          );
+          expect(tester.takeException(), isNull);
+        },
+      );
+    }
+  }
   testWidgets(
     'handle lookup from mounted old context returns null after shutdown and restart',
     (tester) async {
@@ -224,7 +236,7 @@ void main() {
       final h = await _mount(tester);
       final a = h.push('A');
       await tester.pumpAndSettle();
-      final entry = CCRouter.activeRouteEntries.single;
+      final entry = _detailEntries.single;
       final foreign = CCRouterTestHost();
       foreign.initialize();
       addTearDown(foreign.dispose);
@@ -257,7 +269,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(captured, isNull);
-      expect(CCRouter.activeRouteEntries.single.handle, same(entry.handle));
+      expect(_detailEntries.single.handle, same(entry.handle));
       Navigator.of(tester.element(find.text('foreign-runtime-popup'))).pop();
       await popup;
       await tester.pumpAndSettle();
@@ -338,47 +350,46 @@ void main() {
     expect(find.text('home'), findsOneWidget);
   });
 
-  testWidgets(
-    'foreign Page with the same location and key is not targeted by close',
-    (tester) async {
-      final h = await _mount(tester);
-      final a = h.push('A');
-      await tester.pumpAndSettle();
-      final target = h.handle('A');
-      final configuration =
-          h.backend.router.routerDelegate.currentConfiguration;
-      final imperative = configuration.matches
-          .whereType<ImperativeRouteMatch>()
-          .single;
-      final navigator = Navigator.of(h.contexts['A']!);
-      navigator.push(
-        MaterialPageRoute<void>(
-          settings: MaterialPage<void>(
-            key: imperative.pageKey,
-            name: '/detail/A',
-            child: const Text('foreign-same-page'),
+  for (final reuseSettings in [false, true]) {
+    testWidgets(
+      'foreign Page with reused key/settings is not targeted: $reuseSettings',
+      (tester) async {
+        final h = await _mount(tester);
+        final a = h.push('A');
+        await tester.pumpAndSettle();
+        final target = h.handle('A');
+        final page = ModalRoute.of(h.contexts['A']!)!.settings as Page;
+        final navigator = Navigator.of(h.contexts['A']!);
+        navigator.push(
+          MaterialPageRoute<void>(
+            settings: reuseSettings
+                ? page
+                : MaterialPage<void>(
+                    key: page.key,
+                    name: '/detail/A',
+                    child: const Text('foreign-same-page'),
+                  ),
+            builder: (_) => const Text('foreign-same-page'),
           ),
-          builder: (_) => const Text('foreign-same-page'),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(
-        (await CCRouter.navigator.close(target, result: 'A')).status,
-        CCRouteCloseStatus.closed,
-      );
-      expect(await a, 'A');
-      await tester.pumpAndSettle();
-      expect(find.text('foreign-same-page'), findsOneWidget);
-      expect(find.text('page-A'), findsNothing);
-      expect(find.text('home'), findsNothing);
+        expect(
+          (await CCRouter.navigator.close(target, result: 'A')).status,
+          CCRouteCloseStatus.closed,
+        );
+        expect(await a, 'A');
+        await tester.pumpAndSettle();
+        expect(find.text('foreign-same-page'), findsOneWidget);
+        expect(find.text('page-A'), findsNothing);
+        expect(find.text('home'), findsNothing);
 
-      navigator.pop();
-      await tester.pumpAndSettle();
-      expect(find.text('home'), findsOneWidget);
-    },
-  );
-
+        navigator.pop();
+        await tester.pumpAndSettle();
+        expect(find.text('home'), findsOneWidget);
+      },
+    );
+  }
   testWidgets(
     'foreign same-location push before managed observer keeps exact identity',
     (tester) async {
@@ -447,7 +458,7 @@ void main() {
         CCRouter.navigator.close(bHandle, result: 42),
         throwsA(isA<CCRouteResultTypeError>()),
       );
-      expect(CCRouter.activeRouteEntries.single.handle, same(bHandle));
+      expect(_detailEntries.single.handle, same(bHandle));
       expect(
         (await CCRouter.navigator.close(bHandle, result: 'second')).status,
         CCRouteCloseStatus.closed,
@@ -465,7 +476,7 @@ void main() {
       final h = await _mount(tester, nested: true);
       expect(
         CCRouter.routeEntryHandleOf(tester.element(find.text('home'))),
-        isNull,
+        isNotNull,
       );
       final a = h.push('A');
       await tester.pumpAndSettle();
@@ -536,75 +547,72 @@ void main() {
   });
 
   testWidgets(
-    'declarative unsupported close preserves configuration, Popup and Scope',
+    'declarative close removes its exact Scope while preserving foreign Popup',
     (tester) async {
       final h = await _mount(tester);
       await CCRouter.navigator.go(const _Intent('A'));
       await tester.pumpAndSettle();
       final target = h.handle('A');
-      final configuration =
-          h.backend.router.routerDelegate.currentConfiguration;
-      final entries = CCRouter.activeRouteEntries.map((e) => e.handle).toList();
       final popup = showDialog<void>(
         context: h.contexts['A']!,
-        builder: (_) => const AlertDialog(content: Text('unsupported-popup')),
+        builder: (_) => const AlertDialog(content: Text('declarative-popup')),
       );
       await tester.pumpAndSettle();
       expect(
         (await CCRouter.navigator.close(target)).status,
-        CCRouteCloseStatus.unsupported,
+        CCRouteCloseStatus.closed,
       );
       await tester.pumpAndSettle();
-      expect(
-        h.backend.router.routerDelegate.currentConfiguration,
-        same(configuration),
-      );
-      expect(CCRouter.activeRouteEntries.map((e) => e.handle), entries);
-      expect(find.text('unsupported-popup'), findsOneWidget);
-      expect(h.resources['A']!.disposals, 0);
-      Navigator.of(tester.element(find.text('unsupported-popup'))).pop();
+      expect(_detailEntries, isEmpty);
+      expect(find.text('declarative-popup'), findsOneWidget);
+      expect(h.resources['A']!.disposals, 1);
+      Navigator.of(tester.element(find.text('declarative-popup'))).pop();
       await popup;
       await tester.pumpAndSettle();
-      expect(find.text('page-A'), findsOneWidget);
+      expect(find.text('page-A'), findsNothing);
+      expect(
+        (await CCRouter.navigator.close(target)).status,
+        CCRouteCloseStatus.notFound,
+      );
+      expect(h.resources['A']!.disposals, 1);
     },
   );
 
-  testWidgets(
-    'onExit unsupported close leaves declaration, Popup and result untouched',
-    (tester) async {
-      final h = await _mount(tester, externalExit: true);
-      var completed = false;
-      final a = h.push('A').then((value) {
-        completed = true;
-        return value;
-      });
-      unawaited(a.catchError((_) => null));
-      await tester.pumpAndSettle();
-      final configuration =
-          h.backend.router.routerDelegate.currentConfiguration;
-      final target = h.handle('A');
-      final popup = showDialog<void>(
-        context: h.contexts['A']!,
-        builder: (_) => const AlertDialog(content: Text('unsupported-popup')),
-      );
-      await tester.pumpAndSettle();
-      expect(
-        (await CCRouter.navigator.close(target)).status,
-        CCRouteCloseStatus.unsupported,
-      );
-      await tester.pumpAndSettle();
-      expect(
-        h.backend.router.routerDelegate.currentConfiguration,
-        same(configuration),
-      );
-      expect(CCRouter.activeRouteEntries.single.handle, same(target));
-      expect(completed, isFalse);
-      expect(find.text('unsupported-popup'), findsOneWidget);
-      expect(h.resources['A']!.disposals, 0);
-      Navigator.of(tester.element(find.text('unsupported-popup'))).pop();
-      await popup;
-      await tester.pumpAndSettle();
-      expect(find.text('page-A'), findsOneWidget);
-    },
-  );
+  testWidgets('denied close preserves configuration, Popup, result and Scope', (
+    tester,
+  ) async {
+    final h = await _mount(tester, denyClose: true);
+    var completed = false;
+    final a = h.push('A').then((value) {
+      completed = true;
+      return value;
+    });
+    unawaited(a.catchError((_) => null));
+    await tester.pumpAndSettle();
+    final configuration =
+        h.backend.routerConfig.routerDelegate.currentConfiguration!.uri;
+    final target = h.handle('A');
+    final popup = showDialog<void>(
+      context: h.contexts['A']!,
+      builder: (_) => const AlertDialog(content: Text('denied-popup')),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      (await CCRouter.navigator.close(target)).status,
+      CCRouteCloseStatus.guardDenied,
+    );
+    await tester.pumpAndSettle();
+    expect(
+      h.backend.routerConfig.routerDelegate.currentConfiguration!.uri,
+      configuration,
+    );
+    expect(_detailEntries.single.handle, same(target));
+    expect(completed, isFalse);
+    expect(find.text('denied-popup'), findsOneWidget);
+    expect(h.resources['A']!.disposals, 0);
+    Navigator.of(tester.element(find.text('denied-popup'))).pop();
+    await popup;
+    await tester.pumpAndSettle();
+    expect(find.text('page-A'), findsOneWidget);
+  });
 }

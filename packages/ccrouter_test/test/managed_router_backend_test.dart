@@ -50,11 +50,13 @@ CCRouteDefinition<_Arguments, String> _detailDefinition() => CCRouteDefinition(
 );
 
 final class _RouteResource implements CCDisposable {
-  bool disposed = false;
+  int disposeCount = 0;
+
+  bool get disposed => disposeCount > 0;
 
   @override
   Future<void> dispose() async {
-    disposed = true;
+    disposeCount += 1;
   }
 }
 
@@ -86,6 +88,25 @@ final class _TogglePopGuard implements CCPopGuard {
   }
 }
 
+final class _CloseManagedDetailPolicy implements CCRouteRevalidationPolicy {
+  const _CloseManagedDetailPolicy();
+
+  @override
+  CCRouteRevalidationDecision evaluate(CCRouteRevalidationContext context) =>
+      context.entry.routeId == 'managed.detail'
+      ? const CCRouteRevalidationClose()
+      : const CCRouteRevalidationKeep();
+}
+
+final class _ReplaceManagedDetailPolicy implements CCRouteRevalidationPolicy {
+  const _ReplaceManagedDetailPolicy();
+  @override
+  CCRouteRevalidationDecision evaluate(CCRouteRevalidationContext context) =>
+      context.entry.routeId == 'managed.detail'
+      ? const CCRouteRevalidationReplace(_Intent('B'))
+      : const CCRouteRevalidationKeep();
+}
+
 final class _Harness {
   const _Harness({
     required this.backend,
@@ -104,6 +125,9 @@ final class _Harness {
 Future<_Harness> _mount(
   WidgetTester tester, {
   List<CCGlobalPopGuard> globalPopGuards = const [],
+  List<CCGlobalRouteRevalidationPolicy> routeRevalidationPolicies = const [],
+  bool enablePredictiveBack = false,
+  ThemeData? theme,
 }) async {
   CCRouterHost.initialize(
     hostAssembly: CCHostAssembly.fromComponents(
@@ -116,6 +140,7 @@ Future<_Harness> _mount(
       ],
     ),
     globalPopGuards: globalPopGuards,
+    routeRevalidationPolicies: routeRevalidationPolicies,
   );
   final contexts = <String, BuildContext>{};
   final resources = <String, _RouteResource>{};
@@ -139,11 +164,15 @@ Future<_Harness> _mount(
       [destination(_homeDefinition()), destination(_detailDefinition())],
       componentVersions: const {'managed': '1.0.0'},
     ),
+    enablePredictiveBack: enablePredictiveBack,
   );
   await tester.pumpWidget(
     CCRouterApp.managed(
       backend: backend,
-      child: MaterialApp.router(routerConfig: backend.routerConfig),
+      child: MaterialApp.router(
+        theme: theme,
+        routerConfig: backend.routerConfig,
+      ),
     ),
   );
   await tester.pumpAndSettle();
@@ -311,6 +340,160 @@ void main() {
     expect(await b, 'closed-B');
   });
 
+  for (final guarded in [false, true]) {
+    testWidgets(
+      'Pop preserves outgoing content during animation (guarded=$guarded)',
+      (tester) async {
+        final guard = _TogglePopGuard()..allow = true;
+        final harness = await _mount(
+          tester,
+          theme: ThemeData(platform: TargetPlatform.iOS),
+          globalPopGuards: guarded
+              ? [CCGlobalPopGuard(id: 'managed.animation.guard', guard: guard)]
+              : [],
+        );
+        final result = CCRouter.navigator.push<String>(const _Intent('A'));
+        await tester.pumpAndSettle();
+        final resource = harness.resources['A']!;
+        final route = ModalRoute.of(harness.contexts['A']!)!;
+
+        CCRouter.navigator.pop(result: 'done');
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 50));
+        expect(route.animation!.status, AnimationStatus.reverse);
+        expect(route.animation!.value, greaterThan(0));
+        expect(find.text('managed-A', skipOffstage: false), findsOneWidget);
+        expect(await result, 'done');
+        expect(resource.disposeCount, 0);
+        expect(CCRouter.activeRouteEntries, hasLength(1));
+
+        await tester.pumpAndSettle();
+        expect(find.text('managed-A', skipOffstage: false), findsNothing);
+        expect(resource.disposeCount, 1);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  for (final terminal in ['pop', 'remove', 'replace']) {
+    testWidgets('foreign $terminal retires its final empty anchor', (
+      tester,
+    ) async {
+      final harness = await _mount(tester);
+      final resource = harness.resources['home']!;
+      final navigator = harness.backend.host.navigatorKey.currentState!;
+      final popup = DialogRoute<void>(
+        context: harness.contexts['home']!,
+        builder: (_) => const Dialog(child: Text('foreign-anchor')),
+      );
+      unawaited(navigator.push(popup));
+      await tester.pumpAndSettle();
+      expect(
+        (await CCRouter.navigator.close(harness.handle('home'))).status,
+        CCRouteCloseStatus.closed,
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('managed-home', skipOffstage: false), findsNothing);
+      expect(resource.disposeCount, 1);
+
+      switch (terminal) {
+        case 'pop':
+          navigator.pop();
+        case 'remove':
+          navigator.removeRoute(popup);
+        case 'replace':
+          final replacement = DialogRoute<void>(
+            context: tester.element(find.text('foreign-anchor')),
+            builder: (_) => const Dialog(child: Text('foreign-replacement')),
+          );
+          navigator.replace(oldRoute: popup, newRoute: replacement);
+          await tester.pumpAndSettle();
+          expect(find.text('foreign-replacement'), findsOneWidget);
+          expect(navigator.widget.pages, hasLength(1));
+          navigator.removeRoute(replacement);
+      }
+      await tester.pumpAndSettle();
+      final result = CCRouter.navigator.push<String>(const _Intent('A'));
+      await tester.pumpAndSettle();
+      expect(navigator.widget.pages, hasLength(1));
+      expect(navigator.canPop(), isFalse);
+      expect(CCRouter.activeRouteEntries, hasLength(1));
+      expect(resource.disposeCount, 1);
+      expect(tester.takeException(), isNull);
+      final pendingError = expectLater(
+        result,
+        throwsA(isA<CCNavigationAdapterError>()),
+      );
+      await CCRouterHost.shutdown();
+      await pendingError;
+    });
+  }
+
+  for (final ending in ['shutdown', 'unmount']) {
+    testWidgets(
+      'render exit releases its Scope on $ending without more animation',
+      (tester) async {
+        final harness = await _mount(tester);
+        final result = CCRouter.navigator.push<String>(const _Intent('A'));
+        await tester.pumpAndSettle();
+        final resource = harness.resources['A']!;
+        CCRouter.navigator.pop(result: 'done');
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 50));
+        expect(await result, 'done');
+        expect(resource.disposeCount, 0);
+        if (ending == 'shutdown') {
+          await CCRouterHost.shutdown();
+        } else {
+          await tester.pumpWidget(const SizedBox.shrink());
+          await tester.pump();
+        }
+        expect(resource.disposeCount, 1);
+        await CCRouterHost.shutdown();
+        await tester.pumpAndSettle();
+        expect(resource.disposeCount, 1);
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets(
+    'removing one of multiple foreign popups keeps the required anchor',
+    (tester) async {
+      final harness = await _mount(tester);
+      final navigator = harness.backend.host.navigatorKey.currentState!;
+      final context = harness.contexts['home']!;
+      final popups = [
+        for (var i = 0; i < 2; i++)
+          DialogRoute<void>(
+            context: context,
+            builder: (_) => Dialog(child: Text('foreign-$i')),
+          ),
+      ];
+      for (final popup in popups) {
+        unawaited(navigator.push(popup));
+        await tester.pumpAndSettle();
+      }
+      await CCRouter.navigator.close(harness.handle('home'));
+      await tester.pumpAndSettle();
+      navigator.removeRoute(popups.first);
+      await tester.pumpAndSettle();
+      expect(find.text('foreign-1'), findsOneWidget);
+      expect(navigator.widget.pages, hasLength(1));
+      expect(harness.resources['home']!.disposeCount, 1);
+      navigator.removeRoute(popups.last);
+      await tester.pumpAndSettle();
+      final result = CCRouter.navigator.push<String>(const _Intent('A'));
+      await tester.pumpAndSettle();
+      expect(navigator.canPop(), isFalse);
+      expect(navigator.widget.pages, hasLength(1));
+      await CCRouter.navigator.close(harness.handle('A'), result: 'closed');
+      await tester.pumpAndSettle();
+      expect(await result, 'closed');
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('exact close does not consume a foreign PopupRoute', (
     tester,
   ) async {
@@ -420,6 +603,90 @@ void main() {
     expect(route.popDisposition, RoutePopDisposition.pop);
     expect(CCRouter.isInitialized, isFalse);
   });
+
+  testWidgets(
+    'revalidation Replace commits a rendered Managed page before its Pop result',
+    (tester) async {
+      final harness = await _mount(
+        tester,
+        routeRevalidationPolicies: const [
+          CCGlobalRouteRevalidationPolicy(
+            id: 'managed.replace',
+            policy: _ReplaceManagedDetailPolicy(),
+          ),
+        ],
+      );
+      final originalResult = CCRouter.navigator.push<String>(
+        const _Intent('A'),
+      );
+      await tester.pumpAndSettle();
+      final originalResource = harness.resources['A']!;
+      final report = await tester.runAsync(
+        () => CCRouter.revalidateActiveRoutes(
+          reason: 'permission_changed',
+        ).timeout(const Duration(seconds: 1)),
+      );
+      await tester.pumpAndSettle();
+      expect(report!.entries.last.outcome, CCRouteRevalidationOutcome.replaced);
+      expect(await originalResult, isNull);
+      expect(find.text('managed-A'), findsNothing);
+      expect(find.text('managed-B'), findsOneWidget);
+      // Revalidation runs outside FakeAsync; join its render-exit continuation.
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+      expect(originalResource.disposeCount, 1);
+      final replacementResource = harness.resources['B']!;
+      expect(replacementResource.disposeCount, 0);
+      CCRouter.navigator.pop(result: 'replacement-result');
+      await tester.pumpAndSettle();
+      expect(replacementResource.disposeCount, 1);
+      expect(originalResource.disposeCount, 1);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
+  testWidgets(
+    'revalidation closes a covered Managed page and disposes its Scope once',
+    (tester) async {
+      final guard = _TogglePopGuard();
+      final harness = await _mount(
+        tester,
+        globalPopGuards: [
+          CCGlobalPopGuard(id: 'managed.revalidation.guard', guard: guard),
+        ],
+        routeRevalidationPolicies: const [
+          CCGlobalRouteRevalidationPolicy(
+            id: 'managed.revalidation.policy',
+            policy: _CloseManagedDetailPolicy(),
+          ),
+        ],
+      );
+      final targetResult = CCRouter.navigator.push<String>(const _Intent('A'));
+      await tester.pumpAndSettle();
+      final targetResource = harness.resources['A']!;
+      final coveringResult = CCRouter.navigator.push<String>(
+        const _Intent('home'),
+      );
+      await tester.pumpAndSettle();
+
+      final report = await tester.runAsync(
+        () => CCRouter.revalidateActiveRoutes(reason: 'permission_changed'),
+      );
+      await tester.pumpAndSettle();
+
+      expect(report, isNotNull);
+      expect(report!.changed, isTrue);
+      expect(await targetResult, isNull);
+      expect(find.text('managed-home'), findsWidgets);
+      expect(targetResource.disposeCount, 1);
+      expect(guard.triggers, isEmpty);
+
+      guard.allow = true;
+      CCRouter.navigator.pop(result: 'cover-result');
+      await tester.pumpAndSettle();
+      expect(await coveringResult, 'cover-result');
+      expect(targetResource.disposeCount, 1);
+    },
+  );
 
   testWidgets('browser history configuration uses Runtime Go semantics', (
     tester,
@@ -635,6 +902,70 @@ void main() {
     await CCRouterHost.shutdown();
     expect(predictive.adapter.predictiveBackBridge!.isActive, isFalse);
   });
+
+  testWidgets(
+    'Managed predictive-back ignores duplicate terminal events per stack level',
+    (tester) async {
+      final harness = await _mount(
+        tester,
+        enablePredictiveBack: true,
+        theme: ThemeData(platform: TargetPlatform.android),
+      );
+      final events = <CCPredictiveBackEvent>[];
+      final removeListener = harness
+          .backend
+          .navigationAdapter
+          .predictiveBackBridge!
+          .addPredictiveBackListener(events.add);
+
+      var firstCompletionCount = 0;
+      var secondCompletionCount = 0;
+      final first = CCRouter.navigator.push<String>(const _Intent('first'))
+        ..then<void>((_) => firstCompletionCount += 1);
+      await tester.pumpAndSettle();
+      final second = CCRouter.navigator.push<String>(const _Intent('second'))
+        ..then<void>((_) => secondCompletionCount += 1);
+      await tester.pumpAndSettle();
+      expect(CCRouter.activeRouteEntries, hasLength(3));
+
+      await _predictiveBackEvent(tester, 'startBackGesture');
+      await _predictiveBackEvent(tester, 'commitBackGesture');
+      await tester.pumpAndSettle();
+      final firstCommit = events.lastWhere(
+        (event) => event.phase == CCPredictiveBackPhase.committed,
+      );
+      harness.backend.navigationAdapter.predictiveBackBridge!.committed(
+        firstCommit.outcome!,
+      );
+      await _predictiveBackEvent(tester, 'commitBackGesture');
+      await tester.pumpAndSettle();
+
+      expect(await second, isNull);
+      expect(secondCompletionCount, 1);
+      expect(firstCompletionCount, 0);
+      expect(CCRouter.activeRouteEntries, hasLength(2));
+      expect(find.text('managed-first'), findsOneWidget);
+      expect(find.text('managed-second'), findsNothing);
+      expect(harness.resources['second']!.disposeCount, 1);
+      expect(harness.resources['first']!.disposeCount, 0);
+
+      await _predictiveBackEvent(tester, 'startBackGesture');
+      await _predictiveBackEvent(tester, 'commitBackGesture');
+      await tester.pumpAndSettle();
+
+      expect(await first, isNull);
+      expect(firstCompletionCount, 1);
+      expect(secondCompletionCount, 1);
+      expect(CCRouter.activeRouteEntries, hasLength(1));
+      expect(harness.resources['first']!.disposeCount, 1);
+      expect(
+        events.where((event) => event.phase == CCPredictiveBackPhase.committed),
+        hasLength(2),
+      );
+      removeListener();
+    },
+    variant: TargetPlatformVariant.only(TargetPlatform.android),
+  );
 
   testWidgets('Managed PopGuard updates iOS gesture gate and system fallback', (
     tester,

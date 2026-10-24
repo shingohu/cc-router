@@ -224,20 +224,6 @@ final class _OverviewView extends StatelessWidget {
               ],
             ),
           ),
-        _SectionTitle(
-          'Restoration demand',
-          snapshot.restorationOpportunities.length,
-        ),
-        if (snapshot.restorationOpportunities.isEmpty)
-          const _EmptyState('没有记录到状态恢复机会。')
-        else
-          for (final event in snapshot.restorationOpportunities)
-            ListTile(
-              dense: true,
-              title: Text(event.reason.name),
-              subtitle: Text('outcome=${event.outcome.name}'),
-              trailing: Text(_time(event.recordedAt)),
-            ),
       ],
     );
   }

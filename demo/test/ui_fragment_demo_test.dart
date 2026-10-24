@@ -14,14 +14,12 @@ Future<void> _settle(WidgetTester tester) async {
 }
 
 void main() {
-  setUp(
-    () => CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly),
-  );
   tearDown(CCRouterHost.shutdown);
 
   testWidgets(
     'real generated Host renders B UI in A with isolated State and KeepAlive',
     (tester) async {
+      CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly);
       await tester.pumpWidget(
         const CCRouterDemoApp(
           initialLocation: '/ui-fragments',
@@ -81,6 +79,7 @@ void main() {
   testWidgets(
     'payloads from two private loads stay instance-local and follow new Props',
     (tester) async {
+      CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly);
       final first = <String>[];
       final second = <String>[];
       Widget tree(String category, {bool active = true}) =>
@@ -120,6 +119,7 @@ void main() {
   testWidgets(
     'business error, retry and rapid removal release pending fake requests',
     (tester) async {
+      CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly);
       await tester.pumpWidget(
         const CCRouterDemoApp(
           initialLocation: '/ui-fragments',

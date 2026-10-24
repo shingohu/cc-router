@@ -82,7 +82,7 @@ Analyzer 测试在 `packages/ccrouter_analyzer_plugin/` 内执行 `fvm dart test
 
 - 状态：已修复。只临时打开具体 Route 的框架 Gate，同步检查完整 Flutter
   `popDisposition == pop` 后提交，再恢复仍存活的门闩；本地 PopScope/Form 仍可拒绝。
-- 位置：[adapter.dart](../packages/ccrouter_go_router/lib/src/adapter.dart) 第 1297 行。
+- 位置：历史路径 `packages/ccrouter_go_router/lib/src/adapter.dart` 第 1297 行（2026-10-23 已退役）。
 - 触发：Managed Page 配有返回 allow 的 CCRouter PopGuard，页面又有
   `PopScope(canPop: false)` 或等价 Form 退出保护，执行系统返回。
 - 根因：`didPop == false` 后只检查框架 Guard，然后直接 `Navigator.pop`；它没有区分
@@ -137,7 +137,7 @@ Analyzer 测试在 `packages/ccrouter_analyzer_plugin/` 内执行 `fvm dart test
 
 - 状态：已修复。撤销/禁用递增投递代次并清空队列，每个 Sink 启动前复核授权和代次；
   立即重新授权不会恢复旧事件，已经开始的 write 仍不可撤回。
-- 位置：[analytics.dart](../packages/ccrouter_analytics/lib/src/analytics.dart) 第 506、571 行。
+- 位置：[analytics.dart](../demo/modules/analytics/lib/src/analytics.dart) 第 506、571 行。
 - 触发：一个事件同时发往 A/B 两个 Sink；A 正在等待时撤销 Consent，然后 A 完成。
 - 根因：撤销仅清空待处理队列，已取出的事件遍历 Sink 时不再校验策略。
 - 实测：撤销后 B 的新 `write` 仍调用一次。B 在撤销时尚未开始，不属于无法撤回的在途写入。
@@ -209,7 +209,7 @@ Token，并仅等待 Interceptor 本身或 timeout。它没有关联 Runtime 取
 
 - 状态：已修复。属性构造时复制并验证列表，向调用方及全部 Sink 暴露同一不可变快照。
 
-[analytics.dart](../packages/ccrouter_analytics/lib/src/analytics.dart) 第 41、72 行保留调用方
+[analytics.dart](../demo/modules/analytics/lib/src/analytics.dart) 第 41、72 行保留调用方
 List 引用，仅外层 Map.unmodifiable。实测先传合法 `['valid']`，再向原 List 加入 Map/Object，
 已经验证的事件能读到这些非法对象；Sink 也可修改该 List，污染后续 Sink。
 
@@ -221,7 +221,7 @@ List 引用，仅外层 Map.unmodifiable。实测先传合法 `['valid']`，再�
 - 状态：已修复。先建立单次调度状态，再通过事件循环分发；重入保持 FIFO，close 等待
   尚未启动的调度，最后一个 Sink 的完成监听器新增事件也不会滞留。
 
-[analytics.dart](../packages/ccrouter_analytics/lib/src/analytics.dart) 第 564 行直接调用
+[analytics.dart](../demo/modules/analytics/lib/src/analytics.dart) 第 564 行直接调用
 async `_drain()`，其首个 `await` 之前已经执行 `sink.write`。实测 dispatch 返回前 Sink
 计数已增加。耗时同步 Sink 会阻塞按钮/导航调用，重入发生时 drain 标识也尚未赋值。
 
@@ -232,7 +232,7 @@ async `_drain()`，其首个 `await` 之前已经执行 `sink.write`。实测 di
 
 状态：已修复，验证见第 12 节。下述为修复前证据。
 
-[exposure_tracking.dart](../packages/ccrouter_analytics_flutter/lib/src/exposure_tracking.dart)
+[exposure_tracking.dart](../demo/modules/analytics_flutter/lib/src/exposure_tracking.dart)
 第 104 行把 NotificationListener 放在 Target 内，滚动通知沿祖先方向传播，不会进入位于
 Scrollable 子树中的列表项 Listener。
 
@@ -462,7 +462,7 @@ dependencies 分别表达组件关系和实际消费，可用可靠 Quick Fix �
 - 根因分别是授权仅在入队时检查、属性列表保留外部可变引用、async 函数在首个 await 前
   同步调用 Sink。仅由应用 Sink 补检查会重复策略且无法保证所有消费者；本次选用
   Dispatcher 内部修复，不增加公开 API，不改变应用供应商 Adapter 的所有权。
-- [analytics_dispatcher_regression_test.dart](../packages/ccrouter_test/test/analytics_dispatcher_regression_test.dart)
+- [analytics_dispatcher_regression_test.dart](../demo/modules/analytics/test/analytics_dispatcher_regression_test.dart)
   新增 **12 项**确定性回归，覆盖 revoke/re-grant、disable/re-enable、Sink 错误回调内撤销、
   调用方/Sink 修改列表、首个写入异步、重入 FIFO、重复/重入 close、末尾完成监听器入队
   以及首次写入前的队列溢出。先用失败用例复现，再修复；加上原有 Pure Dart 测试共
@@ -543,10 +543,10 @@ dependencies 分别表达组件关系和实际消费，可用可靠 Quick Fix �
   后帧回调使用弱引用，避免无后续帧时保留已销毁 State。
 - `once` 只在 Dispatcher 接受事件后生效；deny/background/detach 不积累 dwell，grant/resume
   后重新计时。采样/黑名单/节流拒绝不占 lifetime once，也不逐帧重试；授权变更不回放已接受事件。
-- [exposure_regression_test.dart](../packages/ccrouter_test/test/exposure_regression_test.dart)
+- [exposure_regression_test.dart](../demo/modules/analytics_flutter/test/exposure_regression_test.dart)
   新增 **10 项**真实 Widget 回归：祖先滚动与 50% viewport 裁剪、嵌套同轴滚动、中途移出重置、
   最近 ScrollPosition 替换、GlobalKey 迁移、deny/grant、revoke/grant、过滤拒绝、后台重建和关闭。
-  [analytics_dispatcher_regression_test.dart](../packages/ccrouter_test/test/analytics_dispatcher_regression_test.dart)
+  [analytics_dispatcher_regression_test.dart](../demo/modules/analytics/test/analytics_dispatcher_regression_test.dart)
   新增 **3 项**策略观察边界：解绑/异常/重入策略更新、终态只通知一次、通知中关闭。
 - Demo Network 保留生成器要求的无参 generative constructor；增加测试用 Backend 注入入口，
   实现 `CCDisposable` 并转发 Client → Dio 释放。释放 Future 在调用 Backend 前发布，重复/重入

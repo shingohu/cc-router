@@ -1,0 +1,8 @@
+{
+  "seed": 20261023,
+  "rounds": 24,
+  "scope": "real macOS Managed/Foreign Dialog, BottomSheet, Page; each round returns to one managed home Entry",
+  "actions": 221,
+  "evidence": "last48 actions,24 matched open/close pairs; all24 closing AX snapshots contain CCRouter Lab and1 Route Entries",
+  "note": "Recomputed from saved action snapshots; replaces stale incremental counter8."
+}

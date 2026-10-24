@@ -1,5 +1,13 @@
 # GoRouter 官方示例覆盖对照
 
+> 历史记录：文中的 GoRouter 实现与验收对应原版本。2026-10-23 已移除兼容包；
+> 当前原生 Managed 能力及回归以[退役记录](../../docs/validation/go_router_retirement_20261023.md)、API 和测试为准。
+> 下表 restoration opportunity 属于历史实现；当前恢复需求采集归应用，
+> 见[职责收口记录](../../docs/validation/20261023-framework-boundaries/README.md)。
+
+当前 Managed 能力、Demo 入口和真实平台结果统一见[验证索引](../../docs/validation/README.md)。
+下文旧示例路径与 GoRouter 配置保留原貌；当前多 Host 入口为 `demo/lib/multi_host_demo.dart`。
+
 ## 对照原则
 
 - 对照来源：Flutter `packages/go_router/example` 的 `main` 分支，核对日期 2026-09-20。
@@ -57,5 +65,5 @@
 状态隔离；每个 Router surface 在 Pointer/Focus 进入时由 Host 组装层激活，因此页面内部
 默认导航和 Pop 不会串到另一个可见 Host。同一入口还验证一个 Host 在横竖屏、桌面窗口缩放和
 模拟 hinge 下更新
-`CCHostLayoutMetrics`，并切换 list/detail Outlet。它不代表原生多 Window 已完成；平台
+`DemoHostLayoutMetrics`，并切换 list/detail Outlet。它不代表原生多 Window 已完成；平台
 Window/Engine 生命周期仍属于后续工作。

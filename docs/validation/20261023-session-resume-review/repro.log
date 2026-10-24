@@ -1,0 +1,74 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/session_and_resume/repro.dart
+00:00 +0: late work initializer=true, lookup=service, switch=false
+00:00 +1: late work initializer=true, lookup=services, switch=false
+00:00 +2: late work initializer=true, lookup=serviceAsync, switch=false
+00:00 +3: late work initializer=true, lookup=service, switch=true
+00:00 +3 -1: late work initializer=true, lookup=service, switch=true [E]
+  Expected: (<Instance of 'CCScopeClosedError'> or <Instance of 'CCInvocationCancelledError'>)
+    Actual: <Instance of 'AccountResource'>
+  Old work must not resolve new account resources; actual=new
+  
+  package:matcher                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                              expect
+  packages/ccrouter_test/test/review_repros/session_and_resume/repro.dart 119:15  main.<fn>
+  
+00:00 +3 -1: late work initializer=true, lookup=services, switch=true
+00:00 +3 -2: late work initializer=true, lookup=services, switch=true [E]
+  Expected: (<Instance of 'CCScopeClosedError'> or <Instance of 'CCInvocationCancelledError'>)
+    Actual: <Instance of 'AccountResource'>
+  Old work must not resolve new account resources; actual=new
+  
+  package:matcher                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                              expect
+  packages/ccrouter_test/test/review_repros/session_and_resume/repro.dart 119:15  main.<fn>
+  
+00:00 +3 -2: late work initializer=true, lookup=serviceAsync, switch=true
+00:00 +4 -2: late work initializer=false, lookup=service, switch=false
+00:00 +5 -2: late work initializer=false, lookup=services, switch=false
+00:00 +6 -2: late work initializer=false, lookup=serviceAsync, switch=false
+00:00 +7 -2: late work initializer=false, lookup=service, switch=true
+00:00 +7 -3: late work initializer=false, lookup=service, switch=true [E]
+  Expected: (<Instance of 'CCScopeClosedError'> or <Instance of 'CCInvocationCancelledError'>)
+    Actual: <Instance of 'AccountResource'>
+  Old work must not resolve new account resources; actual=new
+  
+  package:matcher                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                              expect
+  packages/ccrouter_test/test/review_repros/session_and_resume/repro.dart 119:15  main.<fn>
+  
+00:00 +7 -3: late work initializer=false, lookup=services, switch=true
+00:00 +7 -4: late work initializer=false, lookup=services, switch=true [E]
+  Expected: (<Instance of 'CCScopeClosedError'> or <Instance of 'CCInvocationCancelledError'>)
+    Actual: <Instance of 'AccountResource'>
+  Old work must not resolve new account resources; actual=new
+  
+  package:matcher                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                              expect
+  packages/ccrouter_test/test/review_repros/session_and_resume/repro.dart 119:15  main.<fn>
+  
+00:00 +7 -4: late work initializer=false, lookup=serviceAsync, switch=true
+00:00 +8 -4: defer resume: same error Zone=true, outcome=proceed
+00:00 +9 -4: defer resume: same error Zone=true, outcome=deny
+00:00 +10 -4: defer resume: same error Zone=true, outcome=failure
+00:00 +11 -4: defer resume: same error Zone=false, outcome=proceed
+00:00 +12 -4: defer resume: same error Zone=false, outcome=deny
+00:02 +12 -5: defer resume: same error Zone=false, outcome=deny [E]
+  Expected: same instance as CCRouteCancelledError:<CCRouteCancelledError: Navigation was cancelled.>
+    Actual: <Instance of 'NoOutcome'>
+  Resume must finish in its own caller Zone; uncaught=[CCRouteCancelledError]
+  
+  package:matcher                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                              expect
+  packages/ccrouter_test/test/review_repros/session_and_resume/repro.dart 210:11  main.<fn>
+  
+00:02 +12 -5: defer resume: same error Zone=false, outcome=failure
+00:04 +12 -6: defer resume: same error Zone=false, outcome=failure [E]
+  Expected: same instance as CCNavigationInterceptorError:<CCNavigationInterceptorError: Navigation interceptor "fixture.resume" failed as StateError.>
+    Actual: <Instance of 'NoOutcome'>
+  Resume must finish in its own caller Zone; uncaught=[CCNavigationInterceptorError]
+  
+  package:matcher                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                              expect
+  packages/ccrouter_test/test/review_repros/session_and_resume/repro.dart 210:11  main.<fn>
+  
+00:04 +12 -6: Some tests failed.

@@ -2,6 +2,12 @@
 
 ## 0.1.0 - Unreleased
 
+- Wire optional component examples to generated Host assembly, Managed app and
+  an authored startup Route. Declare proven build tools and SDK test dependencies;
+  prepare standalone parent Portable State before read-only example consumption.
+- Preserve YAML string identity for inherited SDK ranges and Git refs; rebase
+  example build tools from the staged component snapshot across async creation.
+
 - Recognize `ccrouter_ui` as a framework Package so external UI consumers do
   not require business Portable State for the runtime. Keep that validation for
   business components and print per-Package generator prerequisites in scaffolds.

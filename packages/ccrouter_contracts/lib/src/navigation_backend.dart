@@ -100,6 +100,8 @@ final class CCPopOutcome {
   final bool handled;
 
   /// Backend identity removed by the Pop, when the adapter could correlate it.
+  /// Must use the same identity domain as that Adapter's backend events and
+  /// snapshots; a MultiHost aggregate qualifies child-local IDs by registration.
   final String? removedBackendEntryId;
 
   /// Ownership of the backend entry removed by the Pop.
@@ -159,6 +161,8 @@ final class CCNavigationPopTarget {
     required this.hostId,
     required this.navigatorOutlet,
     this.backendEntryId,
+    this.owner,
+    this.handlesPopInternally = false,
   });
 
   /// Concrete navigation Host receiving the Pop.
@@ -169,6 +173,19 @@ final class CCNavigationPopTarget {
 
   /// Exact backend Entry expected to leave, when the adapter can prove it.
   final String? backendEntryId;
+
+  /// Live ownership known by the Adapter before queued ledger observation.
+  ///
+  /// Foreign/opaque targets bypass managed guards even when their push event
+  /// has not arrived. Null preserves legacy Runtime/ledger reconciliation.
+  final CCBackendEntryOwner? owner;
+
+  /// The actual Route will consume this attempt without leaving its Entry.
+  ///
+  /// Host bridges use this for LocalHistory. It bypasses Managed exit Guards,
+  /// preserves local PopScope/Form decisions and never identifies a removal.
+  /// Backends must recheck their live Route before an eventual exit.
+  final bool handlesPopInternally;
 }
 
 /// Identifies a stack transition observed from a navigation backend.
@@ -242,6 +259,8 @@ final class CCBackendEntrySnapshot {
   });
 
   /// Stable identity assigned by the navigation adapter.
+  /// Aggregate adapters may qualify child-local IDs. Treat it as opaque and
+  /// correlate only with snapshots/events/targets from the same adapter surface.
   final String backendEntryId;
 
   /// Ownership classification protecting managed Route Entries.
@@ -298,6 +317,8 @@ final class CCInitialBackendEntrySnapshot {
   });
 
   /// Stable identity assigned by the backend before Runtime initialization.
+  /// Must match subsequent events on this Adapter surface. MultiHost qualifies
+  /// child-local snapshot IDs using the same registration as live events.
   final String backendEntryId;
 
   /// Backend ownership classification known at snapshot time.
@@ -364,6 +385,8 @@ final class CCNavigationBackendEvent {
   final CCNavigationBackendEventKind kind;
 
   /// Backend route identity affected by this transition, when available.
+  /// Unique across this Adapter's registration lifetime and all Outlets. MultiHost
+  /// gives each child registration a separate opaque identity domain.
   final String? backendEntryId;
 
   /// Adapter operation identity used for duplicate-event suppression.
@@ -383,10 +406,12 @@ final class CCNavigationBackendEvent {
   /// Navigator Outlet that emitted this event.
   final String? navigatorOutlet;
 
-  /// Outlets simultaneously visible after an `outletsChanged` event.
+  /// Outlets simultaneously visible after `outletsChanged` or `outletActivated`.
   ///
   /// The list is empty for ordinary stack events and must not be interpreted
   /// as a request to hide every Outlet unless [kind] is `outletsChanged`.
+  /// An `outletActivated` event with no list retains legacy single-branch
+  /// selection; an explicit list preserves Host-owned split layouts.
   final List<String> activeNavigatorOutlets;
 
   /// Monotonic adapter sequence for this backend event.
@@ -470,7 +495,7 @@ final class CCNavigationBackendDiagnosticEvent {
   /// Navigator Outlet that emitted the transition, when known.
   final String? navigatorOutlet;
 
-  /// Outlets simultaneously visible after an `outletsChanged` event.
+  /// Effective Outlets after `outletsChanged` or `outletActivated`.
   final List<String> activeNavigatorOutlets;
 
   /// Monotonic adapter sequence for this backend event.
@@ -588,6 +613,27 @@ abstract interface class CCNavigationManagedEntryReleaseSink {
   void releaseManagedNavigation(String navigationId);
 }
 
+/// Optional Host-only bridge between logical removal and rendered Route exit.
+///
+/// Runtime removes an Entry and completes its result independently of the
+/// backend's exit animation. This binding keeps only that exact Route Scope
+/// available while its outgoing Widget subtree may still rebuild.
+abstract interface class CCNavigationRouteExitBinding {
+  /// Subscribes to a removed navigation's pending render exit, if any.
+  ///
+  /// Return null when no outgoing surface remains (including exact removal or
+  /// an empty structural anchor). Otherwise return an idempotent unsubscribe
+  /// callback and invoke [onExited] once, asynchronously, when rendering ends.
+  /// Unsubscribing must release the callback without changing navigation.
+  /// Host disposal must release pending callbacks. Runtime unsubscribes and
+  /// closes the Scope immediately on shutdown rather than awaiting UI frames.
+  void Function()? addRouteExitListener({
+    required String navigationId,
+    required String hostId,
+    required void Function() onExited,
+  });
+}
+
 /// Optional Adapter SPI for platform predictive-back coordination.
 ///
 /// Implementations must emit a committed event only after the backend has
@@ -632,6 +678,9 @@ abstract interface class CCNavigationBackendSnapshotSource {
 /// outcome whose removed owner is [CCPopRemovedEntryOwner.none].
 abstract interface class CCNavigationPopCoordinator {
   /// Coordinates one Pop and returns the removed backend Entry ownership.
+  /// Runtime uses its Host Zone for dispatch and observation, and consumes an
+  /// unfinished request without removal if that Host or Runtime retires. The
+  /// Adapter remains responsible for cancelling its external work.
   Future<CCPopOutcome> maybePopOutcome({Object? result});
 
   /// Executes an explicit business Pop and returns the removed ownership.
@@ -652,6 +701,8 @@ abstract interface class CCNavigationPopCoordinator {
 /// Host and Outlet identity resolved by the Host facade.
 abstract interface class CCNavigationScopedPopCoordinator {
   /// Coordinates a conditional Pop in one exact Host/Outlet partition.
+  /// Runtime applies the same Host-context and retirement rules as
+  /// [CCNavigationPopCoordinator.maybePopOutcome].
   Future<CCPopOutcome> maybePopOutcomeAt({
     required String hostId,
     required String navigatorOutlet,
@@ -677,4 +728,17 @@ abstract interface class CCNavigationScopedPopCoordinator {
 abstract interface class CCNavigationPopTargetSource {
   /// Returns the active Pop partition, or null when no target is available.
   CCNavigationPopTarget? get activePopTarget;
+}
+
+/// Optional Host SPI resolving live Pop ownership for a call-site partition.
+///
+/// Unlike the active fallback target, this lookup must not depend on focus or
+/// activate another Host. An ancestor popup can select the Host root instead
+/// of the requested nested Outlet. Structural anchors are never popup owners.
+abstract interface class CCNavigationScopedPopTargetSource {
+  /// Returns the actual live Back target, or null for an unavailable partition.
+  CCNavigationPopTarget? popTargetAt({
+    required String hostId,
+    required String navigatorOutlet,
+  });
 }

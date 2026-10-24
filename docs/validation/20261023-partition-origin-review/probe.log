@@ -1,0 +1,120 @@
+00:00 +0: loading /tmp/ccrouter_review_partition_origin_probe_test.dart
+00:00 +0: singleFlight must not skip external origin policy
+ORIGIN checks=0 externalResult=null
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: <1>
+  Actual: <0>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///tmp/ccrouter_review_partition_origin_probe_test.dart:72:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///tmp/ccrouter_review_partition_origin_probe_test.dart line 72
+The test description was:
+  singleFlight must not skip external origin policy
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -1: singleFlight must not skip external origin policy [E]
+  Test failed. See exception logs above.
+  The test description was: singleFlight must not skip external origin policy
+  
+00:00 +0 -1: context-free redirect stays in originally selected Host
+REDIRECT primary=[/] secondary=[/detail/B]
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: '/detail/B'
+  Actual: '/'
+   Which: is different. Both strings start the same, but the actual value is missing the following
+trailing characters: detail/B
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///tmp/ccrouter_review_partition_origin_probe_test.dart:88:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///tmp/ccrouter_review_partition_origin_probe_test.dart line 88
+The test description was:
+  context-free redirect stays in originally selected Host
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -2: context-free redirect stays in originally selected Host [E]
+  Test failed. See exception logs above.
+  The test description was: context-free redirect stays in originally selected Host
+  
+00:00 +0 -2: pending context-free Back keeps actual Host in receipt
+BACK host=secondary outlet=root result=primary-result
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: 'primary'
+  Actual: 'secondary'
+   Which: is different.
+          Expected: primary
+            Actual: secondary
+                    ^
+           Differ at offset 0
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///tmp/ccrouter_review_partition_origin_probe_test.dart:114:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///tmp/ccrouter_review_partition_origin_probe_test.dart line 114
+The test description was:
+  pending context-free Back keeps actual Host in receipt
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -3: pending context-free Back keeps actual Host in receipt [E]
+  Test failed. See exception logs above.
+  The test description was: pending context-free Back keeps actual Host in receipt
+  
+00:00 +0 -3: failure recovery stays in originally admitted Host
+RECOVERY primary=[/] secondary=[/detail/B]
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: '/detail/B'
+  Actual: '/'
+   Which: is different. Both strings start the same, but the actual value is missing the following
+trailing characters: detail/B
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///tmp/ccrouter_review_partition_origin_probe_test.dart:132:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///tmp/ccrouter_review_partition_origin_probe_test.dart line 132
+The test description was:
+  failure recovery stays in originally admitted Host
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -4: failure recovery stays in originally admitted Host [E]
+  Test failed. See exception logs above.
+  The test description was: failure recovery stays in originally admitted Host
+  
+00:00 +0 -4: control allow runs external origin policy independently
+00:00 +1 -4: control same-origin singleFlight still shares one dispatch
+00:00 +2 -4: control async Proceed keeps originally selected Host
+00:00 +3 -4: control context-pinned redirect survives focus change
+00:00 +4 -4: control deferred redirect stays in originally admitted Host
+00:00 +5 -4: Some tests failed.

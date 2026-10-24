@@ -1,0 +1,24 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/shared_execution_regression_test.dart
+00:00 +0: InitTask publication control: ordinary overlapping Gate calls share one drain
+00:00 +1: InitTask publication synchronous Gate reentry runs each sibling once: appStarted
+00:00 +2: InitTask publication synchronous Gate reentry runs each sibling once: privacyGranted
+00:00 +3: InitTask publication first drain waits for synchronously opened Gate work
+00:00 +4: Shared readiness and cleanup Zones shared readiness: same error Zone=true, initialization fails=false, late join=false
+00:00 +5: Shared readiness and cleanup Zones shared readiness: same error Zone=true, initialization fails=false, late join=true
+00:00 +6: Shared readiness and cleanup Zones shared readiness: same error Zone=true, initialization fails=true, late join=false
+00:00 +7: Shared readiness and cleanup Zones shared readiness: same error Zone=true, initialization fails=true, late join=true
+00:00 +8: Shared readiness and cleanup Zones shutdown joins cancelled InitTask: same error Zone=true
+00:00 +9: Shared readiness and cleanup Zones shared readiness: same error Zone=false, initialization fails=false, late join=false
+00:00 +10: Shared readiness and cleanup Zones shared readiness: same error Zone=false, initialization fails=false, late join=true
+00:00 +11: Shared readiness and cleanup Zones shared readiness: same error Zone=false, initialization fails=true, late join=false
+00:00 +12: Shared readiness and cleanup Zones shared readiness: same error Zone=false, initialization fails=true, late join=true
+00:00 +13: Shared readiness and cleanup Zones shutdown joins cancelled InitTask: same error Zone=false
+00:00 +14: Shared navigation Zones singleFlight navigation: same error Zone=true, policy cancels=false
+00:00 +15: Shared navigation Zones singleFlight navigation: same error Zone=true, policy cancels=true
+00:00 +16: Shared navigation Zones singleFlight navigation: same error Zone=false, policy cancels=false
+00:00 +17: Shared navigation Zones singleFlight navigation: same error Zone=false, policy cancels=true
+00:00 +18: Public Host shutdown public Host shutdown in another error Zone finishes cleanup
+00:00 +19: shared readiness preserves original failure and stack in every Zone
+00:00 +20: different error Zones join one Gate drain: shutdown=false
+00:00 +21: different error Zones join one Gate drain: shutdown=true
+00:00 +22: All tests passed!

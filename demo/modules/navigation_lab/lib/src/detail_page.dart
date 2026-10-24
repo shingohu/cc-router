@@ -13,6 +13,7 @@ import 'ccrouter_generated/demo_navigation_lab_component.api.g.dart';
       constraints: {'id': r'\d+'},
     ),
     CCPathPattern('/lab/item/:id'),
+    CCRegexPattern(r'^/lab/regex/(?<id>[^/]+)$'),
     CCUriPattern('ccrouter://lab/detail/:id'),
     CCUriPattern('https://ccrouter.example/lab/detail/:id'),
   ],
@@ -66,13 +67,16 @@ final class _DemoDetailPageState extends State<DemoDetailPage>
   }
 
   void _complete() {
-    if (CCRouter.navigator.canPop()) {
-      CCRouter.navigator.pop(result: 'detail:${widget.id}:confirmed');
+    if (CCRouter.navigator.canPop(context: context)) {
+      CCRouter.navigator.pop(
+        result: 'detail:${widget.id}:confirmed',
+        context: context,
+      );
       return;
     }
     observeDemoOperation(
       'Detail 返回首页',
-      CCRouter.navigator.go(DemoNavigationLabRoutes.home()),
+      CCRouter.navigator.go(DemoNavigationLabRoutes.home(), context: context),
     );
   }
 

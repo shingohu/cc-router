@@ -245,9 +245,9 @@ final class _RouteRegistry {
 
   /// Encodes a typed [intent] through its route's canonical primary Pattern.
   ///
-  /// [placementOverride] is applied only to a route that declares the default
-  /// root placement. It is a Host-layer convenience and never overrides an
-  /// explicit Shell, Parent, Host, or named Outlet declaration.
+  /// [placementOverride] supplies a call-site Outlet only for a fully default
+  /// root placement. Its concrete Host independently binds a default Host on
+  /// Shell, Parent, or named Outlet routes; an explicit Host always wins.
   _PreparedRoute prepareIntent<R>(
     CCRouteIntent<R> intent, {
     CCNavigationOrigin origin = CCNavigationOrigin.internal,
@@ -293,8 +293,8 @@ final class _RouteRegistry {
 
   /// Resolves and decodes a dynamic [location] under its trusted [origin].
   ///
-  /// [placementOverride] follows the same default-placement-only rule as the
-  /// typed Intent path and does not bypass Deep Link validation.
+  /// [placementOverride] follows the typed path's independent default-Host and
+  /// structural-placement rules and does not bypass Deep Link validation.
   _PreparedRoute prepareUri(
     Uri location,
     CCNavigationOrigin origin, {
@@ -322,19 +322,65 @@ final class _RouteRegistry {
     );
   }
 
-  /// Applies a call-site placement only when the route left placement at the
-  /// default root. Explicit route placement is a stronger contract and must
-  /// not be silently redirected by an unrelated widget context.
+  /// Reconstructs one declared ancestor from the child's serializable values.
+  ///
+  /// The parent's own Codec must decode without Extra and generate a valid
+  /// canonical URI. Missing required parent values fail before stack mutation.
+  /// Deep Link admission applies to the externally addressed leaf. Ancestors
+  /// are structural reconstruction, not additional external destinations; their
+  /// access interceptors still run with the leaf's original external origin.
+  _PreparedRoute prepareParent(_PreparedRoute child) {
+    final parentId = child.placement.parentRouteId!;
+    final parent = _requireRoute(parentId);
+    try {
+      final arguments =
+          parent.definition.codec.decode(
+                CCRouteCodecValues(
+                  path: child.pathParameters,
+                  query: child.uri.queryParametersAll,
+                ),
+              )
+              as Object;
+      final prepared = prepareIntent(
+        _ResumedRouteIntent(parentId, arguments),
+        origin: CCNavigationOrigin.internal,
+        placementOverride: CCRoutePlacement(hostId: child.placement.hostId),
+      );
+      if (prepared.extra != null) {
+        throw CCRouteParameterError(
+          'Parent route "$parentId" cannot reconstruct in-memory Extra.',
+        );
+      }
+      return prepared;
+    } on CCRouterError {
+      rethrow;
+    } catch (error) {
+      throw CCRouteParameterError(
+        'Parent route "$parentId" cannot reconstruct arguments: '
+        '${error.runtimeType}.',
+      );
+    }
+  }
+
+  /// Binds a default Host independently of the route's structural placement.
+  ///
+  /// Shell, Parent, and named Outlet declarations always retain their topology.
+  /// A fully default root route additionally inherits the call-site Outlet.
+  /// Explicit route Hosts never change, even for revalidation or replay.
   CCRoutePlacement _effectivePlacement(
     CCRoutePlacement declared,
     CCRoutePlacement? override,
   ) {
-    if (override == null ||
-        declared.hostId != 'default' ||
-        declared.shellId != null ||
+    if (override == null || declared.hostId != 'default') return declared;
+    if (declared.shellId != null ||
         declared.parentRouteId != null ||
         declared.navigatorOutlet != 'root') {
-      return declared;
+      return CCRoutePlacement(
+        hostId: override.hostId,
+        parentRouteId: declared.parentRouteId,
+        shellId: declared.shellId,
+        navigatorOutlet: declared.navigatorOutlet,
+      );
     }
     return override;
   }

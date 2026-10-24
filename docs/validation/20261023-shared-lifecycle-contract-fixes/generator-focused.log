@@ -1,0 +1,13 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: valid UI workspace emits no diagnostics
+00:00 +1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator >=1.0.0
+00:00 +2: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator <=1.0.0
+00:00 +3: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator <2.0.0
+00:00 +4: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator >=1.0.0	<2.0.0
+00:00 +5: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator >=1.0.0
+<2.0.0
+00:00 +6: loading packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart
+00:00 +6: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: consumer generation accepts single comparator >=1.0.0
+00:24 +7: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: consumer generation accepts single comparator <=1.0.0
+00:31 +8: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: consumer generation accepts single comparator <2.0.0
+00:37 +9: All tests passed!

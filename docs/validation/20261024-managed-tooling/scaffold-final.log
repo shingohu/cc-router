@@ -1,0 +1,16 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/scaffold_command_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/scaffold_command_test.dart: create component and page emits a minimal non-overwriting template
+00:01 +1: packages/ccrouter_test/generator_test/scaffold_command_test.dart: create rejects invalid names before writing files
+00:02 +2: packages/ccrouter_test/generator_test/scaffold_command_test.dart: YAML scalar round trips preserve SDK ranges and Git ref strings
+00:02 +3: packages/ccrouter_test/generator_test/scaffold_command_test.dart: example inherits build_runner from the same staged component snapshot
+00:02 +4: packages/ccrouter_test/generator_test/scaffold_command_test.dart: create component can atomically add a runnable example Host
+00:05 +5: packages/ccrouter_test/generator_test/scaffold_command_test.dart: failed example creation publishes no partial component
+00:05 +6: packages/ccrouter_test/generator_test/scaffold_command_test.dart: create component reports its exact workspace entry
+00:06 +7: packages/ccrouter_test/generator_test/scaffold_command_test.dart: example fails before publishing when build tool source is unknown
+00:10 +8: packages/ccrouter_test/generator_test/scaffold_command_test.dart: create component inherits resolved dependency sources
+00:12 +9: packages/ccrouter_test/generator_test/scaffold_command_test.dart: create capability templates emit valid annotation starting points
+00:15 +10: packages/ccrouter_test/generator_test/scaffold_command_test.dart: create capability options add only explicitly requested glue
+00:17 +11: packages/ccrouter_test/generator_test/scaffold_command_test.dart: create reports an incomplete template command
+00:17 +12: loading packages/ccrouter_test/generator_test/managed_scaffold_integration_test.dart
+00:17 +12: packages/ccrouter_test/generator_test/managed_scaffold_integration_test.dart: standalone scaffold prepares its parent and runs generated Managed routes
+01:57 +13: All tests passed!

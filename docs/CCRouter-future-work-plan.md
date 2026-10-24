@@ -1,369 +1,63 @@
-# CCRouter 后续任务与实施计划
+# CCRouter 后续工作与触发条件
 
-## 1. 文档状态
+本文只维护未完成事项与立项条件，不复制已经完成的实施清单、历史测试数量或发布阻塞表。当前能力以[文档索引](README.md)与专项规范为准，证据见[验证索引](validation/README.md)；发布结论只看[Release Readiness](CCRouter-release-readiness.md)，当前仍不可正式发布。合并前计划保留于[归档](archive/20261024-consolidation/CCRouter-future-work-plan.md)。
 
-- 状态：后续任务总清单，仅记录，不代表当前立即实施。
-- 当前架构代际：1.x，重点是兼容性、性能、稳定性和生成物正确性维护；Package 仍为开发期
-  `0.1.0`，不得把架构代际误写成已发布版本。
-- 架构 2.0：只有达到本文列出的真实需求、性能或平台触发条件后才立项。
-- 优先级：P0 最高；P1 为 1.x 后续或正式发布前；P2 为架构 2.0 候选。
+## 1. 近期验证与开发工具
 
-本文是各专项设计文档的索引，不替代具体契约。实施时必须先更新对应设计文档、补测试，
-再修改代码；每个完成项单独回归并提交。
+| 待办 | 启动条件与边界 | 规范/执行入口 |
+| --- | --- | --- |
+| 发布候选兼容样本、干净消费者与分发验证 | 进入 RC/正式发布流程；保留上一版本 Index、指纹和迁移样本，不从当前版本号推断已发布 | [Contract 兼容](CCRouter-contract-compatibility.md)、[Release Readiness](CCRouter-release-readiness.md) |
+| 平台与长期性能/内存趋势 | 按候选源码与真实业务场景采样；自动化、构建 smoke 和单次实窗不替代设备矩阵 | [验证索引](validation/README.md)、[SDK 兼容](CCRouter-sdk-compatibility.md) |
+| Flutter/Dart SDK 升级 | 尚未选择或升级目标；独立执行 U0–U6 的解析、工具身份、最小迁移、平台与分发验证 | [SDK 升级计划](CCRouter-sdk-upgrade-plan.md) |
+| build_runner P6 传播与摘要优化 | 正确性前置、输入一致性屏障和测量先行；Shadow Closure 已删除，传播收窄及 P6-2/3 尚未实施；完整证明与净收益通过前无新默认 skip | [优化计划](CCRouter-build-runner-optimization-plan.md#12-p6生成状态摘要与依赖失效粒度优化) |
+| Host 聚合输入摘要优化 | 只有真实工程聚合超过总耗时 20% 才继续；不能以 mtime/size 替代内容摘要；减少状态变更与缩短耗时分别验收 | [性能报告](CCRouter-generator-performance-report.md) |
+| Analyzer 独立多根冷启动、完整 IDE/SDK/Hosted 矩阵 | 共享 Workspace 回归不关闭 legacy PluginManager 多实例边界，也不承诺监听分析根外依赖；Hosted 下载必须等待实际发布 | [IDE 与 CLI 规范](CCRouter-ide-analysis-server.md) |
+| Contract scaffold/promotion/migration、alias migration | 真实接入证明重复成本；先定义安全迁移、Owner 与生成物一致性，不能靠跨包导入内部实现规避 | [注解校验](CCRouter-annotation-validation.md) |
+| 官方 Extension 直接打开本地 IDE | 已有只读源码位置和复制 URI；需真实工具协议及多 IDE 验证后扩展 | [DevTools](CCRouter-devtools.md) |
 
-正式发布阻塞项不在本文重复维护，统一见
-[正式发布准备与门禁](CCRouter-release-readiness.md)。
+UI 已有 enum/受限 DTO、生成、查找和本地首次接入技术闭环。未参与实现者的接入可用性、API 最终冻结、正式分发及长期性能仍需补证据；不将实施者自测当作新人研究。UI DevTools Catalog 尚未实现，是否新增取决于真实诊断需求。
 
-2026-10-03 的[全框架审查](CCRouter-framework-audit-2026-10-03.md) 确认了 5 项 P1、
-13 项 P2 缺陷；生命周期清理与返回保护 F01/F02 已修复并完成 432 项回归，生成器
-F03/F04/F09 已修复并补上真实分发及常量解析回归；Analytics F05/F10/F11 已修复并完成
-444 项框架/Flutter/Demo 回归。Runtime F06/F07/F08 已修复并完成 462 项回归。
-曝光采集 F12/F13 与 Demo Network 生命周期 F18 已修复，完成 478 项框架/Flutter/Demo 回归。
-F14/F15 Analyzer 已修复，并补上 Service 生命周期 warning 与保守 Quick Fix，独立插件
-110 项测试通过；Demo 后续已同步 watch/one-shot structured diagnostics bridge、canonical Host
-identity 与当前 editor overlay 的 Pub resolution 提示，固定到远端可解析提交 `23ff0d2`。Demo
-bootstrap manifest/lock/`resolved-ref` 已一致，Android Studio 重建 cache 后完成真实提示出现/清除往返。
-F16/F17 AI Skill 安装与接入指导已修复，两个完整 Skill 组成独立安装包，并增加孤立目录
-引用、真实 CLI 命令和关键 Dart 示例校验。本轮 18 项已确认缺陷均已关闭；当前 Demo 的
-本机旧插件缓存与 Android Studio Service Quick Fix 后续已验收；Demo Shell/Outlet/Owner
-barrel 私有减负已完成。后续补齐 Legacy/LSP Server 自动化与 Workspace 文件监听，独立
-Analyzer 83 项通过；新增监听修复、独立多根 SDK 边界和远端 pin 状态见该报告第 17 节。
-真实 IDE/平台矩阵与长期质量观测仍保持独立验收。
-最终收尾 844 项测试通过（框架/Demo 等 478、Generator 280、Analyzer 78、Skill 8），
-Workspace/插件 analyze 及缓存/无缓存生成物检查通过。
-下文已完成项表示基础能力和当时测试已落地，
-不表示本次发现的组合边界已修复；报告中的缺陷严重度与本文的规划优先级分别管理。
+## 2. 按业务需求触发的能力扩展
 
-`c2c169c` 后的[生成器与 Analyzer 复审](CCRouter-generator-analyzer-audit-2026-10-03.md)
-新增的 **6 项缺陷已分别修复提交**：G05 自定义输出 `--check` 恢复、G01 Proxy 名称遮蔽、G02 默认
-集合类型、G03 Host 描述转义、G04 preflight Library 作用域、A01 同名注解误报。
-新增反例与验证记录见复审报告；2026-10-04 已补五类能力 15 个 Builder 入口的读取范围
-核对与受控反例，见[优化计划 12.7](CCRouter-build-runner-optimization-plan.md#127-五类-builder-读取范围证据与-p6-决策2026-10-04)。
-这不是完备的符号级复用证明；P6 尚未收窄传播或改变摘要。生成期间输入一致性屏障已经完成；
-生产路径中的 Shadow Closure 已删除，历史实现只保留 benchmark 证据。没有真实项目净收益和完整
-可移植证明前，不再把文件闭包原型列为默认下一步。
+| 候选能力 | 触发与必须先解决的问题 |
+| --- | --- |
+| Service Proxy 高级类型 | 真实生产需求触发泛型 Contract、Stream、callback、继承或 Route Scope 方法代理；每项先定义 Owner、取消、释放、并发与版本兼容；现有受限泛型方法不等于通用支持 |
+| 环境 Provider 选择 | 先使用 Composition Root、Service Key 和 Test Override；确有多个应用共同需求才引入 dev/test/staging/production 抽象 |
+| Navigator 1.0 Backend | 真实渐进接入受阻时立项；先明确 root Outlet、readiness handshake、混合栈与结果通道 |
+| 外部 Router Backend/attach | 原生 Managed 已使用 Navigator 2.0；这里指接入明确的外部 RouterDelegate/Pages 模型，不提供“万能 attach” |
+| 原子组合栈、任意位置 replace | 已支持精确 Entry close；新增组合操作须有稳定身份、原子提交、失败回滚和结果/Scope 语义，不能把连续 push/pop 包装为事务 |
+| 原生多窗口/多 Flutter View | 真实 macOS/Windows/iPadOS 应用触发；现有 MultiHost 聚合不等于 Window 创建、激活、关闭与 View 生命周期桥 |
+| 完整 Route Restoration | 先由应用采集恢复需求；再设计版本化快照、契约校验、重新解析、部分恢复与安全降级；不在 Runtime 预置需求诊断队列 |
+| 动态组件治理 | 先覆盖依赖级联、Handler/订阅清理、活跃 Route 协调、未完成调用取消与能力原子切换，再讨论 activate/deactivate/install/uninstall |
+| Workspace/Feature Scope | 真实共享生命周期触发，不开放任意字符串层级 Scope |
+| Action Pipeline | 只有动态来源需本地白名单、多候选处理器或真实仲裁缺陷才立项；先约束来源、优先级、短路、取消、超时、白名单与报告 |
+| Host-owned Route Mount | [旧 Proposal](CCRouter-host-owned-route-mount-design.md)含历史 GoRouter 语境，须基于 Managed 与已有局部 Outlet 重新评估；不是现行 API |
+| UI sealed union/集合/动态 Slot | 真实异构动作或多贡献者场景触发；不能用 Object/Map/函数 Props 绕过 schema；每项先定义兼容、实例身份与资源所有权 |
+| Event Runtime Contract Registry | 仅在 generated SPI 需要成为严格防伪边界时评估；正常 Client、Workspace 校验和 publisher identity 已覆盖常规场景 |
 
-生产项目中发现的新场景、缺陷和能力候选，先按
-[生产项目场景驱动演进流程](CCRouter-production-adoption-workflow.md) 分类和验证，再决定进入
-当前版本修复、正式发布前计划或架构 2.0 候选。
+[Action Pipeline 方案](CCRouter-action-pipeline-plan.md)仅作候选设计。新能力不能因为外部框架有同名功能就进入默认 API。
 
-## 2. 当前已完成
+## 3. 保持应用职责的事项
 
-- [x] GoRouter Host 最小接入 `CCGoRouterApp`，保留 `attach` 和 `CCRouterApp.managed`。
-- [x] Demo 稳定 ID 集中管理：InitTask、Gate、Event、Policy、导航来源和 Host ID。
-- [x] GoRouter Page、Dialog、BottomSheet、Shell、StatefulShell、Outlet 和混合路由基础闭环。
-- [x] Runtime、Session、RouteEntry、Service、Command、Event、InitTask 生命周期基础闭环。
-- [x] Interceptor、Redirect、Defer、PopGuard、Aspect、Trace、Telemetry 和失败回退基础闭环。
-- [x] 生成器增量缓存、Workspace/Package 聚合、Catalog、源码查找和生成物门禁基础闭环。
-- [x] CLI Component/内部 Page 非覆盖式脚手架；脚手架不修改 Host 依赖或生成物。
-- [x] 顶层 `const CCComponent`、自动 Registrar/Manifest、Route 与简单 Service 自动装配，
-  以及 Service Contract 自动绑定、稳定 ID/Provider metadata 最小生成闭环。
-- [x] Command/Event Contract、Handler/Subscription、Owner Client、稳定 ID、metadata、Catalog
-  与 Workspace 校验生成闭环。
-- [x] InitTask Contract、Handler、类型化依赖、自动 Registrar bridge、DAG/Catalog、源码定位
-  与 Workspace 校验生成闭环。
+布局 metrics、breakpoints、折痕解释与 pane 选择属于应用；Host 只投递已决定的 Outlet 可见性。产品 Analytics、Consent、供应商 HTTP/Crash/存储 Adapter、账号与环境切换策略放在应用或 `demo/modules/*`。恢复需求采集也由应用拥有。
 
-## 3. P0：恢复开发后的第一批任务
+不做默认 Widget 文本/Key 猜测、随机业务 ID、全局万能 Route 表、反射分派或任意 Map Contract。多个独立 Pub build root 不合并为一个 watch；嵌套 Host 各自持有 session/lock，跨 root 编排需真实样本证明。不为收尾新增单独 `ccrouter help`。
 
-### 3.1 稳定 ID 与 Contract 边界
+## 4. Framework Package 准入
 
-- [x] 完成 InitTask/Contract 生成边界：不扫描 Registrar/Contribution 猜测关系，采用显式
-  Task Contract、Handler 注解和类型化依赖引用。
-- [x] Demo 已用公共 contracts Package 验证真实跨组件 Task Contract 和 required Owner dependency。
-- [x] 框架提供通用的 `appStarted` 与 `privacyGranted` Gate；业务组件直接使用框架常量，避免重复定义。
-- [x] 跨组件 Task Contract 必须归属公共 contracts Package，并由 public barrel exposure 测试门禁。
+新增 `packages/*` 前须同时证明：
 
-### 3.2 生成器校验收敛
+1. 多个应用能复用，而非单一 Demo、产品或供应商策略。
+2. 契约 provider-neutral，不内置业务事件、账号、上传、存储或环境切换。
+3. Owner、生命周期、失败、隐私、性能与兼容语义能形成稳定契约。
+4. Composition Root、`demo/modules/*` 或现有更窄 SPI 无法满足。
+5. 依赖可选，不向未使用能力的应用传递供应商 SDK。
+6. 有独立测试、回归矩阵与长期维护责任。
 
-- [x] 评估生成器是否能可靠发现手写 InitTask 的 ID、Gate 和依赖；结论是不能可靠发现，
-  因此已批准显式声明方案，不增加启发式扫描，也不静默声称已覆盖。
-- [x] 确认 Route/InitTask Contract、组件依赖、公共 Barrel 和跨包内部 API 的生成期校验边界；
-  Runtime 继续保留对手写与陈旧生成物的最终校验。
-- [x] InitTask 生成错误与 metadata 提供 Package、组件、任务 ID、依赖和可移植来源位置。
-- [x] 2026-09-27 已在本轮 Component/Service 生成改动后执行全量生成物回归；后续每次
-  Generator 改动仍必须重复该门禁，不能只验证 Demo 编译。
+不满足时留在应用侧试验，形成多个应用共性后再评估晋升。
 
-### 3.3 质量回归
+## 5. 执行顺序
 
-- [x] 2026-09-24 完成本轮全量回归：`dart analyze`、`ccrouter_test` 302 项、Generator 131 项、
-  Demo 30 项、缓存/无缓存 `generate --check`、Runtime/Generator/Service 基准、macOS Debug
-  构建和资源释放审查均通过；长期平台 RSS/Heap 趋势仍属于持续观测。
-- [x] 2026-09-27 完成 Component/Service 生成架构回归：`dart analyze`、
-  `ccrouter_test` 324 项、Generator 177 项、Demo 31 项以及缓存/无缓存
-  `generate --check` 均通过；4 个组件、31 条路由和 8 个生成 Package 输出一致。
-- [x] 2026-09-27 完成 Command/Event/InitTask 生成闭环回归：`dart analyze`、
-  `ccrouter_test` 329 项、Generator 216 项、Demo 31 项、缓存/无缓存 `generate --check`、
-  InitTask clean/rebuild 和能力级 `ccrouter find` 均通过。
-- [x] 提供统一 `packages/ccrouter_test/benchmark/performance_regression.dart`，编排 Runtime、
-  Service、并发、长运行、Analytics 压力和可选全能力 Generator 基准；持续执行的版本趋势仍需
-  由发布流程保存 JSON 结果。
-- [x] 2026-09-28 修复 public barrel 校验的重复 Package 扫描，引入精确内容 fast path 和
-  Route/Service/Command/Event/InitTask 混合压力基准；30× 的 1650 项能力 Validator 为 38ms，
-  无变化 wall 为 0.81-0.85s。完整数据见
-  [生成器性能报告](CCRouter-generator-performance-report.md)。
-- [x] 2026-09-28 增加保守 per-Package dirty set：metadata、受管输出和直接依赖 Index 均用
-  精确 fingerprint，dirty 沿反向依赖闭包传播；干净 Package 跳过聚合写入但仍执行 Validator、
-  Host 组装和删除检查。缓存 schema 升级为 2，旧缓存自动 fail-closed。
-- [x] [build_runner 与团队构建正确性优先优化计划](CCRouter-build-runner-optimization-plan.md)
-  的 P1、P2 纯删除路径、P3 Portable Generation State 和 P4 冷成本评估已完成：分层 Build Plan、`.dart_tool`
-  本地诊断状态、`suggested/actual/reasons` Profile、精确删除与可信纯新增 aggregation-only、只读
-  外部 Package Artifact Integrity 均已落地。可写 Package 无法证明时回退完整 Builder；只读外部
-  Package 缺失或失配时明确失败。P4 证明当前主要冷成本是 build_runner AOT，且新版受 Flutter
-  SDK 解析约束阻断；后续已单独实现 build_runner watch 开发路径，仍不引入自有
-  runner，CI 保持 `--no-cache --check`。
-- [x] 2026-10-03 完成 P3 回归：全仓 Analyze、Generator `272/272`、增量与
-  `--no-cache --check` 生成门禁均通过；状态缺失、篡改、无 Builder metadata 与只读外部 Package
-  边界均有专项测试，生成状态未包含本机路径或 `.dart_tool` 信息。
-- [x] 2026-10-03 完成 3x/5x/10x 多组件个人与团队增删回归：18/30/60 个组件分别包含
-  Route、Service、Command、Event、InitTask；个人未生成组件安全运行 Builder，团队可信预生成
-  新增和个人/团队删除走 aggregation-only。所有场景路径经 `--no-cache --check` 与逐文件逐字节
-  比较一致，并修复 Workspace 外 Path 依赖在 Build Plan 与 Portable State 间的指纹覆盖差异。
-- [ ] 仅在真实项目 Host 聚合超过总耗时 20% 时继续优化 dirty set 的输入摘要速度；不得用
-  mtime/size 替代内容摘要。
-- [ ] Flutter / Dart 升级同步：已盘点当前 SDK、Generator/独立 Analyzer、Hook 和只读组件分发
-  边界，尚未选定或升级目标版本。按[升级计划 U0–U6](CCRouter-sdk-upgrade-plan.md) 执行隔离
-  解析、工具身份证明、最小兼容迁移、平台/性能回归和分发收口；不与 P6 传播优化捆绑启用。
-- [~] build_runner 优化下一阶段 P6：F04/F03 正确性前置、生成期间输入一致性屏障、只读归因、
-  混合对照样本和 Builder 读取范围核对已完成；生产 Shadow Closure 已删除，传播收窄和 P6-2/3
-  尚未实施。普通注释、生成文档与源码定位的分层摘要仅在真实项目慢样本证明收益后重新评估；
-  减少状态变更与缩短生成耗时分别验收。详见
-  [优化计划第 12 节](CCRouter-build-runner-optimization-plan.md#12-p6生成状态摘要与依赖失效粒度优化)。
-  完整证明、准确性与净收益门禁通过前，不增加新的 production skip 或默认优化路径。
-- [x] 建立冷启动、初始化、路由解析、导航延迟、并发导航、Runtime dispose 和长期 RSS 的
-  同机趋势入口；长期趋势仍需按发布版本持续采样。
-- [x] 2026-09-29 完成 macOS、iOS Simulator、Android、Web 和 OHOS 构建 smoke；真实 iOS/macOS
-  真机手势、原生多窗口和平台长期运行仍按兼容性维护持续采样，不能用 Pure Dart benchmark
-  代替真实平台结论。
-- [x] 2026-09-29 完成 Adapter、Observer、Route Scope、Overlay、Timer 和 Stream 的释放路径
-  回归；长期 RSS/Heap 趋势仍需按发布版本持续采样。
-- [x] 2026-09-27 核对架构、路由、契约、生成器、分析事件与后续计划文档，纠正已实现能力、
-  旧生成路径、旧 API 名称和当前测试数量；历史回归基准保留其原始口径。
-- [x] 保留 `CCRouterRuntime.forTesting` 与 Zone-local Test Runtime Overlay，并提取私有 Runtime
-  Resolver 统一选择 default/overlay Runtime；Resolver 不拥有、不销毁 Runtime，未改变公开 API。
+先确认真实场景、版本与触发条件，列明候选取舍；再定义 Owner、生命周期、失败/取消和隐私边界，选择最小可回退路径。更新专项规范和接入指南后实现，按风险运行适用的 Pure Dart、Flutter、Generator 与平台回归，最后做生成一致性和文档检查。
 
-## 4. P1：正式发布前或真实规模触发后
-
-### 4.1 Contract 与版本兼容
-
-- [x] 完成正式发布前 Contract 版本兼容设计：独立 Contract SemVer、规范化 shape fingerprint、
-  Owner/消费者范围、生成/聚合/Runtime 三层校验、迁移和废弃门禁。详见
-  [正式发布前能力设计与实施计划](CCRouter-pre-release-capability-plan.md)；核心 Runtime/生成器
-  实现已完成，后续只保留发布候选兼容样本维护。
-- [x] 为五类 Contract 增加独立 SemVer、shape fingerprint metadata，并实现生成期/聚合期
-  的版本、指纹和 Owner 结构门禁；旧 schema 仍可供迁移工具读取。
-- [x] 生成阶段写入消费者的精确版本范围与 shape fingerprint，Host Bundle 携带五类
-  Contract descriptor；Host 组装和 Runtime 共享稳定的 `missing`、`ownerMismatch`、
-  `versionOutOfRange`、`fingerprintChanged`、`duplicateImplementation`、
-  `staleGeneratedOutput` 错误码。Runtime 只做最终边界保护，不协商或静默降级。
-- [ ] 评估环境实现选择模型；短期继续使用 Composition Root、Service Key 和 Test Override。
-
-### 4.2 初始化任务生成（已完成）
-
-- [x] 设计显式 `CCInitTaskContract`、`@CCInitTask`、类型化依赖和现有
-  `CCInitTaskGate` 复用模型；不生成业务调用 Client。
-- [x] 生成 Handler registration bridge、依赖索引、Package/Host metadata 和可读 DAG 文档。
-- [x] 实现 Task/Owner/Gate/Handler/Contract exposure/依赖图校验，并保留 Runtime 最终校验。
-
-### 4.3 Service Proxy 与 Command/Event 生成
-
-- [x] Service Contract Token、简单 Provider registration、自动 Registrar 和 Catalog metadata
-  已实现；复杂构造/readiness 继续通过 Contribution 显式注册。
-- [x] Service 方法级自动 Proxy 使用消费组件显式 `CCServiceDependency<T>`，生成组件专属
-  Client、稳定 caller/method identity 和方法 metadata；不扫描依赖生成未使用能力。
-- [x] `CCServiceContract.alias`、`CCCommandContract.alias` 提供跨消费者默认 Client 名称，
-  Dependency alias 可局部覆盖；alias 进入 metadata 和 shape fingerprint。alias migration
-  CLI/Analyzer Quick Fix 尚未实现。
-- [ ] 根据生产需求扩展当前明确拒绝的泛型 Contract、Stream、callback、继承或 Route Scope 方法代理；
-  每一项必须先冻结所有权、取消和兼容语义。
-- [x] 按 `CCRouter-command-design.md` 已批准方案实现 Command Contract、Handler registration、
-  显式消费依赖、组件专属 Client、metadata、Catalog 和 Workspace 校验；不扫描并生成未使用 Command。
-- [x] 按 `CCRouter-event-design.md` 已批准方案实现 Event Contract、静态 Subscription、Owner
-  自动 Publication Client、metadata、Catalog 和 Workspace 校验；不引入重复 publication 声明
-  或动态 EventBus 语义。
-- [x] Contract 通过公共业务 barrel 暴露；Proxy 留在消费组件内部生成目录，跨 Package 不导出
-  生成实现文件。
-
-### 4.4 开发体验与诊断
-
-- [x] 扩展 `ccrouter find` 和 Catalog 源码定位，覆盖 Route、Service、Command、Event、InitTask。
-- [x] 增加 `ccrouter create component`、`create page`、`create service`、`create command`、
-  `create event` 和 `create init-task` 模板命令；跨组件 Contract 提升仍需显式设计。
-- [x] 完成可嵌入 DevTools 只读视图：Component Graph、Route/Backend Entry、Trace、
-  Failure/Fallback 和 InitTask DAG；官方 DevTools Extension 及 Catalog/Runtime 联动、源码定位、
-  组件依赖筛选和调用链视图均已完成，见 `docs/CCRouter-devtools.md`。
-- [x] 2026-09-28 完成最小 IDE / Analysis Server 集成：独立
-  `ccrouter_analyzer_plugin` 提供跨 Package 生成物导入、Route/Service/Command/Event/InitTask
-  确定性同源输出缺失，以及 required InitTask Contract/timeout 诊断；生成的 Dart
-  API、`ccrouter find`、Catalog 与 `generate --check` 仍分别承担补全、源码定位和最终门禁。
-  插件不执行生成、不替代 Workspace Validator。详见
-  [IDE / Analysis Server 集成](CCRouter-ide-analysis-server.md)。
-- [x] Analyzer 单文件规则覆盖 Handler 形态/明显签名、互斥参数、字面量 ID/alias/Gate 和正 timeout；
-  同源生成物刷新覆盖 Route、Service、Command、Event 与 InitTask。Plugin 单次 parse 复用行信息，
-  Package Context 使用有界 LRU 和 pubspec 失效；Quick Fix 支持删除开发者明确选择的冲突参数。
-- [x] Analyzer 使用 Pub Package config 和精确生成 metadata 建立有界 Contract Owner 索引；
-  Service/Command Owner 缺少 required `dependencies` 时实时诊断。Owner 常量已由当前公共 import
-  精确暴露且列表可直接编辑时提供 Quick Fix；不扫描仓库、不插 import、不改复杂集合，Generator
-  和 Workspace Validator 保持最终权威。
-- [x] Demo Analyzer bootstrap 已切换为固定 Git commit，保留独立 Analyzer 依赖图；增加
-  loader `analyze/compile` smoke、兼容性边界测试和发布后的 Hosted fallback manifest。
-- [x] 独立真实 Analysis Server Legacy/LSP 回归覆盖 Dart/pubspec overlay、Quick Fix/codeAction、
-  五类生成物磁盘变化、Workspace 跨包 Owner metadata/Contract 变化及嵌套 Host diagnostics polling。
-  已修复原始事件被 import 依赖图过滤、JSON 未被关注、无 watch one-shot 诊断缺失和恢复依赖后
-  stale hint 残留；Demo 固定远端 pin 已包含当前 Plugin 修复。
-- [ ] 独立多根工程同时冷启动的 SDK legacy PluginManager 重复实例边界与完整 IDE/SDK
-  矩阵；当前共享 Dart Workspace 验证不替代这一项，也不承诺监听分析根外的依赖。
-- [x] Analyzer Plugin 已提供 Host-only 的 `status/doctor/install/upgrade/uninstall`，覆盖固定来源、lockfile、
-  Analyzer 兼容检查、幂等、候选验证、配置回滚和 `--dry-run`。Hosted 来源需显式版本；
-  发布后的真实 Hosted 安装及完整 IDE/SDK 矩阵仍待验收。不挂入 `generate`、Pub Hook 或组件脚手架。固定 Git ref 仅在插件
-  实际变化、独立验证并推送远端后更新，不追随本地 HEAD。详见
-  [Analyzer Plugin CLI 自动装配计划](CCRouter-analyzer-cli-plan.md)。
-- [x] 建立纯 Dart、版本化的 Catalog/Runtime Snapshot 与 Trace Edge 协议；静态记录携带
-  可移植源码位置，Runtime 适配器只复制稳定 ID、Owner、Host/Outlet、状态和耗时。官方
-  Extension 已直接消费该协议，不读取 Runtime 内部对象。
-- [x] 实现独立官方 Flutter/Dart DevTools Extension 最小只读闭环；保持现有
-  `ccrouter_devtools` Widget 面板只读，通过 `ext.ccrouter.snapshot` 消费版本化 Envelope。
-  已补齐高级组件筛选、Route source URI 展示/复制和单次 Service/Command/Event/InitTask
-  调用链视图；嵌入式面板可由 Host 提供 `onOpenSource`，官方 Extension 不直接绑定本地 IDE。
-- [x] 完成 DevTools Host 自动装配：从 Host Catalog 生成静态快照，由 Host Assembly 携带可选
-  Tool Integration，Runtime 初始化后注册、shutdown 时清理；Debug 默认开启、Profile 可显式
-  开启、Release 强制关闭。不得让 `ccrouter` 反向依赖 `ccrouter_devtools`，也不得由业务组件或
-  任意 Navigation Host dispose 管理 isolate endpoint。详见
-  [DevTools Host 自动装配计划](CCRouter-devtools-host-integration-plan.md)。
-- [x] Pub Hook 已支持成功的显式 `flutter pub` 和 `dart pub` 后置生成，以及
-  `flutter run/build` fail-closed 前置生成；复用 fingerprint fast-path，覆盖 POSIX/Windows
-  wrapper 和全局参数前缀。POSIX 包装 inner Dart executable；Windows 只覆盖 `bin/dart.bat`，
-  IDE 直接执行 `dart.exe` 以及 Flutter Tool 内部隐式 `pub get` 仍明确不在 Hook 边界。
-- [x] **Pub Hook 等待期间的 resolution churn 快速失败**：active watch 可能在 Pub 正在
-  更新 resolution 文件时启动 cycle；若 cycle 开始与结束的 resolution fingerprint 不一致，
-  watch 即使已经在 aggregation 阶段失败，也无法发布可供 Hook 匹配的完成 fingerprint，Hook
-  会错误等待到 5 分钟超时。成功证据仍须严格要求当前 resolution fingerprint 匹配，不能为了
-  避免超时而接受旧 cycle；Hook 应记录等待基线 `sessionId/cycle/eventRevision`，对等待开始后
-  出现的新 terminal failure 立即 fail-closed。fingerprint 可证明匹配时转发原始 Validator/
-  aggregation diagnostics；确认发生 resolution churn 时立即报告“当前 cycle 不能作为成功证明，
-  需要新 cycle 或 session”，并附已有的有界 diagnostics，不再等待固定超时。
-  已以 `sessionId/cycle/eventRevision` 和 `cycleResolutionState` 实现等待基线与快速失败；验收覆盖
-  cycle 中途更新 resolution、无完成 fingerprint 的 aggregation 失败、等待前历史失败不得误用、
-  等待后新失败快速返回，以及后续匹配成功 cycle 正常复用。协调逻辑保留独立 kill switch，
-  one-shot `--no-cache --check` 和逐字节输出对照仍为最终权威门禁。
-- [x] **Hot Reload / watch 完成栅栏**：当前 Flutter Hot Reload 与 CCRouter watch 可由同一次
-  保存并行触发，第一轮 reload 可能在相应 `aggregationSucceeded` 之前读取旧生成物。
-  后续需先设计 Flutter Tool/Hook 可接入的协调边界，再为会影响生成声明的修改等待与该次
-  输入匹配的 `aggregationSucceeded`；不得把旧 cycle 或 `buildSucceeded` 当作完成证据。
-  Builder/Validator/aggregation 失败时必须阻止消费旧生成物并显示原始诊断；普通 Widget body、
-  `initState` 或注释修改不应引入无界等待。未保存的 `pubspec.yaml` 修改不产生 generation
-  诊断；已保存但尚未执行 Pub 时应报告 resolved graph stale 并要求执行 Pub，不得声称依赖变化
-  已生效；Pub 完成但 watch aggregation 失败时必须显式显示生成错误，不能把 Flutter 增量编译
-  成功解释为 CCRouter graph 成功；Host topology 成功变化后应发布 `hotRestartRequired`，因为
-  `main()`/`CCRouterHost.initialize()` 不会由普通 Hot Reload 重新执行。优先采用结构化状态与诊断
-  协调，不直接代理整个 Flutter daemon。实现须保留 kill switch，并用声明变更/非声明变更、
-  连续保存、生成失败、resolved graph stale、topology 变化及通常 reload 的真实 `flutter run`
-  时序回归验收。
-  已为 Hook 启动的 `flutter run --machine` 增加 stdin-only gate；watch 通过 authored input
-  revision 与完成/失败 revision 关联保存和 cycle，gate 只在稳定的匹配
-  `aggregationSucceeded` 后转发 `app.restart`。失败返回标准 daemon error 和有界诊断；
-  topology restart 发布 `hotRestartRequired`，显式 Hot Restart 得到成功响应后才解除当前
-  run session 的栅栏。实现不解析 Dart AST、不参与 Builder 跳过，也不改写或缓冲
-  Flutter daemon stdout，只透传解析与 Hot Restart 匹配的 response；
-  `CCROUTER_DISABLE_HOT_RELOAD_GATE=1` 可独立回退。普通交互式终端 `r`
-  因 TTY/信号所有权不在安全接入边界内，仍需先通过 `watch follow` 确认成功，此限制保持显式。
-- [x] **Pub 拓扑变化后重启 watch session**：普通 `pub get`、版本变化，以及仍被当前
-  targets 安全覆盖的依赖删除，继续等待现有 watch cycle。新增 Package 或重算后的生成目标/
-  `--build-filter` 集合无法由当前 session 覆盖时，watch owner 应在持有同一 Host lease 期间
-  有序停止旧 build_runner、重新解析 build root/targets，并启动带新 session identity 的
-  build_runner。Pub Hook 只能在新 session 的 `ready` 之后接受与当前 Pub 解析指纹匹配的
-  `aggregationSucceeded`；重启、新 cycle 或状态发布失败均 fail-closed 并转发有界诊断。
-  验收覆盖 Package 新增/删除/重命名、Host dependency edge 变化、Dart 文件新增/删除/
-  重命名、重启期间并发 Pub 命令、进程退出与逐字节 `--no-cache --check` 对照；保留
-  独立 kill switch 以回退到显式停止 watch 后执行 one-shot 的参考路径。
-  已实现 exact resolution monitor、`resolutionStarted` 聚合 cycle、同 lease 的 session identity
-  轮换和新 session `ready` 栅栏。实测 build_runner 在部分依赖删除/版本解析变化时会主动退出，
-  因而“安全删除必定复用原 child”不是可靠上游契约；supervisor 仅在 exact resolution 已变化时
-  将该退出收敛为受控 restart，resolution 未变化的退出仍 fail closed。监视器以 stat 低成本
-  唤醒、exact fingerprint 判定并保留低频 exact 兜底，不把 mtime 当正确性证明。
-- [x] **Flutter wrapper 等待 watch 启动就绪**：`flutter run` 的后台进程 fork 不再等价于
-  watch 可用。wrapper 通过独立 Dart handshake 只接受同一 Host、同一 lease、
-  `sessionReady=true` 且 owner lock 仍被持有的结构化状态；watch-lock 冲突、入口未启动、初始
-  generation 失败、进程退出和有界超时均在原 Flutter Tool 启动前 fail-closed，并保留日志路径。
-  POSIX/Windows wrapper 使用相同协议；`CCROUTER_DISABLE_WATCH_STARTUP_HANDSHAKE=1` 仅回退
-  此握手，不关闭 preflight、watch、reload gate 或最终 `--no-cache --check`。
-- [x] **结构化生成诊断与 Analyzer watch bridge**：Workspace Validator 保留原 CLI 全量错误文本，
-  同时返回带稳定 code、severity、`package:` 位置、correction 和 root-cause group 的结构诊断；
-  同一缺失 Owner 引起的能力级错误在结构 snapshot 中保留 related locations，IDE 当前只显示
-  折叠后的一个主错误。watch 独立
-  原子发布 `diagnostics.json`，绑定 Host/build root、session、cycle、event revision 和 resolution
-  fingerprint，成功、新 cycle/session 会清空。Analyzer 只接受与当前 `status.json` 完全一致、
-  resolution matched 的证据，并以 500ms file-identity polling 弥补 Analysis Server 不转发
-  `.dart_tool` 事件的限制；只有 identity 变化才重新分析。无活动 watch 时，普通 Host generation
-  发布带 exact Pub-resolution fingerprint 的 one-shot 终态，成功或输入变化清除旧错误；活动 watch
-  始终优先且不会回退旧 one-shot。`pubspec.yaml` 与 resolved graph 失配只发布
-  `ccrouter_pub_resolution_stale`，并读取当前 editor overlay，不推断 Owner。Legacy/LSP 与真实
-  Android Studio 均已验证错误出现、恢复清除、旧 revision 拒绝与 stale Pub 提示清除；bridge 可由
-  `CCROUTER_DISABLE_ANALYZER_WATCH_BRIDGE=1` 独立关闭，诊断发布失败不改变生成结果；CLI 原文
-  兼容性、无 Pub Hook 保存、活动 watch 失败/恢复、位置跳转和旧 cycle 拒绝均有回归覆盖。
-- [x] KV Storage Demo 已提供 Scoped Facade，通过 Host-owned Context Provider 动态解析用户、
-  API 环境和设备命名空间，并保留内存 Backend 和可替换 Backend 边界。真实持久化、Secure
-  Storage 和生产 Session/Environment/Device 绑定仍由应用 Composition Root 落地。
-
-## 5. P2：架构 2.0 候选
-
-### 5.1 导航后端与组合栈
-
-- [ ] Navigator 1.0 Backend：先完成 root Outlet、readiness handshake、混合栈和结果通道设计。
-- [ ] 通用 Navigator 2.0/自定义 Router Backend：只适配明确的 RouterDelegate/Pages 模型，
-  不承诺“万能 Navigator 2.0 Adapter”。
-- [ ] 原子组合栈操作：重新评估 `pushAndRemoveUntil`、`removeRoute`、`removeRouteBelow`、
-  `replaceRouteBelow` 等能力；必须具备稳定 Entry ID、原子提交、失败回滚和返回值语义。
-
-### 5.2 平台窗口与状态
-
-- [ ] macOS、Windows、iPadOS 原生多窗口和 Flutter View 到 `CCNavigationHost` 的映射。
-- [ ] 多 Window Host 的创建、激活、关闭、注销和替换 Host 生命周期。
-- [ ] 完整 Route Restoration：版本化 Snapshot、重新解析、契约校验、部分恢复和安全降级。
-- [ ] 仅在 restoration opportunity 数据证明收益后，才进入公开恢复 API。
-
-### 5.3 组件与 Scope 治理
-
-- [ ] 动态组件 `activateComponent` / `deactivateComponent` / 卸载协议。
-- [ ] 依赖级联、Handler/订阅/诊断清理、活跃 Route 协调、未完成调用取消和原子能力切换。
-- [ ] 受控 Workspace/Feature Scope；不直接开放任意字符串层级 Scope。
-
-### 5.4 Action Pipeline
-
-- [ ] 只有出现动态来源触发本地白名单能力、多个候选处理器或真实仲裁缺陷后立项。
-- [ ] 设计 Action ID、来源策略、优先级、短路、取消、超时、白名单和执行报告。
-- [ ] Host Ingress 先把 H5/远程输入转换为类型安全 Action，禁止脚本、类名和任意 Map。
-
-## 6. 明确暂不做
-
-- [ ] 不把多个独立 Pub build root 合并为一个 watch；嵌套 Package Host 仍各自持有
-  session 与 generation lock，只在真实多 Host 协调样本证明需求后再评估跨 root 编排。
-- [ ] 不增加单独的 `ccrouter help` 作为 1.x 收尾能力。
-- [ ] 不在 1.x 增加动态组件激活、停用或卸载 API。
-- [ ] 不在 1.x 增加完整状态恢复 API，只保留脱敏 restoration opportunity 诊断。
-- [ ] 不为了对齐其他框架增加全局万能 Route 表、反射分派或任意 Map Contract。
-- [ ] 不在核心 `ccrouter` 中直接依赖 GoRouter；GoRouter 最小入口保持在独立 Adapter Package。
-- [ ] 不做默认全局 Widget 文本/Key 猜测和随机业务 ID；自动埋点只在显式 Target 或实验构建中
-  运行。通用节流、黑名单、Consent 回归、应用层 Firebase Adapter 示例和平台矩阵按
-  [正式发布前能力设计与实施计划](CCRouter-pre-release-capability-plan.md) 分阶段完成。
-
-## 7. 执行规则
-
-1. 每个任务开始前先确认所属版本、触发条件、Owner、生命周期和失败语义。
-2. 先更新对应设计文档，再实现最小闭环；不把候选 API 提前加入公开 Barrel。
-3. 每项完成后必须有 Pure Dart/Flutter/生成器测试中适用的回归覆盖。
-4. 通过 Analyze、相关测试、生成检查和 `git diff --check` 后再单独提交。
-5. 新增公开 API 必须说明场景、所有权、生命周期、错误、诊断边界和更窄替代方案。
-
-### 7.1 Framework Package 准入门禁
-
-新增 `packages/*` 前必须完成边界评审，并同时满足：
-
-1. 能被多个应用复用，且不是某个 Demo、产品或供应商的集成策略；
-2. 契约保持 provider-neutral，不内置业务事件、账号、上传、存储或环境切换规则；
-3. Owner、生命周期、失败、隐私、性能和兼容语义能够形成稳定公开契约；
-4. 不能仅通过应用 Composition Root、`demo/modules/*` 或已有 SPI 完成；
-5. 依赖可选且不会把供应商 SDK 传递给未使用该能力的应用；
-6. 具备独立测试、回归矩阵和长期维护责任。
-
-不满足任一项时，默认放入应用仓库或 `demo/modules/*` 验证；只有形成多个真实应用共同需求后，
-才重新评估是否晋升为框架 Package。
+当前发布阻塞不在本页重复打勾；回到 Release Readiness 逐项关闭。计划文字本身不授权升级 SDK、发布 Package、修改远端或更新 Demo pin。

@@ -368,7 +368,7 @@
     {
       "id": "demo_navigation_lab.detail",
       "version": "0.1.0",
-      "shapeFingerprint": "ef1b3a3e2d7b26cdeb4a052c2b88ec9512f08ca2734ac774dfc46f69fd66d803",
+      "shapeFingerprint": "b1f2938c7bd7b5fc004df4eacec347a8389398c2c802b2ee3a433921f86e52a5",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "enabled",
@@ -381,7 +381,7 @@
         "kind": "page",
         "symbol": "DemoDetailPage",
         "packageUri": "package:demo_navigation_lab/src/detail_page.dart",
-        "line": 26,
+        "line": 27,
         "column": 13
       },
       "navigationSources": [
@@ -449,6 +449,11 @@
           "constraints": {}
         },
         {
+          "type": "CCRegexPattern",
+          "value": "^/lab/regex/(?<id>[^/]+)$",
+          "primary": false
+        },
+        {
           "type": "CCUriPattern",
           "value": "ccrouter://lab/detail/:id",
           "primary": false,
@@ -510,7 +515,7 @@
         "kind": "page",
         "symbol": "DemoExtraPage",
         "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-        "line": 224,
+        "line": 238,
         "column": 13
       },
       "navigationSources": [
@@ -1430,7 +1435,7 @@
         "kind": "page",
         "symbol": "DemoBottomSheetPage",
         "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-        "line": 168,
+        "line": 172,
         "column": 13
       },
       "navigationSources": [
@@ -1825,7 +1830,7 @@
         "kind": "page",
         "symbol": "DemoShellDetailPage",
         "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-        "line": 60,
+        "line": 63,
         "column": 13
       },
       "navigationSources": [
@@ -1991,7 +1996,7 @@
         "kind": "page",
         "symbol": "DemoShellSettingsPage",
         "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-        "line": 89,
+        "line": 92,
         "column": 13
       },
       "navigationSources": [
@@ -2069,7 +2074,7 @@
         "kind": "page",
         "symbol": "DemoStackPage",
         "packageUri": "package:demo_navigation_lab/src/stack_page.dart",
-        "line": 12,
+        "line": 15,
         "column": 13
       },
       "navigationSources": [
@@ -2403,7 +2408,7 @@
         "kind": "page",
         "symbol": "DemoWorkspaceActivityPage",
         "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-        "line": 172,
+        "line": 186,
         "column": 13
       },
       "navigationSources": [
@@ -2481,7 +2486,7 @@
         "kind": "page",
         "symbol": "DemoWorkspaceDetailPage",
         "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-        "line": 143,
+        "line": 147,
         "column": 13
       },
       "navigationSources": [
@@ -2570,7 +2575,7 @@
         "kind": "page",
         "symbol": "DemoWorkspaceHomePage",
         "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-        "line": 109,
+        "line": 112,
         "column": 13
       },
       "navigationSources": [
@@ -2648,7 +2653,7 @@
         "kind": "page",
         "symbol": "DemoWorkspaceProfilePage",
         "packageUri": "package:demo_navigation_lab/src/shell_pages.dart",
-        "line": 208,
+        "line": 222,
         "column": 13
       },
       "navigationSources": [

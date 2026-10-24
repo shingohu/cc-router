@@ -1,0 +1,20 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart
+00:00 +0: retained navigation callback Zone releases Runtime decision=false
+00:00 +0 -1: retained navigation callback Zone releases Runtime decision=false [E]
+  Expected: null
+    Actual: <Instance of 'CCRouterRuntime'>
+  
+  package:matcher                                                               expect
+  package:flutter_test/src/widget_tester.dart 477:18                            expect
+  packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart 139:7  main.<fn>
+  
+00:00 +0 -1: retained navigation callback Zone releases Runtime decision=true
+00:00 +0 -2: retained navigation callback Zone releases Runtime decision=true [E]
+  Expected: null
+    Actual: <Instance of 'CCRouterRuntime'>
+  
+  package:matcher                                                               expect
+  package:flutter_test/src/widget_tester.dart 477:18                            expect
+  packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart 139:7  main.<fn>
+  
+00:00 +0 -2: Some tests failed.

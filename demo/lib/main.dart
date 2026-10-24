@@ -29,12 +29,17 @@ Future<void> runDemoApplication(Widget application) async {
         interceptor: DemoGlobalNavigationInterceptor(),
       ),
     ],
+    routeRevalidationPolicies: const [
+      CCGlobalRouteRevalidationPolicy(
+        id: DemoHostIds.routeRevalidationPolicy,
+        policy: DemoRouteRevalidationPolicy(),
+      ),
+    ],
     navigationFailurePolicy: const DemoNavigationFailurePolicy(),
     navigationAspects: [
       demoNavigationAspect,
       demoNavigationAnalytics.createAspect(),
     ],
-    telemetryContextProvider: const DemoNavigationTelemetryProvider(),
     diagnostics: CCDiagnosticsConfig(
       sink: demoDiagnosticsSink,
       defaultMinimumLevel: CCDiagnosticLevel.debug,
@@ -83,7 +88,9 @@ final class _CCRouterDemoAppState extends State<CCRouterDemoApp> {
   ) {
     final backend = createDemoManagedRouterBackend(
       catalog: configuration.catalog,
-      initialLocation: configuration.initialLocation ?? '/',
+      initialLocation: configuration.initialLocation,
+      overridePlatformDefaultLocation:
+          configuration.overridePlatformDefaultLocation,
       enablePredictiveBack: configuration.enablePredictiveBack,
       initializeFromRouteInformation:
           configuration.initializeFromRouteInformation,

@@ -1,0 +1,194 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart
+00:00 +0: concurrent maybePop preserves actual result and unique receipt
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: 'first'
+  Actual: 'second'
+   Which: is different.
+          Expected: first
+            Actual: second
+                    ^
+           Differ at offset 0
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart:109:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart line 109
+The test description was:
+  concurrent maybePop preserves actual result and unique receipt
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -1: concurrent maybePop preserves actual result and unique receipt [E]
+  Test failed. See exception logs above.
+  The test description was: concurrent maybePop preserves actual result and unique receipt
+  
+00:00 +0 -1: LocalHistory precedes deny Guard (native=false)
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: null
+  Actual: 'left_locked'
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart:138:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart line 138
+The test description was:
+  LocalHistory precedes deny Guard (native=false)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -2: LocalHistory precedes deny Guard (native=false) [E]
+  Test failed. See exception logs above.
+  The test description was: LocalHistory precedes deny Guard (native=false)
+  
+00:00 +0 -2: LocalHistory precedes deny Guard (native=true)
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: <1>
+  Actual: <0>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart:141:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart line 141
+The test description was:
+  LocalHistory precedes deny Guard (native=true)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -3: LocalHistory precedes deny Guard (native=true) [E]
+  Test failed. See exception logs above.
+  The test description was: LocalHistory precedes deny Guard (native=true)
+  
+00:00 +0 -3: Shell exit retains content and child Scope (native=false)
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 0 widgets with text "probe-L1": []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart:170:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart line 170
+The test description was:
+  Shell exit retains content and child Scope (native=false)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -4: Shell exit retains content and child Scope (native=false) [E]
+  Test failed. See exception logs above.
+  The test description was: Shell exit retains content and child Scope (native=false)
+  
+00:00 +0 -4: Shell exit retains content and child Scope (native=true)
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 0 widgets with text "probe-L1": []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart:170:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart line 170
+The test description was:
+  Shell exit retains content and child Scope (native=true)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -5: Shell exit retains content and child Scope (native=true) [E]
+  Test failed. See exception logs above.
+  The test description was: Shell exit retains content and child Scope (native=true)
+  
+00:00 +0 -5: new location supersedes old policy (initial=/)
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: '/detail/B'
+  Actual: '/detail/A'
+   Which: is different.
+          Expected: /detail/B
+            Actual: /detail/A
+                            ^
+           Differ at offset 8
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart:189:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart line 189
+The test description was:
+  new location supersedes old policy (initial=/)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -6: new location supersedes old policy (initial=/) [E]
+  Test failed. See exception logs above.
+  The test description was: new location supersedes old policy (initial=/)
+  
+00:00 +0 -6: new location supersedes old policy (initial=/detail/A)
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: '/detail/B'
+  Actual: '/detail/A'
+   Which: is different.
+          Expected: /detail/B
+            Actual: /detail/A
+                            ^
+           Differ at offset 8
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart:189:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart line 189
+The test description was:
+  new location supersedes old policy (initial=/detail/A)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -7: new location supersedes old policy (initial=/detail/A) [E]
+  Test failed. See exception logs above.
+  The test description was: new location supersedes old policy (initial=/detail/A)
+  
+00:00 +0 -7: Some tests failed.

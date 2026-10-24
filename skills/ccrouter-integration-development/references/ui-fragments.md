@@ -209,6 +209,10 @@ uiDependencies: [
 The Owner must also appear in required `dependencies`; optional owners cannot
 satisfy this edge. Aliases and contract edges must be unique. The generated
 Client name is the PascalCase full component ID plus `Fragments`.
+Version ranges use the shared Contract grammar: exact, `*`, caret, tilde, or
+one or more `>=`/`>`/`<=`/`<` comparators separated by whitespace,
+including tabs/newlines. A single comparator such as `>=1.0.0` is valid; the
+Host still checks the installed version and exact schema fingerprint.
 
 The Analyzer Owner diagnostic and imported-constant Quick Fix also support
 resolved typedef constructors for `CCComponent` and `CCUIFragmentDependency`.
@@ -296,6 +300,10 @@ is the proven missing required Owner edge described above.
   Actions; B pauses polling/animations itself. It is not pixel visibility or
   authorization, and hiding does not dispose State.
 - Flutter `dispose` releases owned controllers, timers and subscriptions.
+  Unmount or capability identity changes also revoke the framework Action sink
+  and clear its consumer callback reference. Retaining only an old sink does not
+  retain Fragment State/Props; retaining render input or Props yourself still
+  requires your own cleanup.
   `deactivate` is not terminal. App/Session Services retain their existing Scope
   ownership; cross-component Route-scoped Service Proxy remains unsupported.
 - On Session change, clear old account data and invalidate pending work. A Host

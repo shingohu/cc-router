@@ -21,6 +21,51 @@ void main() {
   tearDown(() => fixture.dispose());
 
   test(
+    'canonical Contract placement diagnoses without rejecting factory values',
+    () async {
+      final result = await fixture.resolve('''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart' as cc;
+typedef Placement = cc.CCRoutePlacement;
+@cc.CCRouteContract<void>(componentId: cc.CCComponentId('consumer'),
+  id: 'sample.home', pattern: cc.CCPathPattern('/'),
+  placement: Placement(hostId: 'Bad Host'),
+  popGuards: ['dirty.check', 'dirty.check'])
+abstract class HomeRouteContract {}
+''');
+      final codes = fixture.diagnostics(result).map((d) => d.code);
+      expect(
+        result.diagnostics.where(
+          (d) => d.diagnosticCode.severity.name == 'ERROR',
+        ),
+        isEmpty,
+      );
+      expect(codes, contains('ccrouter_route_placement_invalid'));
+      expect(codes, contains('ccrouter_route_policy_duplicate'));
+    },
+  );
+
+  test(
+    'resolved foreign constructors and computed placement values defer',
+    () async {
+      final result = await fixture.resolve('''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart' as cc;
+const placement = cc.CCRoutePlacement(hostId: 'Bad Host');
+cc.CCRoutePlacement makePlacement({String hostId = ''}) => placement;
+@cc.CCRoute<void>(id: 'a', pattern: cc.CCPathPattern('/a'), placement: placement)
+class A {}
+@cc.CCRoute<void>(id: 'b', pattern: cc.CCPathPattern('/b'), placement: makePlacement(hostId: 'Bad Host'))
+class B {}
+''');
+      expect(
+        fixture
+            .diagnostics(result)
+            .where((d) => d.code.startsWith('ccrouter_route_')),
+        isEmpty,
+      );
+    },
+  );
+
+  test(
     'prefixed and transitive lifecycle references retain framework identity',
     () async {
       final result = await fixture.resolve('''

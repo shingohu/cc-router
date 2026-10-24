@@ -117,7 +117,11 @@ Future<List<File>> _createComponentScaffold(
 }) async {
   final packageName = _packageName(rawName);
   final packageRoot = Directory(path.join(parent.path, packageName));
-  final finalFiles = _componentFiles(packageName, parent);
+  final finalFiles = _componentFiles(
+    packageName,
+    parent,
+    withExample: withExample,
+  );
   final stagingRoot = await parent.createTemp('.ccrouter-$packageName-');
   final stagingFiles = <File, String>{
     for (final entry in finalFiles.entries)
@@ -153,6 +157,24 @@ Future<List<File>> _createComponentScaffold(
       if (withExample) ...[
         File(path.join(packageRoot.path, 'example', 'pubspec.yaml')),
         File(path.join(packageRoot.path, 'example', 'lib', 'main.dart')),
+        File(
+          path.join(
+            packageRoot.path,
+            'example',
+            'lib',
+            'src',
+            'example_component.dart',
+          ),
+        ),
+        File(
+          path.join(
+            packageRoot.path,
+            'example',
+            'lib',
+            'src',
+            'example_home_page.dart',
+          ),
+        ),
       ],
     ];
   } on CCScaffoldException {
@@ -224,9 +246,10 @@ Future<void> _createExampleHost({
   if (componentDependencies is! YamlMap ||
       componentDevDependencies is! YamlMap ||
       !componentDependencies.containsKey('ccrouter') ||
-      !componentDevDependencies.containsKey('ccrouter_generator')) {
+      !componentDevDependencies.containsKey('ccrouter_generator') ||
+      !componentDevDependencies.containsKey('build_runner')) {
     throw const CCScaffoldException(
-      'Generated component manifest is missing CCRouter dependencies.',
+      'Generated component manifest is missing generation dependencies.',
     );
   }
   final finalExampleRoot = Directory(path.join(finalRoot.path, 'example'));
@@ -243,6 +266,11 @@ Future<void> _createExampleHost({
     finalRoot,
     finalExampleRoot,
   );
+  devDependencies['build_runner'] = _rebasePathDependency(
+    _normalizeYaml(componentDevDependencies['build_runner']),
+    finalRoot,
+    finalExampleRoot,
+  );
   document['dependencies'] = dependencies;
   document['dev_dependencies'] = devDependencies;
   if (_hasWorkspaceRoot(finalRoot)) document['resolution'] = 'workspace';
@@ -250,6 +278,54 @@ Future<void> _createExampleHost({
     '${_renderYamlDocument(document)}\n',
     flush: true,
   );
+  final sources = <String, String>{
+    'lib/main.dart':
+        '''import 'package:ccrouter/ccrouter_host.dart';
+import 'package:flutter/material.dart';
+
+import 'src/ccrouter_generated/ccrouter_host.api.g.dart';
+
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly);
+  runApp(const CCManagedRouterApp(title: '$packageName Example'));
+}
+''',
+    'lib/src/example_component.dart':
+        '''import 'package:ccrouter/ccrouter.dart';
+
+/// Composition owned by this standalone example, separate from the component.
+const exampleComponent = CCComponent(
+  id: CCComponentId('${packageName}_example'),
+  version: '0.1.0',
+  dependencies: [CCComponentId('$packageName')],
+);
+''',
+    'lib/src/example_home_page.dart':
+        '''import 'package:ccrouter/ccrouter.dart';
+import 'package:flutter/material.dart';
+
+/// The example owns a real startup Route; Managed never invents a home page.
+@CCRoute<void>(
+  id: '${packageName}_example.home',
+  pattern: CCPathPattern('/'),
+)
+final class ExampleHomePage extends StatelessWidget {
+  const ExampleHomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('$packageName Example')),
+    body: const Center(child: Text('Add component pages and open their typed Intents here.')),
+  );
+}
+''',
+  };
+  for (final source in sources.entries) {
+    final file = File(path.join(exampleRoot.path, source.key));
+    await file.parent.create(recursive: true);
+    await file.writeAsString(source.value, flush: true);
+  }
 }
 
 /// Executes one external scaffold process without shell interpolation.
@@ -334,7 +410,9 @@ List<String> scaffoldCompletionSteps({
   }
   if (exampleRoot.existsSync()) {
     steps.addAll(<String>[
-      'The generated example is a CCRouter Host with a direct `$packageName` dependency.',
+      'The generated example is a CCRouter Host with a direct `$packageName` dependency, a Managed app, and a registered / home.',
+      if (workspaceRoot == null)
+        'Outside a Workspace, first run `flutter pub get` from `${packageRoot.path}`, then `ccrouter portable prepare ${packageRoot.path}`. The component opts into Portable Generation State because the example consumes its parent as a read-only Path dependency.',
       'Run `flutter pub get` from `${exampleRoot.path}`, then `ccrouter generate ${exampleRoot.path}`.',
     ]);
   } else {
@@ -346,7 +424,15 @@ List<String> scaffoldCompletionSteps({
   return List<String>.unmodifiable(steps);
 }
 
-Map<File, String> _componentFiles(String rawName, Directory parent) {
+/// Plans authored component files without publishing or mutating a Workspace.
+///
+/// Standalone examples consume a read-only parent, so that parent must prepare
+/// portable artifacts using its own build tool before the example is generated.
+Map<File, String> _componentFiles(
+  String rawName,
+  Directory parent, {
+  bool withExample = false,
+}) {
   final packageName = _packageName(rawName);
   final packageRoot = Directory(path.join(parent.path, packageName));
   if (packageRoot.existsSync()) {
@@ -375,6 +461,18 @@ Map<File, String> _componentFiles(String rawName, Directory parent) {
     ..writeln('    sdk: flutter')
     ..writeln('dev_dependencies:');
   _writeDependency(pubspec, 'ccrouter_generator', manifest.ccrouterGenerator);
+  if (withExample) {
+    // Match the Flutter app template's SDK-pinned tool dependencies when the
+    // component and example resolve independently for Portable verification.
+    pubspec
+      ..writeln('  flutter_test:')
+      ..writeln('    sdk: flutter');
+    _writeDependency(
+      pubspec,
+      'build_runner',
+      _buildRunnerDependency(parent, packageRoot),
+    );
+  }
 
   final componentSource =
       '''import 'package:ccrouter/ccrouter.dart';
@@ -395,6 +493,9 @@ const $componentSymbol = CCComponent(
 /// The component descriptor remains an internal source declaration.
 ''';
   return <File, String>{
+    if (withExample && !workspaceResolution)
+      File(path.join(packageRoot.path, 'ccrouter.yaml')):
+          'generation:\n  portable: true\n',
     File(path.join(packageRoot.path, 'pubspec.yaml')):
         '${pubspec.toString()}\n',
     File(path.join(packageRoot.path, '.metadata')): 'project_type: package\n',
@@ -408,6 +509,24 @@ const $componentSymbol = CCComponent(
       ),
     ): componentSource,
   };
+}
+
+/// Inherits a proven build tool source for independently generated examples.
+Object _buildRunnerDependency(Directory parent, Directory target) {
+  final manifests = <File>[
+    ..._ancestorPubspecs(parent),
+    ..._ancestorPubspecs(Directory.current),
+  ];
+  final dependency =
+      _firstDependency(manifests, 'build_runner', target) ??
+      _resolvedVersionConstraint(parent, 'build_runner') ??
+      _resolvedVersionConstraint(Directory.current, 'build_runner');
+  if (dependency != null) return dependency;
+  throw const CCScaffoldException(
+    'Cannot prove dependency source for build_runner. Declare a compatible '
+    'build_runner dev dependency in the invoking Host/Workspace before '
+    'creating --with-example. No component was published.',
+  );
 }
 
 Map<File, String> _pageFiles(String rawName, Directory packageRoot) {
@@ -971,14 +1090,15 @@ void _writeYamlValue(StringBuffer output, Object value, int indent) {
   }
 }
 
-/// Encodes one YAML scalar without changing version-constraint readability.
+/// Preserves string identity, quoting YAML indicators and implicitly typed data.
 String _yamlScalar(Object value) {
   if (value is! String) return '$value';
-  if (RegExp(r'^[A-Za-z0-9_./^<>=+*~ -]+$').hasMatch(value) &&
-      value != 'true' &&
-      value != 'false' &&
-      value != 'null') {
-    return value;
+  if (RegExp(r'^[A-Za-z0-9_./^<>=+*~ -]+$').hasMatch(value)) {
+    try {
+      if (loadYaml(value) == value) return value;
+    } on YamlException {
+      // Version ranges starting with > and aliases such as * need quotes.
+    }
   }
   return jsonEncode(value);
 }

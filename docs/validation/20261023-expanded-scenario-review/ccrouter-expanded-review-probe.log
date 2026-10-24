@@ -1,0 +1,212 @@
+00:00 +0: loading /tmp/ccrouter_expanded_review_probe_test.dart
+00:00 +0: public Session service cleanup (reentrant=false)
+public service: reentrant=false, disposals=1
+00:00 +1: public Session service cleanup (reentrant=true)
+public service: reentrant=true, disposals=0
+00:00 +1 -1: public Session service cleanup (reentrant=true) [E]
+  Expected: <1>
+    Actual: <0>
+  
+  package:matcher                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18   expect
+  /tmp/ccrouter_expanded_review_probe_test.dart 127:7  main.<fn>
+  
+00:00 +1 -1: factory resource cleanup (scope=app, reentrant=false)
+factory: scope=app, reentrant=false, disposals=1
+00:00 +2 -1: factory resource cleanup (scope=session, reentrant=false)
+factory: scope=session, reentrant=false, disposals=1
+00:00 +3 -1: factory resource cleanup (scope=app, reentrant=true)
+factory: scope=app, reentrant=true, disposals=1
+00:00 +4 -1: factory resource cleanup (scope=session, reentrant=true)
+factory: scope=session, reentrant=true, disposals=0
+00:00 +4 -2: factory resource cleanup (scope=session, reentrant=true) [E]
+  Expected: <1>
+    Actual: <0>
+  a successfully returned owned resource must not be abandoned
+  
+  package:matcher                                       expect
+  package:flutter_test/src/widget_tester.dart 477:18    expect
+  /tmp/ccrouter_expanded_review_probe_test.dart 170:11  main.<fn>
+  
+00:00 +4 -2: Command timeout preserves error when listener throws=false
+timeout: throwing=false, result=CCInvocationTimeoutError, trace=timedOut
+00:00 +5 -2: Command timeout preserves error when listener throws=true
+timeout: throwing=true, result=StateError, trace=timedOut
+00:00 +5 -3: Command timeout preserves error when listener throws=true [E]
+  Expected: <Instance of 'CCInvocationTimeoutError'>
+    Actual: StateError:<Bad state: cleanup listener>
+     Which: is not an instance of 'CCInvocationTimeoutError'
+  
+  package:matcher                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18   expect
+  /tmp/ccrouter_expanded_review_probe_test.dart 207:9  main.<fn>
+  
+00:00 +5 -3: deferred request cannot be resurrected in replacement Host
+defer replacement: old=Null, path=/detail/A
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: '/'
+  Actual: '/detail/A'
+   Which: is different. Both strings start the same, but the actual value also has the following
+trailing characters: detail/A
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///tmp/ccrouter_expanded_review_probe_test.dart:236:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///tmp/ccrouter_expanded_review_probe_test.dart line 236
+The test description was:
+  deferred request cannot be resurrected in replacement Host
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +5 -4: deferred request cannot be resurrected in replacement Host [E]
+  Test failed. See exception logs above.
+  The test description was: deferred request cannot be resurrected in replacement Host
+  
+00:00 +5 -4: control: focus change preserves live Host
+control: remove=false, old=Null
+00:01 +6 -4: control: removed Host without replacement fails
+control: remove=true, old=CCNavigationAdapterError
+00:01 +7 -4: old proceed cannot enter replacement Host
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: ['/']
+  Actual: MappedListIterable<CCNavigationRequest, String>:['/detail/A']
+   Which: at location [0] is '/detail/A' instead of '/'
+terminated Host must not transfer pending work to a new instance
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///tmp/ccrouter_expanded_review_probe_test.dart:306:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///tmp/ccrouter_expanded_review_probe_test.dart line 306
+The test description was:
+  old proceed cannot enter replacement Host
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +7 -5: old proceed cannot enter replacement Host [E]
+  Test failed. See exception logs above.
+  The test description was: old proceed cannot enter replacement Host
+  
+00:01 +7 -5: old redirect cannot enter replacement Host
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: ['/']
+  Actual: MappedListIterable<CCNavigationRequest, String>:['/detail/B']
+   Which: at location [0] is '/detail/B' instead of '/'
+terminated Host must not transfer pending work to a new instance
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///tmp/ccrouter_expanded_review_probe_test.dart:306:9)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///tmp/ccrouter_expanded_review_probe_test.dart line 306
+The test description was:
+  old redirect cannot enter replacement Host
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +7 -6: old redirect cannot enter replacement Host [E]
+  Test failed. See exception logs above.
+  The test description was: old redirect cannot enter replacement Host
+  
+00:01 +7 -6: old recovery cannot enter replacement Host
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: ['/']
+  Actual: MappedListIterable<CCNavigationRequest, String>:['/detail/B']
+   Which: at location [0] is '/detail/B' instead of '/'
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///tmp/ccrouter_expanded_review_probe_test.dart:337:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///tmp/ccrouter_expanded_review_probe_test.dart line 337
+The test description was:
+  old recovery cannot enter replacement Host
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +7 -7: old recovery cannot enter replacement Host [E]
+  Test failed. See exception logs above.
+  The test description was: old recovery cannot enter replacement Host
+  
+00:02 +7 -7: control: same live Host honors singleFlight
+00:02 +8 -7: new Host request does not share old singleFlight gate
+replacement gate: policy=singleFlight, calls=1, fresh=CCRouteCancelledError, path=/
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: <2>
+  Actual: <1>
+new lifecycle must run its own admission policy
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///tmp/ccrouter_expanded_review_probe_test.dart:409:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///tmp/ccrouter_expanded_review_probe_test.dart line 409
+The test description was:
+  new Host request does not share old singleFlight gate
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +8 -8: new Host request does not share old singleFlight gate [E]
+  Test failed. See exception logs above.
+  The test description was: new Host request does not share old singleFlight gate
+  
+00:02 +8 -8: control: same live Host honors rejectDuplicate
+00:02 +9 -8: new Host request does not share old rejectDuplicate gate
+replacement gate: policy=rejectDuplicate, calls=1, fresh=CCNavigationDuplicateError, path=/
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: <2>
+  Actual: <1>
+new lifecycle must run its own admission policy
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///tmp/ccrouter_expanded_review_probe_test.dart:409:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///tmp/ccrouter_expanded_review_probe_test.dart line 409
+The test description was:
+  new Host request does not share old rejectDuplicate gate
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +9 -9: new Host request does not share old rejectDuplicate gate [E]
+  Test failed. See exception logs above.
+  The test description was: new Host request does not share old rejectDuplicate gate
+  
+00:02 +9 -9: Some tests failed.

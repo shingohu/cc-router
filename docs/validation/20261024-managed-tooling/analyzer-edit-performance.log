@@ -1,0 +1,9 @@
+CCRouter analyzer declarations=100 edits=50 total=52ms average=1047us
+CCRouter analyzer declarations=1000 edits=50 total=89ms average=1792us
+CCRouter analyzer declarations=3000 edits=50 total=221ms average=4424us
+CCRouter semantic declarations=100 firstResolve=1314408us firstRules=1356us
+CCRouter semantic declarations=100 edits=20 resolveP50=6817us resolveP95=8593us rulesP50=827us rulesP95=1482us
+CCRouter semantic declarations=1000 firstResolve=50042us firstRules=2501us
+CCRouter semantic declarations=1000 edits=20 resolveP50=19940us resolveP95=30952us rulesP50=1362us rulesP95=1871us
+CCRouter semantic declarations=3000 firstResolve=124668us firstRules=2257us
+CCRouter semantic declarations=3000 edits=20 resolveP50=48090us resolveP95=52089us rulesP50=2097us rulesP95=5379us

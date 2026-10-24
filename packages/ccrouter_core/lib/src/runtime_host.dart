@@ -1,34 +1,56 @@
 part of 'runtime.dart';
 
-/// Immutable ownership context propagated while constructing one Service.
+/// Non-owning context propagated while constructing one Service.
 ///
 /// Nested resolution uses the concrete [instanceScope] and optional
 /// [routeEntry] instead of guessing from global Runtime state. This keeps
-/// New-instance disposal with its consumer while preserving exact Route ownership.
+/// new-instance disposal with its consumer while preserving exact Route ownership.
+/// Detached callbacks retain identity and closed-owner errors, never the Runtime
+/// or an ended Scope's payload graph. Runtime owns active and exiting Entries.
 final class _ServiceConstructionOwner {
   /// Creates the construction context for one selected provider instance.
-  const _ServiceConstructionOwner({
-    required this.runtime,
+  _ServiceConstructionOwner({
+    required this.runtimeIdentity,
     required this.serviceScope,
-    required this.instanceScope,
+    required CCScope instanceScope,
     required this.ownerComponentId,
-    required this.routeEntry,
-  });
+    required _RouteEntryRecord? routeEntry,
+  }) : _instanceScope = WeakReference(instanceScope),
+       _scopeId = instanceScope.id,
+       _routeEntry = serviceScope == CCServiceScope.route && routeEntry != null
+           ? WeakReference(routeEntry)
+           : null;
 
-  /// Runtime whose provider graph is currently constructing an instance.
-  final CCRouterRuntime runtime;
+  /// Exact Runtime identity without a back-reference to the Runtime itself.
+  final Object runtimeIdentity;
 
   /// Logical lifetime used to validate nested dependencies.
   final CCServiceScope serviceScope;
 
-  /// Concrete Scope that owns the constructed instance.
-  final CCScope instanceScope;
+  /// Concrete owner remains strongly owned only by its Runtime lifecycle.
+  final WeakReference<CCScope> _instanceScope;
+
+  /// Stable label used to reject callbacks after the owner has been collected.
+  final String _scopeId;
+
+  /// Exact Entry identity, absent for App and Session construction contexts.
+  final WeakReference<_RouteEntryRecord>? _routeEntry;
+
+  /// Resolves the original Scope without substituting a later active owner.
+  CCScope get instanceScope =>
+      _instanceScope.target ?? (throw CCScopeClosedError(_scopeId));
 
   /// Component that owns the logical consumer being constructed.
   final String ownerComponentId;
 
-  /// Exact Route Entry when construction belongs to a Route lifetime.
-  final _RouteEntryRecord? routeEntry;
+  /// Resolves the exact Route Entry, failing closed after it has been collected.
+  ///
+  /// App/Session providers never inherit their first caller's Route Entry.
+  _RouteEntryRecord? get routeEntry {
+    final reference = _routeEntry;
+    if (reference == null) return null;
+    return reference.target ?? (throw CCScopeClosedError(_scopeId));
+  }
 }
 
 /// Stateful execution kernel used by the framework host and core tests.
@@ -51,11 +73,11 @@ final class CCRouterRuntime {
     CCContractBundleDescriptor? contractBundle,
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
+    Iterable<CCGlobalRouteRevalidationPolicy> routeRevalidationPolicies =
+        const [],
     Iterable<CCGlobalPopGuard> globalPopGuards = const [],
     CCNavigationFailurePolicy? navigationFailurePolicy,
     Iterable<CCNavigationAspect> navigationAspects = const [],
-    CCNavigationTelemetryContextProvider? telemetryContextProvider,
-    CCRouteRestorationOpportunitySource? restorationOpportunitySource,
     CCNavigationConcurrencyPolicy navigationConcurrencyPolicy =
         CCNavigationConcurrencyPolicy.allow,
     CCDeepLinkIngressPolicy deepLinkIngressPolicy =
@@ -68,11 +90,10 @@ final class CCRouterRuntime {
     contractBundle: contractBundle,
     navigationAdapter: navigationAdapter,
     globalInterceptors: globalInterceptors,
+    routeRevalidationPolicies: routeRevalidationPolicies,
     globalPopGuards: globalPopGuards,
     navigationFailurePolicy: navigationFailurePolicy,
     navigationAspects: navigationAspects,
-    telemetryContextProvider: telemetryContextProvider,
-    restorationOpportunitySource: restorationOpportunitySource,
     navigationConcurrencyPolicy: navigationConcurrencyPolicy,
     deepLinkIngressPolicy: deepLinkIngressPolicy,
   );
@@ -91,11 +112,11 @@ final class CCRouterRuntime {
     CCContractBundleDescriptor? contractBundle,
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
+    Iterable<CCGlobalRouteRevalidationPolicy> routeRevalidationPolicies =
+        const [],
     Iterable<CCGlobalPopGuard> globalPopGuards = const [],
     CCNavigationFailurePolicy? navigationFailurePolicy,
     Iterable<CCNavigationAspect> navigationAspects = const [],
-    CCNavigationTelemetryContextProvider? telemetryContextProvider,
-    CCRouteRestorationOpportunitySource? restorationOpportunitySource,
     CCNavigationConcurrencyPolicy navigationConcurrencyPolicy =
         CCNavigationConcurrencyPolicy.allow,
     CCDeepLinkIngressPolicy deepLinkIngressPolicy =
@@ -109,11 +130,10 @@ final class CCRouterRuntime {
     contractBundle: contractBundle,
     navigationAdapter: navigationAdapter,
     globalInterceptors: globalInterceptors,
+    routeRevalidationPolicies: routeRevalidationPolicies,
     globalPopGuards: globalPopGuards,
     navigationFailurePolicy: navigationFailurePolicy,
     navigationAspects: navigationAspects,
-    telemetryContextProvider: telemetryContextProvider,
-    restorationOpportunitySource: restorationOpportunitySource,
     navigationConcurrencyPolicy: navigationConcurrencyPolicy,
     deepLinkIngressPolicy: deepLinkIngressPolicy,
     serviceOverrides: serviceOverrides,
@@ -132,11 +152,11 @@ final class CCRouterRuntime {
     CCContractBundleDescriptor? contractBundle,
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
+    Iterable<CCGlobalRouteRevalidationPolicy> routeRevalidationPolicies =
+        const [],
     Iterable<CCGlobalPopGuard> globalPopGuards = const [],
     this.navigationFailurePolicy,
     Iterable<CCNavigationAspect> navigationAspects = const [],
-    this.telemetryContextProvider,
-    this.restorationOpportunitySource,
     required this.navigationConcurrencyPolicy,
     required CCDeepLinkIngressPolicy deepLinkIngressPolicy,
     Iterable<CCServiceOverrideEntry<Object>> serviceOverrides = const [],
@@ -150,6 +170,9 @@ final class CCRouterRuntime {
       }
     }
     _globalInterceptors = _validateGlobalInterceptors(globalInterceptors);
+    _routeRevalidationPolicies = _validateRouteRevalidationPolicies(
+      routeRevalidationPolicies,
+    );
     _globalPopGuards = _validateGlobalPopGuards(globalPopGuards);
     _navigationAspects = _validateNavigationAspects(navigationAspects);
     if (traceCapacity < 0) {
@@ -183,7 +206,7 @@ final class CCRouterRuntime {
     }
   }
 
-  /// Zone key carrying the current invocation and its parent trace.
+  /// Zone key carrying invocation tracing and immutable admission ownership.
   static final Object _invocationZoneKey = Object();
 
   /// Zone key carrying the Scope of a service under construction.
@@ -198,13 +221,16 @@ final class CCRouterRuntime {
   /// Zone key preventing navigation from asynchronous framework callbacks.
   static final Object _navigationCallbackZoneKey = Object();
 
+  /// Zone key carrying one navigation's non-reusable Host registrations.
+  static final Object _navigationOwnershipZoneKey = Object();
+
   /// Maximum number of trace and subscriber error records retained.
   final int traceCapacity;
 
   /// Maximum retained records in each bounded navigation diagnostic history.
   ///
   /// The limit applies independently to lifecycle, failure, capability
-  /// fallback, visibility, Route Entry, Backend, and restoration histories.
+  /// fallback, visibility, Route Entry, and Backend histories.
   /// Active structural state is not evicted by this value. Zero disables
   /// retained histories while live listeners and navigation behavior remain
   /// active.
@@ -238,21 +264,12 @@ final class CCRouterRuntime {
   /// invoking navigation directly.
   final CCNavigationFailurePolicy? navigationFailurePolicy;
 
-  /// Optional Host SPI used to snapshot anonymous analytics identity.
-  ///
-  /// Runtime calls it only when a navigation observation begins. Business code
-  /// and route implementations never receive the provider itself.
-  final CCNavigationTelemetryContextProvider? telemetryContextProvider;
-
-  /// Optional Host SPI that reports evidence of unmet restoration demand.
-  ///
-  /// The source remains Host-owned. Runtime records sanitized events and only
-  /// owns the subscription installed during initialization.
-  final CCRouteRestorationOpportunitySource? restorationOpportunitySource;
-
   /// Runtime-specific prefix preventing trace identifiers from colliding.
   final String _runtimeId =
       '${DateTime.now().microsecondsSinceEpoch}-${Random.secure().nextInt(1 << 32)}';
+
+  /// Private Zone identity that cannot keep this Runtime reachable on its own.
+  final Object _zoneIdentity = Object();
 
   /// Service providers grouped by contract type.
   final Map<Type, List<_Provider>> _providers = {};
@@ -267,7 +284,7 @@ final class CCRouterRuntime {
   final Set<String> _openedInitTaskGates = {};
 
   /// Active DAG drain shared by concurrent Gate triggers.
-  Future<CCInitTaskRunResult>? _initTaskRun;
+  _InitTaskDrain? _initTaskRun;
 
   /// Whether an overlapping Gate open requires another DAG quiescence pass.
   bool _initTaskDrainRequested = false;
@@ -290,17 +307,23 @@ final class CCRouterRuntime {
   /// Concrete Route Entries currently retained by the Runtime.
   final List<_RouteEntryRecord> _routeEntries = [];
 
+  /// Removed entries whose outgoing rendering still owns a usable Route Scope.
+  final Map<String, _RouteEntryRecord> _exitingRouteEntries = {};
+
+  /// Detachable render waits forcibly released before Runtime shutdown joins.
+  final Map<String, void Function()> _routeExitWaiters = {};
+
   /// Bounded Route Entry lifecycle transitions retained for diagnostics.
   final Queue<CCRouteEntryLifecycleEvent> _routeEntryEvents = Queue();
 
   /// Subscribers receiving Route Entry lifecycle transitions.
-  final Set<CCRouteEntryLifecycleListener> _routeEntryListeners = {};
+  final Map<CCRouteEntryLifecycleListener, Object> _routeEntryListeners = {};
 
   /// Bounded Route Entry visibility observations retained for diagnostics.
   final Queue<CCRouteVisibilityEvent> _routeVisibilityEvents = Queue();
 
   /// Subscribers receiving Route Entry visibility observations.
-  final Set<CCRouteVisibilityListener> _routeVisibilityListeners = {};
+  final Map<CCRouteVisibilityListener, Object> _routeVisibilityListeners = {};
 
   /// Route Scope close operations that Runtime must await during shutdown.
   final List<Future<void>> _routeEntryCloseFutures = [];
@@ -310,6 +333,18 @@ final class CCRouterRuntime {
 
   /// Stable, application-owned interceptors executed before route policies.
   late final List<CCGlobalNavigationInterceptor> _globalInterceptors;
+
+  /// Stable Host policies that reconcile retained Entries after state changes.
+  late final List<CCGlobalRouteRevalidationPolicy> _routeRevalidationPolicies;
+
+  /// Active tail used to serialize explicit active-route policy passes.
+  ///
+  /// Null keeps unused Runtimes free of a Zone-bound Future and is restored
+  /// after the last queued pass reaches a terminal state.
+  Future<void>? _routeRevalidationTail;
+
+  /// Monotonic identity assigned when a serialized pass starts evaluating.
+  int _routeRevalidationRevision = 0;
 
   /// Stable, application-owned navigation AOP registrations.
   late final List<CCNavigationAspect> _navigationAspects;
@@ -354,20 +389,18 @@ final class CCRouterRuntime {
   final Queue<CCNavigationCapabilityFallbackEvent>
   _navigationCapabilityFallbacks = Queue();
 
-  /// Bounded evidence that a prior route state could have been restored.
-  final Queue<CCRouteRestorationOpportunityEvent>
-  _restorationOpportunityEvents = Queue();
+  /// Cross-Zone completion data for requests that have not yet terminated.
+  final Map<_NavigationConcurrencyKey, _SharedResult<Object?>>
+  _inFlightNavigation = {};
 
-  /// Observers exporting sanitized restoration-demand telemetry.
-  final Set<CCRouteRestorationOpportunityListener>
-  _restorationOpportunityListeners = {};
+  /// Live logical Host registrations; detach replaces their token identity.
+  final Map<String, CCCancellationToken> _navigationHostRegistrations = {};
 
-  /// Removes the Runtime subscription from the Host evidence source.
-  void Function()? _restorationOpportunityRemover;
-
-  /// Futures for requests that have not completed or been rejected.
-  final Map<_NavigationConcurrencyKey, Future<Object?>> _inFlightNavigation =
-      {};
+  /// Host execution context for owned resources, never a later caller Zone.
+  ///
+  /// Results cross back as data so independent caller error Zones receive their
+  /// own errors. Pending Adapter callbacks must not retain a consumer's Zone.
+  final Zone _hostZone = Zone.current;
 
   /// Runtime-owned continuations waiting for an external policy decision.
   final Map<String, _PendingNavigationRecord> _pendingNavigations = {};
@@ -376,13 +409,14 @@ final class CCRouterRuntime {
   final Map<String, _CCNavigationAspectRecord> _navigationAspectRecords = {};
 
   /// Subscribers receiving Runtime navigation lifecycle events.
-  final Set<CCNavigationLifecycleListener> _navigationListeners = {};
+  final Map<CCNavigationLifecycleListener, Object> _navigationListeners = {};
 
   /// Subscribers receiving sanitized navigation failure outcomes.
-  final Set<CCNavigationFailureListener> _navigationFailureListeners = {};
+  final Map<CCNavigationFailureListener, Object> _navigationFailureListeners =
+      {};
 
   /// Subscribers receiving safe Adapter capability fallback observations.
-  final Set<CCNavigationCapabilityFallbackListener>
+  final Map<CCNavigationCapabilityFallbackListener, Object>
   _navigationCapabilityFallbackListeners = {};
 
   /// Bounded backend Navigator observations collected from the adapter.
@@ -402,8 +436,8 @@ final class CCRouterRuntime {
   final Set<String> _desynchronizedBackendHosts = {};
 
   /// Subscribers receiving backend Navigator observations.
-  final Set<CCNavigationBackendDiagnosticListener> _backendNavigationListeners =
-      {};
+  final Map<CCNavigationBackendDiagnosticListener, Object>
+  _backendNavigationListeners = {};
 
   /// FIFO batches waiting for isolated observer delivery.
   final Queue<_QueuedNavigationObservation> _navigationObservationQueue =
@@ -539,18 +573,14 @@ final class CCRouterRuntime {
         shells: _shellRegistry.navigationShells,
       );
       final adapter = _navigationAdapter;
-      if (adapter is CCNavigationPopGuardBinding) {
+      if (adapter != null) {
         failureStage = 'popGuardBinding';
-        (adapter as CCNavigationPopGuardBinding).bindPopGuardEvaluator(
-          _evaluatePopGuardsForActiveEntry,
-        );
+        _bindNavigationPopGuards(adapter);
       }
       failureStage = 'backendAttachment';
       _attachBackendNavigationSource();
       _readInitialBackendEntries();
       _initialized = true;
-      failureStage = 'restorationAttachment';
-      _attachRestorationOpportunitySource();
     } on Object catch (error) {
       _emitInitializationDiagnostic(
         occurredAt: startedAt,
@@ -593,20 +623,14 @@ final class CCRouterRuntime {
         _navigationRoutesForAdapter(),
         shells: _shellRegistry.navigationShells,
       );
-      if (adapter is CCNavigationPopGuardBinding) {
-        (adapter as CCNavigationPopGuardBinding).bindPopGuardEvaluator(
-          _evaluatePopGuardsForActiveEntry,
-        );
-      }
+      _bindNavigationPopGuards(adapter);
       _attachBackendNavigationSource();
       _readInitialBackendEntries();
     } catch (error, stackTrace) {
-      if (adapter is CCNavigationPopGuardBinding) {
-        try {
-          (adapter as CCNavigationPopGuardBinding).bindPopGuardEvaluator(null);
-        } catch (_) {
-          // Preserve the attachment failure after best-effort policy cleanup.
-        }
+      try {
+        _bindNavigationPopGuards(adapter, clear: true);
+      } catch (_) {
+        // Preserve the attachment failure after best-effort policy cleanup.
       }
       final backendNavigationRemover = _backendNavigationRemover;
       _backendNavigationRemover = null;
@@ -1147,7 +1171,9 @@ final class CCRouterRuntime {
   /// Throws [CCServiceNotFoundError] when no matching Provider exists,
   /// [CCServiceTypeMismatchError] when a Token is used with the wrong type, or
   /// [CCServiceScopeUnavailableError] when the Provider's required Scope is
-  /// inactive.
+  /// inactive. A cancelled or expired parent invocation, an ended original
+  /// Scope in its call chain, or an ended Service construction owner cannot
+  /// resolve a dependency into a later Scope, even after a method returned.
   T service<T extends Object>({
     CCServiceToken<T>? contractToken,
     CCServiceKey<T>? key,
@@ -1226,8 +1252,9 @@ final class CCRouterRuntime {
   /// Resolves a Route-scoped Service for one exact managed navigation.
   ///
   /// Flutter Host integration obtains [navigationId] from the backend payload
-  /// attached by the Adapter. The ID must identify a currently retained
-  /// RouteEntry; Runtime never falls back to the visible or top Entry. Ordinary
+  /// attached by the Adapter. The ID must identify an active Entry or a removed
+  /// Entry whose backend still owns an outgoing render lifetime. Runtime never
+  /// falls back to the visible or top Entry. Ordinary
   /// business code uses the Flutter facade rather than calling this Host bridge.
   T serviceForRoute<T extends Object>({
     required String navigationId,
@@ -1247,7 +1274,7 @@ final class CCRouterRuntime {
         'Route-bound resolution requires a Route-scoped Service provider.',
       );
     }
-    final entry = _routeEntryForNavigation(navigationId);
+    final entry = _routeServiceEntryForNavigation(navigationId);
     if (entry == null) {
       throw const CCServiceScopeUnavailableError(CCServiceScope.route);
     }
@@ -1256,8 +1283,8 @@ final class CCRouterRuntime {
 
   /// Resolves an optional Route-scoped Service for one exact navigation.
   ///
-  /// Null is returned only when the Provider is absent. A missing, removed, or
-  /// disposed RouteEntry remains a lifecycle error so callers cannot silently
+  /// Null is returned only when the Provider is absent. A missing, fully exited,
+  /// or disposed RouteEntry remains a lifecycle error so callers cannot silently
   /// retain a Service beyond its owning page.
   T? serviceForRouteOrNull<T extends Object>({
     required String navigationId,
@@ -1272,7 +1299,7 @@ final class CCRouterRuntime {
         'Route-bound resolution requires a Route-scoped Service provider.',
       );
     }
-    final entry = _routeEntryForNavigation(navigationId);
+    final entry = _routeServiceEntryForNavigation(navigationId);
     if (entry == null) {
       throw const CCServiceScopeUnavailableError(CCServiceScope.route);
     }
@@ -1281,9 +1308,9 @@ final class CCRouterRuntime {
 
   /// Resolves and readies a Route Service for one exact managed navigation.
   ///
-  /// [navigationId] must still identify a retained RouteEntry when lookup
-  /// begins. Removing that Entry cancels pending initialization through its
-  /// Route Scope and prevents the instance from becoming ready afterward.
+  /// [navigationId] must identify an active or backend-retained outgoing Entry
+  /// when lookup begins. Closing its Scope after rendering cancels pending
+  /// initialization and prevents the instance from becoming ready afterward.
   Future<T> serviceForRouteAsync<T extends Object>({
     required String navigationId,
     CCServiceToken<T>? contractToken,
@@ -1304,7 +1331,7 @@ final class CCRouterRuntime {
         'Route-bound resolution requires a Route-scoped Service provider.',
       );
     }
-    final entry = _routeEntryForNavigation(navigationId);
+    final entry = _routeServiceEntryForNavigation(navigationId);
     if (entry == null) {
       throw const CCServiceScopeUnavailableError(CCServiceScope.route);
     }
@@ -1336,7 +1363,7 @@ final class CCRouterRuntime {
         'Route-bound resolution requires a Route-scoped Service provider.',
       );
     }
-    final entry = _routeEntryForNavigation(navigationId);
+    final entry = _routeServiceEntryForNavigation(navigationId);
     if (entry == null) {
       throw const CCServiceScopeUnavailableError(CCServiceScope.route);
     }
@@ -1410,6 +1437,11 @@ final class CCRouterRuntime {
   /// Service requires the exact managed [navigationId]; non-Route Services
   /// reject one so stale page identity cannot be silently ignored. Arguments
   /// and return values are never added to the invocation context or trace.
+  /// Cancellation, owner closure and deadlines are rechecked after readiness
+  /// before entering the method, including Services without an initializer.
+  /// Detached callbacks keep the original Scope lineage after methods return;
+  /// closing an original Scope cancels pending children and fences fresh calls.
+  /// Once entered, application work remains cooperatively cancellable.
   Future<R> invokeService<T extends Object, R>({
     CCServiceToken<T>? contractToken,
     CCServiceKey<T>? key,
@@ -1438,6 +1470,7 @@ final class CCRouterRuntime {
                   routeEntry: invocation.routeEntry,
                 )
                 as T;
+        _ensureInvocationCanEnter(context, ownerScope: invocation.scope);
         return call(resolved, context);
       },
       ownerScope: invocation.scope,
@@ -1540,7 +1573,7 @@ final class CCRouterRuntime {
     final routeEntry = provider.scope == CCServiceScope.route
         ? navigationId == null
               ? null
-              : _routeEntryForNavigation(navigationId)
+              : _routeServiceEntryForNavigation(navigationId)
         : null;
     if (provider.scope == CCServiceScope.route && routeEntry == null) {
       throw const CCServiceScopeUnavailableError(CCServiceScope.route);
@@ -1711,9 +1744,7 @@ final class CCRouterRuntime {
               await _invoke<void>(
                 'eventSubscriber',
                 '$eventId.${subscriber.id}',
-                (subscriberContext) async {
-                  await subscriber.callback(event, subscriberContext);
-                },
+                _eventSubscriberBody(subscriber, event),
                 callerComponentId: context.callerComponentId,
                 targetComponentId: subscriber.ownerComponentId.isEmpty
                     ? null
@@ -1742,6 +1773,9 @@ final class CCRouterRuntime {
   /// stay pending; successful and failed tasks are never retried implicitly.
   /// Task failures are returned as sanitized snapshots and skip only dependent
   /// branches. Runtime shutdown and cancellation still terminate this Future.
+  /// Synchronous Gate reentry joins the already published drain. A task must
+  /// not await its own drain. Failures are delivered in each caller's error
+  /// Zone while shutdown joins the shared completion without rethrowing it.
   Future<CCInitTaskRunResult> runInitTasks({required CCInitTaskGate gate}) {
     _ensureInitialized();
     if (!_isStableIdentifier(gate.id)) {
@@ -1751,24 +1785,29 @@ final class CCRouterRuntime {
     final active = _initTaskRun;
     if (active != null) {
       _initTaskDrainRequested = true;
-      return active;
+      return active.future;
     }
-    final run = _drainAndReleaseInitTasks();
+    final run = _InitTaskDrain();
     _initTaskRun = run;
-    return run;
+    unawaited(_drainAndReleaseInitTasks(run));
+    return run.future;
   }
 
   /// Runs ready DAG layers and clears the single-flight marker on completion.
-  Future<CCInitTaskRunResult> _drainAndReleaseInitTasks() async {
+  Future<void> _drainAndReleaseInitTasks(_InitTaskDrain run) async {
     try {
       do {
         _initTaskDrainRequested = false;
         await _drainInitTasks();
       } while (_initTaskDrainRequested);
-      return CCInitTaskRunResult._(initTasks);
+      run.result.complete(CCInitTaskRunResult._(initTasks));
+    } catch (error, stack) {
+      run.result.fail(error, stack);
     } finally {
-      _initTaskDrainRequested = false;
-      _initTaskRun = null;
+      if (identical(_initTaskRun, run)) {
+        _initTaskDrainRequested = false;
+        _initTaskRun = null;
+      }
     }
   }
 
@@ -1870,7 +1909,7 @@ final class CCRouterRuntime {
         'Close the current Session before opening another.',
       );
     final sessionId = '$_runtimeId-session-${++_sessionSequence}';
-    _sessionScope = CCScope(sessionId);
+    _sessionScope = _hostZone.run(() => CCScope(sessionId));
     _session = CCSession._(
       sessionId: sessionId,
       accountId: accountId,
@@ -1920,20 +1959,35 @@ final class CCRouterRuntime {
     }
 
     // Stop invocations before awaiting any service disposal.
+    for (final release in _routeExitWaiters.values.toList()) {
+      try {
+        release();
+      } catch (error, stackTrace) {
+        capture(error, stackTrace);
+      }
+    }
     try {
       appScope.cancellation.cancel();
     } catch (error, stackTrace) {
       capture(error, stackTrace);
     }
-    final initTaskRun = _initTaskRun;
-    if (initTaskRun != null) {
+    // A revalidation can be waiting on an interceptor-deferred continuation.
+    // Cancel those continuations before joining the serialized revalidation tail.
+    _cancelAllPendingNavigations(code: 'runtime_disposed');
+    final routeRevalidationTail = _routeRevalidationTail;
+    if (routeRevalidationTail != null) {
       try {
-        await initTaskRun;
+        await routeRevalidationTail;
       } catch (_) {
-        // Shutdown owns cancellation; task failure is already in Trace/snapshot.
+        // Each caller observes its own error; shutdown only waits for quiescence.
       }
     }
-    _cancelAllPendingNavigations(code: 'runtime_disposed');
+    final initTaskRun = _initTaskRun;
+    if (initTaskRun != null) {
+      // Wait for quiescence as data: an error Future created by another Gate
+      // caller cannot deliver errors across Dart error Zone boundaries.
+      await initTaskRun.result.settled;
+    }
     try {
       _removeAllRouteEntries(reason: 'runtimeDispose');
     } catch (error, stackTrace) {
@@ -1946,9 +2000,9 @@ final class CCRouterRuntime {
     }
 
     final adapter = _navigationAdapter;
-    if (adapter is CCNavigationPopGuardBinding) {
+    if (adapter != null) {
       try {
-        (adapter as CCNavigationPopGuardBinding).bindPopGuardEvaluator(null);
+        _bindNavigationPopGuards(adapter, clear: true);
       } catch (error, stackTrace) {
         capture(error, stackTrace);
       }
@@ -1964,13 +2018,6 @@ final class CCRouterRuntime {
     _predictiveBackRemover = null;
     try {
       predictiveBackRemover?.call();
-    } catch (error, stackTrace) {
-      capture(error, stackTrace);
-    }
-    final restorationOpportunityRemover = _restorationOpportunityRemover;
-    _restorationOpportunityRemover = null;
-    try {
-      restorationOpportunityRemover?.call();
     } catch (error, stackTrace) {
       capture(error, stackTrace);
     }
@@ -2009,13 +2056,13 @@ final class CCRouterRuntime {
     _pendingResumeFailures.clear();
     _navigationCapabilityFallbackListeners.clear();
     _navigationCapabilityFallbacks.clear();
-    _restorationOpportunityListeners.clear();
-    _restorationOpportunityEvents.clear();
     _routeEntryListeners.clear();
     _routeEntryEvents.clear();
     _routeVisibilityListeners.clear();
     _routeVisibilityEvents.clear();
     _routeEntryCloseFutures.clear();
+    _exitingRouteEntries.clear();
+    _routeExitWaiters.clear();
     _backendNavigationListeners.clear();
     _backendNavigationEvents.clear();
     _backendEntries.clear();
@@ -2023,6 +2070,7 @@ final class CCRouterRuntime {
     _backendSequencesByHost.clear();
     _desynchronizedBackendHosts.clear();
     _inFlightNavigation.clear();
+    _navigationHostRegistrations.clear();
     for (final record in _navigationAspectRecords.values) {
       record.clock.stop();
     }
@@ -2043,7 +2091,7 @@ final class CCRouterRuntime {
     final zoneOwner = Zone.current[_constructionZoneKey];
     final owner =
         zoneOwner is _ServiceConstructionOwner &&
-            identical(zoneOwner.runtime, this)
+            identical(zoneOwner.runtimeIdentity, _zoneIdentity)
         ? zoneOwner
         : null;
     _validateServiceDependency(owner, provider);
@@ -2086,6 +2134,9 @@ final class CCRouterRuntime {
   }
 
   /// Resolves one normalized [provider] in its effective owner Scope.
+  ///
+  /// Admission is checked before cache/factory access and again before handing
+  /// the instance back, because a factory may synchronously end its caller.
   Object _resolve(
     _Provider provider, {
     _RouteEntryRecord? routeEntry,
@@ -2094,9 +2145,10 @@ final class CCRouterRuntime {
     final zoneOwner = Zone.current[_constructionZoneKey];
     final owner =
         zoneOwner is _ServiceConstructionOwner &&
-            identical(zoneOwner.runtime, this)
+            identical(zoneOwner.runtimeIdentity, _zoneIdentity)
         ? zoneOwner
         : null;
+    _ensureServiceResolutionCanEnter(owner);
     _validateServiceDependency(owner, provider);
     final effectiveRouteEntry = routeEntry ?? owner?.routeEntry;
     final providerScope = _scopeForProvider(provider, effectiveRouteEntry);
@@ -2117,26 +2169,57 @@ final class CCRouterRuntime {
       throw CCServiceNotReadyError(_providerIdentity(provider));
     }
     final context = _context(scope.id, cancellation: scope.cancellation);
-    Object create() => runZoned(
-      () => provider.factory(context),
-      zoneValues: {
-        _invocationZoneKey: (this, context),
-        _constructionZoneKey: _ServiceConstructionOwner(
-          runtime: this,
-          serviceScope: useParentScope ? owner.serviceScope : provider.scope,
-          instanceScope: scope,
-          ownerComponentId: useParentScope
-              ? owner.ownerComponentId
-              : provider.ownerComponentId,
-          routeEntry: effectiveRouteEntry,
-        ),
-      },
+    final constructionValues = <Object, Object?>{
+      ..._invocationZoneValues(
+        context,
+        ownerScope: scope,
+        inheritOwnership: false,
+      ),
+      _constructionZoneKey: _ServiceConstructionOwner(
+        runtimeIdentity: _zoneIdentity,
+        serviceScope: useParentScope ? owner.serviceScope : provider.scope,
+        instanceScope: scope,
+        ownerComponentId: useParentScope
+            ? owner.ownerComponentId
+            : provider.ownerComponentId,
+        routeEntry: effectiveRouteEntry,
+      ),
+      _readinessZoneKey: Zone.current[_readinessZoneKey],
+      _readinessOwnerZoneKey: Zone.current[_readinessOwnerZoneKey],
+      _navigationCallbackZoneKey: Zone.current[_navigationCallbackZoneKey],
+    };
+    // The factory owns Scope work, not its first consumer's arbitrary Zone.
+    // Explicit framework lineage preserves dependency cycles and reentrancy.
+    Object create() => _hostZone.run(
+      () => runZoned(
+        () => provider.factory(context),
+        zoneValues: constructionValues,
+      ),
     );
-    return scope.resolve(
+    final instance = scope.resolve(
       providerKey,
       create,
       cache: provider.creationPolicy == CCServiceCreationPolicy.singleton,
     );
+    _ensureServiceResolutionCanEnter(owner);
+    return instance;
+  }
+
+  /// Rejects fresh resolution from an ended owner or invocation continuation.
+  ///
+  /// Session lookup uses the currently active Scope; it must never turn old
+  /// work into a caller of the replacement account, including detached work
+  /// from successfully returned methods. Root delivery also rechecks Runtime
+  /// shutdown after a reentrant factory. Singleton initializers carry their
+  /// Scope context independently of the first waiter,
+  /// so cancelling that waiter still permits shared initialization to continue.
+  void _ensureServiceResolutionCanEnter(_ServiceConstructionOwner? owner) {
+    if (_disposed) throw const CCInvocationCancelledError();
+    final parent = _parentContext;
+    if (parent != null) _ensureInvocationCanEnter(parent);
+    if (owner != null && owner.instanceScope.state != CCScopeState.active) {
+      throw CCScopeClosedError(owner.instanceScope.id);
+    }
   }
 
   /// Resolves one Service and completes its optional readiness initializer.
@@ -2148,7 +2231,7 @@ final class CCRouterRuntime {
     final zoneOwner = Zone.current[_constructionZoneKey];
     final owner =
         zoneOwner is _ServiceConstructionOwner &&
-            identical(zoneOwner.runtime, this)
+            identical(zoneOwner.runtimeIdentity, _zoneIdentity)
         ? zoneOwner
         : null;
     _validateServiceDependency(owner, provider);
@@ -2184,7 +2267,7 @@ final class CCRouterRuntime {
     final readinessOwner =
         Zone.current[_readinessOwnerZoneKey] as _ServiceReadinessRecord?;
     final constructionOwner = _ServiceConstructionOwner(
-      runtime: this,
+      runtimeIdentity: _zoneIdentity,
       serviceScope: useParentScope ? owner.serviceScope : provider.scope,
       instanceScope: scope,
       ownerComponentId: useParentScope
@@ -2210,47 +2293,58 @@ final class CCRouterRuntime {
           )
         : context;
 
-    Future<void> initialize(_ServiceReadinessRecord record) => runZoned(
-      () async {
-        try {
-          await initializer(instance, initializerContext);
-          if (initializerContext.cancellation.isCancelled) {
-            throw const CCInvocationCancelledError();
-          }
-        } on CCRouterError {
-          rethrow;
-        } catch (error) {
-          throw CCServiceInitializationError(
-            _providerIdentity(provider),
-            error.runtimeType.toString(),
-          );
-        }
-      },
-      zoneValues: {
-        _invocationZoneKey: (this, initializerContext),
-        _constructionZoneKey: constructionOwner,
-        _readinessZoneKey: {...chain, scopedKey: record},
-        _readinessOwnerZoneKey: record,
-      },
-    );
+    // Scope ownership is independent of the first waiter, while framework
+    // decisions must retain their navigation-reentrancy prohibition.
+    final navigationCallback = Zone.current[_navigationCallbackZoneKey];
 
-    if (provider.creationPolicy == CCServiceCreationPolicy.singleton) {
-      await scope.ensureServiceReady(
-        providerKey,
-        initialize,
-        owner: readinessOwner,
-        identity: _providerIdentity(provider),
-        waitCancellation: context.cancellation,
-      );
-    } else {
-      final record = _ServiceReadinessRecord();
-      final waiting = record.waitFor(
-        readinessOwner,
-        _providerIdentity(provider),
-        context.cancellation,
-      );
-      record.start(() => initialize(record), context.cancellation, scope.id);
-      await waiting;
+    Future<void> initialize(_ServiceReadinessRecord record) =>
+        _runServiceInitializer(
+          initializer: initializer,
+          instance: instance,
+          context: initializerContext,
+          identity: _providerIdentity(provider),
+          zoneValues: {
+            ..._invocationZoneValues(
+              initializerContext,
+              ownerScope: scope,
+              inheritOwnership:
+                  provider.creationPolicy != CCServiceCreationPolicy.singleton,
+            ),
+            _constructionZoneKey: constructionOwner,
+            _readinessZoneKey: {...chain, scopedKey: record},
+            _readinessOwnerZoneKey: record,
+            if (navigationCallback != null)
+              _navigationCallbackZoneKey: navigationCallback,
+          },
+        );
+
+    try {
+      if (provider.creationPolicy == CCServiceCreationPolicy.singleton) {
+        await scope.ensureServiceReady(
+          providerKey,
+          initialize,
+          owner: readinessOwner,
+          identity: _providerIdentity(provider),
+          waitCancellation: context.cancellation,
+        );
+      } else {
+        final record = _ServiceReadinessRecord();
+        final waiting = record.waitFor(
+          readinessOwner,
+          _providerIdentity(provider),
+          context.cancellation,
+        );
+        record.start(() => initialize(record), context.cancellation, scope.id);
+        await waiting;
+      }
+    } catch (_) {
+      // Shared outcome delivery crosses error Zones; owner cancellation can
+      // settle readiness before this waiter's invocation race observes it.
+      // Preserve the same public cancellation outcome for every ended caller.
+      if (context.cancellation.isCancelled) {
+        throw const CCInvocationCancelledError();
+      }
+      rethrow;
     }
     if (context.cancellation.isCancelled) {
       throw const CCInvocationCancelledError();
@@ -2448,6 +2542,7 @@ final class CCRouterRuntime {
       appScope.cancellation,
       if (ownerScope != null) ownerScope.cancellation,
       if (parent != null) parent.cancellation,
+      ...?_currentInvocationOwnership?._tokens,
     };
     for (final token in linkedTokens) {
       removers.add(token.addListener(context.cancellation.cancel));
@@ -2456,16 +2551,10 @@ final class CCRouterRuntime {
     var status = 'succeeded';
     String? errorType;
     try {
-      if (context.cancellation.isCancelled) {
-        throw const CCInvocationCancelledError();
-      }
-      final deadline = context.deadline;
-      if (deadline != null && !deadline.isAfter(DateTime.now())) {
-        throw const CCInvocationTimeoutError();
-      }
+      _ensureInvocationCanEnter(context, ownerScope: ownerScope);
       return runZoned(
         () => body(context),
-        zoneValues: {_invocationZoneKey: (this, context)},
+        zoneValues: _invocationZoneValues(context, ownerScope: ownerScope),
       );
     } catch (error) {
       status = error is CCInvocationCancelledError
@@ -2489,6 +2578,28 @@ final class CCRouterRuntime {
         status: status,
         errorType: errorType,
       );
+    }
+  }
+
+  /// Rejects entry into business work after an asynchronous ownership handoff.
+  ///
+  /// Check immediately before calling application code, not only before
+  /// readiness. A cancelled invocation cannot start a previously unentered
+  /// method even when the resolved Service was already available. Original
+  /// owners remain authoritative after parent methods return successfully.
+  void _ensureInvocationCanEnter(
+    CCInvocationContext context, {
+    CCScope? ownerScope,
+  }) {
+    if (_disposed ||
+        context.cancellation.isCancelled ||
+        _currentInvocationOwnership?.isCancelled == true ||
+        (ownerScope != null && ownerScope.state != CCScopeState.active)) {
+      throw const CCInvocationCancelledError();
+    }
+    final deadline = context.deadline;
+    if (deadline != null && !deadline.isAfter(DateTime.now())) {
+      throw const CCInvocationTimeoutError();
     }
   }
 
@@ -2535,6 +2646,7 @@ final class CCRouterRuntime {
       if (ownerScope != null) ownerScope.cancellation,
       if (parent != null) parent.cancellation,
       if (cancellation != null) cancellation,
+      ...?_currentInvocationOwnership?._tokens,
     };
     for (final token in linkedTokens) {
       removers.add(token.addListener(context.cancellation.cancel));
@@ -2550,13 +2662,10 @@ final class CCRouterRuntime {
     String? errorType;
     try {
       final work = Future<R>.sync(() {
-        if (context.cancellation.isCancelled)
-          throw const CCInvocationCancelledError();
-        if (deadline != null && !deadline.isAfter(DateTime.now()))
-          throw const CCInvocationTimeoutError();
+        _ensureInvocationCanEnter(context, ownerScope: ownerScope);
         return runZoned(
           () => body(context),
-          zoneValues: {_invocationZoneKey: (this, context)},
+          zoneValues: _invocationZoneValues(context, ownerScope: ownerScope),
         );
       });
       final result = Future.any([work, cancelled.future]);
@@ -2593,7 +2702,23 @@ final class CCRouterRuntime {
           ? 'timedOut'
           : 'failed';
       errorType = error.runtimeType.toString();
-      if (status == 'timedOut') context.cancellation.cancel();
+      if (status == 'timedOut') {
+        try {
+          context.cancellation.cancel();
+        } catch (cleanupError) {
+          _emitDiagnostic(
+            category: CCDiagnosticCategory.lifecycle,
+            level: CCDiagnosticLevel.error,
+            operation: 'invocationCancellation',
+            occurredAt: DateTime.now(),
+            status: 'failed',
+            duration: Duration.zero,
+            errorType: cleanupError.runtimeType.toString(),
+            invocationId: context.invocationId,
+            scopeId: context.scopeId,
+          );
+        }
+      }
       rethrow;
     } finally {
       for (final remove in removers) {
@@ -2612,15 +2737,6 @@ final class CCRouterRuntime {
         subscriberId: subscriberId,
       );
     }
-  }
-
-  /// Parent invocation carried by the current Zone for this Runtime.
-  CCInvocationContext? get _parentContext {
-    final current = Zone.current[_invocationZoneKey];
-    return current is (CCRouterRuntime, CCInvocationContext) &&
-            identical(current.$1, this)
-        ? current.$2
-        : null;
   }
 
   /// Creates a child-aware invocation context for [scopeId].
@@ -2758,6 +2874,30 @@ final class CCRouterRuntime {
         );
       }
       byId[id] = interceptor;
+    }
+    final ids = byId.keys.toList()..sort();
+    return List.unmodifiable(ids.map((id) => byId[id]!));
+  }
+
+  /// Validates and deterministically orders Host route-revalidation policies.
+  List<CCGlobalRouteRevalidationPolicy> _validateRouteRevalidationPolicies(
+    Iterable<CCGlobalRouteRevalidationPolicy> policies,
+  ) {
+    final byId = <String, CCGlobalRouteRevalidationPolicy>{};
+    for (final policy in policies) {
+      final id = policy.id;
+      if (!_isStableIdentifier(id) || byId.containsKey(id)) {
+        throw CCRegistrationError(
+          'Invalid or duplicate route revalidation policy ID "$id".',
+        );
+      }
+      final timeout = policy.timeout;
+      if (timeout != null && timeout <= Duration.zero) {
+        throw CCRegistrationError(
+          'Route revalidation policy "$id" timeout must be positive.',
+        );
+      }
+      byId[id] = policy;
     }
     final ids = byId.keys.toList()..sort();
     return List.unmodifiable(ids.map((id) => byId[id]!));

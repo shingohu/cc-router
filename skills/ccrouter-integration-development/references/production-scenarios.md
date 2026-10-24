@@ -1,5 +1,17 @@
 # Production Scenario Assessment
 
+Product analytics (PV/dwell definitions, Consent, identity, click/scroll/exposure,
+sampling, queues and upload) is application responsibility. CCRouter supplies
+navigation/page lifecycle observations and framework diagnostics. The repository's
+Demo analytics libraries are references, not a new framework contract or required
+dependency; an existing narrow application client can consume the observations.
+
+Visitor/application Session identities must not be injected into Core. An
+application observer snapshots them at delivery time and owns Consent resets,
+retention and teardown. Layout breakpoints/pane policy and restoration-demand
+collection are application responsibilities too; the framework applies resolved
+Outlet visibility without replacing retained identities or Route Scopes.
+
 Use this reference when an application's real feature exposes a missing,
 unclear, or incorrect framework behavior. Ordinary supported feature work does
 not require a framework redesign or a separate approval cycle.
@@ -9,7 +21,7 @@ not require a framework redesign or a separate approval cycle.
    Record Owner/Scope, creation and disposal, cancellation/timeout, concurrency,
    fallback, and privacy constraints only where relevant to the failure.
 2. Map the scenario to existing Route, Service, Command, Event, InitTask,
-   Interceptor, PopGuard, Aspect, Analytics, Host/Outlet, or Generator contracts.
+   Interceptor, PopGuard, Aspect, page lifecycle, Host/Outlet, or Generator contracts.
    Inspect public APIs and generated output; a planning document is not proof
    that a capability exists.
 3. Classify it as supported integration, framework defect, developer-experience
@@ -40,26 +52,26 @@ This local procedure is sufficient when the remote document is unavailable.
 ## Exact close after asynchronous completion
 
 A managed A covered by B must close its own instance when its work completes;
-ordinary Pop selects B or a foreign Popup. A raw Navigator removal can leave A
-in GoRouter's declarative tree and resurrect it on the next push/pop. This is a
-general optional Adapter capability, not application-specific route matching.
+ordinary Pop selects B or a foreign Popup. A raw Navigator removal bypasses the
+Runtime Entry, result and Scope lifecycle. Use the optional targeted-close
+capability rather than application-specific route matching.
 
 Capture `CCRouter.routeEntryHandleOf(context)` while setting up A, then use
 `CCRouter.navigator.close(handle, result: value)`. Check the explicit outcome;
-never retry unsupported with Pop or same-route lookup. A null capture means an
-unmanaged/initial/removed page, not permission to guess from the active stack.
+never retry unsupported with Pop or same-route lookup. Managed startup pages
+also own handles. A null capture means no valid binding to an active Entry in
+the current Runtime, not permission to guess from the active stack. Foreign
+Routes and local Outlet bases do not create their own Managed identity.
 The target's global/local managed guards run, a wrong result fails before
 mutation, closed results complete once, and its Scope starts disposal once.
 
 The Managed Router Backend stores Host/Outlet Entries independently and projects
 them through `Navigator.pages`, so covered entries, inactive stateful branches,
 and Shell structural anchors can be removed by identity without mutating a
-match tree. GoRouter remains a compatibility source: safely removable observed
-imperative push/replace entries and supported nested Shell Outlets work there,
-while declarative go/reset entries, inactive retained branches, emptying a Shell,
-and trees with external `GoRoute.onExit` remain adapter-specific limits. Old
-custom Adapters remain source compatible and opt into the Host-only targeted-close
-SPI separately.
+match tree. The GoRouter compatibility implementation has been removed.
+Native close preserves foreign popups even when removing the last root or Shell
+Entry: only an empty structural boundary survives until those popups end.
+Custom Adapters opt into the Host-only targeted-close SPI separately.
 
 Regression evidence must include A covered by B, close A then push/pop C and
 return from B without A resurrection; repeated same-route instances; foreign

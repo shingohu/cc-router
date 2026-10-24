@@ -1,5 +1,11 @@
 # macOS Monkey 验证记录
 
+> 历史记录：文中的 GoRouter 实现与验收对应原版本。2026-10-23 已移除兼容包；
+> 当前原生 Managed 能力及回归以[退役记录](../../docs/validation/go_router_retirement_20261023.md)、API 和测试为准。
+
+最新 Managed Monkey、真实窗口及性能/heap 证据分列于[验证索引](../../docs/validation/README.md)。
+本文的旧窗口 Monkey 与耗时/内存数字不表示在当前源码重新执行。
+
 ## 结论
 
 macOS 没有 Android `adb shell monkey` 的直接等价物。Android Monkey 依赖

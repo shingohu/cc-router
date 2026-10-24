@@ -15,8 +15,11 @@ final class _PendingNavigationRecord {
     required this.completer,
     required this.action,
     required this.commitEntry,
+    required this.onEntryCommitted,
     required this.placementOverride,
     required this.validateResult,
+    required this.ownership,
+    this.requestCancellation,
     this.code = 'deferred',
     this.expiresAt,
   });
@@ -60,11 +63,26 @@ final class _PendingNavigationRecord {
   /// Optional RouteEntry commit strategy retained with the operation.
   final void Function(_RouteEntryRecord entry)? commitEntry;
 
+  /// Optional observer notified only after the resumed Entry is committed.
+  final void Function(_RouteEntryRecord entry)? onEntryCommitted;
+
   /// Call-site placement pinned to the original Host for redirects and replay.
   final CCRoutePlacement placementOverride;
 
   /// Original result contract used before completing and removing the Entry.
   final void Function(Object? result)? validateResult;
+
+  /// Host ingress lifetime preserved through defer and resume.
+  final CCCancellationToken? requestCancellation;
+
+  /// Original operation retained across a replay initiated in another Zone.
+  final _NavigationOperationLifetime? ownership;
+
+  /// Releases Host cancellation when this continuation leaves the queue.
+  void Function()? removeHostCancellationListener;
+
+  /// Releases the ingress listener when this pending record leaves the queue.
+  void Function()? removeCancellationListener;
 
   /// Timer responsible for bounded retention when a timeout was requested.
   Timer? timer;
@@ -106,8 +124,10 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
     required Duration? timeout,
     required Future<Object?> Function(CCNavigationRequest request) action,
     required void Function(_RouteEntryRecord entry)? commitEntry,
+    required void Function(_RouteEntryRecord entry)? onEntryCommitted,
     required CCRoutePlacement? placementOverride,
     required void Function(Object? result)? validateResult,
+    CCCancellationToken? requestCancellation,
   }) {
     final completer = Completer<Object?>();
     if (_disposed) {
@@ -130,6 +150,7 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
       completer: completer,
       action: action,
       commitEntry: commitEntry,
+      onEntryCommitted: onEntryCommitted,
       placementOverride: CCRoutePlacement(
         hostId:
             placementOverride == null || placementOverride.hostId == 'default'
@@ -140,6 +161,8 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
         navigatorOutlet: placementOverride?.navigatorOutlet ?? 'root',
       ),
       validateResult: validateResult,
+      requestCancellation: requestCancellation,
+      ownership: _navigationOperation,
     );
     _pendingNavigations[request.navigationId] = record;
     if (timeout != null) {
@@ -150,6 +173,19 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
         );
       });
     }
+    record.removeCancellationListener = requestCancellation?.addListener(() {
+      _cancelPendingNavigationInternal(
+        request.navigationId,
+        code: 'route_information_superseded',
+      );
+    });
+    record.removeHostCancellationListener = record.ownership?.cancellation
+        .addListener(() {
+          _cancelPendingNavigationInternal(
+            request.navigationId,
+            code: 'host_detached',
+          );
+        });
     return completer.future;
   }
 
@@ -161,14 +197,35 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
   /// requests revalidate through encoding; dynamic URIs match/decode again.
   /// The original concrete Host and call-site Outlet remain pinned across
   /// focus changes, while explicit placement on a redirect target still wins.
+  /// Original and restoring callers observe the same result or error in their
+  /// own error Zones; a failing original Future is never shared across them.
   Future<Object?> resumePendingNavigation(String navigationId) async {
     _ensureNavigationCanStart();
     _ensureInitialized();
     final record = _pendingNavigations.remove(navigationId);
     if (record == null) throw const CCNavigationPendingNotFoundError();
+    return _inNavigationOwnership(
+      record.ownership,
+      () => _resumeOwnedPendingNavigation(record),
+    );
+  }
+
+  /// Replays only while the original registration set remains alive.
+  ///
+  /// Completes the original caller separately and returns or throws locally.
+  /// Returning its Completer Future would lose failures across error Zones.
+  Future<Object?> _resumeOwnedPendingNavigation(
+    _PendingNavigationRecord record,
+  ) async {
+    final navigationId = record.request.navigationId;
     record.timer?.cancel();
+    record.removeCancellationListener?.call();
+    record.removeCancellationListener = null;
+    record.removeHostCancellationListener?.call();
+    record.removeHostCancellationListener = null;
     var dispatchStarted = false;
     try {
+      _ensureNavigationRequestAlive(record.requestCancellation);
       final resolveClock = Stopwatch()..start();
       late final _PreparedRoute resolved;
       try {
@@ -223,10 +280,13 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
         navigationId: record.request.navigationId,
         action: record.action,
         commitEntry: record.commitEntry,
+        onEntryCommitted: record.onEntryCommitted,
         placementOverride: record.placementOverride,
         validateResult: record.validateResult,
+        requestCancellation: record.requestCancellation,
       );
       record.completer.complete(result);
+      return result;
     } catch (error, stackTrace) {
       if (!dispatchStarted) {
         final errorType = error.runtimeType.toString();
@@ -248,8 +308,8 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
       }
       _pendingResumeFailures.add(record.request.navigationId);
       record.completer.completeError(error, stackTrace);
+      Error.throwWithStackTrace(error, stackTrace);
     }
-    return record.completer.future;
   }
 
   /// Cancels a pending continuation and completes its original Future with a
@@ -267,6 +327,10 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
     final record = _pendingNavigations.remove(navigationId);
     if (record == null) return false;
     record.timer?.cancel();
+    record.removeCancellationListener?.call();
+    record.removeCancellationListener = null;
+    record.removeHostCancellationListener?.call();
+    record.removeHostCancellationListener = null;
     final error = CCRouteCancelledError(code);
     if (!record.completer.isCompleted) {
       record.completer.completeError(error);

@@ -1,5 +1,13 @@
 # CCRouter Demo
 
+框架接入与能力边界统一查阅[现行规范索引](../docs/README.md)；路由、Shell、Outlet 和混合导航见[Managed 路由规范](../docs/CCRouter-route-design.md)，系统返回及平台手势见[返回协调规范](../docs/CCRouter-predictive-back.md)。本页维护 Demo 场景与操作，不复制框架规则。
+
+产品埋点已归应用侧：[`demo_analytics`](modules/analytics/README.md)、
+[`demo_analytics_flutter`](modules/analytics_flutter/README.md) 和
+[`demo_analytics_firebase`](modules/analytics_firebase/README.md) 都是 Demo library，
+不属于框架依赖或发布能力。公开类型使用 `AppAnalytics…` / `AppNavigationAnalyticsBridge`；
+CCRouter 仅提供导航生命周期观察，PV/停留/滚动/曝光规则由应用决定。
+
 CCRouter 的 Flutter 开发工程，使用 FVM `ohos/oh-3.41.9-release` SDK，包含 Android、iOS、macOS、Web 和 OHOS 平台目录。
 
 Demo 图标采用 CCRouter 双 C + 路由箭头设计；SVG 母版、平台导出命令及尺寸规范见
@@ -25,12 +33,9 @@ Flutter SDK 选择：
 `backendFactory` 复用 Demo Shell/Outlet Backend，并自动创建 `MaterialApp.router` 与 Managed
 Host；业务代码不接触导航 Backend。
 
-原生 Managed Shell 装配集中在 `lib/demo_managed_router_backend.dart`。已 deprecated 的 GoRouter
-对照装配保留在 `lib/demo_router_backend.dart`：Demo 私有挂载对象从 Catalog 解码参数、
-绑定精确 RouteEntry，并复用 `CCFlutterRouteFactory` 创建 Page；同一次挂载同步产生 Adapter
-binding/override，避免再次手写 Route ID 清单。Outlet 的 Key 与 Observer 成对创建和复用。
-Shell 树、相对路径、分支顺序和切换策略仍显式配置；自适应面板的独立 Navigator 不冒充
-GoRouter Shell。Stateful Shell 首次进入空分支时创建根页，返回已访问分支时只激活 Outlet，
+原生 Managed Shell 装配集中在 `lib/demo_managed_router_backend.dart`，旧 GoRouter 装配与入口已移除。
+Shell 树、相对路径、分支顺序和切换策略仍显式配置；自适应面板使用原生 `CCManagedOutlet`，
+本地列表/详情由 `baseBuilder` 提供，不额外创建手写 Navigator。Stateful Shell 首次进入空分支时创建根页，返回已访问分支时只激活 Outlet，
 因此保留分支 Stack 与 Widget State；重选当前分支才重置到根页。这些是 Host 装配策略，
 业务页面不读取 Managed Stack。
 
@@ -38,18 +43,21 @@ GoRouter Shell。Stateful Shell 首次进入空分支时创建根页，返回已
 栈操作、拦截和重定向、Failure Policy、Aspect、页面/应用生命周期、展示动画、
 Managed Modal、Foreign/Overlay 隔离、ShellRoute、StatefulShellRoute、嵌套子路由和
 typed Extra。完整的 macOS 验证矩阵、已修复问题和 Adapter 限制见
-[路由验证记录](docs/route_validation.md)，与 Flutter 官方 GoRouter 示例的差异见
-[GoRouter 示例覆盖对照](docs/go_router_example_coverage.md)。固定 seed 的 Semantic Monkey、
+[路由验证记录](docs/route_validation.md)和[统一验证索引](../docs/validation/README.md)，与 Flutter 官方 GoRouter 示例的历史差异见
+[GoRouter 示例覆盖对照](docs/go_router_example_coverage.md)（不是当前 Backend 接入规范）。固定 seed 的 Semantic Monkey、
 真实窗口 Accessibility Monkey 和小窗口回归方法见
 [macOS Monkey 验证记录](docs/macos_monkey_validation.md)。
 
-`CCRouterDemoApp` 和 `lib/main.dart` 默认使用原生 Managed Backend，并复用相同的生成 Catalog、
-单 Navigator Shell 和 Stateful Shell。冻结的 GoRouter 对照只能通过
-`lib/main_go_router_compat.dart` 或 `lib/main_go_router_predictive_back.dart` 显式启动。
-Managed Widget 回归位于 `test/demo_router_backend_test.dart`；
-`test/managed_demo_feature_matrix_test.dart`
-把同一组页面族、Shell、Stateful Shell 和 Pop 断言参数化后分别运行 GoRouter 与 Managed，
-用于阻止迁移期行为矩阵漂移，不代表 deprecated Backend 继续演进。
+Demo 全部使用原生 Managed Backend，包括默认入口、多 Host、自适应 Pane 和预测返回。
+`test/demo_router_backend_test.dart` 检查接入与展示；
+`test/managed_demo_feature_matrix_test.dart` 和 `test/managed_parity_regression_test.dart`
+保留迁移期的行为断言，直接验证原生路径。历史 GoRouter 对照报告保留为证据，
+不再提供可运行的兼容入口。
+
+`lib/multi_host_demo.dart` 的“Host 生命周期”由 Host 层管理辅助 Backend：点击“发起延迟
+导航”→“关闭并重开 Host”，旧请求应显示 `host_detached`；点击“新实例导航”应立即成功，
+再“放行旧决策”不应改变当前页面。样例释放旧 Backend、卸载旧 `CCRouterApp` 后再挂载
+相同逻辑 ID 的新实例，组件不接触 Host 注册。自动化见 `test/host_lifecycle_lab_test.dart`。
 
 首页“展示”→“类型化 UI Fragment”（`/ui-fragments`）使用真实生成 Host：
 `navigation_lab` 只依赖 `order_contracts`，订单组件提供摘要与推荐两个 Renderer。
@@ -94,8 +102,18 @@ Host 与自适应布局示例已使用原生 `CCManagedMultiHostBackend`：双 H
 Managed Stack 与 RouterConfig 同时显示在一个
 Flutter View 中，验证 Host 选择、路由栈和 RouteEntry 生命周期互不串扰；自适应模式
 保持同一个 Host，根据手机横竖屏、桌面窗口缩放和模拟 hinge 更新
-`CCHostLayoutMetrics`，并在单 `adaptive.list` Outlet 与大屏 list/detail 双 Outlet
-之间切换：
+应用自己的 `DemoHostLayoutMetrics` / `DemoAdaptiveLayoutPolicy`，再调用 Host SPI
+`setActiveOutlets`，在单 `adaptive.list` Outlet 与大屏 list/detail 双 Outlet 之间切换。
+600/840 断点和 hinge 策略不进入 CCRouter；`demo/lib/restoration_demand.dart` 是独立的
+可选恢复需求采集示例，未接入真实平台源，也不代表实现了导航状态恢复：
+
+详情中的“在此 Outlet 打开栈页”实际 push Managed 页面；返回后保留本地选中项。
+导航实验室还提供 Regex alias、内部链接外部拒绝、Pending 取消、覆盖页下的 identity close、
+Revalidation keep/close/replace/reset，以及 Workspace 详情跨 Shell push 后返回的入口。
+较早逐项矩阵见 [2026-10-22 全量能力审查](../docs/validation/managed_full_review_20261022.md)。
+后续[Host 事件身份修复与 macOS 实窗复验](../docs/validation/20261023-host-event-identity-fixes/report.md)
+覆盖多轮重开、旧请求放行、双 Host 与自适应操作；[2026-10-24 源码回归](../docs/validation/20261024-backend-wait-fixes/report.md)
+覆盖最新等待/所有权修复。各日期和范围独立，统一入口为[验证索引](../docs/validation/README.md)。
 
 ```sh
 fvm flutter run -d macos -t lib/multi_host_demo.dart
@@ -120,8 +138,6 @@ fvm flutter run
 ```sh
 # 原生 Managed Backend
 fvm flutter run -t lib/main_predictive_back.dart
-# 已 deprecated 的 GoRouter 迁移回归
-fvm flutter run -t lib/main_go_router_predictive_back.dart
 # Managed 旧入口别名
 fvm flutter run -t lib/main_managed_predictive_back.dart
 fvm flutter test test/predictive_back_demo_test.dart
@@ -142,8 +158,10 @@ Demo widget 回归还覆盖 Shell / StatefulShell 详情上的根弹窗：先弹
 “展示 → 类型化 UI Fragment”还覆盖组合回归：取消保留输入内容与页面，提交后退出一层并卸载
 Fragment；对应 Widget 测试使用真实生成 Host，不代表已完成该场景的真机动画验收。
 
-2026-10-15 已在三星 Android 16 完成开启 / 关闭入口的真机触摸输入注入冒烟；
-结果与限制见[设备验证记录](../docs/validation/android_predictive_back_samsung_20261015.md)。
+Managed 的三星 Android 16 预测返回与 iPhone 13 侧滑真机结果见
+[2026-10-22 平台验收](../docs/validation/managed_navigation_platform_acceptance_20261022.md)。
+[2026-10-15 三星记录](../docs/validation/android_predictive_back_samsung_20261015.md)保留旧 Backend
+的历史冒烟；不能当作当前 Managed 复验。之后的 Widget 回归不自动更新这些真机结论。
 
 自动化测试覆盖上述场景；Demo Manifest 已在 `<application>` 显式设置
 `android:enableOnBackInvokedCallback="true"`。系统派发、最终 Manifest 合并结果、IME、
@@ -177,9 +195,8 @@ Service 由生成器自动装配，没有专用声明模型的能力放入 `@CCC
 组件生成后端中立的页面 Catalog，宿主只导出原子的
 `ccrouterGeneratedHostAssembly`；`CCRouterHost.initialize` 安装该快照后，默认 managed Host
 通过 Host-only Binding 自动读取同一份 Catalog；
-`CCManagedRouterApp` 从 Catalog 创建原生 Managed Backend。迁移对照中的
-`CCGoRouterBackend.managed` 仍从 Catalog 创建 GoRouter routes、Adapter bindings 和
-Root Observer；deprecated `CCGoRouterApp` 只绑定 Host 和 Backend，不初始化或关闭 Runtime。最终由应用
+`CCManagedRouterApp` 从 Catalog 创建原生 Managed Backend；它只绑定 Host 和 Backend，
+不初始化或关闭 Runtime。最终由应用
 Composition Root 显式调用 `CCRouterHost.shutdown`。业务跳转仍统一通过 `CCRouter.navigator`。
 组件 Registrar、Manifest 与 Route Catalog 由独立 `.component.g.dart` 自动生成，并聚合到
 Host Assembly；组件业务 barrel 不导出 Registrar 或 Manifest。
@@ -217,8 +234,7 @@ Manifest 和 Catalog 保持在同一个 Assembly 快照中，
 `lib/src/ccrouter_generated/metadata/ccrouter_package.json` 发布 Index；Runtime 组件通过
 `lib/src/ccrouter_generated/host/<package>_ccrouter.g.dart` 的分层 Bundle 装配，纯 contracts Package 保持 Pure Dart，
 只发布 Index。组件增删普通页面后重新运行
-上述统一命令即可，`main.dart` 不再逐条添加组件 Manifest、`GoRoute` 或
-`CCGoRouterRouteBinding`。宿主自身未注解的本地组件仍由应用显式安装。
+上述统一命令即可，`main.dart` 不再逐条维护页面或 Adapter binding。宿主自身未注解的本地组件仍由应用显式安装。
 
 契约声明参考 `modules/order_contracts/lib/src/order_detail_route_contract.dart`，页面绑定参考
 `modules/order/lib/src/order_detail_page.dart`，生成器约束与测试命令见

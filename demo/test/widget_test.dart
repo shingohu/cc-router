@@ -11,8 +11,10 @@ import 'package:demo_web_contracts/demo_web_contracts.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/demo_startup.dart';
+
 void main() {
-  setUp(() async {
+  setUp(() {
     demoNavigationLabStore
       ..blockDetailGlobally = false
       ..dirtyForm = true
@@ -20,37 +22,6 @@ void main() {
       ..clear();
     setDemoAnalyticsConsent(true);
     demoDiagnosticsSink.clear();
-    CCRouterHost.initialize(
-      hostAssembly: ccrouterGeneratedHostAssembly,
-      deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
-      globalInterceptors: const [
-        CCGlobalNavigationInterceptor(
-          id: DemoHostIds.globalNavigationInterceptor,
-          interceptor: DemoGlobalNavigationInterceptor(),
-        ),
-      ],
-      navigationFailurePolicy: const DemoNavigationFailurePolicy(),
-      navigationAspects: [
-        demoNavigationAspect,
-        demoNavigationAnalytics.createAspect(),
-      ],
-      telemetryContextProvider: const DemoNavigationTelemetryProvider(),
-      diagnostics: CCDiagnosticsConfig(
-        sink: demoDiagnosticsSink,
-        defaultMinimumLevel: CCDiagnosticLevel.debug,
-        policies: const [
-          CCDiagnosticCategoryPolicy(
-            category: CCDiagnosticCategory.navigation,
-            minimumLevel: CCDiagnosticLevel.debug,
-          ),
-          CCDiagnosticCategoryPolicy(
-            category: CCDiagnosticCategory.event,
-            minimumLevel: CCDiagnosticLevel.info,
-          ),
-        ],
-      ),
-    );
-    await CCRouterHost.runInitTasks(gate: CCInitTaskGate.appStarted);
   });
 
   tearDown(CCRouterHost.shutdown);
@@ -154,6 +125,7 @@ void main() {
   testWidgets('capability lab exercises Commands and initialization Gates', (
     tester,
   ) async {
+    await _pumpDemo(tester);
     final startup = {for (final task in CCRouter.initTasks) task.id: task};
     expect(
       startup[DemoInitTaskIds.foundation]!.state,
@@ -175,7 +147,6 @@ void main() {
     );
     expect(startup[DemoInitTaskIds.timeout]!.state, CCInitTaskState.pending);
 
-    await _pumpDemo(tester);
     await _openCapabilityLab(tester);
 
     await _tapCapabilityAction(tester, 'Command · typed result');
@@ -339,7 +310,11 @@ void main() {
       350,
       scrollable: find.byType(Scrollable).last,
     );
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Trace Bundle'));
+    await tester.pumpAndSettle();
     expect(find.text('Trace Bundle'), findsOneWidget);
+    expect(CCRouter.recentTraces, isNotEmpty);
     expect(find.textContaining('条记录（有界摘要）'), findsOneWidget);
 
     await _unmountDemo(tester);
@@ -438,10 +413,7 @@ void main() {
       expect((route as PageRoute<Object?>).popGestureEnabled, isTrue);
       expect(
         CCRouter.activeRouteEntries
-            .where(
-              (entry) =>
-                  entry.routeId == 'demo_navigation_lab.detail',
-            )
+            .where((entry) => entry.routeId == 'demo_navigation_lab.detail')
             .single
             .routeId,
         'demo_navigation_lab.detail',
@@ -502,10 +474,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('CCRouter Lab'), findsOneWidget);
-    expect(
-      CCRouter.activeRouteEntries.map((entry) => entry.routeId),
-      ['demo_navigation_lab.home'],
-    );
+    expect(CCRouter.activeRouteEntries.map((entry) => entry.routeId), [
+      'demo_navigation_lab.home',
+    ]);
     expect(
       demoNavigationLabStore.events.any(
         (event) =>
@@ -642,6 +613,7 @@ void main() {
   testWidgets('platform link stream handles a cold-start URI after attach', (
     tester,
   ) async {
+    await _initializeDemoHost(tester);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     tester.view.physicalSize = const Size(1280, 900);
     tester.view.devicePixelRatio = 1;
@@ -739,6 +711,7 @@ void main() {
   testWidgets('allowlisted HTTPS platform link opens the public Web route', (
     tester,
   ) async {
+    await _initializeDemoHost(tester);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     tester.view.physicalSize = const Size(1280, 900);
     tester.view.devicePixelRatio = 1;
@@ -856,19 +829,18 @@ void main() {
       ),
       isTrue,
     );
-    expect(
-      CCRouter.activeRouteEntries.map((entry) => entry.routeId),
-      ['demo_navigation_lab.home', 'demo_navigation_lab.guarded'],
-    );
+    expect(CCRouter.activeRouteEntries.map((entry) => entry.routeId), [
+      'demo_navigation_lab.home',
+      'demo_navigation_lab.guarded',
+    ]);
 
     await tester.tap(find.text('存在未保存修改'));
     await tester.tap(find.text('模拟系统返回'));
     await tester.pumpAndSettle();
     expect(find.text('CCRouter Lab'), findsOneWidget);
-    expect(
-      CCRouter.activeRouteEntries.map((entry) => entry.routeId),
-      ['demo_navigation_lab.home'],
-    );
+    expect(CCRouter.activeRouteEntries.map((entry) => entry.routeId), [
+      'demo_navigation_lab.home',
+    ]);
     expect(
       demoNavigationLabStore.events.any(
         (event) => event.contains('PopGuard · system · allow'),
@@ -904,10 +876,9 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('CCRouter Lab'), findsOneWidget);
-    expect(
-      CCRouter.activeRouteEntries.map((entry) => entry.routeId),
-      ['demo_navigation_lab.home'],
-    );
+    expect(CCRouter.activeRouteEntries.map((entry) => entry.routeId), [
+      'demo_navigation_lab.home',
+    ]);
 
     await _unmountDemo(tester);
   });
@@ -925,10 +896,9 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('CCRouter Lab'), findsOneWidget);
     expect(find.textContaining('CCRouteResultTypeError'), findsOneWidget);
-    expect(
-      CCRouter.activeRouteEntries.map((entry) => entry.routeId),
-      ['demo_navigation_lab.home'],
-    );
+    expect(CCRouter.activeRouteEntries.map((entry) => entry.routeId), [
+      'demo_navigation_lab.home',
+    ]);
     expect(
       CCRouter.recentNavigationFailures.single.context.reason,
       CCNavigationFailureReason.resultTypeMismatch,
@@ -1072,6 +1042,7 @@ void main() {
   testWidgets('StatefulShell accepts an initial deep link into a branch', (
     tester,
   ) async {
+    await _initializeDemoHost(tester);
     tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
     tester.view.physicalSize = const Size(1280, 900);
     tester.view.devicePixelRatio = 1;
@@ -1175,6 +1146,7 @@ void main() {
 }
 
 Future<void> _pumpDemo(WidgetTester tester) async {
+  await _initializeDemoHost(tester);
   tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
   tester.view.physicalSize = const Size(1280, 900);
   tester.view.devicePixelRatio = 1;
@@ -1185,7 +1157,41 @@ Future<void> _pumpDemo(WidgetTester tester) async {
 }
 
 Future<void> _flushApplicationLogs(WidgetTester tester) async {
-  await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+  await tester.pump();
+}
+
+Future<void> _initializeDemoHost(WidgetTester tester) async {
+  // Runtime-owned producers must share the Widget test's fake scheduler.
+  CCRouterHost.initialize(
+    hostAssembly: ccrouterGeneratedHostAssembly,
+    deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
+    globalInterceptors: const [
+      CCGlobalNavigationInterceptor(
+        id: DemoHostIds.globalNavigationInterceptor,
+        interceptor: DemoGlobalNavigationInterceptor(),
+      ),
+    ],
+    navigationFailurePolicy: const DemoNavigationFailurePolicy(),
+    navigationAspects: [
+      demoNavigationAspect,
+      demoNavigationAnalytics.createAspect(),
+    ],
+    diagnostics: CCDiagnosticsConfig(
+      sink: demoDiagnosticsSink,
+      defaultMinimumLevel: CCDiagnosticLevel.debug,
+      policies: const [
+        CCDiagnosticCategoryPolicy(
+          category: CCDiagnosticCategory.navigation,
+          minimumLevel: CCDiagnosticLevel.debug,
+        ),
+        CCDiagnosticCategoryPolicy(
+          category: CCDiagnosticCategory.event,
+          minimumLevel: CCDiagnosticLevel.info,
+        ),
+      ],
+    ),
+  );
+  await pumpDemoStartup(tester);
 }
 
 Future<void> _openCapabilityLab(WidgetTester tester) async {

@@ -2,6 +2,19 @@
 
 ## 0.1.0 - Unreleased
 
+- Added Managed-only `CCManagedRouterApp`, explicit `CCRouterApp.managed`,
+  MultiHost/Shell/Outlet composition, context-scoped navigation and parent-stack
+  reconstruction. Removed GoRouter Host integration; progressive adoption embeds
+  a Managed Outlet while business Intents remain unchanged.
+- Added exact RouteEntry handles/close and active-route revalidation. Ordinary
+  Pop retains outgoing Route Services through rendering; renderer unmount keeps
+  logical entries for remount and shutdown does not wait for another frame.
+- Preserved exact Guard/Pop ownership across focus changes, repeated Host
+  registration and overlapping returns; foreign popup Back and LocalHistory
+  remain separate from underlying Managed exit. Flutter owns gesture animation.
+- Kept product analytics, adaptive layout policy and restoration-demand collection
+  application-owned. Current contracts and dated verification scopes are indexed
+  in the repository's `docs/validation/README.md`.
 - Moved Runtime lifecycle and InitTask Gate control to `CCRouterHost` in
   `ccrouter_host.dart`; removed business-facade entry points and kept Session
   operations and read-only InitTask diagnostics available to business code.

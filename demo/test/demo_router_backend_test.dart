@@ -2,7 +2,6 @@ import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_demo/ccrouter_demo.dart';
 import 'package:ccrouter_demo/demo_managed_router_backend.dart';
-import 'package:ccrouter_demo/demo_router_backend.dart';
 import 'package:ccrouter_demo/main.dart';
 import 'package:demo_navigation_lab/demo_navigation_lab_host.dart';
 import 'package:flutter/cupertino.dart';
@@ -56,7 +55,8 @@ void main() {
   });
 
   // Exercise the real Demo Shell tree with a substituted destination, without
-  // attaching a Runtime. Existing widget tests cover managed Entry ownership.
+  // using the real Host. Direct Adapter requests isolate presentation rendering;
+  // the shared integration matrix covers Runtime Entry/result ownership.
   for (final (label, presentation) in <(String, CCRoutePresentation)>[
     (
       'cupertino',
@@ -99,7 +99,9 @@ void main() {
               },
             ),
       ], componentVersions: original.componentVersions);
-      final backend = createDemoRouterBackend(
+      CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly);
+      addTearDown(CCRouterHost.shutdown);
+      final backend = createDemoManagedRouterBackend(
         catalog: catalog,
         initialLocation: '/shell/feed',
       );
@@ -107,12 +109,28 @@ void main() {
         backend.adapter.dispose();
         await backend.dispose();
       });
-      await tester.pumpWidget(MaterialApp.router(routerConfig: backend.router));
+      await tester.pumpWidget(
+        CCRouterApp.managed(
+          backend: backend,
+          child: MaterialApp.router(routerConfig: backend.routerConfig),
+        ),
+      );
       await tester.pumpAndSettle();
       final extra = Object();
-      final result = backend.router.push<String>(
-        '/shell/feed/27?tag=one&tag=two',
-        extra: extra,
+      final result = backend.adapter.navigate(
+        CCNavigationRequest(
+          navigationId: 'presentation-$label',
+          operation: CCNavigationOperation.push,
+          routeId: detailId,
+          uri: Uri.parse('/shell/feed/27?tag=one&tag=two'),
+          arguments: Object(),
+          pathParameters: const {'item': '27'},
+          extra: extra,
+          presentation: presentation,
+          placement: catalog.destinationFor(detailId)!.route.placement,
+          origin: CCNavigationOrigin.internal,
+          openMode: null,
+        ),
       );
       await tester.pumpAndSettle();
 
@@ -142,7 +160,7 @@ void main() {
           expect(route, isA<ModalBottomSheetRoute<Object?>>());
       }
 
-      backend.router.pop('done');
+      backend.adapter.pop(result: 'done');
       await tester.pumpAndSettle();
       expect(await result, 'done');
       expect(find.byKey(target), findsNothing);

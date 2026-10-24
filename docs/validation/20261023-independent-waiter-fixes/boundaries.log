@@ -1,0 +1,76 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart
+00:00 +0: independent waiter GC shared pending=false releases second caller after cancel
+00:00 +1: independent waiter GC shared pending=true releases second caller after cancel
+00:00 +2: independent waiter GC shared pending=false releases second caller after timeout
+00:00 +3: independent waiter GC shared pending=true releases second caller after timeout
+00:00 +4: child identity and observer isolation local Entry IDs remain isolated across children, collision=false
+00:00 +5: child identity and observer isolation local Entry IDs remain isolated across children, collision=true
+00:00 +6: child identity and observer isolation foreign event in right Host preserves left Entry, collision=false
+00:00 +7: child identity and observer isolation foreign event in right Host preserves left Entry, collision=true
+00:00 +8: child identity and observer isolation MultiHost predictive observer failure is isolated, throws=false
+00:00 +9: child identity and observer isolation MultiHost predictive observer failure is isolated, throws=true
+00:00 +10: navigation callback GC controls interceptor pending=false lateError=false releases Runtime and payload
+00:00 +11: navigation callback GC controls interceptor pending=false lateError=true releases Runtime and payload
+00:00 +12: navigation callback GC controls interceptor pending=true lateError=false releases Runtime and payload
+00:00 +13: navigation callback GC controls interceptor pending=true lateError=true releases Runtime and payload
+00:00 +14: navigation callback GC controls failurePolicy pending=false lateError=false releases Runtime and payload
+00:00 +15: navigation callback GC controls failurePolicy pending=false lateError=true releases Runtime and payload
+00:00 +16: navigation callback GC controls failurePolicy pending=true lateError=false releases Runtime and payload
+00:00 +17: navigation callback GC controls failurePolicy pending=true lateError=true releases Runtime and payload
+00:00 +18: navigation callback GC controls revalidation pending=false lateError=false releases Runtime and payload
+00:00 +19: navigation callback GC controls revalidation pending=false lateError=true releases Runtime and payload
+00:01 +20: navigation callback GC controls revalidation pending=true lateError=false releases Runtime and payload
+00:01 +21: navigation callback GC controls revalidation pending=true lateError=true releases Runtime and payload
+00:01 +22: navigation callback GC controls diagnostics pending=false lateError=false releases Runtime and payload
+00:01 +23: navigation callback GC controls diagnostics pending=false lateError=true releases Runtime and payload
+00:01 +24: navigation callback GC controls diagnostics pending=true lateError=false releases Runtime and payload
+00:01 +25: navigation callback GC controls diagnostics pending=true lateError=true releases Runtime and payload
+00:01 +26: ended CCServiceScope.session caller releases while shared App initializer lives, fails=false
+00:01 +26 -1: ended CCServiceScope.session caller releases while shared App initializer lives, fails=false [E]
+  CCInvocationError: Generated Service invocation requires a promoted stable contract.
+  package:ccrouter_core/src/runtime_host.dart 1563:7                                        CCRouterRuntime._prepareServiceInvocation
+  package:ccrouter_core/src/runtime_host.dart 1449:24                                       CCRouterRuntime.invokeService
+  packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart 202:19  _endScopedCaller.<fn>
+  dart:async                                                                                _CustomZone.run
+  packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart 200:8   _endScopedCaller
+  packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart 274:36  main.<fn>
+  
+00:01 +26 -1: ended CCServiceScope.session caller releases while shared App initializer lives, fails=true
+00:01 +26 -2: ended CCServiceScope.session caller releases while shared App initializer lives, fails=true [E]
+  CCInvocationError: Generated Service invocation requires a promoted stable contract.
+  package:ccrouter_core/src/runtime_host.dart 1563:7                                        CCRouterRuntime._prepareServiceInvocation
+  package:ccrouter_core/src/runtime_host.dart 1449:24                                       CCRouterRuntime.invokeService
+  packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart 202:19  _endScopedCaller.<fn>
+  dart:async                                                                                _CustomZone.run
+  packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart 200:8   _endScopedCaller
+  packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart 274:36  main.<fn>
+  
+00:01 +26 -2: ended CCServiceScope.route caller releases while shared App initializer lives, fails=false
+00:01 +26 -3: ended CCServiceScope.route caller releases while shared App initializer lives, fails=false [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 824:7                                         CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 814:5                                         CCRouterRuntime.registerService
+  packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart 253:19  main.<fn>
+  
+00:01 +26 -3: ended CCServiceScope.route caller releases while shared App initializer lives, fails=true
+00:01 +26 -4: ended CCServiceScope.route caller releases while shared App initializer lives, fails=true [E]
+  CCRegistrationError: Route-scoped Services must be registered by a component.
+  package:ccrouter_core/src/runtime_host.dart 824:7                                         CCRouterRuntime._registerServiceForComponent
+  package:ccrouter_core/src/runtime_host.dart 814:5                                         CCRouterRuntime.registerService
+  packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart 253:19  main.<fn>
+  
+00:01 +26 -4: cancel shared waiter: separate error Zone=false failure=false
+00:01 +27 -4: cancel shared waiter: separate error Zone=false failure=true
+00:01 +28 -4: cancel shared waiter: separate error Zone=true failure=false
+00:01 +29 -4: cancel shared waiter: separate error Zone=true failure=true
+00:01 +30 -4: timeout shared waiter: separate error Zone=false failure=false
+00:01 +31 -4: timeout shared waiter: separate error Zone=false failure=true
+00:01 +32 -4: timeout shared waiter: separate error Zone=true failure=false
+00:01 +33 -4: timeout shared waiter: separate error Zone=true failure=true
+00:01 +34 -4: every MultiHost identity-bearing SPI uses one registration domain
+00:01 +35 -4: pending Pop keeps old registration identity after same-Host replacement, scoped=false
+00:01 +36 -4: pending Pop keeps old registration identity after same-Host replacement, scoped=true
+00:01 +37 -4: Core rejects managed receipt in wrong partition, wrongHost=false
+00:01 +38 -4: Core rejects managed receipt in wrong partition, wrongHost=true
+00:01 +39 -4: throwing Host observer does not block Runtime predictive reconciliation
+00:01 +40 -4: Some tests failed.

@@ -56,7 +56,6 @@ final class CCRouterDevToolsSnapshotProvider
         backendEvents: CCRouter.recentBackendNavigationEvents,
         initTasks: CCRouter.initTasks,
         pendingNavigations: CCRouter.pendingNavigations,
-        restorationOpportunities: CCRouter.recentRouteRestorationOpportunities,
       );
     } on StateError {
       // Runtime can be shut down between the status check and the read.
@@ -74,9 +73,6 @@ final class CCRouterDevToolsSnapshotProvider
       removers.add(CCRouter.addNavigationFailureListener((_) => listener()));
       removers.add(
         CCRouter.addNavigationCapabilityFallbackListener((_) => listener()),
-      );
-      removers.add(
-        CCRouter.addRouteRestorationOpportunityListener((_) => listener()),
       );
       removers.add(CCRouter.addRouteVisibilityListener((_) => listener()));
       removers.add(CCRouter.addBackendNavigationListener((_) => listener()));

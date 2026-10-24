@@ -1,0 +1,61 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart
+00:00 +0: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scope_construction_ownership_test.dart: closing factory joins async cleanup in reverse order (cached=false)
+00:00 +1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scope_construction_ownership_test.dart: closing factory joins async cleanup in reverse order (cached=true)
+00:00 +2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scope_construction_ownership_test.dart: late throwing disposer cannot skip existing dependencies
+00:00 +3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scope_construction_ownership_test.dart: factory alias of an existing disposable is cleaned once
+00:00 +4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scope_construction_ownership_test.dart: throwing construction releases close and preserves original failure
+00:00 +5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: visited redirect Host removal releases initial CCNavigationConcurrencyPolicy.singleFlight gate immediately
+00:01 +6: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:01 +7: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:02 +8: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:02 +9: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:02 +10: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:02 +11: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:03 +12: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:03 +13: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:03 +14: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:03 +14: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: public Session service cleanup (reentrant=false)
+public service: reentrant=false, disposals=1
+00:03 +15: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:03 +15: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: public Session service cleanup (reentrant=true)
+public service: reentrant=true, disposals=1
+00:03 +16: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:03 +16: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: factory resource cleanup (scope=app, reentrant=false)
+factory: scope=app, reentrant=false, disposals=1
+00:03 +17: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:03 +17: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: factory resource cleanup (scope=session, reentrant=false)
+factory: scope=session, reentrant=false, disposals=1
+00:03 +18: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:03 +18: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: factory resource cleanup (scope=app, reentrant=true)
+factory: scope=app, reentrant=true, disposals=1
+00:03 +19: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:03 +19: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: factory resource cleanup (scope=session, reentrant=true)
+factory: scope=session, reentrant=true, disposals=1
+00:03 +20: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:03 +20: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: Command timeout preserves error when listener throws=false
+timeout: throwing=false, result=CCInvocationTimeoutError, trace=timedOut
+00:03 +21: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:03 +21: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: Command timeout preserves error when listener throws=true
+timeout: throwing=true, result=CCInvocationTimeoutError, trace=timedOut
+00:03 +22: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:03 +22: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: deferred request cannot be resurrected in replacement Host
+defer replacement: old=CCRouteCancelledError, path=/
+00:03 +23: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:03 +23: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: control: focus change preserves live Host
+control: remove=false, old=Null
+00:03 +24: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:04 +24: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: control: removed Host without replacement fails
+control: remove=true, old=CCRouteCancelledError
+00:04 +25: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:04 +26: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:04 +27: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:04 +28: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:04 +29: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:04 +29: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: new Host request does not share old singleFlight gate
+replacement gate: policy=singleFlight, calls=2, fresh=Null, path=/detail/A
+00:04 +30: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:04 +31: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:04 +31: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart: new Host request does not share old rejectDuplicate gate
+replacement gate: policy=rejectDuplicate, calls=2, fresh=Null, path=/detail/A
+00:04 +32: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:04 +33: All tests passed!

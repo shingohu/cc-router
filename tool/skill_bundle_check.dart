@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'markdown_links.dart';
+
 /// The two directories distributed together to application repositories.
 const skillBundleNames = [
   'ccrouter-integration-development',
@@ -9,10 +11,15 @@ const skillBundleNames = [
 /// Checks an isolated bundle, so repository-only links cannot pass accidentally.
 List<String> checkSkillBundle(Directory bundle) {
   final findings = <String>[];
-  final root = bundle.absolute.uri;
-  final links = RegExp(r'''!?\[[^\]]*\]\(([^)\n]+)\)''');
+  final root = bundle.absolute.uri.normalizePath();
   for (final name in skillBundleNames) {
-    final skill = Directory.fromUri(root.resolve('$name/'));
+    // A trailing slash would make POSIX follow a directory symlink before
+    // isLinkSync observes it, defeating the complete-directory bundle rule.
+    final skill = Directory.fromUri(root.resolve(name));
+    if (FileSystemEntity.isLinkSync(skill.path)) {
+      findings.add('Bundle must contain files, not symlinks: ${skill.path}');
+      continue;
+    }
     if (!File('${skill.path}/SKILL.md').existsSync()) {
       findings.add('Missing required Skill: $name/SKILL.md');
       continue;
@@ -23,23 +30,16 @@ List<String> checkSkillBundle(Directory bundle) {
         continue;
       }
       if (file is! File || !file.path.endsWith('.md')) continue;
-      for (final match in links.allMatches(file.readAsStringSync())) {
-        final raw = match.group(1)!.trim();
-        if (raw.startsWith('<') && !raw.contains('>')) {
-          findings.add('${file.path}: malformed link $raw');
-          continue;
-        }
-        final target = raw.startsWith('<')
-            ? raw.substring(1, raw.indexOf('>'))
-            : raw.split(RegExp(r'\s+')).first;
-        final uri = Uri.tryParse(target);
-        if (uri == null) {
+      for (final reference in markdownReferences(file.readAsStringSync())) {
+        final target = reference.target;
+        Uri? resolved;
+        try {
+          resolved = localMarkdownTarget(target, file.absolute.uri);
+        } on FormatException {
           findings.add('${file.path}: invalid link $target');
           continue;
         }
-        if (uri.hasScheme && uri.scheme != 'file') continue;
-        if (target.startsWith('#')) continue;
-        final resolved = file.absolute.uri.resolveUri(uri).removeFragment();
+        if (resolved == null) continue;
         if (!resolved.toString().startsWith(root.toString())) {
           findings.add('${file.path}: link escapes bundle: $target');
         } else if (!File.fromUri(resolved).existsSync() &&
@@ -109,6 +109,9 @@ List<String> checkSkillCommands(String markdown, String help) {
 void copySkillBundle(Directory source, Directory destination) {
   for (final name in skillBundleNames) {
     final directory = Directory('${source.path}/$name');
+    if (FileSystemEntity.isLinkSync(directory.path)) {
+      throw StateError('Skill contains symlink: ${directory.path}');
+    }
     if (!directory.existsSync()) continue;
     for (final entry in directory.listSync(
       recursive: true,

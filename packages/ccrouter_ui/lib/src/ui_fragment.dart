@@ -311,14 +311,60 @@ final class CCUIGeneratedFragment<P extends Object, A extends Object>
   State<CCUIGeneratedFragment<P, A>> createState() => _FragmentState<P, A>();
 }
 
+/// Revocable action forwarding that never retains the Fragment State or Widget.
+///
+/// A Renderer may temporarily retain this sink through asynchronous work. After
+/// revocation it keeps only schema/generation data, never Props or the consumer.
+final class _FragmentActionSink<A extends Object> {
+  /// Binds delivery to one installed catalog and capability identity.
+  _FragmentActionSink(this._catalog, this._contractId);
+
+  /// Catalog generation captured at mount; invalidated by Host shutdown.
+  final _UICatalog _catalog;
+
+  /// Payload-free identity used for ignored-action diagnostics.
+  final String _contractId;
+
+  /// Latest consumer callback, cleared at the exact unmount/identity boundary.
+  ValueChanged<A>? _callback;
+
+  /// Current Host activity permission; hiding does not dispose the instance.
+  bool _active = false;
+
+  /// Refreshes delivery without forcing retained Renderer callbacks to rebuild.
+  void update(ValueChanged<A> callback, bool active) {
+    _callback = callback;
+    _active = active;
+  }
+
+  /// Makes old sinks inert and releases their reference to the consumer.
+  void revoke() {
+    _callback = null;
+    _active = false;
+  }
+
+  /// Forwards only while this exact mounted identity and generation are active.
+  void emit(A action) {
+    final callback = _callback;
+    if (callback == null ||
+        !_active ||
+        !_catalog.valid ||
+        !identical(_activeCatalog, _catalog)) {
+      _record('actionIgnored', _contractId);
+      return;
+    }
+    callback(action);
+  }
+}
+
 /// One Flutter instance; no RouteEntry, Scope or global instance registration.
 final class _FragmentState<P extends Object, A extends Object>
     extends State<CCUIGeneratedFragment<P, A>> {
   /// Captured generation prevents old callbacks from targeting a new Runtime.
   _UICatalog? _generation;
 
-  /// Current capability identity also invalidates callbacks when it changes.
-  Object _identity = Object();
+  /// Current revocable identity, shared only by callbacks for this capability.
+  _FragmentActionSink<A>? _actions;
 
   /// Revokes earlier callbacks if a reused element changes capability identity.
   @override
@@ -327,7 +373,10 @@ final class _FragmentState<P extends Object, A extends Object>
     if (oldWidget.requirement.consumer != widget.requirement.consumer ||
         oldWidget.requirement.contract.identity !=
             widget.requirement.contract.identity) {
-      _identity = Object();
+      _actions?.revoke();
+      _actions = null;
+    } else {
+      _actions?.update(widget.onAction, widget.active);
     }
   }
 
@@ -360,33 +409,26 @@ final class _FragmentState<P extends Object, A extends Object>
     if (!renderer.accepts<P, A>()) {
       throw CCUIFragmentError('rendererSignatureMismatch', contract.id);
     }
-    final identity = _identity;
+    final actions = _actions ??= _FragmentActionSink<A>(catalog, contract.id);
+    actions.update(widget.onAction, widget.active);
     return KeyedSubtree(
       key: ValueKey('${expected.consumer}/${contract.identity}'),
       child: renderer.build(
         CCUIFragmentRenderInput<P, A>(
           props: widget.props,
           active: widget.active,
-          onAction: (action) {
-            if (!mounted ||
-                !widget.active ||
-                !catalog.valid ||
-                !identical(identity, _identity) ||
-                !identical(_activeCatalog, catalog)) {
-              _record('actionIgnored', contract.id);
-              return;
-            }
-            widget.onAction(action);
-          },
+          onAction: actions.emit,
         ),
       ),
     );
   }
 
-  /// Releases the generation reference; retained action sinks become inert.
+  /// Revokes retained action sinks and releases their consumer references.
   @override
   void dispose() {
     _record('unmounted', widget.requirement.contract.id);
+    _actions?.revoke();
+    _actions = null;
     _generation = null;
     super.dispose();
   }

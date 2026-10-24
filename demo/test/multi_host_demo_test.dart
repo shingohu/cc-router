@@ -3,20 +3,48 @@ import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_demo/ccrouter_demo.dart';
 import 'package:ccrouter_demo/multi_host_demo.dart';
 import 'package:ccrouter_demo/platform_deep_link_bridge.dart';
+import 'package:demo_navigation_lab/demo_navigation_lab_host.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  setUp(() {
-    CCRouterHost.initialize(
-      hostAssembly: ccrouterGeneratedHostAssembly,
-      deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
+  _hostTest('adaptive named Outlet renders and returns a managed destination', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1280, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(createMultiHostDemoApp());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('自适应布局'));
+    await tester.pumpAndSettle();
+    final context = tester.element(find.text('Detail View · adaptive.detail'));
+    final pushed = CCRouter.navigator.push(
+      demoStackIntent(level: 73, returnsResult: true),
+      context: context,
     );
+    await tester.pumpAndSettle();
+    expect(find.text('栈操作 · Level 73'), findsOneWidget);
+    expect(
+      CCRouter.activeRouteEntries
+          .where((entry) => entry.routeId == 'demo_navigation_lab.stack')
+          .single
+          .placement
+          .navigatorOutlet,
+      'adaptive.detail',
+    );
+    await tester.tap(find.text('Pop 并返回结果'));
+    await tester.pumpAndSettle();
+    expect(await pushed, 'stack:73:done');
+    expect(find.text('Detail View · adaptive.detail'), findsOneWidget);
+    expect(find.text('List Outlet · adaptive.list'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
   });
-
   tearDown(CCRouterHost.shutdown);
 
-  testWidgets('two Hosts retain independent visible navigation state', (
+  _hostTest('two Hosts retain independent visible navigation state', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(800, 620);
@@ -73,7 +101,7 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('interaction inside a Host activates local navigation and pop', (
+  _hostTest('interaction inside a Host activates local navigation and pop', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(1400, 900);
@@ -153,7 +181,57 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('wide low window keeps nested NavigationRail usable', (
+  _hostTest(
+    'call-site context wins when semantic activation skips Host focus',
+    (tester) async {
+      tester.view.physicalSize = const Size(1400, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(createMultiHostDemoApp());
+      await tester.pumpAndSettle();
+
+      final primaryPane = find.byKey(const ValueKey('host.primary'));
+      final secondaryPane = find.byKey(const ValueKey('host.secondary'));
+
+      await tester.tap(_inside(secondaryPane, find.text('导航')));
+      await tester.pumpAndSettle();
+      await tester.tap(_inside(primaryPane, find.text('总览')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('host.primary-active')), findsOneWidget);
+
+      final secondaryPushTile = tester.widget<ListTile>(
+        find.ancestor(
+          of: _inside(secondaryPane, find.text('Push + typed result')),
+          matching: find.byType(ListTile),
+        ),
+      );
+      secondaryPushTile.onTap!();
+      await tester.pumpAndSettle();
+
+      expect(_inside(secondaryPane, find.text('ID 42')), findsOneWidget);
+      expect(_inside(primaryPane, find.text('ID 42')), findsNothing);
+
+      final complete = tester.widget<FilledButton>(
+        find.ancestor(
+          of: _inside(secondaryPane, find.text('确认并返回类型安全结果')),
+          matching: find.byType(FilledButton),
+        ),
+      );
+      complete.onPressed!();
+      await tester.pumpAndSettle();
+
+      expect(_inside(secondaryPane, find.text('ID 42')), findsNothing);
+      expect(CCRouter.activeRouteEntries, hasLength(2));
+      expect(tester.takeException(), isNull);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pumpAndSettle();
+    },
+  );
+
+  _hostTest('wide low window keeps nested NavigationRail usable', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(2000, 500);
@@ -171,7 +249,7 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('narrow embedded Host keeps simulated split panes usable', (
+  _hostTest('narrow embedded Host keeps simulated split panes usable', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(640, 960);
@@ -195,7 +273,7 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets(
+  _hostTest(
     'one Host adapts orientation, list-detail Outlets, and display features',
     (tester) async {
       tester.view.physicalSize = const Size(520, 900);
@@ -249,3 +327,13 @@ void main() {
 
 Finder _inside(Finder pane, Finder matching) =>
     find.descendant(of: pane, matching: matching);
+
+void _hostTest(String description, WidgetTesterCallback callback) {
+  testWidgets(description, (tester) async {
+    CCRouterHost.initialize(
+      hostAssembly: ccrouterGeneratedHostAssembly,
+      deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
+    );
+    await callback(tester);
+  });
+}

@@ -52,7 +52,13 @@ Dart API visibility remains enforced independently of this optional Plugin.
 Use the optional `ccrouter_analyzer_plugin` only for developer feedback:
 
 - `ccrouter_cross_package_generated_import` catches a handwritten import of
-  another Package's `src/ccrouter_generated` library.
+  another Package's `src/ccrouter_generated` library, including exports and each
+  conditional URI at its own literal span.
+- `ccrouter_route_placement_invalid`, `ccrouter_route_parent_self`,
+  `ccrouter_route_policy_invalid` and `ccrouter_route_policy_duplicate` check
+  direct Route/Contract literal configuration with proven framework identity.
+  Computed values and full parent/Host/Shell/Outlet closure defer to generation;
+  these diagnostics never invent IDs or rewrite topology.
 - `ccrouter_generated_output_missing` warns when a Route/Binding,
   Route/Service Contract, Service, Command Handler, Event Subscription, or
   InitTask source has not produced its deterministic source-preserving output.
@@ -137,10 +143,12 @@ test harness.
 Diagnostics read the Analysis Server overlay after every content update, so an
 unsaved edit such as removing a required component owner must be reported before
 generation. Initial analysis visits only authored Dart sources and skips
-platform/build assets plus CCRouter generated libraries. Do not use `dart
-analyze` to test this behavior: the Dart CLI does not run legacy Analysis Server
-Plugins. Use an IDE or a real Language Server session, then keep the CLI
-generation check as the cross-file authority.
+platform/build assets plus CCRouter generated libraries. Dart 3.11.5 may start
+the Plugin manager when `dart analyze` reaches a configured Host bootstrap,
+surfacing diagnostics or Server/Plugin startup failures. That does not prove
+which revision the running IDE loaded or verify unsaved-overlay round trips.
+Use an IDE or a real Language Server session for those checks, then keep the
+CLI generation check as the cross-file authority.
 
 The plugin is not a generator, general dependency resolver, Runtime validator,
 or authorization boundary. It must not call `build_runner`, inspect Widgets,
@@ -379,7 +387,13 @@ IDE or Pub caches or infer ownership from a shared plugin name. Restart, rerun
 doctor, and verify a real diagnostic or Quick Fix; the CLI cannot observe or
 control the running IDE session.
 
-For a new Host, explicit installation is available:
+`install` and `upgrade` remain available as legacy maintenance-only commands
+and emit a deprecation notice; no new management features will be added.
+After Hosted publication, prefer a normal Host `dev_dependency`. Until a
+Hosted version is actually published and resolvable, an isolated bootstrap
+pinned to a reviewed remote full Git SHA remains available. `status`, `doctor`,
+`pin-check` and `uninstall` support diagnosis and maintenance of bootstraps.
+The explicit legacy setup commands are:
 
 ```bash
 ccrouter analyzer install <host-root> --version <published-version> --dry-run

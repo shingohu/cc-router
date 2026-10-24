@@ -51,7 +51,9 @@ abstract final class CCRouterHost {
   /// errors. Failure before a Runtime is created still permits immediate retry.
   /// Global navigation interceptors are ordered by their stable IDs and run
   /// before route-declared interceptors. Navigation aspects are ordered by
-  /// stable IDs and observe the same Runtime navigation pipeline.
+  /// stable IDs and observe the same Runtime navigation pipeline. Active-route
+  /// revalidation policies are also ordered by stable ID and run only after an
+  /// explicit [CCRouter.revalidateActiveRoutes] trigger.
   /// [deepLinkIngressPolicy] is Host-owned and defaults to rejecting every
   /// external authority and relative Path; configure exact rules only for URI
   /// namespaces the application intentionally owns.
@@ -72,11 +74,11 @@ abstract final class CCRouterHost {
     int navigationDiagnosticCapacity = 1000,
     CCDiagnosticsConfig diagnostics = const CCDiagnosticsConfig(),
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
+    Iterable<CCGlobalRouteRevalidationPolicy> routeRevalidationPolicies =
+        const [],
     Iterable<CCGlobalPopGuard> globalPopGuards = const [],
     CCNavigationFailurePolicy? navigationFailurePolicy,
     Iterable<CCNavigationAspect> navigationAspects = const [],
-    CCNavigationTelemetryContextProvider? telemetryContextProvider,
-    CCRouteRestorationOpportunitySource? restorationOpportunitySource,
     CCNavigationConcurrencyPolicy navigationConcurrencyPolicy =
         CCNavigationConcurrencyPolicy.allow,
     CCDeepLinkIngressPolicy deepLinkIngressPolicy =
@@ -105,11 +107,10 @@ abstract final class CCRouterHost {
         navigationDiagnosticCapacity: navigationDiagnosticCapacity,
         diagnostics: diagnostics,
         globalInterceptors: globalInterceptors,
+        routeRevalidationPolicies: routeRevalidationPolicies,
         globalPopGuards: globalPopGuards,
         navigationFailurePolicy: navigationFailurePolicy,
         navigationAspects: navigationAspects,
-        telemetryContextProvider: telemetryContextProvider,
-        restorationOpportunitySource: restorationOpportunitySource,
         navigationConcurrencyPolicy: navigationConcurrencyPolicy,
         deepLinkIngressPolicy: deepLinkIngressPolicy,
       );
@@ -232,6 +233,9 @@ abstract final class CCRouterHost {
   /// Runtime shutdown and cancellation still terminate the Future. A Host that
   /// intentionally requires fail-fast startup may call
   /// `result.throwIfRequiredFailed()` after awaiting this method.
+  /// Synchronous Gate reentry joins the same run; a task must not await its
+  /// owning run. Calls from different error Zones receive cancellation in their
+  /// own Zone, and [shutdown] can join the run across that boundary.
   static Future<CCInitTaskRunResult> runInitTasks({
     required CCInitTaskGate gate,
   }) => CCRouter._runtime.runInitTasks(gate: gate);

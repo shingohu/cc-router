@@ -1,0 +1,24 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/repro.dart
+00:00 +0: shared pending=false releases second caller after cancel
+00:00 +1: shared pending=true releases second caller after cancel
+00:00 +1 -1: shared pending=true releases second caller after cancel [E]
+  Expected: <0>
+    Actual: <3>
+  ended callers must not accumulate behind a live shared initializer
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/repro.dart 82:9  main.<fn>
+  
+00:00 +1 -1: shared pending=false releases second caller after timeout
+00:00 +2 -1: shared pending=true releases second caller after timeout
+00:00 +2 -2: shared pending=true releases second caller after timeout [E]
+  Expected: <0>
+    Actual: <3>
+  ended callers must not accumulate behind a live shared initializer
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/repro.dart 82:9  main.<fn>
+  
+00:00 +2 -2: Some tests failed.

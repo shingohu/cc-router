@@ -1,204 +1,152 @@
-# CCRouter Android 预测返回自动桥
+# CCRouter 返回协调与平台手势
 
-状态：2026-10-22，Managed 与 GoRouter 已共用 backend-neutral 协调器；平台验收范围见下文。
+状态：2026-10-23，原生 Managed 是当前内置 Backend。GoRouter 兼容包、attach 和旧 Demo 入口
+已移除；历史验收不等于对当前所有设备重新验收。
+
+本文合并系统/业务返回、iOS Cupertino PopGuard 与 Android 预测返回的现行规则。
+原独立手势设计、评估和专项分析保留于[合并归档](archive/20261024-consolidation/README.md)。
 
 ## 问题与方案选择
 
-Flutter 已负责默认 Material 页面预测动画和实际返回。原 CCRouter bridge 需要 Host
-手工报告阶段，不能仅凭 `supportsPredictiveBack` 判断页面已自动接线。
+Flutter 负责平台转场和唯一一次 Pop，CCRouter 负责精确 Entry 身份、Guard、typed result
+与 Route Scope。让两者分别退栈会造成偶发连续退出两层；因此 bridge 只观察与协调，
+绝不在 Flutter 已提交的手势后补一次业务 Pop。
 
-| 方案 | 收益 | 成本与限制 |
+| 方案 | 收益 | 限制 |
 | --- | --- | --- |
-| 直接沿用 Flutter | 最小改动，保留原生返回体验 | 没有 CCRouter 自动阶段观察 |
-| 可选 Route / Adapter 自动桥（本次采用） | 复用 Flutter 动画、现有 Entry 身份和清理协议 | 中等成本；只覆盖明确支持的 Route / Theme |
-| 应用 Host 手工转发 | 可做局部平台试验 | 容易重复提交、绑定错误 Route，应用维护成本高 |
-| 新 Core Guard 预判协议 | 可进一步探索 Guard 页交互动画 | 需要独立的策略失效和异步确认设计，本次暂缓 |
+| Flutter 默认行为 | 最少接线、保留系统动画 | 没有 CCRouter 手势阶段诊断 |
+| Host 可选自动桥（采用） | 复用 Flutter 动画和 backend-neutral Entry 协调器 | 必须按 Route、Theme、平台明确限定支持范围 |
+| 业务页手工转发 | 可作局部平台实验 | 容易重复提交、错绑实例，不推荐作为默认接入 |
 
-不修改业务 Contract、生成器生产代码或 Android targetSdk。框架不会改写应用平台配置；
-Android Host 必须在有效 `<application>` 上设置
-`android:enableOnBackInvokedCallback="true"`，否则系统不会向 Flutter embedding 派发
-`OnBackInvokedCallback`。业务页面无需导入 Host SPI，也不应为了获得动画而放宽
-`PopScope.canPop`。
+## Managed 接入
 
-Managed 与 GoRouter 兼容 Backend 现在共用 `ccrouter_host.dart` 导出的
-`CCPredictiveBackCoordinator`。协调器唯一维护 Route 集合、手势状态机、binding observer、
-listener、PopGuard 和终态 Timer；Backend facade 只解析自身 Entry/Outlet 身份、传入观察事件
-并保存有界 fallback。Adapter dispose 与构造回滚会先断开 Backend/callback 引用，再进入最多
-30 秒的无导航能力终态消费窗口，避免 Timer 保留已结束 Host。该 SPI 不从业务 barrel 导出。
+Host 使用 `CCManagedRouterApp(enablePredictiveBack: true)`，或将相同配置传给
+`CCManagedRouterBackend`。自定义 backendFactory 必须转发开关。
+Android 的有效 application 还须配置
+`android:enableOnBackInvokedCallback="true"`；框架不替应用更改 Manifest 或 targetSdk。
 
-Demo 页面族 matrix 已参数化为 GoRouter/Managed 双跑，但它仍属于 Widget contract 回归，不能
-替代 Android/iOS 手势或 macOS 真实窗口验收。原生 Managed 已成为默认入口；
-`ccrouter_go_router` 已 deprecated 并冻结，仅保留迁移回归。
+默认 false 不创建 CCRouter gesture observer 或阶段状态机，也不会禁用 Flutter 自身的
+预测动画。true 时，Managed 默认 opaque Android Material Page 自动接线，支持原生
+`PredictiveBackPageTransitionsBuilder` 和
+`PredictiveBackFullscreenPageTransitionsBuilder`。自定义 Route 可通过
+`CCFlutterRouteFactory` 的 `predictiveBackHandler` 接线，需独立验证其转场。
+自动接线后禁止再手工报告同一序列。
 
-## 开关与支持范围
+Host-only `CCPredictiveBackCoordinator`、handler 与桥类型从 `ccrouter_host.dart` 导出；
+业务页面只使用业务 Facade，不持有这些 SPI。开启与回退通过重建 Backend 生效。
+`adapter.predictiveBackFallbacks` 最多保留 100 条脱敏记录；关闭时为空。
+通用历史使用 Runtime 的 `recentBackendNavigationEvents`，旧 GoRouter Adapter 的
+`lifecycleEventCapacity/lifecycleEvents` 已移除。
 
-`CCGoRouterApp`、`CCGoRouterBackend.managed/attach` 的 `enablePredictiveBack`
-默认仍为 `false`。
+## 身份、提交与清理
 
-- **false**：沿用原 `MaterialPageRoute` / `CupertinoPageRoute` / 自定义 Route
-  构造，不创建 CCRouter bridge、手势 observer 或阶段状态机。Flutter 自身预测动画
-  仍可能存在；此开关不负责禁用 Flutter 或 Android 的预测返回。
-- **true + managed 默认 Page**：默认 opaque Android Material 页面自动接线。
-  支持 Flutter 原生 `PredictiveBackPageTransitionsBuilder` 和
-  `PredictiveBackFullscreenPageTransitionsBuilder`。
-- **true + attach / override / Shell 自定义 Page**：Host 显式传
-  `predictiveBackHandler: adapter.predictiveBackBridge` 给 `ccGoRouterPage` 或
-  `CCFlutterRouteFactory.createPage`。Demo 的 Shell / StatefulShell 提供实际示例。
-- Cupertino、iOS/OHOS、模态页、透明页、自定义转场和非预测 Theme 保留原路由路径。
-  未接线的 Page 不会被自动改写，不承诺阶段事件。
-- 框架 PopGuard、局部 `PopScope` / `Form`、`LocalHistoryEntry`、foreign Popup
-  保留自己的门禁与返回消费路径。Guard 页继续非交互 fallback；fallback 不保证报告
-  `predictiveBack` 来源或自动桥阶段。
+1. start 捕获具体 Route、backendEntryId 和 Outlet，按当前 Theme、平台、可见性及门禁判断。
+   update 仅观察动画进度，不完成结果、释放 Scope 或产生正式 PageHide。
+2. cancel 恢复 Flutter 动画且只报告一次取消。开始或取消不自动触发业务确认 UI。
+3. commit 前重查原实例、当前 Route、LocalHistory、PopScope/Form 与 Outlet 身份。
+   Flutter 执行唯一一次 Pop；Navigator Observer 确认同一 Entry 移除后才报告 committed。
+4. 重复终态、迟到提交、push/replace/go/reset、弹窗覆盖、Outlet 切换、Theme 改变或
+   Adapter dispose 不能结束另一页的 result/Scope，也不能猜测当前栈顶再 Pop。
+5. 祖先 Navigator 弹窗覆盖时，子页拒绝新手势。预览中发生覆盖会永久使原序列失效，
+   即使弹窗先关闭也不恢复原提交。相关 Outlet 必须保留框架 Observer。
+6. Adapter dispose 清空 Route、listener、Runtime evaluator 与 Backend callback。
+   平台尚欠终态时，只保留无导航能力的终态消费 observer，收到终态或新 start 后移除，
+   平台丢失终态时最多保留 30 秒；Timer 不保留已结束 Host。
+7. 自定义 Host 保留的 Route 在原 handler 退役后仍先拒绝旧提交；下一次新 start 可取消
+   残余预览并恢复 Flutter 行为。读取 eligibility 不改变进行中手势所有权。
+8. Theme 在预览期间切到不支持的平台或转场时，Route 用 Flutter 原取消 hook 恢复动画和
+   Navigator 手势状态。恢复原 Theme 不使旧预览再次有效。监听器失败不跳过清理。
 
-Host 接线类型 `CCFlutterPredictiveBackHandler` 从 `ccrouter_host.dart` 导入，
-不从业务 `ccrouter.dart` 导出。自定义 Backend factory 需要传递配置开关。
-开启和回退通过重新创建 Host / Backend 生效，不支持原地切换已有 Route 的 handler。
+## Android 与 iOS 边界
 
-自动桥拒绝 start 时，Host 可读取 `adapter.predictiveBackFallbacks`。原因是稳定枚举，覆盖
-button event、无已接线路由、Route 不可用、Theme 不支持、Route 非 current、本地门禁、
-非活动 Outlet 和未知 managed Entry。历史与 `lifecycleEventCapacity` 共用容量，每次 start
-最多记录一条，不记录 update；字段仅包含 reason、Host、Outlet 和 timestamp，不包含 URI、
-arguments、Extra、Widget、BuildContext 或业务结果。关闭开关时 getter 返回空列表，Adapter
-不分配该历史。
+### 同步 Guard 与本地返回规则
 
-## 身份、提交与生命周期
+`CCPopGuard` 是同步、只读、backend-neutral 的退出决策；异常 fail closed，不能等待 I/O、
+显示 UI 或重入导航。Guard 读取实际退出 Route 的 Host/Outlet/backend identity，不按全局焦点
+猜测。AppBar、系统返回、业务 maybePop、侧滑和预测返回共用精确目标与结果协调。
 
-1. 私有 Material Route 子类通过公开的 Flutter gesture hooks 报告阶段，始终调用
-   Flutter 原有动画实现。平台 progress 为 `1 - routeProgress`。
-2. start 捕获具体 Flutter Route、backendEntryId 和 Outlet。update 只观察进度，
-   不导航、不完成 typed result、不释放 Scope、不将预览视为正式 show/hide。
-3. cancel 只恢复动画并报告一次取消。commit 前重查原 Route 是否仍为当前页、
-   `popDisposition`、LocalHistory、Adapter 和 Outlet 身份；策略中途关闭则取消。
-   不在手势 start 或取消时自动触发业务确认回调。
-4. Flutter 执行唯一一次 Pop；Navigator Observer 确认相同 managed Entry 实际移除后，
-   bridge 才报告 committed。Core 对已清理的具体 Entry 幂等处理，不能猜测或再退栈顶。
-5. push、replace、go、reset、Popup 覆盖、Outlet 切换和 Adapter dispose 使旧手势失效。
-   取消上下文可保留到原 Route 终止，以拒绝迟到 commit；Route dispose 释放其引用。
-6. 开启路径检查祖先 Navigator 的当前 Route。根 / 祖先弹窗已覆盖嵌套页面时，底下页面
-   不接受新手势，返回交由弹窗 fallback。手势中观察到祖先覆盖则使旧预览永久失效，
-   弹窗先关闭也不恢复该次提交；相关祖先 Outlet 必须保留导航 Observer。
-7. attach 模式允许应用 Router 在 Adapter 销毁后存续。handler 的 `isActive` 变为 false，
-   旧手势仍拒绝 commit；Route 在下次新手势开始时解除旧 handler，恢复 Flutter 返回行为。
-   读取 `Route.popGestureEnabled` 不会解除进行中手势的原 handler；原 commit/cancel
-   到达时结束旧序列。若平台丢失终态，下一次 start 会先取消残留预览，再重新判断 handler
-   活性并解除已销毁 Adapter 的 handler，新序列由 Flutter 处理。能力查询本身不触发恢复，
-   不重建 Route，也不让旧序列再次生效。
-8. Adapter 构造将 Navigator Observer listener、RouterDelegate listener 和 binding observer
-   作为一个事务注册；任一步失败会逆序清理。自定义 handler 的 `isActive` 抛错时，
-   空闲 Route 解除故障 handler 并恢复 Flutter 返回；进行中的手势仍保留原提交保护。
-9. start 按当前 `Theme.platform` 校验实际转场，不能仅凭 Android builder 的配置接受手势。
-   预览期间切换到非 Android 平台或非预测转场时，Route 在 rebuild 后通过 Flutter 原有取消
-   hook 恢复动画并结束 Navigator 手势状态，即使旧 detector 已被销毁。取消不完成结果或
-   Scope；bridge 继续消费旧终态，恢复预测 Theme 也不恢复旧预览，新手势按当前 Theme 处理。
-   延迟取消绑定原手势序号，Route 已销毁或新手势已开始时不再操作。
+LocalHistory-only Back 不退出底层 Managed 页面，绕过其 leave Guard，保留 Entry/Scope。
+Foreign Popup 的返回由其真实 Navigator 所有者处理。框架 Guard 放行仍须服从本地
+PopScope/Form；不能仅靠 Observer 在移除后补 veto，也不能在 Flutter 提交后再执行一次 Pop。
 
-仅 Route hook 不能处理所有迟到平台消息：Route 在手势中被替换后，Flutter detector
-可能已移除，迟到 commit 会进入普通返回 fallback。因此开启时增加一个 Adapter 拥有的
-`WidgetsBindingObserver`，仅对当前、可交互、身份明确且使用受支持原生预测 Theme 的
-Route 接受 start，使该次手势持续被消费。它不驱动动画或导航；Guard、foreign、
-自定义 Theme 和三键返回不由它接管。关闭时不注册该 observer。
+### Android 预测返回
 
-每个 Adapter 拥有 bridge、Route 注册集合和监听器；Adapter dispose 立即清空
-Route / 手势 / listener / Runtime evaluator / Adapter 引用。若平台仍欠一次手势终态，
-只保留无导航能力的终态消费观察，避免旧 Host 的 commit 误退新 Host；收到 commit、
-cancel 或下一次 start 后移除，平台丢失终态时最多保留 30 秒并清理 Timer。移除在
-microtask 执行，避免修改 Flutter 正在遍历的 observer 列表。超过该清理窗口的异常迟到
-平台消息仍由 Flutter fallback 处理。此窗口不拦截下一次正常手势。
-监听器失败隔离，不阻断 Flutter 清理。自动接线页面禁止再手工转发同一序列。
+Android Guard、Modal、透明页面、LocalHistory、自定义转场及不支持的 Theme 使用 fallback；
+不能据此承诺所有路径都有预测阶段事件。局部 PopScope/Form 仍可拒绝系统返回与 maybePop，
+框架 Guard 允许不等于覆盖局部拒绝。确认 UI 属于页面，确认后显式 Pop。
 
-本次支持现有单活动 Host / Outlet 路由选择；多个同时可见、独立导航 Host 的系统返回
-全局仲裁不属于本实现。第三方自定义预测转场应独立评估，不能仅继承原生 builder 就
-宣称兼容。
+### iOS Cupertino 返回
 
-## Demo 与回归
+iOS 默认 opaque Managed 页面在交互开始前同步评估 Guard：拒绝时页面不移动，允许时
+保留 Flutter 跟手转场，取消保持精确 Entry，提交只退出一层。临时门禁在取消、拒绝启动、
+Route 移除和 Backend dispose 时关闭。自定义转场仍使用保守 fallback。
+iOS 侧滑不是 Android 预测返回开关的同义词，必须分别验收。
 
-在 `demo/` 中使用关闭入口和两个 Backend 的开启入口对比：
+框架使用 Route 级 `PopEntry` gate，只为 `hasPopGuard` 的精确受保护 Route 安装。无 Guard
+页面保留 Flutter 默认手势。eligibility 查询放行后，gate 仍绑定同一 Route；未真正开始、取消、
+提交、Route 卸载、Guard unbind 或 Backend dispose 时都必须复位/释放。自定义转场、Modal、
+身份未关联或正在结构切换等不能可靠处理的情形采用保守 fallback，不改变页面展示类型。
+
+系统返回的临时放行与最终 `popDisposition` 检查保持同步，避免跨 await 被另一返回请求借用。
+已完成 legacy willPop 判断的路径不再二次调用同一异步判断；目标改变即放弃旧提交。
+
+### 页面拥有的异步确认
+
+页面使用 Flutter `PopScope` / `Form` 或显式离开按钮拥有确认 UI。合并重复请求；确认取消时
+保持 Entry、Scope 与结果不变。确认后检查 mounted、更新业务允许退出状态，再用页面 Context
+调用 `CCRouter.navigator.pop`；原同步 Guard 仍有效，确认不是绕过其它 Guard 的凭据。
+框架没有公开 UI 协调器或 resume-token API。
+
+iOS 的 `canPop: false` 可禁用边缘侧滑而完全没有拒绝回调，不能承诺滑动时自动弹框。
+需要提供显式保存/离开入口，允许后再恢复交互。页面不必为了框架 Guard 重复接线，业务确认
+UI 则继续由业务页面管理。
+
+MultiHost 仍通过当前活动 Host 选择无 Context 的系统返回；同时可见页面使用 Context
+定位到具体 Host/Outlet。原生平台多窗口的全局手势仲裁不在本实现范围内。
+第三方 WebView、IME、返回桌面与自定义预测转场需要应用单独验收。
+
+普通 Pop 先完成逻辑 Entry/result，Route Scope 保留到退出渲染结束；renderer 卸载与逻辑移除
+不同，shutdown 不等待下一帧。生命周期细则统一见[Service 生命周期](CCRouter-service-lifecycle-design.md)。
+
+## Demo 与验证
+
+在 demo/ 中运行：
 
 ```sh
 fvm flutter run -t lib/main.dart
-# 原生 Managed Backend，开启 bridge
 fvm flutter run -t lib/main_predictive_back.dart
-# deprecated GoRouter 兼容 Backend，开启 bridge
-fvm flutter run -t lib/main_go_router_predictive_back.dart
-# Managed 旧入口别名
+# 旧 Managed 名称保留为同一路径的别名
 fvm flutter run -t lib/main_managed_predictive_back.dart
 fvm flutter test test/predictive_back_demo_test.dart
 ```
 
-普通 Managed 入口保持 false；两个 Backend 的开启入口共享同一套初始化、页面和场景。
-存量 Host 仍使用 GoRouter 时，必须对 compatibility 入口单独完成平台手势验收。
-Demo 的 `android/app/src/main/AndroidManifest.xml` 已显式启用
-`android:enableOnBackInvokedCallback="true"`；复制入口代码不能替代目标 Host 的有效
-Manifest 合并结果检查。
-导航页的
-`Push + typed result` 可验证取消后保留原页、提交后仅退出一层；诊断事件显示
-`Predictive back · started/cancelled/committed`，不逐帧记录 update。
-自动桥降级原因可从 `backend.adapter.predictiveBackFallbacks` 读取。
-策略页验证未保存表单拒绝和保存后 fallback。Shell / StatefulShell 验证具体 Outlet
-及分支切换后的迟到提交。
+普通入口默认关闭；开启入口使用相同页面和原生 Managed Backend。
+使用 Push + typed result 验证取消仍在、提交一次；策略页验证未保存拒绝与保存后允许；
+Shell/StatefulShell 验证 Outlet、分支切换与迟到提交。
+Demo Android Manifest 已显式启用系统回调，但复制 Dart 入口不替代目标 Host 的合并检查。
 
-2026-10-15 首次实施验证快照（数量不代表后续提交的累计结果）：
+- 框架专项覆盖动画进度、取消/提交、重复终态、导航打断、Theme 改变、祖先弹窗、
+  本地门禁、退役 handler、跨 Host 迟到消息、资源释放；见
+  [框架回归](../packages/ccrouter_test/test/predictive_back_test.dart)。
+- Demo 场景覆盖真实业务页面与结果、Scope；见
+  [Demo 回归](../demo/test/predictive_back_demo_test.dart)。
+- 历史三星 Android 16 验证见
+  [设备记录](validation/android_predictive_back_samsung_20261015.md)。
+- Managed Android/iOS 真机验收与限制见
+  [平台记录](validation/managed_navigation_platform_acceptance_20261022.md)。
+- 本轮删除与 macOS 验证以
+  [退役记录](validation/go_router_retirement_20261023.md)为准。
 
-- 框架完整 Flutter suite：475 项通过，其中预测返回专项 43 项。
-- Demo 完整 suite：58 项通过，其中新增预测专项 12 项。
-- 生成器完整执行：523 项通过、28 项失败、1 项远程网络冒烟按默认配置跳过。
-  失败来自 worktree 的 `.git` 文件定位和嵌套 Dart Pub 缺少 Flutter SDK 上下文；修复
-  三处测试夹具的 worktree 定位后，设置 `FLUTTER_ROOT` 指向实际 FVM SDK，重跑失败
-  所在两个文件，37 项全部通过。未修改生成器生产逻辑。
-- 覆盖 false 原生 Route 类型、动画、typed result、资源释放；true 取消、进度、提交、
-  重复终态、连续手势、动态门禁、手势中导航、LocalHistory、Popup、Adapter dispose、
-  attach 显式接线、左右边缘、三键 fallback、iOS/OHOS 路由族，以及 Host 重建后的
-  迟到提交、取消、连续新手势和丢失终态后的观察清理。
-- 根 Dart analyze、Demo Flutter analyze 通过；Android 开启入口 debug APK、
-  iOS debug 无签名构建通过。
+Widget 回归与 macOS 不替代手机跟手观感；历史设备通过也不扩大到 Android 全版本、
+全部 OEM 或 iOS 全版本。此前 OHOS HAP 构建被外部 embedding 的 AutoFill API 与本机 SDK
+不匹配阻断，该限制未在此次删除中修复。
 
-Review 修复新增 10 个边界回归：修复前 false 对照通过、其余 9 个失败；修复后全部通过。
-覆盖 attached Router 销毁 Adapter 后的新手势、旧 commit/cancel 后恢复，以及两种 Shell
-的祖先弹窗在开始前、过程中、提交前已关闭三种时序。此轮未重新执行真机手势验证，
-以下设备记录对应 review 修复前版本。
+返回回归还须交叉覆盖 Guard/local gate 的允许与拒绝、重复请求、取消/晚到提交、弹窗与
+LocalHistory、跨 Host 焦点、Shell 切换、Route 移除、renderer 重挂与 shutdown，断言实际页面、
+typed result 和 Scope 只结束一次。最新源码与历史设备结果分别从[验证索引](validation/README.md)查阅。
 
-本轮再新增 4 个核心边界回归：Adapter 构造失败时原子回滚注册、`not-GCed` 泄漏追踪确认
-无 binding observer 保留链、自定义 handler 活性读取抛错时释放并恢复 Flutter fallback，以及
-降级原因按 `lifecycleEventCapacity` 保持有界；同时在现有 false、非预测 Theme、三键和 attach
-未接线用例中验证空历史或精确 reason。
+## 回退
 
-Theme 边界修复新增 6 项回归：修复前关闭开关的对照通过，其余 5 项失败；修复后全部通过。
-覆盖页面创建后的平台 Theme 切换、手势中的平台/转场切换、动画和 Navigator 手势状态恢复、
-commit/cancel 与重复终态、预测 Theme 在旧 commit 前恢复，以及后续独立手势。取消不改变
-typed result、Route Scope 或正式页面生命周期。此轮框架 475 项、Demo 58 项、根和 Demo
-analyze、`ccrouter generate demo --check` 均通过；未重新执行平台构建或真机验证。
-
-2026-10-16 的 `b8584ba` 新增丢失终态回归：attach 模式关闭 Adapter 后先读取
-`popGestureEnabled`，省略旧手势的终态，再发起新 start/commit；新手势正常退出，资源只释放一次。
-`7128be0` 新增真实 Demo 的 UI Fragment 组合回归：取消保留输入内容和 RouteEntry，提交后移除
-页面与一个 Entry，阶段序列为 started/cancelled/started/committed，且无 Flutter 异常。
-用例分别位于[框架预测返回测试](../packages/ccrouter_test/test/predictive_back_test.dart)和
-[Demo 预测返回测试](../demo/test/predictive_back_demo_test.dart)。这些 Widget 回归不扩大真机验收范围。
-
-Android 16 三星 SM-S911U1（手势导航，Demo targetSdk 36）补充完成真机 Android
-触摸输入注入验证：开启时左右缘取消、提交、重新进页后的独立手势、入场未稳定时的
-普通 fallback，以及 Guard 未保存拒绝 / 保存后放行；关闭时取消保留页面、提交仅退
-一层且没有 CCRouter 阶段事件。取消无正式 Hide / result 完成 / dispose，提交对应
-副作用各一次。此轮未改变系统手势设置、targetSdk 或 Manifest，结束后恢复开启版本。
-见 [设备验证记录](validation/android_predictive_back_samsung_20261015.md) 与结构化证据。
-
-真机输入注入经过 Android 手势识别与 Flutter embedding，未直接注入 Flutter back
-channel；仍不代表人工动画观感、IME、WebView、返回桌面或 Android 13/14/15/16
-完整平台矩阵已经验收。
-
-2026-10-22 的 Managed 专用入口、OnePlus OEM 阻断、macOS MultiHost 部分验收、iOS
-Simulator smoke 与两轮 Android monkey 结果见
-[Managed Navigation 平台验收记录](validation/managed_navigation_platform_acceptance_20261022.md)。
-该记录随后已补充 iOS 真机核心手势验收；GoRouter guarded iOS 手势不再继续修复，兼容包已
-deprecated。完整 macOS 窗口矩阵仍是 Managed 发布验收项，不再阻止兼容包弃用。
-
-OHOS 构建未通过：外部 Flutter embedding 的 `OhosAutoFillHelper.ets` 与本机 SDK
-AutoFill API 不匹配（`AutoFillType`、`ViewData`、`requestAutoFill` 等）。本次不升级
-SDK、不改平台代码；OHOS Route 类型回归通过不能替代 HAP 构建或设备验收。
-
-## 灰度与回退
-
-先对普通默认页面启用，业务原有 gate、WebView 历史、教程返回结果等维持自身约束；
-按真实页面逐项验证 typed result、Route Scope 和曝光时机。回退将开关恢复为 false 并
-重建 Backend，移除自定义 Page 的自动 handler 接线。系统预测启用配置和业务页面
-交互优化分别验收、分别回退，不在 bridge 内额外执行 Pop。
+先对普通页面启用，逐项验收结果、Scope 和曝光时机。需要回退自动桥时设为 false 并重建
+Backend，同时撤掉自定义 Route 的 handler 接线；不要在桥内额外执行 Pop。
+GoRouter 已退役，源码可从 Git 历史恢复，但不再作为当前运行时开关维护。

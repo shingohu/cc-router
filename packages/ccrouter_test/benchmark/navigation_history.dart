@@ -2,164 +2,105 @@ import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
 
-// ignore: deprecated_member_use
-import 'package:ccrouter_go_router/ccrouter_go_router.dart';
-import 'package:flutter/material.dart';
+import 'package:ccrouter/ccrouter.dart';
+import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-// Interleave the actual Adapter with a test-only legacy raw-event reference:
-// fvm flutter test --no-pub packages/ccrouter_test/benchmark/navigation_history.dart
-// This measures the complete synchronous Observer -> Adapter event path, not
-// frame rendering. Timings are reports, never machine-dependent CI thresholds.
+final class _Codec implements CCRouteCodec<int> {
+  const _Codec();
+  @override
+  int decode(CCRouteCodecValues input) => int.parse(input.path['id']!);
+  @override
+  CCRouteCodecValues encode(int value) =>
+      CCRouteCodecValues(path: {'id': '$value'});
+}
+
+final class _Intent implements CCRouteIntent<int> {
+  const _Intent(this.arguments);
+  @override
+  final int arguments;
+  @override
+  String get routeId => 'benchmark.detail';
+}
+
+final class _Registrar implements CCComponentRegistrar {
+  @override
+  void register(CCRegistry registry) => registry.registerRoute(
+    CCRouteDefinition<int, int>(
+      routeId: 'benchmark.detail',
+      patterns: [const CCPathPattern('/detail/:id', primary: true)],
+      codec: const _Codec(),
+    ),
+  );
+}
+
+// Measures the shared Runtime diagnostics path, not rendering or a legacy Adapter.
+// Run separately: fvm flutter test --no-pub packages/ccrouter_test/benchmark/navigation_history.dart
 void main() {
-  test('reports bounded navigation history write and read costs', () {
-    const capacities = [0, 2, 1000, 10000];
-    const rounds = 7;
-    const iterations = 10000;
-    const reads = 500;
-    final writes = <String, List<double>>{};
-    final snapshots = <String, List<double>>{};
-    final cpuWrites = <String, List<double>>{};
-    final cpuReads = <String, List<double>>{};
-    final cpuClock = _ThreadCpuClock.open();
-    if (cpuClock != null) addTearDown(cpuClock.dispose);
-    for (var round = 0; round < rounds; round++) {
-      // Rotate ordering to avoid assigning all startup/thermal effects to one
-      // capacity. Each sample gets an independent Adapter and a full buffer.
-      for (var offset = 0; offset < capacities.length; offset++) {
-        final capacity = capacities[(round + offset) % capacities.length];
-        // Alternate pair ordering, so the reference does not always run first.
-        for (final legacy in round.isEven ? [true, false] : [false, true]) {
-          final key = '$capacity/${legacy ? 'legacy' : 'snapshot'}';
-          final rawHistory = <CCGoRouterNavigationEvent>[];
-          final observer = CCGoRouterNavigationObserver(
-            outlet: 'root',
-            onEvent: (event) {
-              // Benchmark fixture only. This intentionally reproduces the old
-              // retention bug; the two test Routes stay alive in both samples.
-              if (!legacy || capacity == 0) return;
-              if (rawHistory.length == capacity) rawHistory.removeAt(0);
-              rawHistory.add(event);
-            },
-          );
-          final router = GoRouter(
-            routes: [GoRoute(path: '/', builder: (_, _) => const SizedBox())],
-          );
-          final adapter = CCGoRouterAdapter(
-            router: router,
-            observers: [observer],
-            lifecycleEventCapacity: legacy ? 0 : capacity,
-          );
-          adapter.initialize(const []);
-          List<Object> readHistory() => legacy
-              ? List<CCGoRouterNavigationEvent>.unmodifiable(rawHistory)
-              : adapter.lifecycleEvents;
-          final home = MaterialPageRoute<void>(
-            settings: const RouteSettings(name: '/'),
-            builder: (_) => const SizedBox(),
-          );
-          final detail = MaterialPageRoute<void>(
-            settings: const RouteSettings(name: '/detail'),
-            builder: (_) => const SizedBox(),
-          );
-          var delivered = 0;
-          final unsubscribe = adapter.addBackendEventListener(
-            (_) => delivered++,
-          );
-          void visit() {
-            observer.didPush(detail, home);
-            observer.didPop(detail, home);
-          }
-
-          for (var index = 0; index < 12000; index++) {
-            visit();
-          }
-          final cpuWriteStart = cpuClock?.microseconds;
-          final watch = Stopwatch()..start();
-          for (var index = 0; index < iterations; index++) {
-            visit();
-          }
-          watch.stop();
-          if (cpuClock != null) {
-            cpuWrites
-                .putIfAbsent(key, () => [])
-                .add(
-                  (cpuClock.microseconds - cpuWriteStart!) / (iterations * 2),
-                );
-          }
-          writes
-              .putIfAbsent(key, () => [])
-              .add(watch.elapsedMicroseconds / (iterations * 2));
-          expect(delivered, (12000 + iterations) * 2);
-          // Avoid benchmarking only the aligned head==0 fast path: default
-          // capacity divides the event counts above. Exercise wrapped reads.
-          observer.didPush(detail, home);
-          expect(readHistory(), hasLength(capacity));
-
-          var readCount = 0;
-          watch.reset();
-          final cpuReadStart = cpuClock?.microseconds;
-          watch.start();
-          for (var index = 0; index < reads; index++) {
-            readCount += readHistory().length;
-          }
-          watch.stop();
-          if (cpuClock != null) {
-            cpuReads
-                .putIfAbsent(key, () => [])
-                .add((cpuClock.microseconds - cpuReadStart!) / reads);
-          }
-          snapshots
-              .putIfAbsent(key, () => [])
-              .add(watch.elapsedMicroseconds / reads);
-          expect(readCount, capacity * reads);
-          unsubscribe();
-          adapter.dispose();
-          router.dispose();
-          home.dispose();
-          detail.dispose();
-        }
+  test('reports backend-neutral Runtime history costs', () async {
+    final cpu = _ThreadCpuClock.open();
+    if (cpu != null) addTearDown(cpu.dispose);
+    final results = <Map<String, Object?>>[];
+    for (final capacity in [0, 2, 1000, 10000]) {
+      final adapter = CCMemoryNavigationAdapter();
+      // Benchmarks deliberately exercise the explicit test-only Runtime path.
+      // ignore: invalid_use_of_visible_for_testing_member
+      final runtime = CCRouterRuntime.forTesting(
+        navigationAdapter: adapter,
+        navigationDiagnosticCapacity: capacity,
+        traceCapacity: 0,
+        components: [
+          CCComponentManifest(
+            id: 'benchmark',
+            version: '1.0.0',
+            registrar: _Registrar(),
+          ),
+        ],
+      )..initialize();
+      for (var index = 0; index < 6000; index++) {
+        final result = runtime.pushRoute<int>(_Intent(index));
+        runtime.popRoute(result: index);
+        await result;
       }
+      const iterations = 1000;
+      final cpuStart = cpu?.microseconds;
+      final watch = Stopwatch()..start();
+      for (var index = 0; index < iterations; index++) {
+        final result = runtime.pushRoute<int>(_Intent(index));
+        runtime.popRoute(result: index);
+        expect(await result, index);
+      }
+      watch.stop();
+      final writeTime = watch.elapsedMicroseconds;
+      final cpuTime = cpu == null ? null : cpu.microseconds - cpuStart!;
+      final count = runtime.recentNavigationEvents.length;
+      expect(count, capacity);
+      const reads = 500;
+      watch.reset();
+      watch.start();
+      var readCount = 0;
+      for (var index = 0; index < reads; index++) {
+        readCount += runtime.recentNavigationEvents.length;
+      }
+      watch.stop();
+      expect(readCount, capacity * reads);
+      results.add({
+        'capacity': capacity,
+        'wallMicrosecondsPerPushPop': writeTime / iterations,
+        'cpuMicrosecondsPerPushPop': cpuTime == null
+            ? null
+            : cpuTime / iterations,
+        'wallMicrosecondsPerSnapshot': watch.elapsedMicroseconds / reads,
+      });
+      await runtime.dispose();
     }
-
-    double median(List<double> values) =>
-        (values.toList()..sort())[rounds ~/ 2];
-    // JSON is easy to retain alongside a commit or compare across processes.
-    // RSS is intentionally excluded: the two fixed test Routes do not model
-    // retained application trees; lifecycle regression tests check actual GC.
     print(
       jsonEncode({
-        'benchmark': 'navigation-history',
+        'benchmark': 'runtime-navigation-lifecycle-history',
+        'scope':
+            'memory-backend plus Runtime; excludes Flutter frames and allocation/heap',
         'sdk': Platform.version,
-        'rounds': rounds,
-        'eventsPerRound': iterations * 2,
-        'cpuClock': cpuClock == null ? 'unavailable' : 'mutator-thread',
-        'results': [
-          for (final capacity in capacities)
-            for (final implementation in ['legacy', 'snapshot'])
-              {
-                'capacity': capacity,
-                'implementation': implementation,
-                'writeMicrosecondsPerEvent': median(
-                  writes['$capacity/$implementation']!,
-                ),
-                'readMicrosecondsPerSnapshot': median(
-                  snapshots['$capacity/$implementation']!,
-                ),
-                'writeSamples': writes['$capacity/$implementation'],
-                'readSamples': snapshots['$capacity/$implementation'],
-                if (cpuClock != null) ...{
-                  'writeCpuMicrosecondsPerEvent': median(
-                    cpuWrites['$capacity/$implementation']!,
-                  ),
-                  'readCpuMicrosecondsPerSnapshot': median(
-                    cpuReads['$capacity/$implementation']!,
-                  ),
-                  'writeCpuSamples': cpuWrites['$capacity/$implementation'],
-                  'readCpuSamples': cpuReads['$capacity/$implementation'],
-                },
-              },
-        ],
+        'results': results,
       }),
     );
   });

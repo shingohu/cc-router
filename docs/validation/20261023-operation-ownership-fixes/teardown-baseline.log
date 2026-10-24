@@ -1,0 +1,75 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart
+00:00 +0: concurrent maybePop preserves actual result and unique receipt
+00:00 +1: independent Outlets preserve concurrent results
+00:00 +2: waiting maybePop cannot claim pop removal
+00:00 +3: waiting maybePop cannot claim push removal
+00:00 +4: waiting maybePop cannot claim close removal
+00:00 +5: waiting maybePop cannot claim unmount removal
+00:00 +6: LocalHistory precedes deny Guard (native=false)
+00:00 +7: LocalHistory precedes deny Guard (native=true)
+00:00 +8: pending willPop ends on renderer teardown (shutdown=false)
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: true
+  Actual: <false>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart:302:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart line 302
+The test description was:
+  pending willPop ends on renderer teardown (shutdown=false)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +8 -1: pending willPop ends on renderer teardown (shutdown=false) [E]
+  Test failed. See exception logs above.
+  The test description was: pending willPop ends on renderer teardown (shutdown=false)
+  
+00:00 +8 -1: pending willPop ends on renderer teardown (shutdown=true)
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: true
+  Actual: <false>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart:302:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart line 302
+The test description was:
+  pending willPop ends on renderer teardown (shutdown=true)
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +8 -2: pending willPop ends on renderer teardown (shutdown=true) [E]
+  Test failed. See exception logs above.
+  The test description was: pending willPop ends on renderer teardown (shutdown=true)
+  
+00:00 +8 -2: Shell exit retains content and child Scope (native=false)
+00:00 +9 -2: Shell exit retains content and child Scope (native=true)
+00:00 +10 -2: LocalHistory removed during wait cannot bypass denied exit
+00:00 +11 -2: Shell exit remains bounded when interrupted by push
+00:00 +12 -2: Shell exit remains bounded when interrupted by reenter
+00:00 +13 -2: Shell exit remains bounded when interrupted by unmount
+00:00 +14 -2: Shell exit remains bounded when interrupted by shutdown
+00:01 +15 -2: completed Shell exit releases old Routes while Adapter stays alive
+00:01 +16 -2: new location supersedes old policy (initial=/)
+00:01 +17 -2: new location supersedes old policy (initial=/detail/A)
+00:01 +18 -2: same-current location still cancels the old policy
+00:01 +19 -2: new location cancels an old Failure Policy recovery
+00:01 +20 -2: new location cancels deferred replay (resuming=false)
+00:01 +21 -2: new location cancels deferred replay (resuming=true)
+00:01 +22 -2: shutdown cancels a never-completing platform policy without another frame
+00:01 +23 -2: Some tests failed.

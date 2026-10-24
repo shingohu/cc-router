@@ -1,0 +1,57 @@
+00:00 +0: loading demo/modules/analytics/test/navigation_identity_test.dart
+00:00 +0: demo/modules/analytics/test/navigation_identity_test.dart: provider dispose cannot resurrect identity or publish a visit
+00:00 +1: demo/modules/analytics/test/analytics_test.dart: analytics contracts validates primitive properties and duplicate names
+00:00 +2: demo/modules/analytics/test/analytics_test.dart: analytics contracts validates primitive properties and duplicate names
+00:00 +3: demo/modules/analytics/test/analytics_test.dart: analytics contracts validates primitive properties and duplicate names
+00:00 +4: demo/modules/analytics/test/analytics_test.dart: analytics contracts validates primitive properties and duplicate names
+00:00 +5: demo/modules/analytics/test/analytics_test.dart: analytics contracts validates primitive properties and duplicate names
+00:00 +6: demo/modules/analytics/test/navigation_identity_test.dart: Consent reset and disposal release snapshots and fence late observations
+00:00 +7: demo/modules/analytics/test/analytics_test.dart: analytics contracts rejects unstable event identities
+00:00 +8: demo/modules/analytics/test/navigation_identity_test.dart: invalid identity and provider errors are isolated in the application
+00:00 +9: demo/modules/analytics/test/analytics_test.dart: analytics contracts bounds property values and event payload size
+00:00 +10: demo/modules/analytics/test/navigation_identity_test.dart: bounds identity snapshots for incomplete application observations
+00:00 +11: demo/modules/analytics/test/analytics_test.dart: analytics dispatcher filters events before queueing when consent or sampling rejects
+00:00 +12: demo/modules/analytics/test/analytics_test.dart: analytics dispatcher applies blacklist and deterministic per-event throttling
+00:00 +13: demo/modules/analytics/test/analytics_test.dart: analytics dispatcher keeps throttle state bounded and allows clearing its policy
+00:00 +14: demo/modules/analytics/test/analytics_test.dart: analytics dispatcher revoking consent resets throttle state and pending events
+00:00 +15: demo/modules/analytics/test/analytics_test.dart: analytics dispatcher sampling uses the injected decision source deterministically
+00:00 +16: demo/modules/analytics/test/analytics_dispatcher_regression_test.dart: policy observers see committed state, isolate errors and detach
+00:00 +17: demo/modules/analytics/test/analytics_dispatcher_regression_test.dart: policy observers see committed state, isolate errors and detach
+00:00 +18: demo/modules/analytics/test/analytics_dispatcher_regression_test.dart: policy observers see committed state, isolate errors and detach
+00:00 +19: demo/modules/analytics/test/analytics_dispatcher_regression_test.dart: policy observers see committed state, isolate errors and detach
+00:00 +20: demo/modules/analytics/test/analytics_dispatcher_regression_test.dart: policy observers see committed state, isolate errors and detach
+00:00 +21: demo/modules/analytics/test/analytics_dispatcher_regression_test.dart: policy observers see committed state, isolate errors and detach
+00:00 +22: demo/modules/analytics/test/analytics_dispatcher_regression_test.dart: policy observers see committed state, isolate errors and detach
+00:00 +23: demo/modules/analytics/test/analytics_dispatcher_regression_test.dart: policy observers see committed state, isolate errors and detach
+00:00 +24: demo/modules/analytics_firebase/test/firebase_sink_test.dart: Firebase sink maps only sanitized event data
+00:00 +25: demo/modules/analytics_firebase/test/firebase_sink_test.dart: Firebase sink maps only sanitized event data
+00:00 +26: tool/test/quality_workflow_test.dart: workflow-level environment uses only workflow-available values
+00:00 +27: tool/test/quality_workflow_test.dart: workflow-level environment uses only workflow-available values
+00:00 +28: tool/test/quality_workflow_test.dart: workflow-level environment uses only workflow-available values
+00:00 +29: tool/test/quality_workflow_test.dart: workflow-level environment uses only workflow-available values
+00:00 +30: tool/test/quality_workflow_test.dart: workflow-level environment uses only workflow-available values
+00:00 +31: tool/test/quality_workflow_test.dart: workflow-level environment uses only workflow-available values
+00:00 +32: tool/test/quality_workflow_test.dart: workflow-level environment uses only workflow-available values
+00:00 +33: tool/test/quality_workflow_test.dart: workflow-level environment uses only workflow-available values
+00:00 +34: tool/test/quality_workflow_test.dart: workflow-level environment uses only workflow-available values
+00:00 +35: tool/test/quality_workflow_test.dart: workflow-level environment uses only workflow-available values
+00:00 +36: demo/modules/analytics/test/analytics_dispatcher_regression_test.dart: sink starts on a later event turn and close flushes scheduled work
+00:00 +37: demo/modules/analytics/test/analytics_dispatcher_regression_test.dart: revocation before the scheduled drain starts prevents all writes
+00:00 +38: demo/modules/analytics/test/analytics_dispatcher_regression_test.dart: synchronous sink reentry stays in a single FIFO drain
+00:00 +39: demo/modules/analytics/test/analytics_dispatcher_regression_test.dart: close called inside a sink waits for that write and remaining sinks
+00:00 +40: demo/modules/analytics/test/analytics_dispatcher_regression_test.dart: a timed out sink is quarantined and cannot block close forever
+00:00 +41: demo/modules/analytics/test/analytics_dispatcher_regression_test.dart: event admitted as the last sink completes is not stranded
+00:00 +42: tool/test/skill_bundle_check_test.dart: consumer copy resolves required links without repository docs
+00:00 +43: tool/test/performance_compare_test.dart: reports relative regressions as non-blocking advisories
+00:00 +44: tool/test/performance_compare_test.dart: reports relative regressions as non-blocking advisories
+00:00 +45: tool/test/performance_compare_test.dart: reports relative regressions as non-blocking advisories
+00:00 +46: tool/test/performance_compare_test.dart: reports relative regressions as non-blocking advisories
+00:00 +47: tool/test/performance_compare_test.dart: reports relative regressions as non-blocking advisories
+00:00 +48: tool/test/performance_compare_test.dart: reports relative regressions as non-blocking advisories
+00:00 +49: tool/test/performance_compare_test.dart: reports relative regressions as non-blocking advisories
+00:00 +50: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:00 +51: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:00 +52: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:00 +53: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:03 +54: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:14 +55: All tests passed!

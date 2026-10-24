@@ -1,157 +1,112 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
-// ignore: deprecated_member_use
-import 'package:ccrouter_go_router/ccrouter_go_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-CCFlutterRouteDestination destination({
+final class _Codec implements CCRouteCodec<String> {
+  const _Codec();
+  @override
+  String decode(CCRouteCodecValues input) => input.path['id']!;
+  @override
+  CCRouteCodecValues encode(String value) =>
+      CCRouteCodecValues(path: {'id': value});
+}
+
+CCRouteDefinition<String, String> _definition({
   String routeId = 'orders.detail',
-  List<CCRoutePattern> patterns = const [
-    CCPathPattern('/orders/:orderId', primary: true),
-    CCPathPattern('/order/:orderId'),
-  ],
   CCRoutePresentation presentation = const CCPagePresentation(),
-  CCRoutePlacement placement = const CCRoutePlacement.root(),
+}) => CCRouteDefinition(
+  routeId: routeId,
+  patterns: [
+    const CCPathPattern('/orders/:id', primary: true),
+    const CCPathPattern('/order/:id'),
+    const CCRegexPattern(r'/legacy/(?<id>\d+)'),
+  ],
+  codec: const _Codec(),
+  presentation: presentation,
+);
+CCFlutterRouteDestination _destination({
+  String routeId = 'orders.detail',
+  CCRoutePresentation presentation = const CCPagePresentation(),
 }) => CCFlutterRouteDestination.fromDefinition(
-  definition: CCRouteDefinition<Object?, Object?>(
-    routeId: routeId,
-    patterns: patterns,
-    codec: _ObjectCodec(),
-    presentation: presentation,
-    deepLink: CCDeepLinkPolicy.disabled,
-    placement: placement,
-  ),
-  builder: (arguments) => Text(
-    '${arguments.path['orderId']}:${arguments.query['tab']?.single}',
-    textDirection: TextDirection.ltr,
-  ),
+  definition: _definition(routeId: routeId, presentation: presentation),
+  builder: (values) =>
+      Text('${values.path['id']}:${values.query['tab']?.single}'),
 );
 
-final class _ObjectCodec implements CCRouteCodec<Object?> {
-  const _ObjectCodec();
-
+final class _Registrar implements CCComponentRegistrar {
   @override
-  Object? decode(CCRouteCodecValues input) => null;
-
-  @override
-  CCRouteCodecValues encode(Object? arguments) => CCRouteCodecValues();
+  void register(CCRegistry registry) => registry.registerRoute(_definition());
 }
 
 void main() {
+  tearDown(CCRouterHost.shutdown);
   test('catalog merges components and rejects duplicate route IDs', () {
-    final orders = CCFlutterRouteCatalog([destination()]);
-    final account = CCFlutterRouteCatalog([
-      destination(
-        routeId: 'account.profile',
-        patterns: const [CCPathPattern('/profile', primary: true)],
-      ),
+    final catalog = CCFlutterRouteCatalog.merge([
+      CCFlutterRouteCatalog([_destination()]),
+      CCFlutterRouteCatalog([_destination(routeId: 'other')]),
     ]);
-
-    final merged = CCFlutterRouteCatalog.merge([orders, account]);
-    expect(merged.destinations, hasLength(2));
+    expect(catalog.destinations, hasLength(2));
+    expect(catalog.destinationFor('other')?.routeId, 'other');
+    expect(catalog.destinationFor('missing'), isNull);
     expect(
-      merged.destinationFor('account.profile')?.routeId,
-      'account.profile',
-    );
-    expect(merged.destinationFor('missing'), isNull);
-    expect(
-      () => CCFlutterRouteCatalog([destination(), destination()]),
+      () => CCFlutterRouteCatalog([_destination(), _destination()]),
       throwsArgumentError,
     );
   });
-
-  testWidgets('assembler renders primary and alias paths from one catalog', (
+  testWidgets('Managed renders primary, alias and Regex from one catalog', (
     tester,
   ) async {
-    final assembly = CCGoRouterAssembler.assemble(
-      catalog: CCFlutterRouteCatalog([destination()]),
+    final catalog = CCFlutterRouteCatalog(
+      [_destination()],
+      componentVersions: const {'orders': '1.0.0'},
     );
-    expect(assembly.routes, hasLength(2));
-    expect(assembly.bindings.single.routeId, 'orders.detail');
-    expect(
-      assembly.bindings.single.presentationType,
-      CCGoRouterPresentationType.page,
+    CCRouterHost.initialize(
+      hostAssembly: CCHostAssembly.fromComponents(
+        components: [
+          CCComponentManifest(
+            id: 'orders',
+            version: '1.0.0',
+            registrar: _Registrar(),
+          ),
+        ],
+        routeCatalog: catalog,
+      ),
     );
-
-    final router = GoRouter(
-      initialLocation: '/orders/42?tab=items',
-      routes: assembly.routes,
+    await tester.pumpWidget(
+      const CCManagedRouterApp(initialLocation: '/orders/42?tab=items'),
     );
-    addTearDown(router.dispose);
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
     await tester.pumpAndSettle();
     expect(find.text('42:items'), findsOneWidget);
-
-    router.go('/order/7?tab=summary');
-    await tester.pumpAndSettle();
-    expect(find.text('7:summary'), findsOneWidget);
+    for (final path in ['/order/7?tab=summary', '/legacy/7?tab=summary']) {
+      await CCRouter.navigator.open(Uri.parse(path));
+      await tester.pumpAndSettle();
+      expect(find.text('7:summary'), findsOneWidget);
+      expect(CCRouter.activeRouteEntries.last.routeId, 'orders.detail');
+      CCRouter.navigator.pop();
+      await tester.pumpAndSettle();
+    }
   });
-
-  test('assembler maps modal presentations into binding metadata', () {
-    final sheet = CCGoRouterAssembler.assemble(
-      catalog: CCFlutterRouteCatalog([
-        destination(presentation: const CCModalBottomSheetPresentation()),
-      ]),
-    );
-    expect(
-      sheet.bindings.single.presentationType,
-      CCGoRouterPresentationType.bottomSheet,
-    );
-
-    final dialog = CCGoRouterAssembler.assemble(
-      catalog: CCFlutterRouteCatalog([
-        destination(presentation: const CCDialogPresentation()),
-      ]),
-    );
-    expect(
-      dialog.bindings.single.presentationType,
-      CCGoRouterPresentationType.dialog,
-    );
-  });
-
-  test(
-    'assembler requires overrides for backend-specific route structures',
-    () {
-      final nested = CCFlutterRouteCatalog([
-        destination(placement: const CCRoutePlacement(shellId: 'home')),
+  test('catalog preserves sheet/dialog presentations without overrides', () {
+    for (final presentation in <CCRoutePresentation>[
+      const CCModalBottomSheetPresentation(),
+      const CCDialogPresentation(),
+    ]) {
+      final catalog = CCFlutterRouteCatalog([
+        _destination(presentation: presentation),
       ]);
       expect(
-        () => CCGoRouterAssembler.assemble(catalog: nested),
-        throwsA(isA<CCNavigationAdapterError>()),
+        catalog.destinations.single.route.presentation,
+        same(presentation),
       );
-
-      final regex = CCFlutterRouteCatalog([
-        destination(
-          patterns: const [
-            CCPathPattern('/orders/:orderId', primary: true),
-            CCRegexPattern(r'/legacy/(?<orderId>\d+)'),
-          ],
-        ),
-      ]);
-      expect(
-        () => CCGoRouterAssembler.assemble(catalog: regex),
-        throwsA(isA<CCNavigationAdapterError>()),
+      final backend = CCManagedRouterBackend(
+        routeCatalog: catalog,
+        initializeFromRouteInformation: false,
       );
-
-      final customRoute = GoRoute(
-        path: '/custom/:orderId',
-        builder: (_, state) => Text(state.pathParameters['orderId']!),
-      );
-      final overridden = CCGoRouterAssembler.assemble(
-        catalog: nested,
-        overrides: {
-          'orders.detail': CCGoRouterRouteOverride(
-            binding: CCGoRouterRouteBinding(
-              routeId: 'orders.detail',
-              goRoute: customRoute,
-            ),
-            includeInRootRoutes: false,
-          ),
-        },
-      );
-      expect(overridden.routes, isEmpty);
-      expect(overridden.bindings.single.goRoute, same(customRoute));
-    },
-  );
+      backend.adapter.initialize([catalog.destinations.single.route]);
+      expect(backend.adapter.capabilities.supportsModalRoutes, isTrue);
+      backend.adapter.dispose();
+      addTearDown(backend.dispose);
+    }
+  });
 }

@@ -37,31 +37,44 @@ RC 文案和发布归档仍需再次 dry-run。这不是文档措辞问题，而
 正式发布前应冻结以下三组，不允许发布过程中临时决定：
 
 1. **基础依赖闭包**：`ccrouter_contracts`、`ccrouter_core`、`ccrouter`、
-   `ccrouter_go_router`、`ccrouter_generator`。
-2. **可选能力**：`ccrouter_ui`、`ccrouter_analytics`、`ccrouter_analytics_flutter`、
+   `ccrouter_generator`。GoRouter 兼容包已移除，不在发布集合中。
+2. **可选能力**：`ccrouter_ui`、
    `ccrouter_devtools_protocol`、`ccrouter_devtools`、`ccrouter_analyzer_plugin`、
    `ccrouter_test`。每个 Package 必须有独立使用场景和维护承诺，不能仅因已经存在就发布。
 3. **不发布到 pub.dev**：Workspace 聚合 Package、`demo`、`demo/modules/*`、Demo Analyzer
    bootstrap，以及 `devtools/ccrouter_extension` 的应用壳。Extension 按 DevTools Extension
    分发流程处理，不伪装成普通业务依赖。
 
+`demo_analytics`、`demo_analytics_flutter` 已迁到 `demo/modules/`，属于第三组的应用侧示例，
+不属于框架 API、可选框架能力或发布集合。产品埋点由应用自行实现或接入既有平台。
+
 Package 发布顺序按依赖 DAG 从叶子到门面执行。任何一个基础 Package dry-run 或 Hosted smoke
 失败，后续 Package 不得继续发布。
 
 ## 4. 文档与安全门禁
 
-从仓库根目录执行：
+这些仓库工具使用 Workspace 的开发依赖；干净 checkout 先在根目录执行
+`CCROUTER_PUB_HOOK_DISABLE=1 fvm flutter pub get`，再运行下列检查。
+这里只解析聚合根依赖，不代表任何成员 Host 已完成生成验证：
 
 ```bash
 fvm dart run tool/documentation_check.dart
+fvm dart run tool/skill_bundle_check.dart
 fvm dart run tool/release_sensitivity_check.dart
 ```
 
-`documentation_check.dart` 检查所有 tracked Markdown 的本地链接，并保证 `docs/README.md` 和
-`demo/README.md` 没有漏掉同目录文档。`release_sensitivity_check.dart` 检查当前 tracked files
-中的常见凭据和本机绝对路径，只报告位置和类别，不回显值。
+`documentation_check.dart` 检查当前工作树中 Git 跟踪及尚未暂存、未被忽略的 Markdown
+本地文件链接与图片。它与 Skill 分发检查共用 GFM 解析器，支持行内和引用式链接、平衡括号、
+转义与 URL 编码，按 URL 规则剥离 query/fragment；跳过已删除文件及不会渲染为链接的代码、
+注释和未使用引用定义。章节锚点、HTML 标签中的链接和远端可达性不在检查范围内。
+诊断报告文件和解析后的目标，不推算解析器未提供的源码行号。它还要求
+`docs/README.md` 和 `demo/README.md` 通过实际本地链接覆盖对应目录中的直接子文档，
+正文提到文件名、图片或远端同名文件不能满足索引覆盖。
+`skill_bundle_check.dart` 验证隔离的双 Skill 分发包引用与真实 CLI 帮助的一致性。
+`release_sensitivity_check.dart` 检查当前 tracked files 中的常见凭据和本机绝对路径，
+只报告位置和类别，不回显值。
 
-这两个脚本都不能替代 Git 历史 Secret Scanner。正式公开发布前还必须：
+这些脚本都不能替代 Git 历史 Secret Scanner。正式公开发布前还必须：
 
 1. 使用发布平台 Secret Scanner 或经批准的 `gitleaks`/同类工具扫描完整历史；
 2. 先轮换已经进入历史的凭据，再决定是否重写历史；
@@ -76,17 +89,41 @@ fvm dart run tool/release_sensitivity_check.dart
 至少执行：
 
 ```bash
-fvm dart analyze
+fvm dart analyze packages
+fvm dart analyze tool
+fvm dart test tool/test
 fvm flutter test packages/ccrouter_test/test
 fvm dart test --concurrency=1 packages/ccrouter_test/generator_test
 fvm flutter test demo
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --check
 fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --check --no-cache
+fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo/modules/order/example --check --no-cache
 ```
 
-随后执行 Generator 混合能力基准、Runtime 长运行/RSS、Analytics 队列压力，以及 Android、
-iOS Simulator、macOS、Web、OHOS 构建 smoke。真机矩阵必须注明设备、OS、Flutter SDK、时间和
-未覆盖项，不能把 Simulator 结果写成真机结论。
+Analyzer Plugin 不属于根 Dart Workspace，必须先从
+`packages/ccrouter_analyzer_plugin/` 独立解析依赖，再在该目录执行：
+
+```bash
+fvm dart analyze
+fvm dart test --concurrency=1
+```
+
+根目录的分析和测试不替代上述隔离包门禁。若同时交付 Demo，还须从根目录执行：
+
+```bash
+fvm dart test demo/modules/analytics/test demo/modules/analytics_firebase/test
+fvm flutter test --no-pub demo/modules/analytics_flutter/test
+```
+
+并从 `demo/modules/order/example/` 执行 `fvm flutter test --no-pub test`。
+父 Host 的生成与测试不能代替独立 Example Host 的检查。这些命令与
+`.github/workflows/quality.yml` 的门禁配合使用；真机验收仍需另行完成。
+
+随后执行 Generator 混合能力基准、Runtime 长运行/RSS，以及 Android、iOS Simulator、macOS、
+Web、OHOS 构建 smoke。若同时交付 Demo，再独立执行应用侧 Analytics 队列压力；这不是框架
+埋点能力或其上传可靠性承诺。真机矩阵必须注明设备、OS、Flutter SDK、时间和未覆盖项，
+不能把 Simulator 结果写成真机结论。历史及最新证据按[验证索引](validation/README.md)查阅，
+后续源码自动回归不能延续旧平台认证，也不自动关闭本文发布阻塞项。
 
 每个待发布 Package 在移除 `publish_to: none` 后单独执行：
 

@@ -61,14 +61,14 @@ CCRouter 的核心 Runtime 能力并不落后。相较常见方案，CCRouter �
 | Watch 增量生成 | 生态支持 | 部分支持 | 不适用 | 支持 | Host-only `generate --watch=auto --machine`，并提供 `watch status/follow`；最终门禁仍是 `--no-cache --check` |
 | DevTools | 部分 | 部分 | 注册查看 | 部分 | 嵌入式面板、官方只读 Extension、Catalog/Runtime 联动、依赖与调用链已支持；不直接控制 Runtime 或绑定本地 IDE |
 | 原生多窗口 | 平台相关 | 平台相关 | 无 | 后端相关 | Host 隔离已具备，原生桥接暂缓 |
-| 状态恢复 | 平台/后端相关 | 后端相关 | 无 | 部分 | 只记录恢复机会，完整恢复暂缓 |
+| 状态恢复 | 平台/后端相关 | 后端相关 | 无 | 部分 | 完整恢复暂缓；需求采集由应用负责 |
 
 ## 当前真实缺口
 
 ### 1. Host 最小接入已完成
 
-新项目可以直接使用 `CCManagedRouterBackend`，由它装配 `RouterDelegate + Navigator.pages`、
-Managed Stack、Host 和 `MaterialApp.router`；已有项目可以继续使用 `CCGoRouterApp` 兼容接入：
+新项目优先使用 `CCManagedRouterApp`；也可显式使用 `CCManagedRouterBackend`，
+装配 `RouterDelegate + Navigator.pages`、Managed Stack、Host 和 `MaterialApp.router`：
 
 ```dart
 final backend = CCManagedRouterBackend(
@@ -83,10 +83,9 @@ runApp(
 ```
 
 应用必须先显式调用 `CCRouterHost.initialize(hostAssembly: ...)`；Managed Backend 使用
-初始化时安装的同一份 Catalog。已有 GoRouter 工程继续使用
-`CCGoRouterBackend.attach`；复杂 Shell、多 Outlet 或
-自定义 Router 构造可使用一次性 `backendFactory`，只有完全自定义 Widget 树才直接使用
-`CCRouterApp.managed`。这些显式路径是渐进式集成边界，不是新项目必须复制的样板代码。
+初始化时安装的同一份 Catalog。GoRouter 兼容包和 attach 已移除；已有工程可在局部功能
+嵌入 Managed Outlet。复杂 Shell、多 Outlet 可使用一次性 `backendFactory`，自定义 Widget
+树可直接使用 `CCRouterApp.managed`。业务调用保持不变，外层应用负责原 Navigator 的返回交接。
 
 因此 Host 最小接入已经闭环。后续新增 Backend 应复用同一个 `CCRouterAppBackend` 边界，
 不再为每种后端复制业务初始化模型。

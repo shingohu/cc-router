@@ -1,5 +1,13 @@
 # ccrouter_analyzer_plugin
 
+Route/Contract checks report `ccrouter_route_placement_invalid`,
+`ccrouter_route_parent_self`, `ccrouter_route_policy_invalid`, and
+`ccrouter_route_policy_duplicate` for directly authored literal configuration.
+Placement constructors require canonical framework identity; computed values,
+unknown expressions and full parent/Host/Shell/Outlet closure defer to generation.
+No ID or topology rewrite is offered. Cross-package generated-import diagnostics
+check each URI of conditional imports and exports at its precise literal span.
+
 
 UI Fragment checks use canonical framework symbols, including prefixed and
 transitive public exports. They report `ccrouter_ui_alias_invalid`,

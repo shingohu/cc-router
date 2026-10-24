@@ -1,0 +1,84 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart
+00:00 +0: singleFlight must not skip external origin policy
+00:00 +1: context-free redirect stays in originally selected Host
+00:00 +2: pending context-free Back keeps actual Host in receipt
+00:00 +3: failure recovery stays in originally admitted Host
+00:00 +4: control allow runs external origin policy independently
+00:00 +5: control same-origin singleFlight still shares one dispatch
+00:00 +6: control async Proceed keeps originally selected Host
+00:00 +7: control context-pinned redirect survives focus change
+00:00 +8: control deferred redirect stays in originally admitted Host
+00:00 +9: CCNavigationConcurrencyPolicy.singleFlight isolates CCNavigationOrigin.internal from CCNavigationOrigin.externalPlatform
+00:01 +10: CCNavigationConcurrencyPolicy.singleFlight isolates CCNavigationOrigin.internal from CCNavigationOrigin.externalNotification
+00:01 +11: CCNavigationConcurrencyPolicy.singleFlight isolates CCNavigationOrigin.internal from CCNavigationOrigin.externalQrCode
+00:01 +12: CCNavigationConcurrencyPolicy.singleFlight keeps same-origin failure semantics for CCNavigationOrigin.internal
+00:01 +13: CCNavigationConcurrencyPolicy.singleFlight isolates CCNavigationOrigin.externalPlatform from CCNavigationOrigin.internal
+00:01 +14: CCNavigationConcurrencyPolicy.singleFlight isolates CCNavigationOrigin.externalPlatform from CCNavigationOrigin.externalNotification
+00:01 +15: CCNavigationConcurrencyPolicy.singleFlight isolates CCNavigationOrigin.externalPlatform from CCNavigationOrigin.externalQrCode
+00:01 +16: CCNavigationConcurrencyPolicy.singleFlight keeps same-origin failure semantics for CCNavigationOrigin.externalPlatform
+00:01 +17: CCNavigationConcurrencyPolicy.singleFlight isolates CCNavigationOrigin.externalNotification from CCNavigationOrigin.internal
+00:01 +18: CCNavigationConcurrencyPolicy.singleFlight isolates CCNavigationOrigin.externalNotification from CCNavigationOrigin.externalPlatform
+00:01 +19: CCNavigationConcurrencyPolicy.singleFlight isolates CCNavigationOrigin.externalNotification from CCNavigationOrigin.externalQrCode
+00:01 +20: CCNavigationConcurrencyPolicy.singleFlight keeps same-origin failure semantics for CCNavigationOrigin.externalNotification
+00:01 +21: CCNavigationConcurrencyPolicy.singleFlight isolates CCNavigationOrigin.externalQrCode from CCNavigationOrigin.internal
+00:01 +22: CCNavigationConcurrencyPolicy.singleFlight isolates CCNavigationOrigin.externalQrCode from CCNavigationOrigin.externalPlatform
+00:01 +23: CCNavigationConcurrencyPolicy.singleFlight isolates CCNavigationOrigin.externalQrCode from CCNavigationOrigin.externalNotification
+00:01 +24: CCNavigationConcurrencyPolicy.singleFlight keeps same-origin failure semantics for CCNavigationOrigin.externalQrCode
+00:01 +25: CCNavigationConcurrencyPolicy.rejectDuplicate isolates CCNavigationOrigin.internal from CCNavigationOrigin.externalPlatform
+00:01 +26: CCNavigationConcurrencyPolicy.rejectDuplicate isolates CCNavigationOrigin.internal from CCNavigationOrigin.externalNotification
+00:01 +27: CCNavigationConcurrencyPolicy.rejectDuplicate isolates CCNavigationOrigin.internal from CCNavigationOrigin.externalQrCode
+00:01 +28: CCNavigationConcurrencyPolicy.rejectDuplicate keeps same-origin failure semantics for CCNavigationOrigin.internal
+00:01 +29: CCNavigationConcurrencyPolicy.rejectDuplicate isolates CCNavigationOrigin.externalPlatform from CCNavigationOrigin.internal
+00:01 +30: CCNavigationConcurrencyPolicy.rejectDuplicate isolates CCNavigationOrigin.externalPlatform from CCNavigationOrigin.externalNotification
+00:01 +31: CCNavigationConcurrencyPolicy.rejectDuplicate isolates CCNavigationOrigin.externalPlatform from CCNavigationOrigin.externalQrCode
+00:01 +32: CCNavigationConcurrencyPolicy.rejectDuplicate keeps same-origin failure semantics for CCNavigationOrigin.externalPlatform
+00:01 +33: CCNavigationConcurrencyPolicy.rejectDuplicate isolates CCNavigationOrigin.externalNotification from CCNavigationOrigin.internal
+00:01 +34: CCNavigationConcurrencyPolicy.rejectDuplicate isolates CCNavigationOrigin.externalNotification from CCNavigationOrigin.externalPlatform
+00:02 +35: CCNavigationConcurrencyPolicy.rejectDuplicate isolates CCNavigationOrigin.externalNotification from CCNavigationOrigin.externalQrCode
+00:02 +36: CCNavigationConcurrencyPolicy.rejectDuplicate keeps same-origin failure semantics for CCNavigationOrigin.externalNotification
+00:02 +37: CCNavigationConcurrencyPolicy.rejectDuplicate isolates CCNavigationOrigin.externalQrCode from CCNavigationOrigin.internal
+00:02 +38: CCNavigationConcurrencyPolicy.rejectDuplicate isolates CCNavigationOrigin.externalQrCode from CCNavigationOrigin.externalPlatform
+00:02 +39: CCNavigationConcurrencyPolicy.rejectDuplicate isolates CCNavigationOrigin.externalQrCode from CCNavigationOrigin.externalNotification
+00:02 +40: CCNavigationConcurrencyPolicy.rejectDuplicate keeps same-origin failure semantics for CCNavigationOrigin.externalQrCode
+00:02 +41: go redirect Intent preserves Shell and parent in admitted Host
+00:02 +42: go redirect URI preserves Shell and parent in admitted Host
+00:02 +43: go recovery Intent preserves Shell and parent in admitted Host
+00:02 +44: go recovery URI preserves Shell and parent in admitted Host
+00:02 +45: reset redirect Intent preserves Shell and parent in admitted Host
+00:02 +46: reset redirect URI preserves Shell and parent in admitted Host
+00:02 +47: reset recovery Intent preserves Shell and parent in admitted Host
+00:02 +48: reset recovery URI preserves Shell and parent in admitted Host
+00:02 +49: push redirect Intent preserves Shell and parent in admitted Host
+00:02 +50: push redirect URI preserves Shell and parent in admitted Host
+00:02 +51: push recovery Intent preserves Shell and parent in admitted Host
+00:02 +52: push recovery URI preserves Shell and parent in admitted Host
+00:02 +53: replace redirect Intent preserves Shell and parent in admitted Host
+00:02 +54: replace redirect URI preserves Shell and parent in admitted Host
+00:02 +55: replace recovery Intent preserves Shell and parent in admitted Host
+00:02 +56: replace recovery URI preserves Shell and parent in admitted Host
+00:02 +57: openPush redirect Intent preserves Shell and parent in admitted Host
+00:02 +58: openPush redirect URI preserves Shell and parent in admitted Host
+00:02 +59: openPush recovery Intent preserves Shell and parent in admitted Host
+00:03 +60: openPush recovery URI preserves Shell and parent in admitted Host
+00:03 +61: openGo redirect Intent preserves Shell and parent in admitted Host
+00:03 +62: openGo redirect URI preserves Shell and parent in admitted Host
+00:03 +63: openGo recovery Intent preserves Shell and parent in admitted Host
+00:03 +64: openGo recovery URI preserves Shell and parent in admitted Host
+00:03 +65: explicit target Host wins during redirect
+00:03 +66: explicit target Host wins during recovery
+00:03 +67: explicit initial Host owns later default redirect
+00:03 +68: resolution failure recovery uses invocation Host snapshot
+00:03 +69: pending Back keeps receipt after Host unregister
+00:03 +70: pending Back keeps receipt after shutdown
+00:03 +71: scoped Pop reports actual root Popup Outlet
+00:03 +72: scoped maybePop reports actual root Popup Outlet
+00:03 +73: default Host survives explicit hop (recovery=false defer=false)
+00:03 +74: default Host survives explicit hop (recovery=false defer=true)
+00:03 +75: default Host survives explicit hop (recovery=true defer=false)
+00:03 +76: default Host survives explicit hop (recovery=true defer=true)
+00:03 +77: redirect cannot switch away from retired Host (shutdown=false)
+00:03 +78: redirect cannot switch away from retired Host (shutdown=true)
+00:03 +79: recovery cannot switch away from retired Host (shutdown=false)
+00:03 +80: recovery cannot switch away from retired Host (shutdown=true)
+00:03 +81: LocalHistory receipt keeps origin when its callback changes focus
+00:03 +82: All tests passed!

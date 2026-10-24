@@ -4,17 +4,19 @@
 
 - 版本：v0.1
 - 日期：2026-10-13
-- 状态：Proposal 已确认，尚未实现
+- 状态：历史 Proposal，尚未实现；GoRouter 退役后须基于原生 Managed 重新评估
 - 分类：新的通用框架能力（生产场景分类 E）
-- 适用范围：Contract-first Route、单 Host、Shell/StatefulShell/Outlet、GoRouter Backend
+- 原提案适用范围：Contract-first Route、单 Host、Shell/StatefulShell/Outlet、GoRouter Backend
 - 当前公开能力：不包含 Host-owned Route Mount；现有静态 `CCRoutePlacement` 行为保持不变
 
-本文定义后续实施 Host-owned Route Mount 的边界、API 草案、兼容策略和验收门禁。
+本文保留原 Host-owned Route Mount 的边界、API 草案、兼容策略和验收门禁。
+其中 `CCGoRouter…` 及 `ccrouter_go_router` 已移除；第 6.4 节与 P3 等 Backend 步骤不可直接
+执行。若重启提案，须先按 Managed Stack、当前 Host/Outlet identity 与注册生命周期重评估，
+不能机械改名后宣称方案已可实施。
 文中的类型与示例均为设计目标，不代表当前代码已经提供对应 API。当前 Route、Shell、
 Outlet 和 Host 语义继续以
-[路由子系统设计](CCRouter-route-design.md)、
-[路由契约设计](CCRouter-route-contract-design.md)和
-[混合路由设计](CCRouter-hybrid-routing-design.md)为准。
+[Managed 路由与混合导航规范](CCRouter-route-design.md)和
+[路由契约设计](CCRouter-route-contract-design.md)为准。
 
 ## 1. 生产场景与问题分类
 

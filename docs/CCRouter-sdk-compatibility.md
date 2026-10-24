@@ -4,9 +4,11 @@
 
 - 版本：v0.1
 - 状态：持续验证记录，不是对所有 Flutter 平台和版本的永久承诺
-- 范围：Dart/Flutter SDK、GoRouter 适配器、Generator 和 Demo 路由回归
+- 范围：Dart/Flutter SDK、原生 Managed Backend、Generator 和 Demo 路由回归
 - 2026-10-04 补充[Flutter / Dart 升级同步计划](CCRouter-sdk-upgrade-plan.md)：包含独立 Analyzer、
   工具身份/只读组件、Hook、DevTools 与最低消费者门禁；该计划不代表目标 SDK 已升级或通过。
+- 最新源码回归与各日期的平台证据见[验证索引](validation/README.md)；下文 SDK 安装及较早
+  smoke 记录不自动延续到当前源码，也不能替代最低 SDK 的独立消费者验证。
 
 ## 当前约束
 
@@ -15,7 +17,6 @@
 | Package | SDK 下限 |
 | --- | --- |
 | `ccrouter_core`、`ccrouter_contracts`、`ccrouter_generator`、`ccrouter` | Dart `^3.10.0` |
-| `ccrouter_go_router` | Dart `^3.10.0` |
 | `ccrouter_test` | Dart `^3.10.0` |
 | `demo` | Dart `^3.11.5` |
 
@@ -86,11 +87,11 @@ Workspace 根是聚合 Package；根目录解析时禁用 Pub Hook，并单独�
 ## 已验证范围
 
 - Core / Contracts 的纯 Dart 路由解析、拦截、并发和生命周期测试不依赖 Flutter UI。
-- Flutter 测试覆盖 GoRouter Adapter、Page/Route Factory、Host/Outlet、Dialog/BottomSheet、
+- Flutter 测试覆盖原生 Managed Adapter、Page/Route Factory、Host/Outlet、Dialog/BottomSheet、
   Shell、StatefulShell、系统返回和资源销毁。
 - Generator 测试覆盖 Analyzer、build_runner、Package Index、Catalog、源码定位和生成物校验。
-- GoRouter 声明为 `^17.5.0`，当前 lock 解析为 `17.5.0`；升级版本需要重新执行 Adapter、Demo 和生成物回归，不能只更新
-  `pubspec.yaml`。
+- 2026-10-23 已移除 GoRouter 依赖；历史 SDK 结果只代表当时版本，当前回归见
+  [退役记录](validation/go_router_retirement_20261023.md)。
 
 2026-09-22 本机多 SDK 验证历史快照如下。表中的测试数量保留当次执行口径，用于证明这些
 SDK 组合在当时通过，不代表当前测试套件总数：
@@ -135,10 +136,10 @@ shader 资源加载，不是 CCRouter 断言失败；隔离每个 SDK 的 `.dart
 
 ## 维护规则
 
-1. 修改 Core、Contracts、Generator、GoRouter Adapter 或生成器输出协议后，至少重跑默认 OHOS
+1. 修改 Core、Contracts、Generator、Managed Adapter 或生成器输出协议后，至少重跑默认 OHOS
    SDK 的完整命令集。
 2. 修改 Flutter Page、Adapter、生命周期或 Demo Host 后，补跑标准 Flutter 3.41.9 的
    `ccrouter_test` Flutter 测试；若涉及平台插件或平台目录，再执行对应平台构建。
-3. 升级 Dart、Flutter 或 GoRouter 后，记录版本、命令和失败阶段；不能只记录“能编译”。
+3. 升级 Dart、Flutter 或 Backend 后，记录版本、命令和失败阶段；不能只记录“能编译”。
 4. 新增 API 的性能变化先运行两个现有 scaling benchmark 和并发回收 benchmark，再决定是否
    调整实现或门禁阈值。

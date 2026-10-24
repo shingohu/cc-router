@@ -20,6 +20,68 @@ bool _has(List<Map<String, dynamic>> errors, String code) =>
 
 void main() {
   test(
+    'real LSP clears route placement and policy errors on unsaved repair',
+    () async {
+      const file = 'lib/src/routes.dart';
+      const source = '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+@CCRoute<void>(id: 'sample.home', pattern: CCPathPattern('/'),
+  placement: CCRoutePlacement(hostId: 'Bad Host', parentRouteId: 'sample.home'),
+  popGuards: ['dirty.check', 'dirty.check'])
+class Home {}
+''';
+      const codes = {
+        'ccrouter_route_placement_invalid',
+        'ccrouter_route_parent_self',
+        'ccrouter_route_policy_duplicate',
+      };
+      final server = await AnalysisServerSession.start({
+        file: source,
+      }, lsp: true);
+      addTearDown(server.close);
+      final uri = Uri.file(server.path(file)).toString();
+      server.notify('textDocument/didOpen', {
+        'textDocument': {
+          'uri': uri,
+          'languageId': 'dart',
+          'version': 1,
+          'text': source,
+        },
+      });
+      await server.waitFor(
+        file,
+        (errors) => codes.every((code) => _has(errors, code)),
+      );
+      final revision = server.revisions[server.path(file)]!;
+      server.notify('textDocument/didChange', {
+        'textDocument': {'uri': uri, 'version': 2},
+        'contentChanges': [
+          {
+            'text': source
+                .replaceFirst(
+                  "hostId: 'Bad Host', parentRouteId: 'sample.home'",
+                  "hostId: 'main'",
+                )
+                .replaceFirst("'dirty.check', 'dirty.check'", "'dirty.check'"),
+          },
+        ],
+      });
+      await server.waitFor(
+        file,
+        (errors) => codes.every((code) => !_has(errors, code)),
+        after: revision,
+      );
+      expect(
+        File(server.path(file)).readAsStringSync(),
+        source,
+        reason:
+            'The repair must be verified from the editor overlay, not a save.',
+      );
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test(
     'real LSP diagnoses component lifecycle and refreshes after Host role change',
     timeout: const Timeout(Duration(minutes: 2)),
     () async {

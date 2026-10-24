@@ -1,0 +1,71 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/20261023/repro.dart
+00:00 +0: initialization reentry cannot overwrite an accepted registration
+00:00 +0 -1: initialization reentry cannot overwrite an accepted registration [E]
+  Expected: <1>
+    Actual: <0>
+  accepted inner Adapter leaked
+  
+  package:matcher                                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18                   expect
+  packages/ccrouter_test/test/review_repros/20261023/repro.dart 125:5  main.<fn>
+  
+00:00 +0 -1: binding rollback cannot erase a replacement registration
+00:00 +0 -2: binding rollback cannot erase a replacement registration [E]
+  Expected: contains 'aux'
+    Actual: Set:['primary']
+     Which: does not contain 'aux'
+  replacement disposeCalls=0
+  
+  package:matcher                                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18                   expect
+  packages/ccrouter_test/test/review_repros/20261023/repro.dart 148:5  main.<fn>
+  
+00:00 +0 -2: synchronous detach during dispatch cannot commit a retired Entry
+00:00 +0 -3: synchronous detach during dispatch cannot commit a retired Entry [E]
+  Expected: empty
+    Actual: [Instance of 'CCRouteEntrySnapshot']
+  
+  package:matcher                                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18                   expect
+  packages/ccrouter_test/test/review_repros/20261023/repro.dart 190:7  main.<fn>
+  
+00:00 +0 -3: synchronous shutdown during dispatch cannot recreate an Entry
+00:00 +0 -4: synchronous shutdown during dispatch cannot recreate an Entry [E]
+  Expected: empty
+    Actual: [Instance of 'CCRouteEntrySnapshot']
+  
+  package:matcher                                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18                   expect
+  packages/ccrouter_test/test/review_repros/20261023/repro.dart 223:7  main.<fn>
+  
+00:00 +0 -4: unstarted Service method stays cancelled after caller
+00:00 +0 -5: unstarted Service method stays cancelled after caller [E]
+  Expected: <0>
+    Actual: <1>
+  business method started after cancellation; cancelledAtCall=true, outcome=1
+  
+  package:matcher                                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18                   expect
+  packages/ccrouter_test/test/review_repros/20261023/repro.dart 275:9  main.<fn>
+  
+00:00 +0 -5: unstarted Service method stays cancelled after session
+00:00 +0 -6: unstarted Service method stays cancelled after session [E]
+  Expected: <0>
+    Actual: <1>
+  business method started after cancellation; cancelledAtCall=true, outcome=1
+  
+  package:matcher                                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18                   expect
+  packages/ccrouter_test/test/review_repros/20261023/repro.dart 275:9  main.<fn>
+  
+00:00 +0 -6: unstarted Service method stays cancelled after shutdown
+00:00 +0 -7: unstarted Service method stays cancelled after shutdown [E]
+  Expected: <0>
+    Actual: <1>
+  business method started after cancellation; cancelledAtCall=true, outcome=1
+  
+  package:matcher                                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18                   expect
+  packages/ccrouter_test/test/review_repros/20261023/repro.dart 275:9  main.<fn>
+  
+00:00 +0 -7: Some tests failed.

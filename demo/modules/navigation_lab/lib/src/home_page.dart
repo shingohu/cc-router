@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:ccrouter/ccrouter.dart';
-import 'package:ccrouter_analytics/ccrouter_analytics.dart';
-import 'package:ccrouter_analytics_flutter/ccrouter_analytics_flutter.dart';
+import 'package:demo_analytics/demo_analytics.dart';
+import 'package:demo_analytics_flutter/demo_analytics_flutter.dart';
 import 'package:ccrouter_devtools/ccrouter_devtools.dart';
 import 'package:demo_order_contracts/demo_order_contracts.dart';
 import 'package:demo_web_contracts/demo_web_contracts.dart';
@@ -82,6 +82,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           .push<void>(
             DemoNavigationLabRoutes.defer(),
             source: const CCNavigationSource.feature('policies.defer'),
+            context: context,
           )
           .then((_) => _setStatus('Defer · 已完成'))
           .catchError((Object error) {
@@ -260,7 +261,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
   };
 
   Widget _page(String title, String subtitle, List<Widget> children) =>
-      CCAnalyticsScrollable(
+      AppAnalyticsScrollable(
         tracker: demoAnalyticsTracker,
         eventId: 'demo.ui.scroll.end',
         startEventId: 'demo.ui.scroll.start',
@@ -286,7 +287,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
         spacing: 12,
         runSpacing: 12,
         children: [
-          CCAnalyticsExposureTarget(
+          AppAnalyticsExposureTarget(
             tracker: demoAnalyticsTracker,
             eventId: 'demo.overview.components.exposure',
             minimumVisibleDuration: const Duration(milliseconds: 300),
@@ -337,6 +338,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           () => CCRouter.navigator.push<String>(
             OrderDetailRoute.intent(orderId: 100, tab: 'routing-lab'),
             source: const CCNavigationSource.feature('overview.order'),
+            context: context,
           ),
         ),
       ),
@@ -362,6 +364,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           '组件能力实验室',
           () => CCRouter.navigator.push<void>(
             DemoNavigationLabRoutes.capabilities(),
+            context: context,
           ),
         ),
       ),
@@ -371,8 +374,10 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
         subtitle: '抽象请求、授权/日志拦截、动态 Header 和 API 环境切换。',
         onTap: () => _run(
           'Network + Dio',
-          () =>
-              CCRouter.navigator.push<void>(DemoNavigationLabRoutes.network()),
+          () => CCRouter.navigator.push<void>(
+            DemoNavigationLabRoutes.network(),
+            context: context,
+          ),
         ),
       ),
       _ActionTile(
@@ -381,8 +386,10 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
         subtitle: '基本类型、JSON Map 与全局/游客/用户/环境/硬件命名空间。',
         onTap: () => _run(
           'KV Storage',
-          () =>
-              CCRouter.navigator.push<void>(DemoNavigationLabRoutes.storage()),
+          () => CCRouter.navigator.push<void>(
+            DemoNavigationLabRoutes.storage(),
+            context: context,
+          ),
         ),
       ),
     ]),
@@ -405,6 +412,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
               tags: const ['typed', 'query', 'result'],
             ),
             source: const CCNavigationSource.feature('navigation.typed'),
+            context: context,
           ),
         );
       },
@@ -418,11 +426,12 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
         () => CCRouter.navigator.open(
           Uri.parse('/lab/item/43?title=Path%20Alias&tags=alias&tags=dynamic'),
           source: const CCNavigationSource.feature('navigation.path_alias'),
+          context: context,
         ),
       ),
     ),
     _ActionTile(
-      icon: Icons.public,
+      icon: Icons.link,
       title: 'Open custom scheme',
       subtitle: '应用内 URI 导航，不会标记为 external origin。',
       onTap: () => _run(
@@ -430,6 +439,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
         () => CCRouter.navigator.open(
           Uri.parse('ccrouter://lab/detail/44?title=Custom%20Scheme&tags=uri'),
           source: const CCNavigationSource.deepLink('navigation.scheme_demo'),
+          context: context,
         ),
       ),
     ),
@@ -478,6 +488,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           Uri.parse(
             'https://ccrouter.example/lab/detail/45?title=Full%20URL&tags=https',
           ),
+          context: context,
         ),
       ),
     ),
@@ -508,6 +519,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
         'Stack workbench',
         () => CCRouter.navigator.push<String>(
           DemoNavigationLabRoutes.stack(level: 1, returnsResult: true),
+          context: context,
         ),
       ),
     ),
@@ -516,7 +528,10 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       title: '进入 ShellRoute',
       subtitle: '共享 Scaffold、单嵌套 Navigator、Shell 内详情与 Root 页面。',
       onTap: () => _run('ShellRoute', () async {
-        await CCRouter.navigator.go(DemoNavigationLabRoutes.shellFeed());
+        await CCRouter.navigator.go(
+          DemoNavigationLabRoutes.shellFeed(),
+          context: context,
+        );
         return null;
       }),
     ),
@@ -525,7 +540,10 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       title: '进入 StatefulShellRoute',
       subtitle: '三个持久 Outlet、独立历史和分支内 State。',
       onTap: () => _run('StatefulShellRoute', () async {
-        await CCRouter.navigator.go(DemoNavigationLabRoutes.workspaceHome());
+        await CCRouter.navigator.go(
+          DemoNavigationLabRoutes.workspaceHome(),
+          context: context,
+        );
         return null;
       }),
     ),
@@ -542,6 +560,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
               revision: 3,
             ),
           ),
+          context: context,
         ),
       ),
     ),
@@ -558,6 +577,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
             ),
           ),
           source: const CCNavigationSource.feature('navigation.public_web'),
+          context: context,
         ),
       ),
     ),
@@ -575,6 +595,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
             ),
           ),
           source: const CCNavigationSource.feature('navigation.private_web'),
+          context: context,
         ),
       ),
     ),
@@ -583,7 +604,10 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       title: 'Go 到栈页',
       subtitle: '验证声明式 location 替换；栈页可通过 Open / 回退恢复首页。',
       onTap: () => _run('Go', () async {
-        await CCRouter.navigator.go(DemoNavigationLabRoutes.stack(level: 10));
+        await CCRouter.navigator.go(
+          DemoNavigationLabRoutes.stack(level: 10),
+          context: context,
+        );
         return null;
       }),
     ),
@@ -594,9 +618,31 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       onTap: () => _run('Reset', () async {
         await CCRouter.navigator.reset(
           DemoNavigationLabRoutes.stack(level: 20),
+          context: context,
         );
         return null;
       }),
+    ),
+    _ActionTile(
+      icon: Icons.public,
+      title: 'Open Regex alias',
+      subtitle: '命名捕获 id 进入相同 typed Codec，不在 Backend 重匹配 Path。',
+      onTap: () => _run(
+        'Regex alias',
+        () => CCRouter.navigator.open(
+          Uri.parse('/lab/regex/46?title=Regex%20alias'),
+          context: context,
+        ),
+      ),
+    ),
+    _ActionTile(
+      icon: Icons.security_outlined,
+      title: '拒绝未公开的外部链接',
+      subtitle: '外部访问内部 stack 路由应失败，保留当前页面。',
+      onTap: () => _run(
+        'External denied',
+        () => CCDeepLinkIngress.fromPlatform(Uri.parse('/lab/stack/1')),
+      ),
     ),
   ]);
 
@@ -637,7 +683,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           subtitle: '打开系统 Dialog，验证不会新增 CCRouter page view。',
           onTap: () async {
             final before = demoAnalyticsSink.events
-                .where((event) => event.type == CCAnalyticsEventType.pageView)
+                .where((event) => event.type == AppAnalyticsEventType.pageView)
                 .length;
             await showDialog<void>(
               context: context,
@@ -653,7 +699,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
               ),
             );
             final after = demoAnalyticsSink.events
-                .where((event) => event.type == CCAnalyticsEventType.pageView)
+                .where((event) => event.type == AppAnalyticsEventType.pageView)
                 .length;
             demoNavigationLabStore.record(
               'Foreign Popup attribution · ${before == after ? 'isolated' : 'unexpected'}',
@@ -662,9 +708,22 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
         ),
         SwitchListTile(
           value: demoNavigationLabStore.blockDetailGlobally,
-          onChanged: demoNavigationLabStore.setBlockDetailGlobally,
+          onChanged: (value) {
+            demoNavigationLabStore.setBlockDetailGlobally(value);
+            observeDemoOperation(
+              'Active route revalidation',
+              CCRouter.revalidateActiveRoutes(
+                reason: 'detail_policy_changed',
+              ).then((report) {
+                demoNavigationLabStore.record(
+                  'Active route revalidation · '
+                  '${report.changed ? 'changed' : 'unchanged'}',
+                );
+              }),
+            );
+          },
           title: const Text('全局阻止 Detail Route'),
-          subtitle: const Text('打开后，任意 Detail 请求在 Adapter 前被取消。'),
+          subtitle: const Text('阻止新请求，并清理已经打开的 Detail Entry。'),
         ),
         _ActionTile(
           icon: Icons.verified_outlined,
@@ -674,6 +733,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
             'Proceed interceptor',
             () => CCRouter.navigator.push<void>(
               DemoNavigationLabRoutes.proceed(),
+              context: context,
             ),
           ),
         ),
@@ -683,8 +743,10 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           subtitle: '返回标准 CCRouteCancelledError，页面不会创建。',
           onTap: () => _run(
             'Cancel interceptor',
-            () =>
-                CCRouter.navigator.push<void>(DemoNavigationLabRoutes.cancel()),
+            () => CCRouter.navigator.push<void>(
+              DemoNavigationLabRoutes.cancel(),
+              context: context,
+            ),
           ),
         ),
         _ActionTile(
@@ -695,6 +757,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
             'Redirect interceptor',
             () => CCRouter.navigator.push<void>(
               DemoNavigationLabRoutes.redirectSource(),
+              context: context,
             ),
           ),
         ),
@@ -711,6 +774,20 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           onTap: _resumeDeferred,
         ),
         _ActionTile(
+          icon: Icons.cancel_outlined,
+          title: '取消第一个 Pending Navigation',
+          subtitle: '取消等待并释放参数；之后不能再次恢复。',
+          onTap: () {
+            final pending = CCRouter.pendingNavigations;
+            if (pending.isEmpty) {
+              _setStatus('当前没有 Pending Navigation');
+              return;
+            }
+            CCRouter.cancelPendingNavigation(pending.first.navigationId);
+            _setStatus('Pending Navigation 已取消');
+          },
+        ),
+        _ActionTile(
           icon: Icons.timer_off_outlined,
           title: 'Interceptor Timeout',
           subtitle: '180ms deadline 触发失败，异步任务需协作取消。',
@@ -718,6 +795,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
             'Timeout interceptor',
             () => CCRouter.navigator.push<void>(
               DemoNavigationLabRoutes.timeout(),
+              context: context,
             ),
           ),
         ),
@@ -731,6 +809,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
               'PopGuard route',
               () => CCRouter.navigator.push<void>(
                 DemoNavigationLabRoutes.guarded(),
+                context: context,
               ),
             );
           },
@@ -741,7 +820,10 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           subtitle: 'Failure Policy 将 resolution failure 恢复到安全兜底页。',
           onTap: () => _run(
             'Failure fallback',
-            () => CCRouter.navigator.open(Uri.parse('/lab/not-found')),
+            () => CCRouter.navigator.open(
+              Uri.parse('/lab/not-found'),
+              context: context,
+            ),
           ),
         ),
       ],
@@ -758,7 +840,10 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
         subtitle: '跨组件摘要、推荐、实例隔离与 Tab 保活',
         onTap: () => observeDemoOperation(
           'UI Fragment',
-          CCRouter.navigator.push<void>(DemoNavigationLabRoutes.uiFragments()),
+          CCRouter.navigator.push<void>(
+            DemoNavigationLabRoutes.uiFragments(),
+            context: context,
+          ),
         ),
       ),
       _ActionTile(
@@ -769,6 +854,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           'Fade Page',
           CCRouter.navigator.push<void>(
             DemoNavigationLabRoutes.presentationFade(),
+            context: context,
           ),
         ),
       ),
@@ -780,6 +866,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           'Scale Page',
           CCRouter.navigator.push<void>(
             DemoNavigationLabRoutes.presentationScale(),
+            context: context,
           ),
         ),
       ),
@@ -791,6 +878,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           'Cupertino PageRoute',
           CCRouter.navigator.push<void>(
             DemoNavigationLabRoutes.presentationCupertino(),
+            context: context,
           ),
         ),
       ),
@@ -802,6 +890,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           '全屏页面从底部滑入',
           CCRouter.navigator.push<void>(
             DemoNavigationLabRoutes.presentationBottomPage(),
+            context: context,
           ),
         ),
       ),
@@ -813,6 +902,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           '透明全屏海报页',
           CCRouter.navigator.push<void>(
             DemoNavigationLabRoutes.presentationTransparent(),
+            context: context,
           ),
         ),
       ),
@@ -824,6 +914,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           'Managed Dialog',
           () => CCRouter.navigator.push<String>(
             DemoNavigationLabRoutes.presentationDialog(),
+            context: context,
           ),
         ),
       ),
@@ -835,6 +926,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           'Managed BottomSheet',
           () => CCRouter.navigator.push<String>(
             DemoNavigationLabRoutes.presentationSheet(),
+            context: context,
           ),
         ),
       ),
@@ -932,13 +1024,17 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           subtitle: '同时使用 CCPageLifecycleMixin 与 CCPageLifecycleListener。',
           onTap: () => observeDemoOperation(
             '页面生命周期',
-            CCRouter.navigator.push<void>(DemoNavigationLabRoutes.lifecycle()),
+            CCRouter.navigator.push<void>(
+              DemoNavigationLabRoutes.lifecycle(),
+              context: context,
+            ),
           ),
         ),
         const SizedBox(height: 12),
         const Text(
-          'macOS 实机步骤：进入实验页 → 打开覆盖页 → 返回 → 切换到其他 App → '
-          '回到 Demo。诊断日志应依次出现 Hide/Show 与 Background/Foreground。',
+          'macOS 实机步骤：进入实验页 → 打开覆盖页 → 返回，验证 Hide/Show；'
+          '使用 Cmd+H 隐藏 Demo 后恢复，验证 Background/Foreground。'
+          '切换其他 App 只会进入 inactive。',
         ),
       ]);
 

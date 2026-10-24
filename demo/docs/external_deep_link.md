@@ -15,7 +15,7 @@ Source 只用于来源归因，是否外部由受控 Ingress 设置的 `CCNaviga
 
 外部来源和栈行为相互独立。三个 `CCDeepLinkIngress` 入口默认使用
 `CCDeepLinkOpenMode.push`，因此运行中打开链接会覆盖到当前页面上方，返回时仍可回到固定
-Root 或主 Tab。需要按 URI 重建 GoRouter 的声明式 Shell/Outlet location 时，宿主可以显式
+Root 或主 Tab。需要按 URI 重建当前 Managed Host 的声明式 Shell/Outlet location 时，宿主可以显式
 选择：
 
 ```dart
@@ -29,9 +29,10 @@ await CCDeepLinkIngress.fromPlatform(
 白名单、Route Deep Link Policy、参数 Codec 或拦截器。Demo 的平台桥保持默认 `push`，用于
 验证固定首页不会被外部链接清除。
 
-当目标位于另一个 `StatefulShellRoute` branch（例如外部链接要求切到另一个 Bottom Tab）
-时，应显式使用 `go`。GoRouter 的 `push` 可以打开 location，但 branch 切换本身不是一条
-可靠的可 Pop 页面历史，不能用它承诺“返回到原 Tab”。
+跨 Shell 或分支并不自动要求 `go`。原生 Managed 的 cross-Shell `push` 保留原 Shell 的分支栈
+与 Widget State，可在目标退出后返回；Host Tab 选择本身仍是分支激活策略，不自动新增 Push
+历史。需要保留访问前历史时用 `push`，需要用链接重建当前 Host location 时用 `go`，不要再
+沿用已移除 GoRouter Backend 的历史限制。跨 Shell 返回入口见导航实验室 Workspace 详情。
 
 Demo 在 `CCRouterHost.initialize` 中配置 `demoDeepLinkIngressPolicy`：只接受
 `ccrouter://lab/...`、`https://ccrouter.example/...`，并允许经过 Host mapper

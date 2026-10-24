@@ -6,8 +6,8 @@ resolution: workspace
 environment:
   sdk: ^3.11.5
 dependencies:
-  ccrouter_analytics: ^0.1.0
-  ccrouter_analytics_flutter: ^0.1.0
+  demo_analytics: ^0.1.0
+  demo_analytics_flutter: ^0.1.0
   ccrouter: ^0.1.0
   ccrouter_ui: ^0.1.0
   ccrouter_devtools: ^0.1.0

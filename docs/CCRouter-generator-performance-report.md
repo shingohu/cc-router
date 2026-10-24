@@ -262,8 +262,10 @@ per-Package manifest 与 reverse dependency closure 已作为保守 dirty set �
 fvm dart run packages/ccrouter_test/benchmark/performance_regression.dart
 ```
 
-它依次运行 Runtime scaling、并发导航、Service 生命周期、1000 轮 Runtime 重建、Analytics
-队列压力，并为每个子进程输出结构化 JSON。发布候选或生成器变更时追加完整混合能力生成：
+它依次运行 Runtime scaling、并发导航、Service 生命周期和 1000 轮 Runtime 重建，
+并为每个子进程输出结构化 JSON。2026-10-23 起 Analytics 队列压力改为应用侧独立入口
+`fvm dart run demo/modules/analytics/benchmark/analytics_dispatcher.dart`，不再属于框架基准集。
+下文历史 Analytics 数字保留为当时快照。发布候选或生成器变更时追加完整混合能力生成：
 
 ```bash
 fvm dart run packages/ccrouter_test/benchmark/performance_regression.dart --full

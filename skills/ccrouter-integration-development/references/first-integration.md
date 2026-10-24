@@ -12,7 +12,7 @@ Service、Command、Event、InitTask 或 UI Fragment。已经有业务工程时�
   实际可解析的发布来源。不要把框架 Workspace 的 `resolution: workspace` 抄入独立 App。
 - 本地 `pubspec_overrides.yaml` 可以覆盖配套框架包做受控联调；它不替代团队/CI 的固定来源。
   测试前查看实际 `.dart_tool/package_config.json`，确认没有混用不配套的 Generator/Runtime。
-- Host 直接依赖 `ccrouter`、`ccrouter_go_router`，开发依赖包含 `ccrouter_generator` 和 `build_runner`；
+- Host 直接依赖 `ccrouter`，通过 `CCManagedRouterApp` 或 Managed Backend 接入，开发依赖包含 `ccrouter_generator` 和 `build_runner`；
   参与生成的组件和 contracts 包按自身角色声明依赖。可选工具包按需添加。
 - 标准 Flutter app 的 `.metadata` 可表明 Host 角色。自定义 Flutter Host 可在 `ccrouter.yaml`
   显式声明 `host: { enabled: true }`；Workspace 聚合根不应冒充 Host。
@@ -20,6 +20,11 @@ Service、Command、Event、InitTask 或 UI Fragment。已经有业务工程时�
 已有 Workspace 仍使用自己的成员关系和 Pub 根；独立 App 使用自己的 Pub 解析与 lockfile。
 不要复制框架或另一个应用的 `.dart_tool`。首次验证可以使用本机已有的 Pub 下载缓存，但必须
 单独解析消费者依赖；这与证明 Hosted 或发布归档可用是不同的验收。
+
+新建组件时可用 `create component <name> <parent> --with-example`：脚手架已接入原生 Managed、
+生成的 Host Assembly 和 Example 自己的 `/` 首页。Workspace 同时登记组件和 Example；独立
+场景先在组件 Pub get、`ccrouter portable prepare .`，再在 Example Pub get、`ccrouter generate .`。
+组件变更后重新 prepare，工具链不匹配时对齐两边解析；不能让 Example 越权写入只读父组件。
 
 ## 2. 选择最窄的声明与依赖边界
 
@@ -66,8 +71,10 @@ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate .
 Workspace 可以从自己的根执行 `generate <实际-host>`；不要把聚合根当作参数。
 确认输出包括最终校验成功，而不只看 Builder 成功。
 
-Host 只传一个完整 Assembly。下列装配片段假定上一步已生成 Host，且 Contract 提供
-`DetailRoute.intent(itemId: ...)`：
+Host 只传一个完整 Assembly。下列装配片段假定上一步已生成 Host，已注册可解析的 `/` 首页，
+且 Contract 提供 `DetailRoute.intent(itemId: ...)`。若工程首页使用其它地址，修改
+`initialLocation` 为该实际地址；CCRouter 不会自动生成首页或把未知 `/` 映射到 Detail。
+平台启动链接仍遵循外部入口规则，不能为跑通示例而隐式关闭其校验：
 
 ```dart
 import 'package:ccrouter/ccrouter.dart';

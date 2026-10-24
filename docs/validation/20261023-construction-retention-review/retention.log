@@ -1,0 +1,54 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/runtime_round_trip/construction_retention.dart
+00:00 +0: ended Runtime is collectable with pending callback fromInvocation=false
+00:00 +1: ended Runtime is collectable with pending callback fromInvocation=true
+00:00 +1 -1: ended Runtime is collectable with pending callback fromInvocation=true [E]
+  Expected: false
+    Actual: <true>
+  Callback retains only its Zone; no application reference points at the disposed Runtime
+  
+  package:matcher                                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                                              expect
+  packages/ccrouter_test/test/review_repros/runtime_round_trip/construction_retention.dart 144:7  main.<fn>
+  
+00:00 +1 -1: closed Route payload is collectable with retained method Zone
+00:00 +2 -1: closed Route payload is collectable with retained factory Zone
+00:00 +2 -2: closed Route payload is collectable with retained factory Zone [E]
+  Expected: false
+    Actual: <true>
+  A framework construction Zone must not retain removed RouteEntry.request.arguments after Scope cleanup
+  
+  package:matcher                                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                                              expect
+  packages/ccrouter_test/test/review_repros/runtime_round_trip/construction_retention.dart 185:9  main.<fn>
+  
+00:00 +2 -2: closed Route payload is collectable with retained initializer Zone
+00:00 +2 -3: closed Route payload is collectable with retained initializer Zone [E]
+  Expected: false
+    Actual: <true>
+  A framework construction Zone must not retain removed RouteEntry.request.arguments after Scope cleanup
+  
+  package:matcher                                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                                              expect
+  packages/ccrouter_test/test/review_repros/runtime_round_trip/construction_retention.dart 185:9  main.<fn>
+  
+00:00 +2 -3: unrelated pending Future in factory cannot retain closed Route payload
+00:00 +2 -4: unrelated pending Future in factory cannot retain closed Route payload [E]
+  Expected: false
+    Actual: <true>
+  No application callback captured the route payload
+  
+  package:matcher                                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                                              expect
+  packages/ccrouter_test/test/review_repros/runtime_round_trip/construction_retention.dart 226:9  main.<fn>
+  
+00:00 +2 -4: unrelated pending Future in initializer cannot retain closed Route payload
+00:00 +2 -5: unrelated pending Future in initializer cannot retain closed Route payload [E]
+  Expected: false
+    Actual: <true>
+  No application callback captured the route payload
+  
+  package:matcher                                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                                              expect
+  packages/ccrouter_test/test/review_repros/runtime_round_trip/construction_retention.dart 226:9  main.<fn>
+  
+00:00 +2 -5: Some tests failed.

@@ -1,0 +1,13 @@
+[
+  {"name":"root defaults","arguments":"","codes":[]},
+  {"name":"explicit root","arguments":"placement: CCRoutePlacement.root(),","codes":[]},
+  {"name":"valid topology and ordered policies","arguments":"placement: CCRoutePlacement(hostId: 'main', navigatorOutlet: 'detail', shellId: 'app.shell', parentRouteId: 'sample.parent'), interceptors: ['auth.check', 'trace.v2'], popGuards: ['dirty.check'],","codes":[]},
+  {"name":"invalid host","arguments":"placement: CCRoutePlacement(hostId: 'Bad Host'),","codes":["ccrouter_route_placement_invalid"]},
+  {"name":"invalid outlet","arguments":"placement: CCRoutePlacement(navigatorOutlet: 'bad..outlet'),","codes":["ccrouter_route_placement_invalid"]},
+  {"name":"invalid shell","arguments":"placement: CCRoutePlacement(shellId: 'UPPER'),","codes":["ccrouter_route_placement_invalid"]},
+  {"name":"invalid parent","arguments":"placement: CCRoutePlacement(parentRouteId: 'parent/route'),","codes":["ccrouter_route_placement_invalid"]},
+  {"name":"self parent","arguments":"placement: CCRoutePlacement(parentRouteId: 'sample.home'),","codes":["ccrouter_route_parent_self"]},
+  {"name":"duplicate interceptor","arguments":"interceptors: ['auth.check', 'auth.check'],","codes":["ccrouter_route_policy_duplicate"]},
+  {"name":"duplicate guard","arguments":"popGuards: ['dirty.check', 'dirty.check'],","codes":["ccrouter_route_policy_duplicate"]},
+  {"name":"invalid policy","arguments":"interceptors: ['bad policy'],","codes":["ccrouter_route_policy_invalid"]}
+]

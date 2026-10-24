@@ -14,15 +14,26 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
   /// Terminal events are delivered by the bounded FIFO observer queue. The
   /// returned callback removes the listener and cancels its queued deliveries.
   /// Listener failures never alter the selected recovery or original error.
+  /// Cleanup is idempotent and never removes a later re-add of this callback.
+  /// Simultaneous duplicate adds still share one subscription.
   void Function() addNavigationFailureListener(
     CCNavigationFailureListener listener,
   ) {
     _ensureInitialized();
-    _navigationFailureListeners.add(listener);
-    return () => _navigationFailureListeners.remove(listener);
+    return _subscribeNavigationObserver(_navigationFailureListeners, listener);
   }
 
   /// Resolves, dispatches, and optionally recovers one target navigation.
+  ///
+  /// [validateRequest] may enforce an internal invariant on every final Adapter
+  /// request, including Interceptor redirects and Failure Policy recovery. Its
+  /// failure must occur before Adapter mutation.
+  /// [onEntryCommitted] observes the actual commit independently of the commit
+  /// strategy and remains active across valid Failure Policy recovery.
+  /// [coordinateConcurrency] may be disabled by identity-sensitive framework
+  /// reconciliation that must never share another request's result Future.
+  /// The initial concrete Host is retained for default-placement recovery,
+  /// including resolution failure before the first request can be built.
   Future<Object?> _executeNavigationWithFailurePolicy({
     required CCNavigationOperation operation,
     required CCNavigationOrigin origin,
@@ -32,10 +43,21 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
     CCRoutePlacement? placementOverride,
     required _PreparedRoute Function() prepare,
     required Future<Object?> Function(CCNavigationRequest request) action,
+    void Function(CCNavigationRequest request)? validateRequest,
     void Function(_RouteEntryRecord entry)? commitEntry,
+    void Function(_RouteEntryRecord entry)? onEntryCommitted,
     void Function(Object? result)? validateResult,
-  }) async {
+    bool coordinateConcurrency = true,
+    CCCancellationToken? requestCancellation,
+  }) => _withNavigationOwnership(() async {
     _ensureNavigationCanStart();
+    var navigationHostId = _resolveNavigationHostId(
+      placementOverride ?? const CCRoutePlacement.root(),
+    );
+    placementOverride = _navigationPlacementForHost(
+      placementOverride,
+      navigationHostId,
+    );
     final effectiveSource = _validatedNavigationSource(source);
     final navigationId = '$_runtimeId-navigation-${++_navigationSequence}';
     _beginNavigationObservation(navigationId);
@@ -44,7 +66,13 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
     var currentOpenMode = openMode;
     var currentRouteIdHint = routeIdHint;
     var currentPrepare = prepare;
-    var currentAction = action;
+    Future<Object?> validatedAction(CCNavigationRequest request) {
+      _ensureNavigationRequestAlive(requestCancellation);
+      validateRequest?.call(request);
+      return action(request);
+    }
+
+    var currentAction = validatedAction;
     var currentCommitEntry = commitEntry;
     var currentValidateResult = validateResult;
     var suppressRecoveryResult = false;
@@ -55,9 +83,19 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
     while (true) {
       _PreparedRoute? prepared;
       try {
+        _ensureNavigationRequestAlive(requestCancellation);
         final resolveClock = Stopwatch()..start();
         try {
           prepared = currentPrepare();
+          if (recoveryDepth == 0 && prepared.placement.hostId != 'default') {
+            navigationHostId = prepared.placement.hostId;
+            placementOverride = _navigationPlacementForHost(
+              placementOverride,
+              navigationHostId,
+            );
+          }
+          prepared = _bindPreparedNavigationHost(prepared, navigationHostId);
+          _bindNavigationHost(_resolveNavigationHostId(prepared.placement));
           attemptedRouteId = prepared.routeId;
           initialRouteId ??= prepared.routeId;
         } finally {
@@ -75,7 +113,10 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
                 placementOverride: placementOverride,
                 action: currentAction,
                 commitEntry: currentCommitEntry,
+                onEntryCommitted: onEntryCommitted,
                 validateResult: currentValidateResult,
+                coordinateConcurrency: coordinateConcurrency,
+                requestCancellation: requestCancellation,
                 onAttempt: (routeId) => attemptedRouteId = routeId,
                 onInterceptorRedirect: () {
                   failureAttempt =
@@ -92,7 +133,9 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
                 placementOverride: placementOverride,
                 action: currentAction,
                 commitEntry: currentCommitEntry,
+                onEntryCommitted: onEntryCommitted,
                 validateResult: currentValidateResult,
+                requestCancellation: requestCancellation,
                 onAttempt: (routeId) => attemptedRouteId = routeId,
                 onInterceptorRedirect: () {
                   failureAttempt =
@@ -101,6 +144,12 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
               ));
         return suppressRecoveryResult ? null : result;
       } catch (error, stackTrace) {
+        if (error is _RouteRevalidationRequestError) rethrow;
+        // A resolution failure still belongs to the invocation Host. Never
+        // acquire a new registration after cancellation of an existing one.
+        if (_navigationOperation?.hosts.isEmpty == true) {
+          _bindNavigationHost(navigationHostId);
+        }
         final resumedPending = _pendingResumeFailures.remove(navigationId);
         final context = CCNavigationFailureContext(
           navigationId: navigationId,
@@ -130,7 +179,10 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
           recoveryDepth: recoveryDepth,
         );
         final policy = navigationFailurePolicy;
-        if (policy == null || _disposed) {
+        if (policy == null ||
+            _disposed ||
+            _navigationOperation?.cancellation.isCancelled == true ||
+            requestCancellation?.isCancelled == true) {
           _emitNavigationFailure(context, recovered: false);
           if (prepared == null) _discardNavigationObservation(navigationId);
           rethrow;
@@ -139,10 +191,14 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
         try {
           decision = await _awaitNavigationDecision(
             () => policy.onFailure(context),
+            requestCancellation: requestCancellation,
           );
-          _ensureNavigationAlive();
+          _ensureNavigationRequestAlive(requestCancellation);
         } catch (policyError) {
-          if (policyError is CCRouteCancelledError && _disposed) {
+          if (policyError is CCRouteCancelledError &&
+              (_disposed ||
+                  _navigationOperation?.cancellation.isCancelled == true ||
+                  requestCancellation?.isCancelled == true)) {
             _emitNavigationFailure(
               CCNavigationFailureContext(
                 navigationId: context.navigationId,
@@ -204,13 +260,14 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
                 origin: origin,
                 placementOverride: placementOverride,
               );
-        currentAction = (request) =>
-            _requiredNavigationAdapter.navigate(request);
+        // Recovery retains the operation's acceptance contract as well as its
+        // identity fence; it must not fall back to an ambiguous legacy Future.
+        currentAction = validatedAction;
         currentCommitEntry = null;
         suppressRecoveryResult = decision is CCNavigationFailureFallback;
       }
     }
-  }
+  });
 
   /// Removes malformed caller attribution before any observable request data.
   ///
@@ -384,10 +441,9 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
       }
       _navigationFailures.add(event);
     }
-    _enqueueNavigationObserverBatch(
+    _enqueueRegisteredNavigationObserverBatch(
       _navigationFailureListeners,
       (listener) => listener(event),
-      isActive: _navigationFailureListeners.contains,
       failureLabel: 'Navigation failure listener',
       critical: true,
     );

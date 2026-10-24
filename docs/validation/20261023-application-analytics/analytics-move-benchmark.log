@@ -1,0 +1,1 @@
+{"scenario":"analytics-dispatcher-pressure","events":1000,"capacity":64,"enqueueUsP50":1,"enqueueUsP95":1,"acceptedEvents":1000,"droppedEvents":936,"peakQueueDepth":64,"pendingEventsAfterClose":0,"initialRssBytes":191889408,"finalRssBytes":192217088,"rssDeltaBytes":327680,"rssObservation":"trend-only; compare the same SDK, platform, and process conditions"}

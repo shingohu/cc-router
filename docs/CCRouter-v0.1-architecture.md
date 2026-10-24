@@ -3,6 +3,7 @@
 ## 文档状态
 
 - 版本：v0.1 Draft
+- 定位：历史架构基线，保留旧 API 和阶段取舍；当前接入以根 README / Integration Skill 为准
 - 框架名称：`CCRouter`
 - 目标平台：Flutter 应用（Android、iOS，后续可扩展 Web、桌面）
 - 公开 API：统一使用 `CCRouter` 静态 API
@@ -10,6 +11,13 @@
 - 工程分发决策：Git Monorepo + Pub Workspace + 私有 Hosted Pub
 
 本文档描述 CCRouter 的架构边界、核心语义和 v0.1 的验收范围。代码示例用于表达契约，不表示 v0.1 已经完成全部实现。
+
+当前能力及后续变更见[状态矩阵](README.md)，源码回归与平台快照见[验证索引](validation/README.md)。
+不要将本文的旧接入示例、销毁时机或发布目标当成现行 API 承诺。
+
+2026-10-23：当前后端为原生 Managed；下文 GoRouter 示例属于历史设计。
+访客/应用 Session 身份、恢复需求采集及布局策略已迁到应用，当前边界见
+[职责收口记录](validation/20261023-framework-boundaries/README.md)。
 
 路由子系统的详细契约、生成模型和实现阶段见 [CCRouter 路由子系统设计](CCRouter-route-design.md)。
 
@@ -188,23 +196,22 @@ ccrouter                 Flutter 业务门面、CCNavigator、CCRouterApp 和默
 ccrouter_contracts       纯 Dart 契约、错误、Codec 接口和基础类型
 ccrouter_core            Runtime、Registry、Scope、Dispatcher、Trace
 ccrouter_generator       Dart build_runner 代码生成器
-ccrouter_go_router       默认 go_router 导航适配器
 ccrouter_test             测试 Runtime、Override、TestHost 和断言工具
-ccrouter_analytics        供应商中立的分析事件与有界分发
-ccrouter_analytics_flutter       可选的显式 UI 采集目标
 ccrouter_devtools         可选的嵌入式只读诊断面板
 ccrouter_devtools_protocol 纯 Dart、版本化的 Catalog/Runtime Snapshot 协议
 ccrouter_analyzer_plugin  可选的 Analysis Server 边界诊断
 devtools/ccrouter_extension 官方 Flutter/Dart DevTools 只读 Extension
 demo/modules/analytics_firebase 应用层 Firebase callback 映射示例
+demo/modules/analytics 应用侧事件、策略、分发与导航观察桥示例（非框架）
+demo/modules/analytics_flutter 应用侧滚动、曝光与上下文 Widget 示例（非框架）
 ```
 
 注解声明位于 `ccrouter_contracts`；`ccrouter_core` 保持 Pure Dart，Flutter 相关类型只出现在
-`ccrouter`、`ccrouter_go_router`、`ccrouter_analytics_flutter` 和业务组件页面中。只读诊断由可选的
+`ccrouter`、`ccrouter_ui` 和应用组件页面/Widget 中。只读诊断由可选的
 `ccrouter_devtools`、`ccrouter_devtools_protocol` 和官方 `devtools/ccrouter_extension` 提供；
 这些工具只作为开发/内部诊断依赖，不进入业务组件的默认依赖图。
 
-供应商 SDK Adapter、业务事件命名、账号身份、Consent、上传和持久化策略属于应用层，默认放在
+产品埋点模型、PV/停留口径、滚动/曝光、发送队列、供应商 SDK Adapter、业务事件命名、账号身份、Consent、上传和持久化策略属于应用层，默认放在
 应用自身或 `demo/modules/*`，不能仅因可复用就进入 `packages/*`。
 
 这些是源码和依赖治理边界，不要求每个边界都成为业务方手工配置的依赖。v0.1 中，出现在公开传递依赖图里的 Package 必须可以独立发布；仅供开发或测试使用的 Package 可以标记为开发工具包。
@@ -668,13 +675,16 @@ Session，再打开新 Session。已解析的旧 Service 实例永久失效；�
 ### 9.2 Route Service
 
 Route Service 绑定一次具体 `CCRouteEntry`，不是绑定 Widget 或 `BuildContext` 生命周期。
-路由永久移出导航栈时，Route Scope 才销毁。自动 Flutter Host 为 Managed Page 注入不可变
+原生 Managed 普通 Pop 保留 Route Scope 到退出渲染结束，精确 close 及时释放；renderer 卸载
+本身保留逻辑 Entry/Scope，shutdown 不等待下一帧。自动 Flutter Host 为 Managed Page 注入不可变
 Navigation ID，页面使用 `CCRouter.routeService<T>(context)` 读取精确绑定；它不会按当前可见页
-或栈顶猜测。初始位置、Foreign Route 和未完成 Host binding 的手写 Route 不具备 Route Scope。
+或栈顶猜测。Managed 启动初始页同样有 Route Scope；Foreign Route、本地 Outlet base surface
+和未完成 Host binding 的手写 Route 不创建自己的 Managed Scope。完整现行语义见
+[Service 生命周期设计](CCRouter-service-lifecycle-design.md)。
 
-手写 GoRouter builder 必须用 `CCRouterHostBinding.decodeRouteExtra` 恢复业务 Extra，并用
+历史 GoRouter 接入中，手写 builder 使用 `CCRouterHostBinding.decodeRouteExtra` 恢复业务 Extra，并用
 `CCRouterHostBinding.bindRouteEntry` 包裹页面；自动 Assembler 已完成这两步。Core 解析和
-生命周期测试仍只依赖 Navigation ID，不依赖 Flutter。
+生命周期测试仍只依赖 Navigation ID，不依赖 Flutter。该 Backend 已移除，不再是当前接入步骤。
 
 ### 9.3 销毁协议
 
@@ -704,8 +714,8 @@ abstract interface class CCDisposable {
 - Pattern 负责匹配页面；`CCRouteEntry` 负责一次导航实例的生命周期和返回值。
 - Deep Link 外部性由 `CCRouterApp`、平台 Adapter 或受控 Host 入口写入的内部 Origin 决定，不根据 URL 形态或业务埋点 Source 推断；重定向必须继承原始 Origin。
 - Core、Intent 和 Definition 不依赖 Flutter、`BuildContext` 或 `go_router`。
-- 默认提供 Managed Router Backend（`RouterDelegate + Navigator.pages`），同时保留 GoRouter
-  Adapter 作为兼容路径；两者消费同一份中立 Definition。
+- 默认提供 Managed Router Backend（`RouterDelegate + Navigator.pages`），消费中立 Definition；
+  2026-10-23 已移除 GoRouter 兼容 Adapter，自定义 Backend 仍通过 Host SPI 扩展。
 - 路由展示契约区分普通 Page、模态 BottomSheet 与 Dialog；Page 和 Dialog 分别声明平台默认、Material 或 Cupertino Route 类型。
 - 完整设计见 [CCRouter 路由子系统设计](CCRouter-route-design.md)。
 
@@ -765,7 +775,10 @@ Deep Link Policy，之后才通过 Adapter 的 `go` 进入目标 Shell 分支。
 
 小屏列表、大屏左列表右详情属于自适应主从布局（Master-Detail/List-Detail），应使用同一组类型安全的列表/详情 Route Contract。小屏采用单列 Navigator 栈，大屏采用显式 List Outlet 与 Detail Outlet；只有在两个区域需要独立导航历史时才由 Shell 承载两个 Navigator。底部 Tab 等多个长期并行分支才使用 `StatefulShellRoute`，不能把所有主从布局都建模为 Stateful Shell。
 
-路由目的地必须与设备形态解耦。`CCRoutePlacement` 负责显式声明 parent、Shell、Navigator Outlet 和 route kind；后续再以 Window Size Class（compact/medium/expanded）、折痕与铰链等 Display Feature、Fold Posture、多 Host、Adaptive Presentation Policy 和状态恢复标识描述呈现条件。相同 Route Contract 根据可用布局空间选择单列、双栏、多 Pane、Dialog、Bottom Sheet 或全屏呈现。导航状态应按 Navigation Host 隔离，而不是只依赖进程级单例栈。第一阶段实现 Host 尺寸自适应、主从双 Outlet、Modal 自适应和旋转/调整大小状态保持；原生多窗口等待 Flutter 平台能力稳定后通过 Window/Flutter View 到 Root Host 的桥接接入。
+路由目的地必须与设备形态解耦。`CCRoutePlacement` 显式声明 parent、Shell 和 Navigator Outlet。
+Window Size Class、折痕、铰链、断点和单/双栏选择由应用负责；Host 将决定后的可见集合交给
+`CCMultiHostNavigationAdapter.setActiveOutlets`。框架按 Host 隔离导航栈，保留隐藏 Outlet 的
+Entry identity、结果和 Scope。原生多窗口的 Window/Flutter View 生命周期仍需平台桥接。
 
 复杂对象默认不直接塞进 URL。需要传递内存对象时可使用 `extra`，但必须标记 `localOnly`，不可用于 Deep Link、跨 Isolate 或状态恢复。
 
@@ -1217,10 +1230,11 @@ Android/iOS SDK、权限和 MethodChannel/Pigeon 应通过显式 Service 或 Com
 v0.1 提供机器可读诊断接口、可选的嵌入式只读 DevTools 面板和官方只读 DevTools Extension：
 
 `navigationDiagnosticCapacity` 分别限制每一种 Runtime 导航诊断历史，包括
-Lifecycle、Failure、Visibility、Route Entry、Backend Event、Restoration Opportunity
+Lifecycle、Failure、Visibility、Route Entry、Backend Event
 以及已移除 Backend Entry 的历史。它不是导航栈容量，也不是全部诊断记录共享的总容量。
 设为 `0` 只关闭历史快照留存，不影响实时 Listener、活跃 RouteEntry、Backend Entry
 或正常导航行为。
+恢复需求证据由应用独立收集，不计入 Runtime 诊断历史。
 
 ```dart
 CCRouter.diagnostics.recentTraces();

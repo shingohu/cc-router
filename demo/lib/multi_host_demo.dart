@@ -1,48 +1,69 @@
 import 'dart:async';
+
+import 'adaptive_layout.dart';
 import 'dart:math' as math;
 
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
 import 'package:ccrouter_demo/ccrouter_demo.dart';
 import 'package:ccrouter_demo/demo_managed_router_backend.dart';
+import 'package:demo_navigation_lab/demo_navigation_lab.dart';
 import 'package:demo_navigation_lab/demo_navigation_lab_host.dart';
 import 'package:flutter/material.dart';
 
 import 'platform_deep_link_bridge.dart';
 import 'demo_initialization.dart';
+import 'host_lifecycle_lab.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  final lifecyclePolicy = DemoHostLifecyclePolicy();
   CCRouterHost.initialize(
     hostAssembly: ccrouterGeneratedHostAssembly,
     deepLinkIngressPolicy: demoDeepLinkIngressPolicy,
+    globalInterceptors: [
+      CCGlobalNavigationInterceptor(
+        id: 'demo.hostLifecycle',
+        interceptor: lifecyclePolicy,
+      ),
+    ],
+    routeRevalidationPolicies: const [
+      CCGlobalRouteRevalidationPolicy(
+        id: DemoHostIds.routeRevalidationPolicy,
+        policy: DemoRouteRevalidationPolicy(),
+      ),
+    ],
   );
-  runApp(createMultiHostDemoApp());
+  runApp(createMultiHostDemoApp(lifecyclePolicy: lifecyclePolicy));
 }
 
-Widget createMultiHostDemoApp() => withDemoInitializationActions(
-  _MultiHostDemoApp(
-    backend: CCManagedMultiHostBackend.managed(
-      defaultHostId: _primaryHostId,
-      hostFactories: {
-        _primaryHostId: (configuration) => createDemoManagedRouterBackend(
-          catalog: configuration.catalog,
-          hostId: configuration.hostId,
+Widget createMultiHostDemoApp({DemoHostLifecyclePolicy? lifecyclePolicy}) =>
+    withDemoInitializationActions(
+      _MultiHostDemoApp(
+        lifecyclePolicy: lifecyclePolicy,
+        backend: CCManagedMultiHostBackend.managed(
+          defaultHostId: _primaryHostId,
+          hostFactories: {
+            _primaryHostId: (configuration) => createDemoManagedRouterBackend(
+              catalog: configuration.catalog,
+              hostId: configuration.hostId,
+            ),
+            _secondaryHostId: (configuration) => createDemoManagedRouterBackend(
+              catalog: configuration.catalog,
+              hostId: configuration.hostId,
+            ),
+          },
         ),
-        _secondaryHostId: (configuration) => createDemoManagedRouterBackend(
-          catalog: configuration.catalog,
-          hostId: configuration.hostId,
-        ),
-      },
-    ),
-  ),
-);
+      ),
+    );
 
 const _primaryHostId = 'host.primary';
 const _secondaryHostId = 'host.secondary';
 
 final class _MultiHostDemoApp extends StatelessWidget {
-  const _MultiHostDemoApp({required this.backend});
+  const _MultiHostDemoApp({required this.backend, this.lifecyclePolicy});
+
+  final DemoHostLifecyclePolicy? lifecyclePolicy;
 
   final CCManagedMultiHostBackend backend;
 
@@ -56,13 +77,18 @@ final class _MultiHostDemoApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF00695C)),
         useMaterial3: true,
       ),
-      home: _MultiHostWorkspace(backend: backend),
+      home: _MultiHostWorkspace(
+        backend: backend,
+        lifecyclePolicy: lifecyclePolicy,
+      ),
     ),
   );
 }
 
 final class _MultiHostWorkspace extends StatefulWidget {
-  const _MultiHostWorkspace({required this.backend});
+  const _MultiHostWorkspace({required this.backend, this.lifecyclePolicy});
+
+  final DemoHostLifecyclePolicy? lifecyclePolicy;
 
   final CCManagedMultiHostBackend backend;
 
@@ -114,17 +140,23 @@ final class _MultiHostWorkspaceState extends State<_MultiHostWorkspace> {
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
           child: SegmentedButton<_HostLabMode>(
-            segments: const [
-              ButtonSegment(
+            segments: [
+              const ButtonSegment(
                 value: _HostLabMode.isolation,
                 icon: Icon(Icons.call_split_outlined),
                 label: Text('Host 隔离'),
               ),
-              ButtonSegment(
+              const ButtonSegment(
                 value: _HostLabMode.adaptive,
                 icon: Icon(Icons.view_sidebar_outlined),
                 label: Text('自适应布局'),
               ),
+              if (widget.lifecyclePolicy != null)
+                const ButtonSegment(
+                  value: _HostLabMode.lifecycle,
+                  icon: Icon(Icons.restart_alt),
+                  label: Text('Host 生命周期'),
+                ),
             ],
             selected: {_mode},
             onSelectionChanged: _selectMode,
@@ -132,9 +164,13 @@ final class _MultiHostWorkspaceState extends State<_MultiHostWorkspace> {
         ),
         Expanded(
           child: switch (_mode) {
+            _HostLabMode.lifecycle => DemoHostLifecycleLab(
+              aggregate: widget.backend,
+              policy: widget.lifecyclePolicy!,
+            ),
             _HostLabMode.isolation => _buildIsolationView(),
             _HostLabMode.adaptive => _AdaptiveHostView(
-              host: widget.backend.hostFor(_primaryHostId),
+              backend: widget.backend.backendFor(_primaryHostId),
               registry: widget.backend.adapter,
             ),
           },
@@ -198,12 +234,14 @@ final class _MultiHostWorkspaceState extends State<_MultiHostWorkspace> {
   );
 }
 
-enum _HostLabMode { isolation, adaptive }
+enum _HostLabMode { isolation, adaptive, lifecycle }
 
 final class _AdaptiveHostView extends StatefulWidget {
-  const _AdaptiveHostView({required this.host, required this.registry});
+  const _AdaptiveHostView({required this.backend, required this.registry});
 
-  final CCNavigationHost host;
+  final CCManagedRouterBackend backend;
+
+  CCNavigationHost get host => backend.host;
   final CCMultiHostNavigationAdapter registry;
 
   @override
@@ -211,7 +249,7 @@ final class _AdaptiveHostView extends StatefulWidget {
 }
 
 final class _AdaptiveHostViewState extends State<_AdaptiveHostView> {
-  static final _outletPolicy = CCAdaptiveOutletPolicy(
+  static final _outletPolicy = DemoAdaptiveOutletPolicy(
     primaryOutlet: demoAdaptiveListOutlet,
     secondaryOutlet: demoAdaptiveDetailOutlet,
   );
@@ -220,11 +258,11 @@ final class _AdaptiveHostViewState extends State<_AdaptiveHostView> {
   bool _showCompactDetail = false;
   int _selectedItem = 1;
   String? _lastMetricsSignature;
-  CCHostLayoutMetrics? _pendingMetrics;
-  CCAdaptiveHostLayoutSnapshot? _layout;
+  DemoHostLayoutMetrics? _pendingMetrics;
+  DemoAdaptiveHostLayoutSnapshot? _layout;
   bool _layoutUpdateScheduled = false;
 
-  void _scheduleLayoutUpdate(CCHostLayoutMetrics metrics) {
+  void _scheduleLayoutUpdate(DemoHostLayoutMetrics metrics) {
     final signature = <Object>[
       metrics.hostId,
       metrics.width.round(),
@@ -241,16 +279,22 @@ final class _AdaptiveHostViewState extends State<_AdaptiveHostView> {
       if (!mounted) return;
       final pending = _pendingMetrics;
       if (pending == null) return;
-      final layout = widget.registry.updateHostLayout(
-        pending,
-        layoutPolicy: CCAdaptiveLayoutPolicy(
-          compact: pending.hasSeparatingFeature
-              ? CCAdaptiveLayoutKind.splitPane
-              : CCAdaptiveLayoutKind.singlePane,
-          medium: CCAdaptiveLayoutKind.splitPane,
-          expanded: CCAdaptiveLayoutKind.splitPane,
-        ),
-        outletPolicy: _outletPolicy,
+      final kind = DemoAdaptiveLayoutPolicy(
+        compact: pending.hasSeparatingFeature
+            ? DemoAdaptiveLayoutKind.splitPane
+            : DemoAdaptiveLayoutKind.singlePane,
+        medium: DemoAdaptiveLayoutKind.splitPane,
+        expanded: DemoAdaptiveLayoutKind.splitPane,
+      ).select(pending);
+      final activeOutlets = _outletPolicy.activeOutletsFor(kind);
+      widget.registry.setActiveOutlets(
+        hostId: pending.hostId,
+        outlets: activeOutlets,
+      );
+      final layout = DemoAdaptiveHostLayoutSnapshot(
+        metrics: pending,
+        layout: kind,
+        activeOutlets: activeOutlets,
       );
       if (mounted) setState(() => _layout = layout);
     });
@@ -276,10 +320,10 @@ final class _AdaptiveHostViewState extends State<_AdaptiveHostView> {
       final width = constraints.maxWidth;
       final height = constraints.maxHeight;
       final features = _simulateHinge
-          ? <CCDisplayFeature>[
-              CCDisplayFeature(
-                type: CCDisplayFeatureType.hinge,
-                bounds: CCLayoutRect(
+          ? <DemoDisplayFeature>[
+              DemoDisplayFeature(
+                type: DemoDisplayFeatureType.hinge,
+                bounds: DemoLayoutRect(
                   left: width / 2 - 6,
                   top: 0,
                   width: 12,
@@ -288,8 +332,8 @@ final class _AdaptiveHostViewState extends State<_AdaptiveHostView> {
                 separating: true,
               ),
             ]
-          : const <CCDisplayFeature>[];
-      final metrics = CCHostLayoutMetrics(
+          : const <DemoDisplayFeature>[];
+      final metrics = DemoHostLayoutMetrics(
         hostId: widget.host.id,
         width: width,
         height: height,
@@ -297,8 +341,8 @@ final class _AdaptiveHostViewState extends State<_AdaptiveHostView> {
       );
       _scheduleLayoutUpdate(metrics);
       final split =
-          _layout?.layout == CCAdaptiveLayoutKind.splitPane ||
-          metrics.sizeClass != CCHostSizeClass.compact ||
+          _layout?.layout == DemoAdaptiveLayoutKind.splitPane ||
+          metrics.sizeClass != DemoHostSizeClass.compact ||
           metrics.hasSeparatingFeature;
       final orientation = width >= height ? '横向' : '纵向';
       final activeOutlets = split
@@ -361,12 +405,10 @@ final class _AdaptiveHostViewState extends State<_AdaptiveHostView> {
                           child: Row(
                             children: [
                               Expanded(
-                                child: _AdaptiveOutletNavigator(
-                                  navigatorKey: widget.host.navigatorKeyFor(
-                                    demoAdaptiveListOutlet,
-                                  ),
-                                  pageKey: 'adaptive-list',
-                                  child: _AdaptiveListPane(
+                                child: CCManagedOutlet(
+                                  backend: widget.backend,
+                                  outlet: demoAdaptiveListOutlet,
+                                  baseBuilder: (_) => _AdaptiveListPane(
                                     selectedItem: _selectedItem,
                                     onSelected: (item) =>
                                         _selectItem(item, compact: false),
@@ -384,14 +426,11 @@ final class _AdaptiveHostViewState extends State<_AdaptiveHostView> {
                               else
                                 const VerticalDivider(width: 1),
                               Expanded(
-                                child: _AdaptiveOutletNavigator(
-                                  navigatorKey: widget.host.navigatorKeyFor(
-                                    demoAdaptiveDetailOutlet,
-                                  ),
-                                  pageKey: 'adaptive-detail',
-                                  child: _AdaptiveDetailPane(
-                                    item: _selectedItem,
-                                  ),
+                                child: CCManagedOutlet(
+                                  backend: widget.backend,
+                                  outlet: demoAdaptiveDetailOutlet,
+                                  baseBuilder: (_) =>
+                                      _AdaptiveDetailPane(item: _selectedItem),
                                 ),
                               ),
                             ],
@@ -400,12 +439,10 @@ final class _AdaptiveHostViewState extends State<_AdaptiveHostView> {
                       );
                     },
                   )
-                : _AdaptiveOutletNavigator(
-                    navigatorKey: widget.host.navigatorKeyFor(
-                      demoAdaptiveListOutlet,
-                    ),
-                    pageKey: 'adaptive-compact',
-                    child: _showCompactDetail
+                : CCManagedOutlet(
+                    backend: widget.backend,
+                    outlet: demoAdaptiveListOutlet,
+                    baseBuilder: (_) => _showCompactDetail
                         ? _AdaptiveDetailPane(
                             item: _selectedItem,
                             outletName: demoAdaptiveListOutlet,
@@ -422,25 +459,6 @@ final class _AdaptiveHostViewState extends State<_AdaptiveHostView> {
         ],
       );
     },
-  );
-}
-
-final class _AdaptiveOutletNavigator extends StatelessWidget {
-  const _AdaptiveOutletNavigator({
-    required this.navigatorKey,
-    required this.pageKey,
-    required this.child,
-  });
-
-  final GlobalKey<NavigatorState> navigatorKey;
-  final String pageKey;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) => Navigator(
-    key: navigatorKey,
-    pages: [MaterialPage<void>(key: ValueKey(pageKey), child: child)],
-    onDidRemovePage: (_) {},
   );
 }
 
@@ -540,6 +558,26 @@ final class _AdaptiveDetailPane extends StatelessWidget {
                   Text(
                     'Item $item',
                     style: Theme.of(context).textTheme.headlineSmall,
+                  ),
+                  const SizedBox(height: 16),
+                  FilledButton(
+                    onPressed: () => unawaited(
+                      CCRouter.navigator
+                          .push(
+                            demoStackIntent(level: item, returnsResult: true),
+                            context: context,
+                          )
+                          .then<void>(
+                            (result) => demoNavigationLabStore.record(
+                              'Adaptive typed result · $result',
+                            ),
+                            onError: (Object error) =>
+                                demoNavigationLabStore.record(
+                                  'Adaptive typed push · ${error.runtimeType}',
+                                ),
+                          ),
+                    ),
+                    child: const Text('在此 Outlet 打开栈页'),
                   ),
                 ],
               ),

@@ -2,8 +2,8 @@
 
 ## 1. 状态与目标
 
-- 日期：2026-10-04。
-- 状态：已核对当前约束及代码边界；**实施待确认，尚未选择目标 SDK、升级依赖或修改生产实现**。
+- 基线盘点日期：2026-10-04；2026-10-24 按 Managed-only 架构修订后续步骤。
+- 状态：升级候选计划；本次文档修订不选择目标 SDK、不升级依赖，也不证明旧版本矩阵在当前源码通过。
 - 范围：框架适配、生成正确性、IDE 插件、CLI/Hook、DevTools、平台验证及文档同步。
 - 本文管理升级工作；[SDK 兼容性验证](CCRouter-sdk-compatibility.md) 保存实际运行矩阵；
   [正式发布门禁](CCRouter-release-readiness.md) 仍是唯一发布清单。
@@ -12,17 +12,18 @@ Flutter 升级、提高 Package 最低 Dart/Flutter 版本、升级第三方依�
 Flutter 应使用它自带的 Dart；Pure Dart 包可以另测独立 Dart SDK，但不能以它替换 Flutter
 内部 Dart 后宣称 Flutter 兼容。框架不自动要求所有用户跟随维护者的开发 SDK 升级。
 
-## 2. 当前基线与风险
+## 2. 2026-10-04 基线快照与风险
 
-以下为本次源码/lockfile 核对；默认 SDK 额外执行了 `fvm flutter --version --machine`。
-没有查询官方最新发布版本，也没有重新执行历史表中所有标准 Flutter SDK。
+以下版本值保留 2026-10-04 的源码/lockfile 盘点；当时额外执行了
+`fvm flutter --version --machine`。未查询官方最新版本，也未在本次收口中重新解析或复验
+表中组合。启动升级时必须重新核对当前源码与 lockfile。GoRouter 已退役，不再是升级对象。
 
-| 层 | 声明约束 / 当前解析值 | 升级时的含义 |
+| 层 | 当时声明约束 / 解析值 | 升级时的含义 |
 | --- | --- | --- |
 | 当前本机默认 | OHOS Flutter `3.41.10-ohos-1.0.0`，Dart `3.11.5`，DevTools `2.54.1` | 仅表示本次运行环境，不是框架最低支持版本 |
 | 框架 Package、独立插件、Extension | Dart `^3.10.0` | 声明允许不等于该下限已在当前提交完整验证；需独立最低版本消费者 |
 | Demo | Dart `^3.11.5` | 整个 Workspace 不能用来证明 Dart 3.10 下限 |
-| GoRouter Adapter | `go_router: ^17.5.0`，lock 为 `17.5.0` | 依赖本身要求 Dart `^3.10.0`、Flutter `>=3.38.0`；这不是 CCRouter 所有功能在 Flutter 3.38 已验证的承诺 |
+| GoRouter Adapter（历史） | 当时 `go_router: ^17.5.0`，lock 为 `17.5.0` | 兼容包和依赖现已移除；其历史 SDK 下限不再代表当前依赖约束 |
 | Generator | `analyzer: ^10.0.0` → `10.0.1`；`build: ^4.0.0` → `4.0.7`；`source_gen: ^4.0.0` → `4.2.4`；`dart_style: ^3.1.7` → `3.1.7` | AST/Element API、常量求值、语法支持、格式输出需要组合验证 |
 | Workspace 构建工具 | `build_runner: ^2.10.0` → `2.15.1`；`build_test 3.5.16`；`meta 1.17.0` | Flutter SDK 的依赖 pin 会限制可解析组合，不能只看各包最新版 |
 | IDE 插件及 loader | `analyzer 8.4.0`、`analyzer_plugin 0.13.10` | 独立依赖图，不在 Workspace 内；与 Generator Analyzer 无须同版本 |
@@ -60,7 +61,7 @@ pin 冲突。该记录不是永久版本结论；目标 SDK 确定后重新解�
 | 方案 | 优点 | 风险 / 成本 |
 | --- | --- | --- |
 | 仅切换 Flutter，保留依赖锁 | 最小变量，容易归因 | 可能无法解析，或编译通过但运行/IDE/生成语义发生变化 |
-| Flutter、GoRouter、Analyzer、build_runner 全部升到最新 | 一次获得新版能力 | 变更面大、冲突难定位、难以回滚，不推荐 |
+| Flutter、Analyzer、build_runner 等全部升到最新 | 一次获得新版能力 | 变更面大、冲突难定位、难以回滚，不推荐 |
 | SDK 兼容验证与工具链升级分阶段 | 能定位问题、保留旧组合参考、按收益决定依赖升级 | 需要独立工作区和多阶段回归，推荐 |
 
 默认先验证新 SDK 与现有依赖；必须调整的依赖作为最小兼容组合升级。可选的性能升级
@@ -78,10 +79,10 @@ pin 冲突。该记录不是永久版本结论；目标 SDK 确定后重新解�
 | 生成缓存与分发 | SDK/tool identity、热命中、失效、旧产物删除、失败恢复、只读 Git/Pub、团队 clone | `bin/src/build_plan.dart`、`portable_generation_state.dart`、CLI 快速路径；必要的证明变更应版本化，保留完整参考路径 |
 | Analyzer 插件 | SDK Server 协议、AST API、新语法、声明身份、overlay/磁盘刷新、诊断清除、Quick Fix 坐标、多个分析根和进程退出 | `packages/ccrouter_analyzer_plugin` 及独立测试；普通 Analyzer 和 `generate --check` 仍是插件不可用时的门禁，不静默屏蔽错误 |
 | 插件 bootstrap / CLI | 插件自身、loader、CLI 模板、Demo bootstrap 是否匹配；全局 CLI snapshot 是否可在目标 SDK 重建 | 插件和 `tools/analyzer_plugin` pubspec、`bin/src/analyzer_installation.dart`、Demo `tools`；固定来源安装 smoke 后才能更新 Demo ref，不使用浮动 main |
-| Flutter Route/Host | Page/Route Factory、默认平台动画、Cupertino 返回、PopScope/Guard、系统返回、typed result、生命周期、Foreign Popup、Host/Outlet 隔离 | `ccrouter/lib/src/flutter_route_factory.dart`、生命周期/Host 与 `ccrouter_go_router/lib/src`；重点防止“能编译但侧滑或返回保护失效” |
-| GoRouter | 当前版本是否支持目标 Flutter、匹配/重定向/refresh、Shell/StatefulShell、observer 与 pop/replace 行为 | 按真实 breaking change 调整 Adapter/Assembler；不假定 GoRouter major 必须随 Flutter major/minor 同步 |
-| App 封装 | `MaterialApp.router` 属性、locale/theme/快捷键等转发、Router ownership 和 dispose 顺序 | `ccrouter_go_router/lib/src/app.dart`；只补真实接入需求，不盲目复制新 SDK 所有参数 |
-| Analytics / DevTools | 手势/滚动监听、Consent、Foreign Popup 归因、VM Service、Extension 宿主协议及 Web 构建 | 框架保持 provider-neutral；Firebase、Network、KV Storage 的插件升级归 Demo/应用，不迁入框架 |
+| Flutter Route/Host | Page/Route Factory、默认平台动画、Cupertino 返回、PopScope/Guard、系统返回、typed result、生命周期、Foreign Popup、Host/Outlet 隔离 | `ccrouter/lib/src/flutter_route_factory.dart`、生命周期/Host 与 `ccrouter/lib/src/managed_router.dart`；重点防止“能编译但侧滑或返回保护失效” |
+| Managed Stack 与 Host | Shell/StatefulShell、父栈重建、Host/Outlet 定位、重复 Host 注册、renderer 重挂、系统返回与精确 close | 检查 `ccrouter` Managed 实现及 Core 协调；不恢复 GoRouter 依赖或以其旧测试代替原生回归 |
+| App 封装 | `MaterialApp.router` 属性、locale/theme/快捷键等转发、Router ownership 和 dispose 顺序 | `ccrouter/lib/src/managed_router_app.dart`；只补真实接入需求，不盲目复制新 SDK 所有参数 |
+| DevTools / 应用示例 | 框架 VM Service、Extension 宿主协议及 Web 构建；应用示例另测手势/滚动、Consent 与 Popup 归因 | Analytics、Firebase、Network、KV Storage 的业务或插件升级归 Demo/应用，不迁入框架或算作框架能力 |
 | SDK Pub Hook | wrapper 参数解析、pub 成功后生成、run/build 前置、release/`--machine`、退出码、耗时、非 Host 跳过、递归防护 | `bin/src/pub_hook.dart` 及临时 SDK 夹具；不得为了升级修改 Flutter 内部 tool snapshot |
 | 生命周期与性能 | pending Future、取消/超时、Scope/Host/Sink/Server 清理、RSS/Heap、冷/热生成及 UI 导航延迟 | 同机同输入 A/B；Flutter/Analyzer 自身缓存增长与框架对象残留分别归因，不能吞错或弱化校验换速度 |
 
@@ -107,8 +108,9 @@ SDK 修订完全匹配。优先使用新 SDK 目录做验证；如必须原地�
 4. **U3：独立 Analyzer 与装配迁移。** 插件和 loader/CLI 模板同步，跑独立 analyze/test，包含
    Legacy/LSP 真 Server、Quick Fix、watcher、独立多根冷启动及退出清理。通过固定来源安装、
    upgrade/失败恢复后，再安排 Demo 远端 ref；没有发布/推送授权时停留在本地可审查结果。
-5. **U4：Flutter/GoRouter 与可选工具验证。** 保留旧 GoRouter 优先测试，再按需升级；补必要
-   Adapter/Host 修复。验证 Hook 临时夹具与实际选定 SDK；标准 Flutter 构建 DevTools Extension，
+5. **U4：Flutter/Managed 与可选工具验证。** 保留旧 SDK 的 Managed 结果作为对照，使用目标
+   SDK 验证原生 Stack、Host/Outlet、返回与 Scope；按真实失败补必要修复。验证 Hook 临时夹具
+   与实际选定 SDK；标准 Flutter 构建 DevTools Extension，
    确认协议、连接/断连及重新初始化行为。不以 OHOS SDK 结果代替标准 Flutter 或反之。
 6. **U5：最低消费者、平台与性能门禁。** 最低 SDK 的独立消费者覆盖所承诺的 Runtime、
    Generator、插件能力；Demo 用自身要求的 SDK。跑 Android/iOS/macOS/Web/OHOS 中实际承诺
@@ -119,7 +121,8 @@ SDK 修订完全匹配。优先使用新 SDK 目录做验证；如必须原地�
    Integration/CLI Skill、安装模板、Demo 与发布门禁。若只是内部修复且接入不变，不做无关
    API/文档改名。最终用干净消费者复验；CI 变更不在本计划默认执行范围内。
 
-U1–U5 的测试补充或修复不是本轮已完成项。本次只完成 U0 所需的当前基线盘点，目标选择仍待确认。
+U1–U5 的升级验证不是本次文档收口的完成项。U0 中的旧盘点须在确定升级目标时刷新；
+现有源码回归及真实平台证据分别见[验证索引](validation/README.md)，不能当作目标 SDK 的验证。
 
 ## 6. 执行与证据约定
 

@@ -1,0 +1,29 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart
+packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart:622:37: Error: The argument type 'Intent' can't be assigned to the parameter type 'CCRouteIntent<Object>'.
+ - 'Intent' is from 'packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart'.
+ - 'CCRouteIntent' is from 'package:ccrouter_contracts/src/route.dart' ('packages/ccrouter_contracts/lib/src/route.dart').
+ - 'Object' is from 'dart:core'.
+            runtime.pushRoute(const fixture.Intent()),
+                                    ^
+packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart:635:37: Error: The argument type 'Intent' can't be assigned to the parameter type 'CCRouteIntent<Object>'.
+ - 'Intent' is from 'packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart'.
+ - 'CCRouteIntent' is from 'package:ccrouter_contracts/src/route.dart' ('packages/ccrouter_contracts/lib/src/route.dart').
+ - 'Object' is from 'dart:core'.
+            runtime.pushRoute(const fixture.Intent()),
+                                    ^
+00:00 +0 -1: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart [E]
+  Failed to load "/Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart":
+  Compilation failed for testPath=/Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart: packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart:622:37: Error: The argument type 'Intent' can't be assigned to the parameter type 'CCRouteIntent<Object>'.
+   - 'Intent' is from 'packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart'.
+   - 'CCRouteIntent' is from 'package:ccrouter_contracts/src/route.dart' ('packages/ccrouter_contracts/lib/src/route.dart').
+   - 'Object' is from 'dart:core'.
+              runtime.pushRoute(const fixture.Intent()),
+                                      ^
+  packages/ccrouter_test/test/independent_waiter_host_identity_regression_test.dart:635:37: Error: The argument type 'Intent' can't be assigned to the parameter type 'CCRouteIntent<Object>'.
+   - 'Intent' is from 'packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart'.
+   - 'CCRouteIntent' is from 'package:ccrouter_contracts/src/route.dart' ('packages/ccrouter_contracts/lib/src/route.dart').
+   - 'Object' is from 'dart:core'.
+              runtime.pushRoute(const fixture.Intent()),
+                                      ^
+  .
+00:00 +0 -1: Some tests failed.

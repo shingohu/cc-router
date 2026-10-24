@@ -175,7 +175,10 @@ final class CCRouteResultTypeError extends CCRouterError {
     : super('Route "$routeId" returned an incompatible result type.');
 }
 
-/// Indicates that a navigation interceptor intentionally stopped a request.
+/// Indicates policy cancellation or termination of a navigation's owner.
+///
+/// `host_detached` ends uncommitted work for a removed Host registration and
+/// cannot be recovered into a later registration with the same logical ID.
 final class CCRouteCancelledError extends CCRouterError {
   /// Creates a cancellation error with a stable non-sensitive [code].
   const CCRouteCancelledError(this.code) : super('Navigation was cancelled.');
@@ -215,6 +218,32 @@ final class CCNavigationInterceptorTimeoutError extends CCRouterError {
 
   /// Stable interceptor identity used for diagnostics.
   final String interceptorId;
+}
+
+/// Indicates that an active-route revalidation policy failed unexpectedly.
+///
+/// The original error object and message are omitted so authentication,
+/// permission, or feature-policy state cannot leak into diagnostics.
+final class CCRouteRevalidationPolicyError extends CCRouterError {
+  /// Creates a sanitized policy failure.
+  const CCRouteRevalidationPolicyError(this.policyId, this.causeType)
+    : super('Route revalidation policy "$policyId" failed as $causeType.');
+
+  /// Stable Host registration identity.
+  final String policyId;
+
+  /// Runtime type of the isolated failure without its arbitrary message.
+  final String causeType;
+}
+
+/// Indicates that an active-route policy exceeded its per-Entry deadline.
+final class CCRouteRevalidationPolicyTimeoutError extends CCRouterError {
+  /// Creates a timeout error for [policyId].
+  const CCRouteRevalidationPolicyTimeoutError(this.policyId)
+    : super('Route revalidation policy "$policyId" timed out.');
+
+  /// Stable Host registration identity.
+  final String policyId;
 }
 
 /// Indicates that a managed route Pop was rejected by a Pop guard.

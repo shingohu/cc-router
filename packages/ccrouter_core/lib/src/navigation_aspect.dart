@@ -2,16 +2,13 @@ part of 'runtime.dart';
 
 /// Mutable timing and attribution retained for one observed navigation.
 final class _CCNavigationAspectRecord {
-  /// Starts timing with the optional anonymous Host context already captured.
-  _CCNavigationAspectRecord({required this.telemetryContext}) {
+  /// Starts monotonic timing for one navigation.
+  _CCNavigationAspectRecord() {
     clock.start();
   }
 
   /// Monotonic clock covering the complete observed navigation lifetime.
   final Stopwatch clock = Stopwatch();
-
-  /// Anonymous analytics identity captured at navigation start.
-  final CCNavigationTelemetryContext? telemetryContext;
 
   /// Route identities visited through redirects and failure recovery.
   final List<String> routeChain = [];
@@ -67,9 +64,7 @@ extension CCRouterRuntimeNavigationAspects on CCRouterRuntime {
         _navigationAspectRecords.containsKey(navigationId)) {
       return;
     }
-    _navigationAspectRecords[navigationId] = _CCNavigationAspectRecord(
-      telemetryContext: _snapshotTelemetryContext(),
-    );
+    _navigationAspectRecords[navigationId] = _CCNavigationAspectRecord();
   }
 
   /// Adds one synchronous route-resolution duration to an observation.
@@ -101,9 +96,7 @@ extension CCRouterRuntimeNavigationAspects on CCRouterRuntime {
     if (!_hasNavigationAspects) return;
     final record = _navigationAspectRecords.putIfAbsent(
       request.navigationId,
-      () => _CCNavigationAspectRecord(
-        telemetryContext: _snapshotTelemetryContext(),
-      ),
+      () => _CCNavigationAspectRecord(),
     );
     record.referrerRouteId ??= _aspectReferrerRouteId(request);
     if (record.routeChain.isEmpty ||
@@ -236,7 +229,6 @@ extension CCRouterRuntimeNavigationAspects on CCRouterRuntime {
       openMode: request.openMode,
       source: request.source,
       presentation: request.presentation,
-      telemetryContext: record?.telemetryContext,
     );
   }
 
@@ -284,41 +276,6 @@ extension CCRouterRuntimeNavigationAspects on CCRouterRuntime {
       }
     }
     return hostFallback?.request.routeId;
-  }
-
-  /// Snapshots and validates Host telemetry while isolating provider failures.
-  CCNavigationTelemetryContext? _snapshotTelemetryContext() {
-    final provider = telemetryContextProvider;
-    if (provider == null) return null;
-    try {
-      return _validatedTelemetryContext(
-        _runNavigationDecisionCallback(provider.currentContext),
-      );
-    } catch (error) {
-      _recordNavigationCallbackFailure(
-        'Navigation telemetry context failed: ${error.runtimeType}.',
-      );
-      return null;
-    }
-  }
-
-  /// Rejects malformed anonymous identifiers without failing navigation.
-  CCNavigationTelemetryContext? _validatedTelemetryContext(
-    CCNavigationTelemetryContext? context,
-  ) {
-    if (context == null) return null;
-    final visitor = context.anonymousVisitorId;
-    final session = context.applicationSessionId;
-    final validVisitor = _isAnonymousTelemetryIdentifier(visitor);
-    final validSession =
-        session == null || _isAnonymousTelemetryIdentifier(session);
-    if (!validVisitor || !validSession) {
-      _recordNavigationCallbackFailure(
-        'Navigation telemetry context contained an invalid anonymous ID.',
-      );
-      return null;
-    }
-    return context;
   }
 
   /// Releases one record after both navigation and Entry lifecycles finish.

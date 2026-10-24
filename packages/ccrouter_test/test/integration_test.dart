@@ -1,9 +1,6 @@
-// ignore_for_file: deprecated_member_use
-
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
-import 'package:ccrouter_core/ccrouter_core.dart';
-import 'package:ccrouter_go_router/ccrouter_go_router.dart';
+import 'support/managed_test_home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -119,49 +116,55 @@ final class _OrdersRegistrar implements CCComponentRegistrar {
   }
 }
 
-final class _RecordingNavigationAdapter
-    implements CCNavigationAdapter, CCNavigationBackendEventSource {
-  _RecordingNavigationAdapter(this.delegate);
+CCRouteDefinition<_OrderArguments, String> _simpleDefinition() =>
+    CCRouteDefinition(
+      routeId: 'orders.detail',
+      patterns: [const CCPathPattern('/orders/:id', primary: true)],
+      codec: const _OrderCodec(),
+    );
 
-  final CCNavigationAdapter delegate;
-  final List<CCNavigationRequest> requests = [];
+Iterable<CCRouteEntrySnapshot> get _orders => CCRouter.activeRouteEntries.where(
+  (entry) => entry.routeId == 'orders.detail',
+);
 
-  @override
-  void initialize(
-    List<CCNavigationRoute> routes, {
-    List<CCNavigationShell> shells = const [],
-  }) => delegate.initialize(routes, shells: shells);
-
-  @override
-  void Function() addBackendEventListener(
-    CCNavigationBackendEventListener listener,
-  ) {
-    final source = delegate;
-    if (source is CCNavigationBackendEventSource) {
-      return (source as CCNavigationBackendEventSource).addBackendEventListener(
-        listener,
-      );
-    }
-    return () {};
-  }
-
-  @override
-  Future<Object?> navigate(CCNavigationRequest request) {
-    requests.add(request);
-    return delegate.navigate(request);
-  }
-
-  @override
-  Future<bool> maybePop({Object? result}) => delegate.maybePop(result: result);
-
-  @override
-  void pop({Object? result}) => delegate.pop(result: result);
-
-  @override
-  bool canPop() => delegate.canPop();
-
-  @override
-  void dispose() => delegate.dispose();
+Future<CCManagedRouterBackend> _mountOrders(
+  WidgetTester tester, {
+  required Widget Function(CCRouteCodecValues) builder,
+  CCComponentRegistrar registrar = const _SimpleOrdersRegistrar(),
+  CCNavigationHost? host,
+}) async {
+  CCRouterHost.initialize(
+    hostAssembly: CCHostAssembly.fromComponents(
+      components: [
+        CCComponentManifest(
+          id: 'orders',
+          version: '1.0.0',
+          registrar: WithTestHome(registrar),
+        ),
+      ],
+    ),
+  );
+  final backend = CCManagedRouterBackend(
+    host: host,
+    routeCatalog: CCFlutterRouteCatalog(
+      [
+        testHomeDestination(),
+        CCFlutterRouteDestination.fromDefinition(
+          definition: _simpleDefinition(),
+          builder: builder,
+        ),
+      ],
+      componentVersions: const {'orders': '1.0.0'},
+    ),
+  );
+  await tester.pumpWidget(
+    CCRouterApp.managed(
+      backend: backend,
+      child: MaterialApp.router(routerConfig: backend.routerConfig),
+    ),
+  );
+  await tester.pumpAndSettle();
+  return backend;
 }
 
 void main() {
@@ -171,69 +174,25 @@ void main() {
     'foreign routes and local history never remove a managed Route Entry',
     (tester) async {
       final host = CCNavigationHost(id: 'window.main');
-      final observer = CCGoRouterNavigationObserver(
-        hostId: host.id,
-        outlet: 'root',
-      );
       final scaffoldKey = GlobalKey<ScaffoldState>();
-      final detailRoute = GoRoute(
-        path: '/orders/:id',
-        builder: (_, state) => Scaffold(
+      await _mountOrders(
+        tester,
+        host: host,
+        builder: (values) => Scaffold(
           key: scaffoldKey,
           body: Text(
-            'order:${state.pathParameters['id']}',
+            'order:${values.path['id']}',
             key: const ValueKey('managed-order'),
           ),
         ),
       );
-      final router = GoRouter(
-        navigatorKey: host.navigatorKey,
-        initialLocation: '/',
-        observers: [observer],
-        routes: [
-          GoRoute(path: '/', builder: (_, _) => const Text('home')),
-          detailRoute,
-        ],
-      );
-      final adapter = CCGoRouterAdapter(
-        router: router,
-        host: host,
-        observers: [observer],
-        bindings: [
-          CCGoRouterRouteBinding(
-            routeId: 'orders.detail',
-            goRoute: detailRoute,
-          ),
-        ],
-      );
-      final runtime = CCRouterRuntime.forTesting(
-        navigationAdapter: adapter,
-        components: const [
-          CCComponentManifest(
-            id: 'orders',
-            version: '1.0.0',
-            registrar: _SimpleOrdersRegistrar(),
-          ),
-        ],
-      );
-      addTearDown(runtime.dispose);
-      addTearDown(router.dispose);
 
-      runtime.initialize();
-      await tester.pumpWidget(
-        CCRouterApp(
-          host: host,
-          child: MaterialApp.router(routerConfig: router),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      final managedResult = runtime.pushRoute<String>(
+      final managedResult = CCRouter.navigator.push<String>(
         const _OrderIntent<String>(_OrderArguments('42')),
       );
       await tester.pumpAndSettle();
-      final managedEntryId = runtime.activeRouteEntries.single.routeEntryId;
-      final managedBackendEntries = runtime.activeBackendEntries.where(
+      final managedEntryId = _orders.single.routeEntryId;
+      final managedBackendEntries = CCRouter.activeBackendEntries.where(
         (entry) => entry.owner == CCBackendEntryOwner.managed,
       );
       expect(managedBackendEntries, isNotEmpty);
@@ -241,7 +200,7 @@ void main() {
         managedBackendEntries.every((entry) => entry.hostId == host.id),
         isTrue,
       );
-      final managedPushEvent = runtime.recentBackendNavigationEvents.lastWhere(
+      final managedPushEvent = CCRouter.recentBackendNavigationEvents.lastWhere(
         (event) => event.routeId == 'orders.detail',
       );
       expect(managedPushEvent.hostId, host.id);
@@ -253,9 +212,9 @@ void main() {
       void expectManagedEntryAlive({
         CCRouteEntryLifecycleState state = CCRouteEntryLifecycleState.visible,
       }) {
-        expect(runtime.activeRouteEntries, hasLength(1));
-        expect(runtime.activeRouteEntries.single.routeEntryId, managedEntryId);
-        expect(runtime.activeRouteEntries.single.lifecycleState, state);
+        expect(_orders, hasLength(1));
+        expect(_orders.single.routeEntryId, managedEntryId);
+        expect(_orders.single.lifecycleState, state);
       }
 
       final dialog = showDialog<void>(
@@ -298,7 +257,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expectManagedEntryAlive();
-      final localHistoryPop = await runtime.maybePopOutcomeRoute();
+      final localHistoryPop = await CCRouter.navigator.maybePopOutcome();
       expect(localHistoryPop.handled, isTrue);
       expect(localHistoryPop.removedEntryOwner, CCPopRemovedEntryOwner.none);
       await tester.pumpAndSettle();
@@ -329,7 +288,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expectManagedEntryAlive(state: CCRouteEntryLifecycleState.hidden);
-      runtime.popRoute();
+      CCRouter.navigator.pop();
       await tester.pumpAndSettle();
       await secondForeignRoute;
       expectManagedEntryAlive();
@@ -337,9 +296,9 @@ void main() {
       Navigator.of(managedContext).pop<String>('managed-result');
       await tester.pumpAndSettle();
       expect(await managedResult, 'managed-result');
-      expect(runtime.activeRouteEntries, isEmpty);
+      expect(_orders, isEmpty);
       expect(
-        runtime.recentBackendNavigationEvents.where(
+        CCRouter.recentBackendNavigationEvents.where(
           (event) => event.routeId == null,
         ),
         isNotEmpty,
@@ -350,82 +309,44 @@ void main() {
   testWidgets(
     'a rejected Pop keeps the managed Route Entry and pending result alive',
     (tester) async {
-      final observer = CCGoRouterNavigationObserver(outlet: 'root');
       final allowPop = ValueNotifier(false);
-      final detailRoute = GoRoute(
-        path: '/orders/:id',
-        builder: (_, state) => ValueListenableBuilder<bool>(
+      addTearDown(allowPop.dispose);
+      await _mountOrders(
+        tester,
+        builder: (values) => ValueListenableBuilder<bool>(
           valueListenable: allowPop,
-          builder: (_, canPop, _) => PopScope<void>(
+          builder: (_, canPop, _) => PopScope<String>(
             canPop: canPop,
             child: Text(
-              'order:${state.pathParameters['id']}',
+              'order:${values.path['id']}',
               key: const ValueKey('guarded-order'),
             ),
           ),
         ),
       );
-      final router = GoRouter(
-        initialLocation: '/',
-        observers: [observer],
-        routes: [
-          GoRoute(path: '/', builder: (_, _) => const Text('home')),
-          detailRoute,
-        ],
-      );
-      final adapter = CCGoRouterAdapter(
-        router: router,
-        observers: [observer],
-        bindings: [
-          CCGoRouterRouteBinding(
-            routeId: 'orders.detail',
-            goRoute: detailRoute,
-          ),
-        ],
-      );
-      final runtime = CCRouterRuntime.forTesting(
-        navigationAdapter: adapter,
-        components: const [
-          CCComponentManifest(
-            id: 'orders',
-            version: '1.0.0',
-            registrar: _SimpleOrdersRegistrar(),
-          ),
-        ],
-      );
-      addTearDown(allowPop.dispose);
-      addTearDown(runtime.dispose);
-      addTearDown(router.dispose);
 
-      runtime.initialize();
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
-      await tester.pumpAndSettle();
-
-      final managedResult = runtime.pushRoute<String>(
+      final managedResult = CCRouter.navigator.push<String>(
         const _OrderIntent<String>(_OrderArguments('guarded')),
       );
       await tester.pumpAndSettle();
-      final managedEntryId = runtime.activeRouteEntries.single.routeEntryId;
+      final managedEntryId = _orders.single.routeEntryId;
       expect(find.byKey(const ValueKey('guarded-order')), findsOneWidget);
 
-      final declined = await runtime.maybePopOutcomeRoute<String>(
+      final declined = await CCRouter.navigator.maybePopOutcome<String>(
         result: 'rejected',
       );
       // PopScope consumes the request even though it refuses to remove the
       // route. Ownership and result availability carry the rejection detail.
       expect(declined.handled, isTrue);
       expect(declined.removedEntryOwner, CCPopRemovedEntryOwner.none);
-      expect(runtime.activeRouteEntries, hasLength(1));
-      expect(runtime.activeRouteEntries.single.routeEntryId, managedEntryId);
-      expect(
-        runtime.activeRouteEntries.single.lifecycleState,
-        CCRouteEntryLifecycleState.visible,
-      );
+      expect(_orders, hasLength(1));
+      expect(_orders.single.routeEntryId, managedEntryId);
+      expect(_orders.single.lifecycleState, CCRouteEntryLifecycleState.visible);
       expect(find.byKey(const ValueKey('guarded-order')), findsOneWidget);
 
       allowPop.value = true;
       await tester.pump();
-      final accepted = await runtime.maybePopOutcomeRoute<String>(
+      final accepted = await CCRouter.navigator.maybePopOutcome<String>(
         result: 'accepted',
       );
       await tester.pumpAndSettle();
@@ -433,61 +354,26 @@ void main() {
       expect(accepted.removedEntryOwner, CCPopRemovedEntryOwner.managed);
       expect(accepted.removedEntryOwner, CCPopRemovedEntryOwner.managed);
       expect(await managedResult, 'accepted');
-      expect(runtime.activeRouteEntries, isEmpty);
+      expect(_orders, isEmpty);
     },
   );
 
   testWidgets('an external system Pop closes a managed go route entry', (
     tester,
   ) async {
-    final observer = CCGoRouterNavigationObserver(outlet: 'root');
-    final detailRoute = GoRoute(
-      path: ':id',
-      builder: (_, state) => Text(
-        'order:${state.pathParameters['id']}',
+    await _mountOrders(
+      tester,
+      builder: (values) => Text(
+        'order:${values.path['id']}',
         key: const ValueKey('go-managed-order'),
       ),
     );
-    final ordersRoute = GoRoute(
-      path: '/orders',
-      builder: (_, _) => const Text('orders-parent'),
-      routes: [detailRoute],
+    await CCRouter.navigator.go(
+      const _OrderIntent<void>(_OrderArguments('42')),
     );
-    final router = GoRouter(
-      initialLocation: '/',
-      observers: [observer],
-      routes: [
-        GoRoute(path: '/', builder: (_, _) => const Text('home')),
-        ordersRoute,
-      ],
-    );
-    final adapter = CCGoRouterAdapter(
-      router: router,
-      observers: [observer],
-      bindings: [
-        CCGoRouterRouteBinding(routeId: 'orders.detail', goRoute: detailRoute),
-      ],
-    );
-    final runtime = CCRouterRuntime.forTesting(
-      navigationAdapter: adapter,
-      components: const [
-        CCComponentManifest(
-          id: 'orders',
-          version: '1.0.0',
-          registrar: _SimpleOrdersRegistrar(),
-        ),
-      ],
-    );
-    addTearDown(runtime.dispose);
-    addTearDown(router.dispose);
-
-    runtime.initialize();
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
-    await tester.pumpAndSettle();
-    await runtime.goRoute(const _OrderIntent<void>(_OrderArguments('42')));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('go-managed-order')), findsOneWidget);
-    expect(runtime.activeRouteEntries, hasLength(1));
+    expect(_orders, hasLength(1));
 
     final context = tester.element(
       find.byKey(const ValueKey('go-managed-order')),
@@ -496,59 +382,25 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const ValueKey('go-managed-order')), findsNothing);
-    expect(runtime.activeRouteEntries, isEmpty);
+    expect(_orders, isEmpty);
   });
 
   testWidgets(
-    'GoRouter system back evaluates the Runtime PopGuard before removal',
+    'Managed system back evaluates the Runtime PopGuard before removal',
     (tester) async {
-      final observer = CCGoRouterNavigationObserver(outlet: 'root');
       final allowPop = ValueNotifier(false);
       final triggers = <CCPopTrigger>[];
-      final detailRoute = GoRoute(
-        path: '/orders/:id',
-        builder: (_, state) => Text(
-          'order:${state.pathParameters['id']}',
+      addTearDown(allowPop.dispose);
+      final backend = await _mountOrders(
+        tester,
+        registrar: _GuardedOrdersRegistrar(allowPop, triggers),
+        builder: (values) => Text(
+          'order:${values.path['id']}',
           key: const ValueKey('system-guarded-order'),
         ),
       );
-      final router = GoRouter(
-        initialLocation: '/',
-        observers: [observer],
-        routes: [
-          GoRoute(path: '/', builder: (_, _) => const Text('home')),
-          detailRoute,
-        ],
-      );
-      final adapter = CCGoRouterAdapter(
-        router: router,
-        observers: [observer],
-        bindings: [
-          CCGoRouterRouteBinding(
-            routeId: 'orders.detail',
-            goRoute: detailRoute,
-          ),
-        ],
-      );
-      final runtime = CCRouterRuntime.forTesting(
-        navigationAdapter: adapter,
-        components: [
-          CCComponentManifest(
-            id: 'orders',
-            version: '1.0.0',
-            registrar: _GuardedOrdersRegistrar(allowPop, triggers),
-          ),
-        ],
-      );
-      addTearDown(allowPop.dispose);
-      addTearDown(runtime.dispose);
-      addTearDown(router.dispose);
 
-      runtime.initialize();
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
-      await tester.pumpAndSettle();
-
-      final result = runtime.pushRoute<String>(
+      final result = CCRouter.navigator.push<String>(
         const _OrderIntent<String>(_OrderArguments('system-guard')),
       );
       await tester.pumpAndSettle();
@@ -557,23 +409,23 @@ void main() {
         findsOneWidget,
       );
 
-      final denied = await router.routerDelegate.popRoute();
+      final denied = await backend.routerConfig.routerDelegate.popRoute();
       await tester.pumpAndSettle();
       expect(denied, isTrue);
       expect(triggers, [CCPopTrigger.system]);
-      expect(runtime.activeRouteEntries, hasLength(1));
+      expect(_orders, hasLength(1));
       expect(
         find.byKey(const ValueKey('system-guarded-order')),
         findsOneWidget,
       );
 
       allowPop.value = true;
-      final accepted = await router.routerDelegate.popRoute();
+      final accepted = await backend.routerConfig.routerDelegate.popRoute();
       await tester.pumpAndSettle();
       expect(accepted, isTrue);
       expect(triggers, [CCPopTrigger.system, CCPopTrigger.system]);
       expect(await result, isNull);
-      expect(runtime.activeRouteEntries, isEmpty);
+      expect(_orders, isEmpty);
     },
   );
 
@@ -581,14 +433,16 @@ void main() {
     testWidgets(
       'system PopGuard allow preserves local ${useForm ? 'Form' : 'PopScope'} refusal and result',
       (tester) async {
-        final observer = CCGoRouterNavigationObserver(outlet: 'root');
         final allowFrameworkPop = ValueNotifier(true);
         final allowLocalPop = ValueNotifier(false);
         final triggers = <CCPopTrigger>[];
         final localResults = <bool>[];
-        final detailRoute = GoRoute(
-          path: '/orders/:id',
-          builder: (_, _) => ValueListenableBuilder<bool>(
+        addTearDown(allowFrameworkPop.dispose);
+        addTearDown(allowLocalPop.dispose);
+        final backend = await _mountOrders(
+          tester,
+          registrar: _GuardedOrdersRegistrar(allowFrameworkPop, triggers),
+          builder: (_) => ValueListenableBuilder<bool>(
             valueListenable: allowLocalPop,
             builder: (_, canPop, _) {
               const child = Text('unsaved editor');
@@ -608,43 +462,9 @@ void main() {
             },
           ),
         );
-        final router = GoRouter(
-          observers: [observer],
-          routes: [
-            GoRoute(path: '/', builder: (_, _) => const Text('home')),
-            detailRoute,
-          ],
-        );
-        final adapter = CCGoRouterAdapter(
-          router: router,
-          observers: [observer],
-          bindings: [
-            CCGoRouterRouteBinding(
-              routeId: 'orders.detail',
-              goRoute: detailRoute,
-            ),
-          ],
-        );
-        final runtime = CCRouterRuntime.forTesting(
-          navigationAdapter: adapter,
-          components: [
-            CCComponentManifest(
-              id: 'orders',
-              version: '1.0.0',
-              registrar: _GuardedOrdersRegistrar(allowFrameworkPop, triggers),
-            ),
-          ],
-        );
-        addTearDown(allowFrameworkPop.dispose);
-        addTearDown(allowLocalPop.dispose);
-        addTearDown(router.dispose);
-        addTearDown(runtime.dispose);
-        runtime.initialize();
-        await tester.pumpWidget(MaterialApp.router(routerConfig: router));
-        await tester.pumpAndSettle();
         var resultCompleted = false;
-        final result = runtime
-            .pushRoute<String>(
+        final result = CCRouter.navigator
+            .push<String>(
               const _OrderIntent<String>(_OrderArguments('unsaved')),
             )
             .then((value) {
@@ -652,12 +472,12 @@ void main() {
               return value;
             });
         await tester.pumpAndSettle();
-        final entryId = runtime.activeRouteEntries.single.routeEntryId;
+        final entryId = _orders.single.routeEntryId;
 
-        expect(await router.routerDelegate.popRoute(), isTrue);
+        expect(await backend.routerConfig.routerDelegate.popRoute(), isTrue);
         await tester.pumpAndSettle();
         expect(find.text('unsaved editor'), findsOneWidget);
-        expect(runtime.activeRouteEntries.single.routeEntryId, entryId);
+        expect(_orders.single.routeEntryId, entryId);
         expect(resultCompleted, isFalse);
         expect(triggers, [CCPopTrigger.system]);
         expect(localResults, [false]);
@@ -670,7 +490,7 @@ void main() {
         expect(await navigator.maybePop<String>('saved'), isTrue);
         await tester.pumpAndSettle();
         expect(await result, 'saved');
-        expect(runtime.activeRouteEntries, isEmpty);
+        expect(_orders, isEmpty);
         expect(triggers, [CCPopTrigger.system, CCPopTrigger.system]);
         expect(localResults.where((didPop) => didPop), hasLength(1));
       },
@@ -678,127 +498,52 @@ void main() {
   }
 
   testWidgets(
-    'dynamic open pushes on GoRouter and completes before its later Pop',
+    'dynamic open pushes on Managed and completes before its later Pop',
     (tester) async {
-      final observer = CCGoRouterNavigationObserver(outlet: 'root');
-      final detailRoute = GoRoute(
-        path: '/orders/:id',
-        builder: (_, state) => Text(
-          'open-order:${state.pathParameters['id']}',
+      await _mountOrders(
+        tester,
+        builder: (values) => Text(
+          'open-order:${values.path['id']}',
           key: const ValueKey('open-managed-order'),
         ),
       );
-      final router = GoRouter(
-        initialLocation: '/',
-        observers: [observer],
-        routes: [
-          GoRoute(path: '/', builder: (_, _) => const Text('home')),
-          detailRoute,
-        ],
-      );
-      final adapter = CCGoRouterAdapter(
-        router: router,
-        observers: [observer],
-        bindings: [
-          CCGoRouterRouteBinding(
-            routeId: 'orders.detail',
-            goRoute: detailRoute,
-          ),
-        ],
-      );
-      final runtime = CCRouterRuntime.forTesting(
-        navigationAdapter: adapter,
-        components: const [
-          CCComponentManifest(
-            id: 'orders',
-            version: '1.0.0',
-            registrar: _SimpleOrdersRegistrar(),
-          ),
-        ],
-      );
-      addTearDown(runtime.dispose);
-      addTearDown(router.dispose);
 
-      runtime.initialize();
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
-      await tester.pumpAndSettle();
+      expect(CCRouter.activeBackendEntries, hasLength(1));
 
-      expect(runtime.activeBackendEntries, hasLength(1));
-
-      await runtime.openRoute(Uri.parse('/orders/42'));
+      await CCRouter.navigator.open(Uri.parse('/orders/42'));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const ValueKey('open-managed-order')), findsOneWidget);
-      expect(runtime.canPopRoute(), isTrue);
-      expect(runtime.activeRouteEntries, hasLength(1));
-      expect(
-        runtime.activeRouteEntries.single.lifecycleState,
-        CCRouteEntryLifecycleState.visible,
-      );
+      expect(CCRouter.navigator.canPop(), isTrue);
+      expect(_orders, hasLength(1));
+      expect(_orders.single.lifecycleState, CCRouteEntryLifecycleState.visible);
 
-      runtime.popRoute();
+      CCRouter.navigator.pop();
       await tester.pumpAndSettle();
       expect(find.text('home'), findsOneWidget);
-      expect(runtime.activeRouteEntries, isEmpty);
+      expect(_orders, isEmpty);
     },
   );
 
   testWidgets('replace recreates the same route with updated parameters', (
     tester,
   ) async {
-    final observer = CCGoRouterNavigationObserver(outlet: 'root');
-    final detailRoute = GoRoute(
-      path: '/orders/:id',
-      pageBuilder: (_, state) => ccGoRouterPage(
-        child: Text(
-          'replace-order:${state.pathParameters['id']}',
-          key: ValueKey('replace-order-${state.pathParameters['id']}'),
-        ),
-        presentation: const CCPagePresentation(),
-        key: state.pageKey,
-        name: 'orders.detail',
+    await _mountOrders(
+      tester,
+      builder: (values) => Text(
+        'replace-order:${values.path['id']}',
+        key: ValueKey('replace-order-${values.path['id']}'),
       ),
     );
-    final router = GoRouter(
-      initialLocation: '/',
-      observers: [observer],
-      routes: [
-        GoRoute(path: '/', builder: (_, _) => const Text('home')),
-        detailRoute,
-      ],
-    );
-    final adapter = CCGoRouterAdapter(
-      router: router,
-      observers: [observer],
-      bindings: [
-        CCGoRouterRouteBinding(routeId: 'orders.detail', goRoute: detailRoute),
-      ],
-    );
-    final runtime = CCRouterRuntime.forTesting(
-      navigationAdapter: adapter,
-      components: const [
-        CCComponentManifest(
-          id: 'orders',
-          version: '1.0.0',
-          registrar: _SimpleOrdersRegistrar(),
-        ),
-      ],
-    );
-    addTearDown(runtime.dispose);
-    addTearDown(router.dispose);
 
-    runtime.initialize();
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
-    await tester.pumpAndSettle();
-
-    final firstResult = runtime.pushRoute<String>(
+    final firstResult = CCRouter.navigator.push<String>(
       const _OrderIntent<String>(_OrderArguments('1')),
     );
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
     expect(find.byKey(const ValueKey('replace-order-1')), findsOneWidget);
 
-    final replacementResult = runtime.replaceRoute<String>(
+    final replacementResult = CCRouter.navigator.replace<String>(
       const _OrderIntent<String>(_OrderArguments('2')),
     );
     await tester.pump();
@@ -806,61 +551,29 @@ void main() {
 
     expect(find.byKey(const ValueKey('replace-order-1')), findsNothing);
     expect(find.byKey(const ValueKey('replace-order-2')), findsOneWidget);
-    expect(runtime.activeRouteEntries, hasLength(1));
-    expect(
-      runtime.activeRouteEntries.single.address.routePattern,
-      '/orders/:id',
-    );
+    expect(_orders, hasLength(1));
+    expect(_orders.single.address.routePattern, '/orders/:id');
 
-    runtime.popRoute(result: 'done');
+    CCRouter.navigator.pop(result: 'done');
     await tester.pump();
     await tester.pump(const Duration(seconds: 1));
     expect(await firstResult.timeout(const Duration(seconds: 2)), isNull);
     expect(await replacementResult.timeout(const Duration(seconds: 2)), 'done');
-    expect(runtime.activeRouteEntries, isEmpty);
+    expect(_orders, isEmpty);
   });
 
   testWidgets('Runtime dispose terminates a pending typed Push result', (
     tester,
   ) async {
-    final detailRoute = GoRoute(
-      path: '/orders/:id',
-      builder: (_, state) => Text(
-        'dispose-order:${state.pathParameters['id']}',
+    final backend = await _mountOrders(
+      tester,
+      builder: (values) => Text(
+        'dispose-order:${values.path['id']}',
         key: const ValueKey('dispose-order'),
       ),
     );
-    final router = GoRouter(
-      initialLocation: '/',
-      routes: [
-        GoRoute(path: '/', builder: (_, _) => const Text('home')),
-        detailRoute,
-      ],
-    );
-    final adapter = CCGoRouterAdapter(
-      router: router,
-      bindings: [
-        CCGoRouterRouteBinding(routeId: 'orders.detail', goRoute: detailRoute),
-      ],
-    );
-    final runtime = CCRouterRuntime.forTesting(
-      navigationAdapter: adapter,
-      components: const [
-        CCComponentManifest(
-          id: 'orders',
-          version: '1.0.0',
-          registrar: _SimpleOrdersRegistrar(),
-        ),
-      ],
-    );
-    addTearDown(runtime.dispose);
-    addTearDown(router.dispose);
 
-    runtime.initialize();
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
-    await tester.pumpAndSettle();
-
-    final pending = runtime.pushRoute<String>(
+    final pending = CCRouter.navigator.push<String>(
       const _OrderIntent<String>(_OrderArguments('42')),
     );
     await tester.pumpAndSettle();
@@ -872,17 +585,20 @@ void main() {
         isA<CCNavigationAdapterError>().having(
           (error) => error.message,
           'message',
-          contains('disposed before navigation completed'),
+          contains('navigation ended before'),
         ),
       ),
     );
     await tester.runAsync(
-      () => runtime.dispose().timeout(const Duration(seconds: 2)),
+      () => CCRouterHost.shutdown().timeout(const Duration(seconds: 2)),
     );
 
     await tester.runAsync(() => completion.timeout(const Duration(seconds: 2)));
-    expect(runtime.activeRouteEntries, isEmpty);
-    expect(adapter.isInitialized, isFalse);
+    expect(CCRouter.isInitialized, isFalse);
+    expect(
+      () => backend.adapter.canPop(),
+      throwsA(isA<CCNavigationAdapterError>()),
+    );
   });
 
   testWidgets(
@@ -890,60 +606,23 @@ void main() {
     (tester) async {
       final homeKey = GlobalKey<NavigatorState>();
       final settingsKey = GlobalKey<NavigatorState>();
-      final observedEvents = <CCGoRouterNavigationEvent>[];
-      final observer = CCGoRouterNavigationObserver(
-        outlet: 'settings',
-        onEvent: observedEvents.add,
+      const placement = CCRoutePlacement(
+        shellId: 'tabs',
+        navigatorOutlet: 'home',
       );
-      final detailRoute = GoRoute(
-        path: 'orders/:id',
-        builder: (_, state) => Text(
-          'order:${state.pathParameters['id']}',
-          key: const ValueKey('order-detail'),
+      final detail = CCRouteDefinition<_OrderArguments, void>(
+        routeId: 'orders.detail',
+        patterns: [
+          const CCPathPattern('/settings/orders/:id', primary: true),
+          const CCUriPattern('https://example.com/settings/orders/:id'),
+        ],
+        codec: const _OrderCodec(),
+        deepLink: CCDeepLinkPolicy.enabled,
+        placement: const CCRoutePlacement(
+          shellId: 'tabs',
+          navigatorOutlet: 'settings',
         ),
       );
-      final homeRoute = GoRoute(
-        path: '/home',
-        builder: (_, _) => const Text('home'),
-      );
-      final settingsRoute = GoRoute(
-        path: '/settings',
-        builder: (_, _) => const Text('settings'),
-        routes: [detailRoute],
-      );
-      final shellRoute = StatefulShellRoute.indexedStack(
-        builder: (_, _, navigationShell) => Scaffold(body: navigationShell),
-        branches: [
-          StatefulShellBranch(navigatorKey: homeKey, routes: [homeRoute]),
-          StatefulShellBranch(
-            navigatorKey: settingsKey,
-            observers: [observer],
-            routes: [settingsRoute],
-          ),
-        ],
-      );
-      final router = GoRouter(initialLocation: '/home', routes: [shellRoute]);
-      final goRouterAdapter = CCGoRouterAdapter(
-        router: router,
-        observers: [observer],
-        shells: [
-          CCGoRouterShellBinding(
-            shellId: 'tabs',
-            route: shellRoute,
-            initialOutlet: 'home',
-            outlets: {'home': homeKey, 'settings': settingsKey},
-          ),
-        ],
-        bindings: [
-          CCGoRouterRouteBinding(
-            routeId: 'orders.detail',
-            goRoute: detailRoute,
-          ),
-        ],
-      );
-      final adapter = _RecordingNavigationAdapter(goRouterAdapter);
-      addTearDown(router.dispose);
-
       CCRouterHost.initialize(
         deepLinkIngressPolicy: CCDeepLinkIngressPolicy(
           allowedAuthorities: [
@@ -951,17 +630,54 @@ void main() {
           ],
         ),
         hostAssembly: CCHostAssembly.fromComponents(
-          components: const [
+          components: [
             CCComponentManifest(
               id: 'orders',
               version: '1.0.0',
-              registrar: _OrdersRegistrar(),
+              registrar: const WithTestHome(
+                _OrdersRegistrar(),
+                placement: placement,
+              ),
             ),
           ],
         ),
       );
-      CCRouterHostBinding.attachNavigationAdapter(adapter);
-      await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+      final backend = CCManagedRouterBackend(
+        host: CCNavigationHost(
+          navigatorKeys: {'home': homeKey, 'settings': settingsKey},
+        ),
+        routeCatalog: CCFlutterRouteCatalog(
+          [
+            testHomeDestination(placement: placement),
+            CCFlutterRouteDestination.fromDefinition(
+              definition: detail,
+              builder: (values) => Text(
+                'order:${values.path['id']}',
+                key: const ValueKey('order-detail'),
+              ),
+            ),
+          ],
+          componentVersions: const {'orders': '1.0.0'},
+        ),
+        shellBindings: [
+          CCManagedShellBinding(
+            shellId: 'tabs',
+            builder: (_, shell) => IndexedStack(
+              index: shell.activeOutlet == 'home' ? 0 : 1,
+              children: [
+                shell.navigatorFor('home'),
+                shell.navigatorFor('settings'),
+              ],
+            ),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        CCRouterApp.managed(
+          backend: backend,
+          child: MaterialApp.router(routerConfig: backend.routerConfig),
+        ),
+      );
       await tester.pumpAndSettle();
 
       const source = CCNavigationSource.deepLink('initial_location.orders');
@@ -974,21 +690,24 @@ void main() {
 
       expect(find.byKey(const ValueKey('order-detail')), findsOneWidget);
       expect(find.text('order:42'), findsOneWidget);
-      expect(router.state.uri.path, '/settings/orders/42');
-      expect(adapter.requests, hasLength(1));
       expect(
-        adapter.requests.single.origin,
+        backend.routerConfig.routerDelegate.currentConfiguration!.uri.path,
+        '/settings/orders/42',
+      );
+      expect(backend.adapter.requests, hasLength(2));
+      expect(
+        backend.adapter.requests.last.origin,
         CCNavigationOrigin.externalPlatform,
       );
-      expect(adapter.requests.single.source, same(source));
-      expect(adapter.requests.single.openMode, CCDeepLinkOpenMode.go);
-      expect(adapter.requests.single.routeId, 'orders.detail');
-      expect(adapter.requests.single.placement.navigatorOutlet, 'settings');
+      expect(backend.adapter.requests.last.source, same(source));
+      expect(backend.adapter.requests.last.openMode, CCDeepLinkOpenMode.go);
+      expect(backend.adapter.requests.last.routeId, 'orders.detail');
+      expect(
+        backend.adapter.requests.last.placement.navigatorOutlet,
+        'settings',
+      );
       expect(settingsKey.currentState, isNotNull);
       expect(homeKey.currentState, isNotNull);
-      expect(observedEvents, isNotEmpty);
-      expect(observedEvents.last.outlet, 'settings');
-      expect(observedEvents.last.location, 'orders/:id');
       final backendEvents = CCRouter.recentBackendNavigationEvents;
       expect(backendEvents, isNotEmpty);
       expect(
@@ -1006,24 +725,11 @@ void main() {
   testWidgets('external ingress rejects a route disabled for deep links', (
     tester,
   ) async {
-    final route = GoRoute(
-      path: '/internal/:id',
-      builder: (_, state) => Text('internal:${state.pathParameters['id']}'),
+    final definition = CCRouteDefinition<_OrderArguments, void>(
+      routeId: 'internal',
+      patterns: [const CCPathPattern('/internal/:id', primary: true)],
+      codec: const _OrderCodec(),
     );
-    final router = GoRouter(
-      initialLocation: '/',
-      routes: [
-        GoRoute(path: '/', builder: (_, _) => const Text('home')),
-        route,
-      ],
-    );
-    final adapter = CCGoRouterAdapter(
-      router: router,
-      bindings: [CCGoRouterRouteBinding(routeId: 'internal', goRoute: route)],
-    );
-    addTearDown(router.dispose);
-
-    final registrar = _DisabledRouteRegistrar();
     CCRouterHost.initialize(
       deepLinkIngressPolicy: CCDeepLinkIngressPolicy(allowRelativePaths: true),
       hostAssembly: CCHostAssembly.fromComponents(
@@ -1031,13 +737,29 @@ void main() {
           CCComponentManifest(
             id: 'internal',
             version: '1.0.0',
-            registrar: registrar,
+            registrar: WithTestHome(_DisabledRouteRegistrar()),
           ),
         ],
       ),
     );
-    CCRouterHostBinding.attachNavigationAdapter(adapter);
-    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+    final backend = CCManagedRouterBackend(
+      routeCatalog: CCFlutterRouteCatalog(
+        [
+          testHomeDestination(),
+          CCFlutterRouteDestination.fromDefinition(
+            definition: definition,
+            builder: (values) => Text('internal:${values.path['id']}'),
+          ),
+        ],
+        componentVersions: const {'internal': '1.0.0'},
+      ),
+    );
+    await tester.pumpWidget(
+      CCRouterApp.managed(
+        backend: backend,
+        child: MaterialApp.router(routerConfig: backend.routerConfig),
+      ),
+    );
     await tester.pumpAndSettle();
 
     await expectLater(
@@ -1047,7 +769,10 @@ void main() {
       ),
       throwsA(isA<CCDeepLinkRejectedError>()),
     );
-    expect(router.state.uri.path, '/');
+    expect(
+      backend.routerConfig.routerDelegate.currentConfiguration!.uri.path,
+      '/',
+    );
     expect(find.text('home'), findsOneWidget);
   });
 }

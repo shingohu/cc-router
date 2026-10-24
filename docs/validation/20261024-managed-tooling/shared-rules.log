@@ -1,0 +1,13 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/route_generator_test.dart
+00:00 +0: shared Analyzer configuration: root defaults
+00:08 +1: shared Analyzer configuration: explicit root
+00:11 +2: shared Analyzer configuration: valid topology and ordered policies
+00:12 +3: shared Analyzer configuration: invalid host
+00:14 +4: shared Analyzer configuration: invalid outlet
+00:16 +5: shared Analyzer configuration: invalid shell
+00:18 +6: shared Analyzer configuration: invalid parent
+00:20 +7: shared Analyzer configuration: self parent
+00:22 +8: shared Analyzer configuration: duplicate interceptor
+00:24 +9: shared Analyzer configuration: duplicate guard
+00:26 +10: shared Analyzer configuration: invalid policy
+00:28 +11: All tests passed!

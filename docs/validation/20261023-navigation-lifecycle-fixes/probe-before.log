@@ -1,0 +1,66 @@
+00:00 +0: loading /tmp/ccrouter_review_probe_test.dart
+00:00 +0: MultiHost visibility must reach the owned Managed Store
+00:00 +0 -1: MultiHost visibility must reach the owned Managed Store [E]
+  Expected: Set:['left']
+    Actual: Set:['left', 'right']
+     Which: larger than expected
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 477:18  expect
+  /tmp/ccrouter_review_probe_test.dart 84:5           main.<fn>
+  
+00:00 +0 -1: ordinary Pop keeps outgoing content until reverse transition ends
+Reverse transition still running: 0.8888888888888888; status=AnimationStatus.reverse
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 0 widgets with text "probe-detail": []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///tmp/ccrouter_review_probe_test.dart:98:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///tmp/ccrouter_review_probe_test.dart line 98
+The test description was:
+  ordinary Pop keeps outgoing content until reverse transition ends
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:01 +0 -2: ordinary Pop keeps outgoing content until reverse transition ends [E]
+  Test failed. See exception logs above.
+  The test description was: ordinary Pop keeps outgoing content until reverse transition ends
+  
+00:01 +0 -2: removeRoute of final foreign Popup retires its empty anchor
+After removeRoute and push: entries=1; pages=[[<'ccrouter.managed.1792730326470134-2737424507-navigation-1'>], [<'ccrouter.managed.1792730326470134-2737424507-navigation-2'>]]
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: false
+  Actual: <true>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///tmp/ccrouter_review_probe_test.dart:122:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///tmp/ccrouter_review_probe_test.dart line 122
+The test description was:
+  removeRoute of final foreign Popup retires its empty anchor
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +0 -3: removeRoute of final foreign Popup retires its empty anchor [E]
+  Test failed. See exception logs above.
+  The test description was: removeRoute of final foreign Popup retires its empty anchor
+  
+00:02 +0 -3: control: stock Flutter retains content throughout reverse transition
+00:02 +1 -3: Some tests failed.

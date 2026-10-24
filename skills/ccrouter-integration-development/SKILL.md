@@ -13,6 +13,12 @@ references. Required guidance is bundled; framework design links are optional
 background and do not require a checkout of the framework repository. Use the
 application's installed package APIs and CLI help if its version differs.
 
+Use current integration guidance and the installed public API as the contract.
+Historical design comparisons, checked implementation plans and dated device
+reports do not expose APIs or certify later source revisions. Keep source-test,
+physical-device and release-readiness evidence separate; do not infer a UI
+coordinator, resume token or GoRouter compatibility API from an old proposal.
+
 ## Workflow
 
 For a first Host or a production adoption check, start with
@@ -61,6 +67,12 @@ namespaces defer to the authoritative Builder instead of guessing.
 Analyzer diagnostics and annotation Quick Fixes require framework declaration
 identity. A foreign same-name annotation is ignored; unresolved ambiguous imports
 wait for semantic resolution rather than offering speculative edits.
+Route/Contract literal placement IDs, self-parent and invalid/repeated policy
+IDs receive early diagnostics; computed configuration and complete topology stay
+Generator-owned. Conditional generated-internal imports/exports are checked per
+URI. For a new runnable Managed component example, follow the CLI scaffold's
+printed steps, including standalone parent Portable preparation before Example
+generation; the scaffold supplies its own `/` Route and Host Assembly entry.
 
 For generator, scaffolding, cleanup, source lookup, or deferred Contract
 migration work, also read
@@ -132,6 +144,48 @@ instead of recursively scanning the Workspace.
 
 Read [implementation-patterns.md](references/implementation-patterns.md) when adding or changing code. Read [review-checklist.md](references/review-checklist.md) when reviewing, migrating, or validating a feature.
 
+For shared readiness, navigation singleFlight and InitTask Gates, verify both
+same and different Dart error Zones. Framework-owned shared outcomes deliver
+failures in each caller's Zone; callers still handle their own returned Future.
+Deferred Resume also delivers its replay result/error in the restoring caller's
+Zone, independently of the original caller, including repeated defer, timeout
+and owner cancellation. Handle both Futures. Host Failure Policy recovery belongs
+to the original pipeline; it does not change a failed replay's own returned error.
+Synchronous Gate reentry joins the existing drain; a task must not await its own
+drain. Navigation listener cleanup is registration-specific and idempotent:
+remove/re-add of the same function cannot replay old events or let old cleanup
+remove the replacement. Simultaneous duplicate adds still deduplicate.
+Cancelling or timing out one shared-readiness waiter, or closing its original
+Session/Route, releases that waiter's internal subscription and caller Zone;
+other callers keep the same initializer and original outcome. Host-only custom
+MultiHost children use locally unique backend Entry IDs across their Outlets.
+The aggregate qualifies IDs by registration consistently across every identity
+protocol; diagnostic consumers must not mix aggregate and raw child IDs.
+Predictive observers are isolated individually, including through MultiHost.
+Late Pop receipts from a retired managed Host registration cannot mutate a
+same-name replacement's state or desynchronization diagnostics.
+Pop establishes registration identity before Guard evaluation, even before the
+first Runtime navigation. Indirect synchronous Guard-triggered Host replacement
+cannot receive the old Back request.
+Host/Runtime retirement settles pending external Pop with `handled: true` and
+no removal, so Back cannot fall through to a replacement Host. Pending targeted
+close ends with `notFound` on original Entry/Host/Runtime loss; completing exact
+receipts retain their outcome. Late Adapter success/errors are consumed, while
+the Adapter owns external task cancellation. Pop/close producers run in the
+Runtime creation Host Zone and deliver failures in each caller's own error Zone.
+Retained Scope/token/readiness state and Scope-owned factories/singleton
+initializers also use Host context, preserving framework lineage and callback
+reentrancy fences without adopting arbitrary first-caller Zone values.
+New-instance initialization preserves caller cancellation lineage. Pass business
+context explicitly; do not configure a shared Service from its first caller's Zone.
+Widget tests create the Runtime inside `testWidgets`, sharing its fake scheduler;
+drive Timer-based startup explicitly instead of creating Runtime in real `setUp`
+and assuming `pumpAndSettle` advances Host-owned work.
+For UI Fragments, unmount/identity changes revoke Action forwarding and release
+consumer callback references; Renderer-owned work and retained Props remain the
+Renderer's responsibility. Contract ranges accept single comparators and all
+whitespace separators, and parsed SemVer prerelease identifiers are immutable.
+
 ## Non-Negotiable Boundaries
 
 - Navigate CCRouter-managed destinations only through `CCRouter.navigator`.
@@ -176,6 +230,9 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
   not decide that public surface. The Consumer Route is the only business
   export; generated Arguments, Definition, and Codec remain Owner SPI even
   when they live in the same generated library.
+  The component-author entry explicitly exports the authored Route Contract
+  schema from its source for `@CCRouteImplementation`; the generated Consumer
+  entry does not supply it. Re-export Consumer APIs there only when needed.
 - Do not simulate unsupported Action Pipeline, dynamic component activation/deactivation, complete state restoration, or Navigator 1.0 Backend. Generated Command/Event/InitTask capabilities and Service Proxies support only their documented declaration and dependency models.
 - Use `@CCEventContract` plus public top-level `@CCEventSubscription` functions for static component Events, and publish annotated Events only through the generated Owner Client. Omit a Subscriber ID only when the component has exactly one Subscriber for that Event. Keep `CCEventSubscriberId<E>`, `CCEventSubscriber<E>`, and the legacy string overload for unannotated migration capabilities and low-level tests.
 - An Event's overall deadline fails publication with `CCInvocationTimeoutError` and cooperatively cancels Subscribers without recording shared-deadline timeouts as Subscriber failures. A shorter nested call timeout stays isolated to its Subscriber. Do not rely on microsecond timer precision.
@@ -184,11 +241,25 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
 - Diagnostic delivery and completion callbacks use the Runtime creation Zone, preserving Host context without inheriting later invocation Zones. Finite initial queue-length batch budgets span Future completions; reentrant diagnostics yield to the event loop after the budget is exhausted, without a Timer for every write in the same batch.
 - Runtime construction failure schedules the same best-effort final drain and cleanup on a later event-loop turn, since no Runtime is returned for disposal. Synchronous failure logs remain deliverable; the first unfinished write discards the remainder. The original construction error is rethrown immediately, and late completion cannot restart delivery.
 - Treat `componentGraph`, `componentRegistration`, and `runtimeInitialize` as the framework-owned component/startup diagnostic flow. Configure the Host Sink at `CCRouterHost.initialize` with `CCDiagnosticLevel.debug` when start events are needed; do not duplicate these lifecycle logs in application bootstrap code.
-- Use `ccrouter_analytics` for provider-neutral product events. Route page view/leave events may be bridged from `CCNavigationAspect`; click, scroll, and exposure events require stable explicit targets. Keep Firebase, ThinkingData, local persistence, and upload adapters in the application layer (the Demo example lives under `demo/modules/`); do not add vendor SDK dependencies to framework `packages/*`, and do not infer business event IDs from Widget text or arbitrary Keys.
-- Keep the analytics dispatcher behind an explicit `CCAnalyticsPolicy`: its default is consent-denied, and the app must call `updatePolicy` after privacy consent. Revocation clears pending events and invalidates remaining sinks of the active event, even after immediate re-grant; already-running writes cannot be retracted. See the Analytics delivery section in `references/implementation-patterns.md` for asynchronous delivery and shutdown ownership.
-- Use `ccrouter_analytics_flutter` only when the app opts in to `CCAnalyticsScope` and explicit `CCAnalyticsScrollable` or `CCAnalyticsExposureTarget` wrappers. Scope inherits an application-owned Dispatcher and immutable context, does not close it, and must not infer Route or Foreign Popup attribution. Configure exposure thresholds deliberately; do not treat the approximation as ad verification or a security signal.
-- `CCNavigationAnalyticsBridge` assigns a bounded `visit_id` to managed Arrival/Show and reports total versus foreground dwell on Hide. The Host must forward resumed/background lifecycle transitions through `onForeground`/`onBackground` and call `dispose()` when it releases the bridge; consent-denied visits are not retained.
-- Exposure targets observe ancestor scrolling and policy changes themselves. Consent grant and foreground resume start fresh dwell; filtered attempts do not consume `once` and are not retried every frame. Visibility includes ancestor clips, not arbitrary Overlay occlusion or opacity. Do not add a business rebuild loop to trigger exposure.
+- Host layout breakpoints, pane selection and fold policy are application-owned.
+  Resolve visible Outlets in composition code and call the Host-only
+  `CCMultiHostNavigationAdapter.setActiveOutlets(hostId: ..., outlets: ...)`.
+  It validates a non-empty unique set before changing visibility and never moves
+  or disposes retained entries. The framework has no adaptive geometry/policy API.
+  Native Managed synchronizes that set into the owning child Store and preserves
+  it through navigation, focus and Shell activation. Root overlays mask it only
+  temporarily. Custom Host Adapters may implement
+  `CCNavigationOutletVisibilityBinding`; otherwise only lifecycle/events are forwarded.
+- Route-restoration demand collection belongs to application/platform tooling.
+  CCRouter implements no full stack restoration and retains no demand history,
+  source subscription or restoration-demand DevTools section.
+- Core/Host never receive analytics visitor or application Session identities.
+  An application bridge may snapshot identity at its first delivered observation;
+  asynchronous delivery cannot prove invocation-time identity. Reset tracking
+  before Consent/account changes, clear terminal snapshots and fence disposal.
+- Product analytics is application-owned. Use `CCNavigationAspect` or page lifecycle observations to connect an existing client; the application defines PV/leave/dwell semantics, Consent, identity, event schema, sampling, queues, persistence, upload, click, scroll and exposure tracking. PageShow/PageHide is navigation state, not pixel visibility or an automatic product event.
+- The repository's `demo_analytics` and `demo_analytics_flutter` under `demo/modules/` are unpublished application references, not framework APIs or required production dependencies. Their `AppAnalytics…` names intentionally distinguish them from CCRouter. A narrow injected client suffices unless framework Scope/readiness/dependency validation is needed. See Application analytics in `references/implementation-patterns.md`.
+- The application owner must detach its analytics observations, cancel timers/listeners, clear visits and close delivery resources. Widget wrappers must not close an injected Dispatcher. Consent revocation and cancellation of already-running vendor writes belong to the application; analytics failure must not affect navigation or cleanup.
 - Use `ccrouter_devtools` only for an application-owned debug route, drawer, or local overlay. The `CCRouterDevToolsPanel` is read-only and must not be used as a navigation, retry, scope disposal, component activation, or Adapter control surface.
 - Tooling that crosses the Flutter application boundary must use the versioned
   `ccrouter_devtools_protocol` snapshots. Do not serialize Runtime, Navigator,
@@ -209,7 +280,7 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
   `package:` references. An IDE opener may be supplied through the panel's
   `onOpenSource` callback, but the framework never assumes an editor or local
   filesystem mapping.
-- Enable `ccrouter_analyzer_plugin` only through the host Package's Analysis Server bootstrap. Keep its Analyzer dependency isolated from the application Workspace; do not add a path dependency to the rule Package when the Analysis Server will copy the bootstrap to a temporary directory. Pin unreleased Git bootstraps to a reviewed commit and use `ccrouter analyzer status/doctor <host-root>` for read-only identity, compatibility, analysis, and loader checks; maintainers use `ccrouter analyzer pin-check <host-root>` to verify manifest/lock/resolved identity, exact remote SHA availability, and advisory Plugin production drift. Do not make pending drift a hard gate for the first-stage Plugin commit. Switch to the provided Hosted manifest only after publication. Analyzer diagnostics use the current unsaved editor overlay and combine single-file rules with an exact generated-Metadata owner index. Its Quick Fix may delete one mutually exclusive Route/InitTask argument or add one uniquely proven Service/Command/UI owner to a missing/direct required dependency list when the public owner constant is already imported. When every missing Owner of the same Component is uniquely provable, it may offer one additional fix that adds all of them in stable order. It never invents a Contract, identity, alias, timeout, or import, and never rewrites variables, spreads, conditionals, or computed dependency collections. `analyzer status` proves only static bootstrap consistency; use `analyzer doctor` for dependency, analysis, loader, and stale plugin-manager cache checks. Doctor reports source, cache, temporary loader smoke, restart, and live verification separately; it never controls the IDE. Neither command proves a running IDE session. Dart 3.11.5 may initialize the Plugin manager when `dart analyze` reaches a configured Host bootstrap and can surface either diagnostics or a Server/Plugin startup failure, but that still does not prove the running IDE loaded it; verify realtime diagnostics in an IDE or real Language Server session. If doctor names a stale cache, stop the Analysis Server from the IDE, confirm any reported candidate process has exited, and manually move the whole listed cache entry to its exact backup path outside `.plugin_manager`; doctor never kills, moves, or deletes global state. Analyzer `install/upgrade/uninstall` now support explicit Host setup and `--dry-run`; use a published Hosted version or remote full Git SHA. Existing manual bootstraps are not adopted. Follow the IDE reference for owned files, rollback journals and restart verification; do not attach installation to generation or Pub Hook. If the plugin is unavailable or incompatible, disable the bootstrap and keep Dart Analyzer plus `ccrouter generate --check` as the authoritative gates.
+- Enable `ccrouter_analyzer_plugin` only through the host Package's Analysis Server bootstrap. Keep its Analyzer dependency isolated from the application Workspace; do not add a path dependency to the rule Package when the Analysis Server will copy the bootstrap to a temporary directory. Pin unreleased Git bootstraps to a reviewed commit and use `ccrouter analyzer status/doctor <host-root>` for read-only identity, compatibility, analysis, and loader checks; maintainers use `ccrouter analyzer pin-check <host-root>` to verify manifest/lock/resolved identity, exact remote SHA availability, and advisory Plugin production drift. Do not make pending drift a hard gate for the first-stage Plugin commit. Switch to the provided Hosted manifest only after publication. Analyzer diagnostics use the current unsaved editor overlay and combine single-file rules with an exact generated-Metadata owner index. Its Quick Fix may delete one mutually exclusive Route/InitTask argument or add one uniquely proven Service/Command/UI owner to a missing/direct required dependency list when the public owner constant is already imported. When every missing Owner of the same Component is uniquely provable, it may offer one additional fix that adds all of them in stable order. It never invents a Contract, identity, alias, timeout, or import, and never rewrites variables, spreads, conditionals, or computed dependency collections. `analyzer status` proves only static bootstrap consistency; use `analyzer doctor` for dependency, analysis, loader, and stale plugin-manager cache checks. Doctor reports source, cache, temporary loader smoke, restart, and live verification separately; it never controls the IDE. Neither command proves a running IDE session. Dart 3.11.5 may initialize the Plugin manager when `dart analyze` reaches a configured Host bootstrap and can surface either diagnostics or a Server/Plugin startup failure, but that still does not prove the running IDE loaded it; verify realtime diagnostics in an IDE or real Language Server session. If doctor names a stale cache, stop the Analysis Server from the IDE, confirm any reported candidate process has exited, and manually move the whole listed cache entry to its exact backup path outside `.plugin_manager`; doctor never kills, moves, or deletes global state. Analyzer `install` and `upgrade` are legacy maintenance-only commands and emit deprecation notices; no new management features will be added. After Hosted publication, prefer a normal Host `dev_dependency`; do not assume an unreleased version is resolvable. Before publication, use an isolated bootstrap pinned to a reviewed remote full Git SHA. Explicit legacy `install/upgrade/uninstall` support `--dry-run`; `status/doctor/pin-check/uninstall` remain available for diagnosis and maintenance. Existing manual bootstraps are not adopted. Follow the IDE reference for owned files, rollback journals and restart verification; do not attach installation to generation or Pub Hook. If the plugin is unavailable or incompatible, disable the bootstrap and keep Dart Analyzer plus `ccrouter generate --check` as the authoritative gates.
   Exclude the inner `tools/analyzer_plugin/**` loader source from the Host's
   ordinary Analyzer scope; it has a deliberately separate dependency graph and
   is validated by `analyzer doctor`, not the application Package config. A
@@ -228,8 +299,7 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
   authored-source diagnostics without restarting. Framework Server-process
   tests validate this path against local sources; they do not upgrade an
   application's pinned plugin or certify its live IDE bootstrap.
-- Keep analytics separate from diagnostics: `CCDiagnosticEvent` explains framework execution and failure, while `CCAnalyticsEvent` represents a product behavior. Analytics properties must use validated primitive values and must not contain credentials, full URI values, Widgets, exceptions, or business objects. Analytics Sink failures and queue pressure must never alter navigation or component results.
-- The analytics dispatcher exposes only payload-free pressure counters (`acceptedEventCount`, `pendingEventCount`, `peakQueueDepth`, `droppedEventCount`, `timedOutSinkWriteCount`, and `quarantinedSinkCount`) plus `snapshot` per-Sink health for bounded health/performance checks. Properties, blacklist IDs, and throttle state are bounded; non-finite numbers and oversized values fail at construction. An optional `sinkWriteTimeout` quarantines a slow application Sink so `close()` is bounded, but Dart Futures remain non-cancellable and the Sink must own cancellation. These counters are not an audit log, replay source, or permission to inspect queued events; use the standalone benchmark when comparing SDK/platform behavior.
+- Keep product analytics separate from diagnostics: `CCDiagnosticEvent` explains framework execution and failure. Do not use diagnostics as a business event store or append credentials, full URIs, arguments, Extra, Widgets, exceptions or business objects to analytics. Delivery health counters are not durable-upload proof or audit/replay records.
 - Use `CCRouter.traceBundle(traceId)` for bounded local troubleshooting across nested calls. It is not an audit log, replay source, or business Event store; records may be incomplete after capacity rotation.
 - When using generated Host assembly, pass it directly to
   `CCRouterHost.initialize(hostAssembly: ...)`; it supplies component Manifests,
@@ -243,20 +313,42 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
   uses `CCHostAssembly.fromComponents`, while ordinary Runtime tests prefer
   `CCRouterTestHost`. Do not split one generated assembly into separately passed
   manifests, Catalog, Contract, or tooling values.
+- Await every `CCRouterTestHost.dispose()` result: concurrent, synchronous
+  reentrant and late callers join one cleanup and receive its original failure
+  and stack in their own error Zone. A later teardown must explicitly handle an
+  already-asserted cleanup failure. Never await the owning Host's teardown from
+  its disposable. Retained framework Zones use non-owning identities and
+  construction references; ended-Scope admission fences still apply. This does
+  not cancel application Timers/subscriptions or release objects captured by
+  application callbacks.
 - After initialization, new Hosts should prefer `CCManagedRouterApp`, which
   creates `CCManagedRouterBackend` from the initialized Catalog and mounts it
   through `CCRouterApp.managed` and `MaterialApp.router`. For custom topology,
   use its `backendFactory`; the explicit `CCManagedRouterBackend` plus
   `CCRouterApp.managed` composition remains available for advanced Hosts and
-  tests. Runtime Managed Stack is the single source of truth projected through
-  `RouterDelegate + Navigator.pages`.
-  The `ccrouter_go_router` library, `CCGoRouterApp()`, and
-  `CCGoRouterBackend.managed/attach` are deprecated, frozen Host-only
-  compatibility paths for existing projects during progressive migration. Do
-  not use them for a new Host or expose routing metadata through the business Facade.
-- Use `CCManagedMultiHostBackend.managed` for new native Managed multi-Host trees;
-  use the deprecated `CCGoRouterMultiHostBackend.managed` only while migrating
-  an existing application tree that truly owns multiple independent Router Hosts. Its factories receive the initialized
+  tests. The Managed Adapter owns each Host/Outlet Stack and projects it through
+  `RouterDelegate + Navigator.pages`; Runtime owns contract resolution, Entry,
+  result and Scope lifecycle, synchronized through backend events.
+  `initialLocation` is a trusted fallback (`/` by default); a non-root platform
+  startup URI wins and remains external ingress. Set
+  `overridePlatformDefaultLocation: true` only to deliberately ignore platform
+  startup links. Null always consumes the platform URI as external input.
+  Custom factories forward both configuration fields without converting links
+  into internal navigation.
+  The fallback must resolve to an installed Route with valid parameters and
+  policy admission. Register `/` or choose an actual entry address; the default
+  does not create a home page.
+  Each Managed Host supersedes its own unfinished platform/browser location
+  request when a newer location arrives, including the already-current URI.
+  Cancellation covers async policy, defer/resume, redirect and failure recovery;
+  late completion cannot commit. This does not change ordinary business Push
+  concurrency or cancel another Host's ingress.
+  The GoRouter compatibility package and Host APIs have been removed. Business
+  Intents and navigator calls stay unchanged; migrate Composition Roots to
+  Managed. For gradual adoption, embed a Managed Outlet in an existing feature
+  area; do not claim support for attaching CCRouter to an external GoRouter.
+- Use `CCManagedMultiHostBackend.managed` when an application tree truly owns
+  multiple independent Router Hosts. Its factories receive the initialized
   Catalog and declared Host ID, while the aggregate owns Adapter and Router
   cleanup. When multiple Host surfaces are simultaneously interactive, the
   Composition Root must activate the Host on pointer/focus entry; feature pages
@@ -265,6 +357,11 @@ Read [implementation-patterns.md](references/implementation-patterns.md) when ad
   optional `BuildContext`; `activateHost` is only a fallback for context-free
   Pop/system-back. The aggregate does not render a layout or model a native
   platform Window.
+  A dynamically mounted auxiliary Host with a fixed trusted home keeps initial
+  route initialization enabled and explicitly overrides the platform startup
+  location. Do not consume the primary Host's startup link again or describe an
+  uninitialized empty stack as a home page. Validate repeated same-ID rebuilds
+  and leaving/re-entering the scenario within one Runtime.
 
 ### Read-only DevTools
 
@@ -323,6 +420,51 @@ the Service Contract.
 
 ## Navigation Policy Rules
 
+- Navigation fixes its default concrete Host before asynchronous policy: use
+  the call-site Context, otherwise the invocation's active Host, with the initial
+  target's explicit Host taking precedence. Redirect, Failure Policy recovery
+  and defer/resume retain this default, even through an explicit intermediate
+  target; explicit destination Hosts and Shell/Outlet/parent topology still win.
+  Resolution-failure recovery uses the invocation Host snapshot. A removed Host
+  must fail instead of silently choosing another Host.
+- Host IDs are logical addresses, not reusable lifecycle identities. Dynamic
+  unregister cancels the old registration's uncommitted waits/recovery/defer
+  with `CCRouteCancelledError('host_detached')` and releases affected gates.
+  Same-ID registration admits fresh work independently; terminal detach cannot
+  trigger Failure Policy recovery. Only the Host Composition Root registers
+  adapters and owns child Backend cleanup. Unmount the old `CCRouterApp` before
+  mounting its replacement; see the Multi Host Demo lifecycle tab.
+- Treat synchronous Adapter returns and old Scope cleanup as ownership handoffs:
+  detach/shutdown during either must prevent a late Entry commit. Dynamic Host
+  registration reserves its identity during initialization and rolls back only
+  its own record. After argument/lifetime validation, rejected unowned Adapters
+  are disposed; reusing an owned Adapter never disposes its current owner.
+  A replacement registered during binding survives the old transaction's failure.
+  Activate a new Host only after registration returns successfully. Pre-init
+  registrations bind once during initialization, never once per setup phase.
+  Aggregate initialization rejects recursive initialize/register operations.
+  Detach delivery finishes before unsubscribe/dispose hooks can install a
+  replacement. Same-ID registration during detach delivery is rejected;
+  cleanup hooks after delivery may register new work without a later old detach.
+- `singleFlight` and `rejectDuplicate` partition by exact trusted origin as well
+  as Host/Outlet, operation, Open mode, route ID and URI. Different internal,
+  platform, notification and QR origins run their own Interceptor policies.
+  Telemetry source is not a trust selector. Same-origin sharing/rejection and
+  Extra-bearing independent execution retain their documented behavior.
+- Native Managed consumes duplicate pending `maybePop` calls for the same live
+  Route without queuing a second Pop or replacing its result. Only the actual
+  remover receives a removal receipt; independent Outlets remain independent.
+  Renderer teardown ends the framework wait even if application `willPop` work
+  has not completed. LocalHistory-only Back skips Managed leave Guards and keeps
+  the Entry/Scope; if history disappears during a wait, actual exit is guarded.
+  MultiHost receipts preserve the dispatch Host and child's actual Outlet across
+  focus changes, unregister and shutdown. Closing a root Popup from a named
+  Outlet reports root; never infer removal ownership from the later active Host.
+- Shell Pop keeps rendered branch content and Scopes through the outer exit
+  transition. Re-entry transfers Outlet rendering to the new Shell container;
+  the outgoing container cannot mount a second Navigator with the same key.
+  Shutdown and renderer detach release render waits without another UI frame.
+
 - For async completion that must remove its own covered page, capture
   `CCRouter.routeEntryHandleOf(context)` during page setup and call
   `CCRouter.navigator.close(handle, result: ...)`. Never select a route by ID,
@@ -334,66 +476,94 @@ the Service Contract.
   use it as system back or async confirmation UI. Only that result and Scope
   end, covering pages/foreign Popups stay alive, and async disposal may still
   be pending. Never fall back from unsupported to ordinary Pop.
-- GoRouter exact close requires an installed observed imperative push/replace
-  entry. Declarative go/reset, retained inactive branches, removal that empties
-  a Shell, and trees containing external `GoRoute.onExit` are unsupported.
-  Custom Host Adapters opt into `CCNavigationTargetedCloseAdapter`; business
-  code must not import that SPI or call a backend directly. Read
-  [production scenarios](references/production-scenarios.md) for validation.
+- Native Managed exact close supports declarative and imperative Entries and
+  retained branches. Removing the last Entry must preserve covering foreign
+  popups while ending only the target's Scope/result. Custom Host Adapters opt
+  into `CCNavigationTargetedCloseAdapter`; business code never calls that SPI.
 
 - Use Interceptor only for pre-navigation decisions: authentication, permission, consent, maintenance, forced upgrade, feature flag, redirect, cancel, or defer.
 - Never use Interceptor for PV/UV, page arrival, data loading, UI side effects, or nested navigation.
 - Observe Interceptor cancellation cooperatively. Runtime shutdown ends pending Interceptor/Failure Policy waits with `CCRouteCancelledError` and ignores late decisions; it cannot stop arbitrary Dart work. Defer/resume preserves typed payloads, the original concrete Host, call-site Outlet, and result contract while revalidating policy. Configure a timeout or explicitly cancel abandoned continuations.
+- When committed authentication, permission, Session, or feature state can invalidate already-open pages, let the state owner explicitly call `CCRouter.revalidateActiveRoutes(reason: ...)`. Register backend-neutral `CCGlobalRouteRevalidationPolicy` instances only at the Host Composition Root; never emulate GoRouter `refreshListenable` by subscribing Runtime to arbitrary application state.
+- A route-revalidation policy reads only application state and the immutable sanitized Entry snapshot. It returns `keep`, exact `close`, top-only `replace`, or Host `reset`; it must not navigate, touch UI, log/emit analytics, retain Context, or mutate the state it evaluates. Bound async work with the registration timeout and cooperate with `context.cancellation`.
+- Revalidation `close` deliberately bypasses PopGuard and local `PopScope` because it represents Host policy revocation rather than a user exit. Unsupported exact removal stays `unsupported`; never fall back to Pop. Inspect the returned report for `stale`/`unsupported`, and do not assume the application phase is an atomic transaction across multiple Backends.
+- Revalidation `replace` stays a replace in the original Host/Outlet and `reset` stays a reset in the selected Entry's Host. The destination Intent, Interceptor redirect, and Failure Policy recovery all pass the same final-request operation/placement fence; a changed operation or cross-partition target reports `unsupported` without mutating that target partition.
+- Default placement remains pinned to the concrete Host captured by the Entry,
+  even if focus or the active Host changes later. Revalidation mutations never
+  share a normal business-navigation `singleFlight`; replace reports success
+  after its replacement Entry commits rather than waiting for that page's Pop
+  result. Runtime shutdown cancels an interceptor-deferred revalidation before
+  joining the serialized pass queue.
+- Revalidation Replace requires the optional Host-only
+  `CCNavigationDispatchAdapter`: returning `CCNavigationDispatch` proves an
+  atomic synchronous Backend commit, while its Future carries only the eventual
+  result. Native Managed implements this; a MultiHost checks its selected child.
+  Legacy/custom Adapters without proof return `unsupported` before mutation;
+  normal navigation remains compatible. Do not infer acceptance from a pending
+  Future or wrap asynchronous acceptance as a commit receipt. Default Host
+  binding is independent of explicit Shell/Parent/Outlet topology. Runtime
+  cancellation also ends Backend close/reset waits; Backends own cancellation
+  of their work, and late completion cannot resume revalidation.
+  Backend close failures preserve framework errors and wrap other exceptions
+  in sanitized `CCNavigationAdapterError`, without the original message.
 - Use PopGuard only for synchronous, in-memory exit decisions. Use Flutter `PopScope` for confirmation UI or asynchronous work.
-- A PopGuard allow decision does not override local `PopScope`/`Form` denial on system back or `maybePop`. Keep the page and its result pending until local policy permits exit; an explicit `pop` after confirmation remains a deliberate application action. Native Managed default opaque iOS pages evaluate the synchronous Guard before an edge swipe: deny stays still, while allow retains Flutter's interactive transition. Cancellation, a declined start, Route removal and Backend disposal close the temporary gate. Custom transitions and the deprecated, frozen GoRouter compatibility Backend keep the conservative non-interactive fallback; unguarded pages retain platform gestures.
-- System back, ordinary Pop, and Cupertino gestures use the shared coordination. Android
-  predictive-back automatic observation is Host opt-in through either the native
-  Managed Backend or, during migration only, the deprecated GoRouter compatibility backend (`enablePredictiveBack: true`).
-  The Android Host must also set
-  `android:enableOnBackInvokedCallback="true"` on the effective
-  `<application>`; the framework does not rewrite application manifests.
-  Managed generated Pages wire their Host bridge automatically. False preserves original Routes and Flutter
-  behavior and installs no CCRouter gesture observer.
-  Managed and GoRouter compatibility Backends share the Host-only
-  `CCPredictiveBackCoordinator`; Backend facades provide only Entry/Outlet
-  identity and sanitized fallback storage. Feature code must not import or
-  retain the coordinator. Adapter disposal and constructor rollback release its
-  observer, terminal Timer, Routes, listeners, PopGuard, and backend callbacks.
-  Generated default Android Material pages wire automatically; attached/custom
-  or Shell Page builders pass the Adapter bridge as `predictiveBackHandler`
-  explicitly. Stock predictive Theme builders are supported; Guard, modal,
-  LocalHistory and custom-transition fallback remain intact. Eligibility follows
-  the current `Theme.platform`; switching to an unsupported platform/transition
-  during a gesture cancels and restores the preview and Navigator gesture state.
-  Late commits cannot pop that page, and restoring a predictive Theme does not
-  revive the old preview. New gestures follow the current Theme. A preview cancelled
-  by navigation or a closed local gate at commit must not complete results,
-  dispose Route Scopes or trigger business confirmation. Ancestor Navigator
-  popups block covered nested pages and invalidate existing previews, including
-  when the popup closes before commit. Attached Router pages recover ordinary
-  Flutter handling for new gestures after Adapter disposal; old gestures stay
-  invalid. Reading `Route.popGestureEnabled` during a retired gesture does not
-  detach its original commit fence. If the terminal callback is lost, the next
-  start first cancels the leftover preview, then reevaluates handler activity;
-  a retired attached Adapter handler detaches before Flutter handles the new
-  sequence. Do not treat an eligibility read as a replacement start.
-  Read `adapter.predictiveBackFallbacks` for bounded, sanitized start
-  rejection reasons; it shares `lifecycleEventCapacity` and is empty without
-  allocating history when the switch is false. Treat custom handler failures as
-  observational: a throwing `isActive` relinquishes an idle Route to Flutter;
-  it does not detach an in-flight gesture owner.
-  Adapter construction must atomically roll back all observer/listener
-  registration. Never add a second Pop
-  or manually forward phases for an automatically wired Route. See the Host
-  section of `references/implementation-patterns.md` for limits and rollback.
-  In this repository's Demo, `lib/main_predictive_back.dart` validates the
-  native Managed backend. The deprecated GoRouter migration regression uses
-  `lib/main_go_router_predictive_back.dart`; `lib/main_managed_predictive_back.dart`
-  is a compatibility alias for the Managed entry. Run platform gesture
-  acceptance separately when an existing Host still depends on GoRouter.
+- Confirmation UI is page-owned and deduplicates repeated attempts. After
+  confirmation, update its allowed-exit state and explicitly call
+  `CCRouter.navigator.pop`; existing synchronous Guards still apply. On iOS,
+  `canPop: false` can disable the edge gesture without a refusal callback, so
+  provide an explicit leave/save action instead of promising swipe-triggered UI.
+- Managed native AppBar/semantic Back, iOS and predictive policy evaluate the
+  actual Host/Outlet/backend identity, independently of global focus. Custom
+  multi-Navigator Backends use Host-only `CCNavigationScopedPopGuardBinding`;
+  the legacy one-argument binding remains supported.
+- A PopGuard allow decision does not override local `PopScope`/`Form` denial on system back or `maybePop`. Keep the page and its result pending until local policy permits exit; an explicit `pop` after confirmation remains a deliberate application action. Native Managed default opaque iOS pages evaluate the synchronous Guard before an edge swipe: deny stays still, while allow retains Flutter's interactive transition. Cancellation, a declined start, Route removal and Backend disposal close the temporary gate. Custom transitions keep the conservative non-interactive fallback; unguarded pages retain platform gestures.
+- System back, ordinary Pop and Cupertino gestures use shared coordination.
+  Android predictive-back observation is Host opt-in through Managed
+  (`enablePredictiveBack: true`). The Android Host must set
+  `android:enableOnBackInvokedCallback="true"` on its effective application.
+  Managed generated Pages wire the bridge automatically; false installs no
+  CCRouter gesture observer and preserves Flutter Route construction.
+  Host-only `CCPredictiveBackCoordinator` owns gesture identity, observer,
+  terminal Timer and result reconciliation. Features must not retain it or
+  manually report phases. Flutter alone animates and pops. Cancellation,
+  duplicate/late terminals, navigation, popup coverage and Theme changes cannot
+  complete a new page's result or dispose an unrelated Scope.
+  Stock predictive Material Theme builders are supported; Android Guard,
+  Modal, LocalHistory and custom-transition fallback remain in effect.
+  Disposing an Adapter releases every backend callback and observer. A custom
+  Route retained by its own Host fences its retired gesture before returning
+  future sequences to Flutter. Reading eligibility is observational.
+  `adapter.predictiveBackFallbacks` retains at most 100 sanitized events and is
+  empty while disabled. General history is the bounded Runtime
+  `recentBackendNavigationEvents`, not the removed Adapter lifecycle ring.
+  Validate Android and iOS gestures separately on target devices. The Demo
+  entry is `lib/main_predictive_back.dart`; the Managed alias
+  `main_managed_predictive_back.dart` remains available.
+- Independent third-party Navigators and non-Route overlays may report lifecycle
+  through Host-only `backend.adapter.foreignRouteBridge`
+  (`CCForeignRouteBridge`, `CCForeignRouteHandle`, `CCOpaqueUiHandle`).
+  These are diagnostic handles; they never navigate or create managed Scopes.
+  Ordinary foreign Routes on a Managed Navigator are observed automatically:
+  do not double-report them. End handles once, reject cross-bridge handles,
+  and never retain callback Route/Context objects in diagnostics.
 - Use `CCNavigationAspect` only for observation and sanitized telemetry. It must not change navigation decisions or synchronously re-enter navigation.
 - Use `CCPageLifecycleMixin` or `CCPageLifecycleListener` for PageShow/PageHide and application foreground/background observation. Use Flutter `initState/dispose` for Widget lifetime.
 - Use Route Service for page-instance resources that must survive PageHide and be disposed only after the exact managed RouteEntry is removed.
+  Managed startup pages also receive an Entry/Scope. Foreign Routes and a local
+  `CCManagedOutlet.baseBuilder` surface do not create their own Managed Scope.
+  Native Managed ordinary exit removes the active Entry and completes its result
+  first, retaining content and its Route Scope until Flutter finishes rendering
+  the outgoing Route. Exact close and empty foreign anchors release business
+  resources promptly. Shutdown cancels render waits without another frame.
+  Custom Backends may implement Host-only `CCNavigationRouteExitBinding`;
+  feature code must not use it or start new business work while exiting.
+- Navigator renderer unmount is independent of logical Entry removal. Managed
+  releases its rendered Route, Guard, foreign and lifecycle top references,
+  retaining identity, pending result and Route Service for remount. Widget State
+  follows Flutter lifetime; destroyed foreign popups do not restore. Reusing a
+  RouterConfig does not replay completed startup navigation. Hidden focus falls
+  back to the sole visible mounted Outlet for context-free Back; ambiguous panes
+  still need Host selection and root popup priority remains in effect.
 - Pass `BuildContext` to navigator calls only when call-site Host/Outlet resolution is required. Do not store it globally.
 - Custom Host Adapters must build destinations from the immutable
   `CCNavigationRequest.pathParameters` resolved by Runtime. Never rematch the
@@ -401,7 +571,7 @@ the Service Contract.
   constraints, and typed Codec values.
 - Managed Hosts expose `CCManagedShellBinding` for single-Navigator or stateful
   branch Shells and `CCManagedOutlet` for adaptive named Outlets. A Shell builder
-  must mount `shell.navigatorFor(outlet)` exactly once per declared Outlet and
+  must mount `shell.navigatorFor(outlet)` at most once per Outlet and
   use `shell.activateOutlet(outlet)` only for branch selection; it must not create
   a second Navigator for the same Outlet. Host branch UI may use
   `shell.hasEntries(outlet)` to distinguish lazy initialization from returning
@@ -410,6 +580,37 @@ the Service Contract.
   Feature pages must not inspect this Host-only stack state. Context-scoped `push`, `go`, `pop`,
   `maybePop`, and `canPop` are resolved before dispatch, so left/right pane
   navigation does not depend on focus timing.
+  Keep inactive branches mounted (for example in an `IndexedStack`) when their
+  Widget State must survive tab changes. Unmounting preserves logical Entries,
+  results and Route Scopes, but disposed Widget State does not restore.
+  Independent panes may supply Host-owned `CCManagedOutlet.baseBuilder` for a
+  local base surface. It has no Managed Entry, result, or Route Scope; pushes
+  from its Context use that same Outlet and pop back to the surface. Do not add
+  a second handwritten Navigator or use this base for Route-scoped resources.
+- Managed declarative Go/Reset/Open-Go and startup/browser reconstruction build
+  declared `parentRouteId` chains atomically. Ancestor Codecs decode the child's
+  Path/Query without Extra; missing values or inaccessible ancestors reject
+  before mutation. Ancestor-to-leaf interceptors keep the original origin;
+  cancellation preserves the old stack, redirect replaces the plan, and defer
+  resumes the original leaf through fresh validation. Only the externally
+  addressed leaf needs Deep Link admission; structural ancestors do not become
+  public external entry points. Each ancestor owns an independent Entry/Scope
+  without a caller result channel. Push/Replace preserve existing stacks.
+  Custom Backends opt in through Host-only `CCNavigationParentStackAdapter`;
+  feature code must not construct plans or import that SPI.
+- Shell lifetime follows actual Outlet membership, including Context-selected
+  pages whose own declaration has no Shell ID. Direct business navigation and
+  branch activation must agree on Runtime visibility and current URL. Foreign
+  Flutter popups have separate live ownership and bypass underlying managed
+  guards; they never create Managed Route Scopes. Shutdown may leave Flutter
+  surfaces mounted briefly while their Store retires; Host builders must not be
+  invoked with disposed structural metadata.
+  Managed cross-Shell push retains the original Shell's branches and Widget
+  State. An exhausted child can return through its outer Shell anchor. Root
+  Context Back resolves the selected child before guard evaluation. Each Shell
+  ID owns one retained container; revisiting it uses its existing partitions.
+  Shells within one Managed Host must own distinct named Outlets and cannot use
+  reserved `root`; conflicting topology is rejected during initialization.
 
 ## Lifecycle Rules
 
@@ -421,12 +622,9 @@ the Service Contract.
   That setting also sizes Observer queues/deduplication windows with a minimum
   of 64, and the Sink queue unless `diagnostics.queueCapacity` is set;
   do not reduce it as a memory-only switch without burst verification.
-  Adapter `lifecycleEventCapacity` is separate and per Host (default 1000).
-  `adapter.lifecycleEvents` returns value-only
-  `CCGoRouterNavigationEventSnapshot` entries; migrate historical Route reads
-  to `location`/`previousLocation`. Only synchronous Observer callbacks receive
-  raw Routes; never retain their events. Names can contain application data,
-  so forward only sanitized Runtime diagnostics to production telemetry.
+  Managed exposes sanitized Runtime history rather than the removed Adapter
+  `lifecycleEvents` API. Only synchronous Host Navigator observers see raw
+  Routes; do not retain those callback objects or application payloads.
   See the diagnostic-capacity guidance in `references/implementation-patterns.md`.
 - `CCRouterHost.initialize` receives one complete Host Assembly once.
 - If `CCRouterHost.initialize` fails after creating a Runtime, Host automatically disposes that unpublished Runtime and synchronously rethrows the original startup error/stack. Await `CCRouterHost.shutdown()` to join rollback before retrying; initialization is rejected until cleanup completes. Joining shutdown callers observe structural cleanup errors; otherwise rollback errors are handled without replacing the startup error. Failures before Runtime creation still allow immediate retry. Direct low-level Runtime owners remain responsible for disposal after failed initialization.
@@ -439,11 +637,47 @@ the Service Contract.
   call it. Reinitialize only after the shutdown Future completes.
 - Cancellation listeners must remain synchronous and short. A throwing listener does not skip other notifications or owned cleanup: Scope records notification/disposal failures internally, and Runtime reports an early App cancellation failure only after structural teardown. Reentrant shutdown joins that teardown and cannot permit early initialization. Never await an Owner's shutdown from an object that the same shutdown is waiting to dispose.
 - Select the narrowest Service Scope: app, session, or route.
+- A factory-returned disposable is adopted or reclaimed even if its Scope
+  closes reentrantly during construction. Lookup then fails with
+  `CCScopeClosedError`; close joins bounded reverse-order disposal. Prefer
+  authentication transitions outside factories and never await an owner's
+  close from one of its disposables.
+- Runtime timeout keeps `CCInvocationTimeoutError` when cancellation listeners
+  throw; cleanup errors enter sanitized diagnostics. Explicit Token.cancel
+  still notifies all listeners before rethrowing its first notification error.
 - A Service that owns a disposable client must itself implement `CCDisposable` and forward cleanup; implementing it only on the nested client is insufficient. Await owned asynchronous closure, make repeated disposal safe, and prevent late callbacks from retaining data after disposal. Consumers must not dispose a framework-owned Service.
 - The Analyzer can connect an existing compatible `dispose()` to `CCDisposable` through an explicit Quick Fix. Its owned-resource warning is conservative and never generates cleanup or proves absence of leaks. Keep Scope lifecycle tests and consult `references/ide-analysis-server.md` for coverage and fallback boundaries.
 - Prefer singleton; use `newInstance` only for stateless or immutable helpers whose ownership remains safe.
 - Use async Service readiness only when callers cannot safely use the instance immediately after synchronous construction.
 - Singleton readiness is shared, including across independent callers. Runtime rejects active dependency wait cycles; caller timeout/cancellation removes its wait without cancelling shared initialization. Do not retry a failed initializer implicitly within the same Scope.
+- Closing the initializer's actual owner settles readiness without waiting for
+  business I/O. Admitted callers receive `CCInvocationCancelledError` in their
+  own error Zone. Unfinished initializer/Subscriber Futures must not retain ended
+  framework Runtime/Route wait frames; late failures are consumed once. Direct
+  business captures, side effects and third-party resource cleanup remain owned
+  by the application. Manual MultiHost construction requires distinct Adapter
+  instances and validates all input before taking ownership of any child.
+- Synchronous `service`, `serviceOrNull` and `services` check the current
+  Invocation cancellation/deadline and Service construction owner's lifetime,
+  including cache hits, Keys and new instances. An old Session continuation
+  cannot resolve the replacement account's resources. Independent live callers
+  and Scope-owned singleton initialization remain unaffected by one waiter's
+  cancellation. Already held objects and entered Dart work remain cooperative.
+- Successful method completion does not give its detached callbacks a new
+  lifetime. They retain the original Session/Route Scope lineage, including
+  nested App Service calls. After an original Scope closes, fresh calls to
+  otherwise available Services, Commands and Events fail with
+  `CCInvocationCancelledError`; live-Scope callbacks remain valid. Factories
+  and singleton initializers belong to their actual Scope independently of a
+  waiter; `newInstance` initialization also keeps the caller lineage. A root
+  synchronous lookup cannot hand out an instance after its factory reenters
+  Runtime shutdown; successful construction still transfers cleanup once.
+- Async Service proxies recheck cancellation, owner lifetime and deadline after
+  readiness and immediately before entering the method. This includes no
+  initializer and already-ready Services. Cancellation/Session close/shutdown
+  cannot start an unentered method; already-entered work remains cooperative.
+  Tests for in-flight cancellation must await an explicit method-start gate;
+  immediate cancellation is a separate boundary with zero method calls.
 - Use `@CCService` only for a public concrete non-generic class with an unnamed zero-argument generative constructor. A promoted implementation must directly implement exactly one `@CCServiceContract`; do not pass or export a Service Token from business code. Use `@CCCommandContract` plus a public top-level `@CCCommandHandler` for generated Commands. Use `@CCEventContract` plus public top-level `@CCEventSubscription` functions for static Events. Use `CCInitTaskContract` plus a public top-level `@CCInitTask` function for generated initialization tasks. Use `@CCComponentContribution` for custom factories, constructor injection, async Service initializers, unannotated migration capabilities, Shell, and policy registration.
 - Keep InitTask dependency targets as top-level `const CCInitTaskContract` values. Set exactly one of `contract` and `id`; use `id` only for an independent component-internal task. Always declare `gate` and `failurePolicy` explicitly; ordinary startup uses `CCInitTaskGate.appStarted`, while generated CLI scaffolds merely write that value for you rather than relying on a framework default. Cross-component task dependencies require a public contracts-Package barrel and a required dependency on the task Owner. Call `CCRouterHost.runInitTasks(gate: ...)` with an explicit Gate from the Host, never invoke generated task bridges from business code.
 - Declare every cross-component Service consumer in the consuming component's `serviceDependencies`, keep the owner in required `dependencies`, and call the generated `<Component>Services` member. Do not scan Package dependencies, handwrite a Proxy, pass caller IDs, or use a generated Client for a component-local Service.
@@ -764,7 +998,7 @@ verification, Workspace validation, and both input barriers. Set
 `CCROUTER_DISABLE_AGGREGATION_REUSE=1` for the full-aggregation A/B reference;
 `--no-cache --check` remains authoritative.
 
-Use `ccrouter find <capability-id-or-route-pattern> <host-root>` to locate a generated Route, Service, Command, Event, or InitTask instead of scanning or guessing. Route declarations additionally support Pattern lookup. Add `--usage <consumer-component-id>` for a read-only recipe based on verified Package Index facts; it never edits dependencies or imports, and an unavailable public barrel requires explicit Contract exposure followed by regeneration. Normal generation may use an exact-content fast path only when authored inputs, tool identity, Package graph, external indexes, and every managed output match the last successful manifest. Use `--no-cache` as the authoritative reference-path check and `--profile` only for generation performance diagnosis. The profile trace is diagnostic data: do not make application logic, cache policy, or CI correctness depend on its timings. On a miss, `build-targets` names Builder inputs while `dirty-packages` names post-build aggregate invalidations and their propagation reasons; do not treat them as the same set. `input-delta` and `output-delta` provide bounded exact-content attribution; resolution-only changes do not prove causal dependencies, and changed state files do not imply changed business APIs. See the generation guidance in implementation-patterns for trace schema, unavailable-baseline, and check-restoration semantics. The Build Plan's `suggested` is only a candidate; only `actual=aggregateOnly` means build_runner was skipped. It supports a proven pure Package removal and a pure addition whose committed Portable Generation State exactly matches current source, resolution, metadata, and managed output. A writable unproven addition runs Builder; a read-only external Package with missing or stale state fails explicitly. Set `CCROUTER_DISABLE_AGGREGATE_ONLY=1` for an emergency full-Builder fallback. Commit `lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json` with generated output, never commit `.dart_tool/ccrouter/v1/build_plans/` or `profiles/`, and retain `--no-cache --check` as the CI authority. Never delete caches or touch files merely to force an ordinary generation run.
+Use `ccrouter find <capability-id-or-route-pattern> <host-root>` to locate a generated Route, Service, Command, Event, or InitTask instead of scanning or guessing. Route declarations additionally support Pattern lookup. Add `--usage <consumer-component-id>` for a read-only recipe based on verified Package Index facts; it never edits dependencies or imports, and an unavailable public barrel requires explicit Contract exposure followed by regeneration. Normal generation may use an exact-content fast path only when authored inputs, tool identity, Package graph, external indexes, and every managed output match the last successful manifest. Use `--no-cache` as the authoritative reference-path check and `--profile` only for generation performance diagnosis. The profile trace is diagnostic data: do not make application logic, cache policy, or CI correctness depend on its timings. On a miss, `build-targets` names Builder inputs while `dirty-packages` names post-build aggregate invalidations and their propagation reasons; do not treat them as the same set. `input-delta` and `output-delta` provide bounded exact-content attribution; resolution-only changes do not prove causal dependencies, and changed state files do not imply changed business APIs. See the generation guidance in implementation-patterns for trace schema, unavailable-baseline, and check-restoration semantics. The Build Plan's `suggested` is only a candidate; only `actual=aggregateOnly` means build_runner was skipped. It supports a proven pure Package removal and a pure addition whose committed Portable Generation State exactly matches current source, resolution, metadata, and managed output. A writable unproven addition runs Builder; a read-only external Package with missing or stale state fails explicitly. Set `CCROUTER_DISABLE_AGGREGATE_ONLY=1` for an emergency full-Builder fallback. For Packages explicitly opting into portable distribution, generate and validate `lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json` through `portable prepare/publish` and commit it with generated output. Ordinary local generation does not produce this state. Never commit `.dart_tool/ccrouter/v1/build_plans/` or `profiles/`, and retain `--no-cache --check` as the CI authority. Never delete caches or touch files merely to force an ordinary generation run.
 
 ## Completion Standard
 

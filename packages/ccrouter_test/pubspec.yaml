@@ -11,16 +11,12 @@ environment:
   sdk: ^3.10.0
 
 dependencies:
-  ccrouter_analytics: ^0.1.0
-  ccrouter_analytics_flutter: ^0.1.0
   ccrouter: ^0.1.0
   ccrouter_ui: ^0.1.0
   ccrouter_contracts: ^0.1.0
   ccrouter_core: ^0.1.0
-  ccrouter_go_router: ^0.1.0
   flutter:
     sdk: flutter
-  go_router: ^17.5.0
 
 dev_dependencies:
   build: ^4.0.0

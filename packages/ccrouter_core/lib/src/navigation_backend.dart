@@ -171,12 +171,13 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
   /// callback removes the listener and cancels its queued deliveries. This
   /// capability is optional; adapters without backend observation support
   /// simply produce no events.
+  /// Cleanup is idempotent and never removes a later re-add of this callback.
+  /// Simultaneous duplicate adds still share one subscription.
   void Function() addBackendNavigationListener(
     CCNavigationBackendDiagnosticListener listener,
   ) {
     _ensureInitialized();
-    _backendNavigationListeners.add(listener);
-    return () => _backendNavigationListeners.remove(listener);
+    return _subscribeNavigationObserver(_backendNavigationListeners, listener);
   }
 
   /// Connects an optional adapter backend event source during initialization.
@@ -280,10 +281,9 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
       }
       _backendNavigationEvents.add(diagnosticEvent);
     }
-    _enqueueNavigationObserverBatch(
+    _enqueueRegisteredNavigationObserverBatch(
       _backendNavigationListeners,
       (listener) => listener(diagnosticEvent),
-      isActive: _backendNavigationListeners.contains,
       failureLabel: 'Backend navigation listener',
       critical: switch (event.kind) {
         CCNavigationBackendEventKind.pop ||
@@ -310,6 +310,7 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
   void _applyObservedHostLifecycle(CCNavigationBackendEvent event) {
     if (event.kind != CCNavigationBackendEventKind.hostDetached) return;
     final hostId = event.hostId ?? event.placement.hostId;
+    _detachNavigationHost(hostId);
     _removeAllRouteEntries(reason: 'hostDetached', hostId: hostId);
     for (final ledgerEntry in _backendEntries.entries.toList()) {
       final entry = ledgerEntry.value;
@@ -542,7 +543,9 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
     _applyActiveOutlets(
       hostId: hostId,
       shellId: shellId,
-      activeOutlets: [activeOutlet],
+      activeOutlets: event.activeNavigatorOutlets.isEmpty
+          ? [activeOutlet]
+          : event.activeNavigatorOutlets,
       reason: 'outletActivated',
     );
   }

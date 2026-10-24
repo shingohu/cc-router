@@ -15,12 +15,16 @@ extension CCRouterRuntimeNavigationCapabilityDiagnostics on CCRouterRuntime {
   /// Events use the Runtime observer queue, so callbacks run on a later event
   /// loop turn and cannot block or alter navigation. The returned callback
   /// removes the listener and cancels deliveries that have not started.
+  /// Cleanup is idempotent and never removes a later re-add of this callback.
+  /// Simultaneous duplicate adds still share one subscription.
   void Function() addNavigationCapabilityFallbackListener(
     CCNavigationCapabilityFallbackListener listener,
   ) {
     _ensureInitialized();
-    _navigationCapabilityFallbackListeners.add(listener);
-    return () => _navigationCapabilityFallbackListeners.remove(listener);
+    return _subscribeNavigationObserver(
+      _navigationCapabilityFallbackListeners,
+      listener,
+    );
   }
 
   /// Retains and publishes one sanitized capability fallback event.
@@ -46,10 +50,9 @@ extension CCRouterRuntimeNavigationCapabilityDiagnostics on CCRouterRuntime {
       }
       _navigationCapabilityFallbacks.add(event);
     }
-    _enqueueNavigationObserverBatch(
+    _enqueueRegisteredNavigationObserverBatch(
       _navigationCapabilityFallbackListeners,
       (listener) => listener(event),
-      isActive: _navigationCapabilityFallbackListeners.contains,
       failureLabel: 'Navigation capability fallback listener',
     );
     _emitDiagnostic(

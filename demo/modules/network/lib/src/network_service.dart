@@ -138,7 +138,7 @@ final class DemoNetworkServiceImpl implements DemoNetworkService, CCDisposable {
 /// API environments used by the network lab.
 const demoNetworkEnvironments = <CCNetworkEnvironment>[
   CCNetworkEnvironment(id: 'development', baseUrl: 'https://httpbin.org/'),
-  CCNetworkEnvironment(id: 'staging', baseUrl: 'https://postman-echo.com/'),
+  CCNetworkEnvironment(id: 'staging', baseUrl: 'https://httpbingo.org/'),
   CCNetworkEnvironment(id: 'production', baseUrl: 'https://httpbin.org/'),
 ];
 

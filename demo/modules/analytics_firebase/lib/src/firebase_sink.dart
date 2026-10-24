@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:ccrouter_analytics/ccrouter_analytics.dart';
+import 'package:demo_analytics/demo_analytics.dart';
 
 /// Application boundary used by [DemoFirebaseAnalyticsSink].
 ///
@@ -9,13 +9,13 @@ import 'package:ccrouter_analytics/ccrouter_analytics.dart';
 typedef DemoFirebaseEventWriter =
     FutureOr<void> Function(String name, Map<String, Object> parameters);
 
-/// Maps sanitized CCRouter analytics events to Firebase-style event calls.
+/// Maps sanitized application analytics events to Firebase-style event calls.
 ///
 /// This Adapter belongs to the application layer because event naming,
 /// Firebase initialization, consent and upload policy are product decisions.
 /// Only validated primitive properties and stable correlation identifiers
 /// cross this boundary.
-final class DemoFirebaseAnalyticsSink implements CCAnalyticsSink {
+final class DemoFirebaseAnalyticsSink implements AppAnalyticsSink {
   /// Creates a sink backed by an application-owned Firebase writer.
   const DemoFirebaseAnalyticsSink({required this.writeEvent});
 
@@ -24,7 +24,7 @@ final class DemoFirebaseAnalyticsSink implements CCAnalyticsSink {
 
   /// Writes one sanitized event using Firebase's name and parameter shape.
   @override
-  FutureOr<void> write(CCAnalyticsEvent event) {
+  FutureOr<void> write(AppAnalyticsEvent event) {
     final parameters = <String, Object>{
       'type': event.type.name,
       'route_id': ?event.routeId,

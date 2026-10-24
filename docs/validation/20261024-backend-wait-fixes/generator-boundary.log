@@ -1,0 +1,8 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/contracts_layout_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/contracts_layout_test.dart: 领域迁移保持 Route 代码及 Route/Service 契约形状
+00:23 +1: loading packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart
+00:23 +1: packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart: rejects cross-Package imports, exports, and conditional imports
+00:23 +2: packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart: allows owner imports, public contracts, and generated Host glue
+00:23 +3: loading packages/ccrouter_test/generator_test/route_api_boundary_test.dart
+00:23 +3: packages/ccrouter_test/generator_test/route_api_boundary_test.dart: another Package reports internal use and hides the public Route API
+00:25 +4: All tests passed!

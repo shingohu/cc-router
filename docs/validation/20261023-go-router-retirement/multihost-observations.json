@@ -1,0 +1,32 @@
+{
+  "date": "2026-10-23",
+  "entrypoint": "lib/multi_host_demo.dart",
+  "results": [
+    {
+      "scenario": "secondary typed Push and result",
+      "observed": "Right detail ID42; left overview unchanged; result detail:42:confirmed; total entries returned to2",
+      "evidence": "07-secondary-push.jpg"
+    },
+    {
+      "scenario": "primary physical coordinate Push and result",
+      "observed": "Left detail ID42; right navigation home unchanged; return leaves two homes",
+      "evidence": "09-primary-coordinate-push.jpg"
+    },
+    {
+      "scenario": "adaptive detail navigation",
+      "observed": "Item3; detail-only stack Level3 -> Level4 -> Pop Level3 with stack:4:done",
+      "evidence": "11-adaptive-detail-stack.jpg"
+    },
+    {
+      "scenario": "compact and hinge visibility",
+      "observed": "compact without hinge activates list only; re-enable hinge restores Level3 Entry; pop returns Item3 base",
+      "evidence": "16-adaptive-base-item3.jpg"
+    }
+  ],
+  "limitations": [
+    "AX exposes one navigation subtree and can remain on the right after physical left activation; AX-click alias affected the right actual control. That attempt is not left-host proof.",
+    "08-primary-push.jpg is a mislabeled AX-selection attempt, not primary-host evidence.",
+    "13-adaptive-compact-stack-preserved.jpg shows hidden detail, not a visible stack; restoration is verified in14.",
+    "Entry survives visibility changes; page-local transient result text was recreated. No universal widget-state preservation claim."
+  ]
+}

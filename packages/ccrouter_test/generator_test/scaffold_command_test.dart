@@ -1,12 +1,14 @@
 @TestOn('vm')
 library;
 
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:ccrouter_generator/src/project_context.dart';
 import 'package:ccrouter_generator/src/project_role.dart';
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
+import 'package:yaml/yaml.dart';
 
 import '../../ccrouter_generator/bin/src/scaffold.dart';
 
@@ -110,6 +112,109 @@ void main() {
     );
   });
 
+  test(
+    'YAML scalar round trips preserve SDK ranges and Git ref strings',
+    () async {
+      for (final ref in ['000123', 'on', '*', 'true']) {
+        final parent = await Directory.systemTemp.createTemp(
+          'ccrouter-scaffold-scalar-',
+        );
+        addTearDown(() => parent.delete(recursive: true));
+        File(path.join(parent.path, 'pubspec.yaml')).writeAsStringSync('''
+name: scaffold_invoker
+environment:
+  sdk: ">=3.10.0 <4.0.0"
+dependencies:
+  ccrouter: ^0.1.0
+dev_dependencies:
+  ccrouter_generator:
+    git:
+      url: https://example.com/framework.git
+      ref: ${jsonEncode(ref)}
+      path: packages/ccrouter_generator
+''');
+        await createScaffold(
+          kind: CCScaffoldKind.component,
+          name: 'feature',
+          root: parent,
+        );
+        final generated =
+            loadYaml(
+                  File(
+                    path.join(parent.path, 'feature/pubspec.yaml'),
+                  ).readAsStringSync(),
+                )
+                as YamlMap;
+        expect(generated['environment']['sdk'], '>=3.10.0 <4.0.0');
+        expect(
+          generated['dev_dependencies']['ccrouter_generator']['git']['ref'],
+          ref,
+        );
+      }
+    },
+  );
+
+  test(
+    'example inherits build_runner from the same staged component snapshot',
+    () async {
+      final parent = await Directory.systemTemp.createTemp(
+        'ccrouter-scaffold-snapshot-',
+      );
+      addTearDown(() => parent.delete(recursive: true));
+      final ownerManifest = File(path.join(parent.path, 'pubspec.yaml'));
+      const original = '''
+name: scaffold_invoker
+environment:
+  sdk: ^3.10.0
+dependencies:
+  ccrouter: ^0.1.0
+dev_dependencies:
+  ccrouter_generator: ^0.1.0
+  build_runner: ^2.10.0
+''';
+      ownerManifest.writeAsStringSync(original);
+      await createScaffold(
+        kind: CCScaffoldKind.component,
+        name: 'feature',
+        root: parent,
+        withExample: true,
+        processRunner:
+            (executable, arguments, {workingDirectory, environment}) async {
+              final example = Directory(arguments.last)
+                ..createSync(recursive: true);
+              File(path.join(example.path, 'pubspec.yaml')).writeAsStringSync(
+                '''
+name: feature_example
+environment:
+  sdk: ^3.10.0
+dependencies:
+  flutter:
+    sdk: flutter
+''',
+              );
+              ownerManifest.writeAsStringSync(
+                original.replaceFirst('^2.10.0', '^2.11.0'),
+              );
+              return ProcessResult(0, 0, '', '');
+            },
+      );
+      for (final relative in ['feature', 'feature/example']) {
+        final generated =
+            loadYaml(
+                  File(
+                    path.join(parent.path, relative, 'pubspec.yaml'),
+                  ).readAsStringSync(),
+                )
+                as YamlMap;
+        expect(
+          generated['dev_dependencies']['build_runner'],
+          '^2.10.0',
+          reason: relative,
+        );
+      }
+    },
+  );
+
   test('create component can atomically add a runnable example Host', () async {
     final parent = await Directory.systemTemp.createTemp('ccrouter-scaffold-');
     addTearDown(() => parent.delete(recursive: true));
@@ -180,6 +285,34 @@ dev_dependencies:
     expect(manifest, contains('demo_inventory:'));
     expect(manifest, contains('path: ..'));
     expect(manifest, contains('ccrouter_generator:'));
+    expect(manifest, contains('build_runner:'));
+    expect(
+      File(path.join(packageRoot.path, 'pubspec.yaml')).readAsStringSync(),
+      contains('build_runner:'),
+    );
+    expect(
+      File(path.join(packageRoot.path, 'ccrouter.yaml')).readAsStringSync(),
+      contains('portable: true'),
+    );
+    expect('${result.stdout}', contains('ccrouter portable prepare'));
+    final mainSource = File(
+      path.join(example.path, 'lib/main.dart'),
+    ).readAsStringSync();
+    expect(mainSource, contains('CCRouterHost.initialize'));
+    expect(mainSource, contains('CCManagedRouterApp('));
+    expect(mainSource, contains('ccrouter_host.api.g.dart'));
+    expect(
+      File(
+        path.join(example.path, 'lib/src/example_component.dart'),
+      ).readAsStringSync(),
+      contains("CCComponentId('demo_inventory_example')"),
+    );
+    expect(
+      File(
+        path.join(example.path, 'lib/src/example_home_page.dart'),
+      ).readAsStringSync(),
+      contains("CCPathPattern('/')"),
+    );
     expect(
       '${result.stdout}',
       contains('generated example is a CCRouter Host'),
@@ -277,7 +410,47 @@ workspace:
     ).readAsStringSync();
     expect(exampleManifest, contains('resolution: workspace'));
     expect(exampleManifest, contains('demo_inventory: ^0.1.0'));
+    expect(
+      File(
+        path.join(modules.path, 'demo_inventory', 'ccrouter.yaml'),
+      ).existsSync(),
+      isFalse,
+    );
   });
+
+  test(
+    'example fails before publishing when build tool source is unknown',
+    () async {
+      final parent = await Directory.systemTemp.createTemp(
+        'ccrouter-scaffold-no-tool-',
+      );
+      addTearDown(() => parent.delete(recursive: true));
+      File(path.join(parent.path, 'pubspec.yaml')).writeAsStringSync('''
+name: scaffold_invoker
+environment:
+  sdk: ^3.10.0
+dependencies:
+  ccrouter: ^0.1.0
+dev_dependencies:
+  ccrouter_generator: ^0.1.0
+''');
+      final result = await Process.run(Platform.resolvedExecutable, [
+        '--packages=${path.absolute('.dart_tool/package_config.json')}',
+        path.absolute('packages/ccrouter_generator/bin/ccrouter.dart'),
+        'create',
+        'component',
+        'feature',
+        parent.path,
+        '--with-example',
+      ], workingDirectory: parent.path);
+      expect(result.exitCode, isNot(0));
+      expect(
+        '${result.stderr}',
+        contains('Cannot prove dependency source for build_runner'),
+      );
+      expect(parent.listSync().whereType<Directory>(), isEmpty);
+    },
+  );
 
   test('create component inherits resolved dependency sources', () async {
     final workspace = await Directory.systemTemp.createTemp(
@@ -297,6 +470,8 @@ dependencies:
   ccrouter:
     path: framework/ccrouter
 dev_dependencies:
+  build_runner:
+    path: framework/build_runner
   ccrouter_generator:
     git:
       url: https://example.com/cc-router.git
@@ -311,6 +486,7 @@ workspace:
       'component',
       'demo_inventory',
       modules.path,
+      '--with-example',
     ]);
     final output = '${result.stdout}\n${result.stderr}';
     expect(result.exitCode, 0, reason: output);
@@ -318,11 +494,19 @@ workspace:
       path.join(modules.path, 'demo_inventory', 'pubspec.yaml'),
     ).readAsStringSync();
 
-    expect(manifest, contains('sdk: >=3.12.0 <4.0.0'));
+    expect(
+      (loadYaml(manifest) as YamlMap)['environment']['sdk'],
+      '>=3.12.0 <4.0.0',
+    );
     expect(manifest, contains('path: ../../framework/ccrouter'));
     expect(manifest, contains('url: "https://example.com/cc-router.git"'));
     expect(manifest, contains('ref: abcdef1234567890'));
     expect(manifest, contains('path: packages/ccrouter_generator'));
+    expect(manifest, contains('path: ../../framework/build_runner'));
+    final exampleManifest = File(
+      path.join(modules.path, 'demo_inventory/example/pubspec.yaml'),
+    ).readAsStringSync();
+    expect(exampleManifest, contains('path: ../../../framework/build_runner'));
   });
 
   test(

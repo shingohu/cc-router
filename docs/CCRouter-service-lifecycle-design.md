@@ -25,7 +25,7 @@ Service Readiness       Synchronous / Lazy async initializer
 | --- | --- | --- | --- |
 | App | Runtime | 首次解析创建，Runtime dispose 时销毁 | 网络客户端、配置、日志、埋点 |
 | Session | 登录 Session | Session 打开后首次解析，closeSession 时销毁 | 账号信息、购物车、用户缓存 |
-| Route | 一个具体 RouteEntry | RouteEntry 创建期间创建，Entry 最终移除后销毁 | 编辑控制器、页面草稿、WebView 控制器 |
+| Route | 一个具体 RouteEntry | Entry 存活时懒创建；退出渲染期结束后释放，精确 close 及时释放 | 编辑控制器、页面草稿、WebView 控制器 |
 
 App、Session 和 Route 三种 Lifetime 均已启用。Route Scope 只由 Runtime 创建、取消和
 关闭；业务代码不能构造 Scope，也不能把不可用的 Lifetime 静默降级到 App Scope。1.x
@@ -60,12 +60,22 @@ Provider Factory 始终同步创建实例，使 Runtime 可以先把实例纳入
 - `service<T>()` 不会隐式启动异步工作；初始化完成前返回 `CCServiceNotReadyError`。
 - 初始化失败在当前 Singleton/Scope 内保持稳定，不自动重试有副作用的操作；业务重试策略应写在
   initializer 内。新的 Session 或 Route Scope 会获得新的实例和 readiness 状态。
-- Session close、RouteEntry 移除和 Runtime shutdown 会取消 Owner Scope 的 readiness context；
+- Session close、Route Scope 关闭和 Runtime shutdown 会取消 Owner Scope 的 readiness context；
   initializer 必须配合 cancellation，Dart Future 本身不能被强制终止。
 - Singleton 初始化由 Scope 共享：单个等待者的 cancellation/timeout 只停止该等待者，不能让
   一个短生命周期调用者永久破坏整个 Scope 的共享 Service。`newInstance` readiness 不共享实例，
   因此同时服从 caller 和 Owner Scope cancellation。
 - 参数、实例和错误消息不进入 Trace；失败只保留稳定 Service identity 与 error type。
+
+等待者取消、超时或其原 Session/Route 结束时，框架解除该等待者的内部订阅，释放 caller Zone；
+共享 initializer 仍由实际 Owner 决定终态。Owner 关闭不等待业务 I/O 完成，已接纳的等待者收到
+`CCInvocationCancelledError`；迟到错误被消费，不重新启动初始化。共享成功/失败分别交付到
+各等待者自己的 error Zone。业务仍须处理各自返回的 Future，并负责外部任务的协作取消。
+
+Scope、token、缓存 readiness、Scope-owned Factory 和 Singleton initializer 使用 Runtime
+创建时的 Host Zone，同时保留框架 Trace、依赖关系与重入门禁；不会采用首次消费者的任意
+Zone 值作为共享配置。`newInstance` initializer 继续保留 caller cancellation 链。业务上下文
+应显式传参；这不保证释放业务回调自己直接捕获的对象。
 
 异步实例构造函数返回 `Future<T>` 不纳入 1.x：实例完成前没有可交付的 Scope 所有权，关闭与晚到
 结果的销毁容易产生竞态。同步实例构造函数 + 可选 initializer 将所有权和 readiness 两个维度分开。
@@ -93,18 +103,28 @@ Session 和 Pop 页面不能互相隐式替代。App `newInstance` 作为窄 Sco
 - Dialog、BottomSheet、Popup 或 LocalHistory 覆盖；
 - App 进入后台。
 
-只有 Managed `RouteEntry` 永久移除后才关闭 Route Lifetime。页面生命周期仍由
-`CCPageLifecycleMixin` / `CCPageLifecycleListener` 提供；Service 不自动接收
-`onResume`、`onPause`、`PageShow` 或 `PageHide`。
+原生 Managed 的逻辑 Entry、Flutter 渲染与 Scope 释放分为以下边界：
+
+- 普通 Pop 先移除活动 Entry 并交付结果，退出页面及 Route Scope 保留到 Flutter 退出渲染结束，
+  使转场期间 rebuild 仍可解析原 Route Service；退出期间不应启动新的业务工作。
+- 精确 close 及时结束目标的结果与 Scope；覆盖页面和 Foreign Popup 不随之关闭。
+- renderer 卸载本身不等于逻辑 Entry 移除；释放旧 Route/Guard 等渲染引用，保留 Entry identity、
+  pending result 和 Route Scope，重挂时可继续使用。Widget State 仍服从 Flutter 生命周期。
+- Runtime shutdown 取消退出渲染等待，不依赖下一帧；资源只清理一次，异步 dispose 可继续等待。
+
+自定义 Backend 可通过 Host-only `CCNavigationRouteExitBinding` 声明退出渲染边界；业务不得调用
+该 SPI。页面生命周期仍由 `CCPageLifecycleMixin` / `CCPageLifecycleListener` 提供；Service
+不自动接收 `onResume`、`onPause`、`PageShow` 或 `PageHide`。
 
 Route Service 不能通过全局 `CCRouter.service<T>()` 猜测当前页面，因为同一个页面可以
 同时打开多个 Entry。自动 Flutter Host 在页面外层注入不可变 Navigation ID，页面通过
 `CCRouter.routeService<T>(context)` 读取该精确绑定；这里的 `BuildContext` 只用于查找 ID，
 不创建、不拥有、也不关闭 Scope。Core 仍可按 ID 在 Pure Dart 测试中完成同一语义。
 
-初始位置、Foreign Route 和未调用 `CCRouterHostBinding.bindRouteEntry` 的手写 Host Route
-没有 Managed RouteEntry，因此不能解析 Route Service。GoRouter 自动 Assembler 已完成绑定；
-手写 Route builder 必须同时解包业务 Extra 并包裹 RouteEntry binding。
+原生 Managed 启动导航创建的初始页面与后续导航页面一样拥有 RouteEntry 和 Route Scope。
+Foreign Route、`CCManagedOutlet.baseBuilder` 本地 surface，以及未建立精确 Entry binding 的
+手写 Host Route 没有自己的 Managed Route Scope。自定义 Host 的绑定与 Extra 解包属于
+Composition Root/SPI，业务页面不能手工制造 Scope 或借用底层页面的身份。
 
 ## 4. Session 与 App 语义
 
@@ -148,13 +168,17 @@ CCRouter 采用相同的维度拆分，但保留组件所有权、RouteEntry 精
 
 ## 6. 当前实施状态
 
+本文件维护 Provider、Scope、readiness 和释放语义；生成 Client 的声明与方法支持矩阵只在
+[Service Proxy 规范](CCRouter-service-proxy-generation-design.md)维护。原实施计划已合并，
+阶段顺序与旧 benchmark 记录见[合并归档](archive/20261024-consolidation/README.md)。
+
 - App、Session、Route 与 `singleton`/`newInstance` 已实现；每次解析创建使用
   `CCServiceCreationPolicy.newInstance`。
 - `ccrouter_test` 已提供隔离 Test Host 的 Service Override；Override 只能替换已注册
   Provider，沿用原 Scope 和创建策略，默认清除生产 initializer 并可选替换为测试
   readiness；缺失或重复目标在 Host 创建阶段失败。
 - Component Lifetime 已从 1.x 移除。
-- Route Lifetime 已接入 Core、Flutter Facade 和 GoRouter 自动 Assembler。
+- Route Lifetime 已接入 Core、Flutter Facade 和原生 Managed Host；GoRouter 兼容包已移除。
 - 可选 lazy async initializer、single-flight readiness、稳定失败、循环检测以及 Scope/caller
   cancellation 已实现；普通同步 Provider 不增加初始化成本。
 - Page 生命周期与 Service 生命周期保持独立。
@@ -167,6 +191,18 @@ CCRouter 采用相同的维度拆分，但保留组件所有权、RouteEntry 精
 活跃 Route 协调，以及 Handler、订阅和诊断状态的确定性清理，不能只关闭一部分 Service。
 
 ## 7. 验收要求
+
+Provider 的 Contract ID/Key 在注册时验证稳定语法；多个默认实现、重复 Key、Token 类型不匹配、
+未打开的 Session 和构造依赖环都返回相应 Service 错误，不能依赖解析顺序碰巧成功。
+跨组件调用使用显式 required Owner 与精确消费依赖；不从 Pub 依赖图猜测 Service。
+
+测试使用 `CCRouterTestHost` 的 Override，替换已注册 Provider，并沿用其 Lifetime/创建策略。
+默认清除生产 initializer，需要时显式安装测试 readiness；缺失或重复目标在 Test Host 创建时
+失败。Zone-local Overlay 不修改默认 Runtime，也不接管生产 Host Backend 或 initialize/shutdown。
+
+Invocation 诊断只记录稳定 Service/Key/method/caller/Owner identity、Scope、Trace、耗时与终态，
+不记录参数、业务返回值或原始异常文本。性能验证须同时确认 Scope 关闭后的 disposable 实例
+归零；同机 P50/P95 只证明对应样本，不用历史 benchmark 声称当前性能。
 
 - Scope 只决定所有权和销毁，不决定是否缓存。
 - Creation Policy 只决定创建和缓存，不改变实例 Owner。

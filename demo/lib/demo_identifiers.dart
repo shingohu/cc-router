@@ -5,4 +5,7 @@ library;
 abstract final class DemoHostIds {
   /// Global navigation policy installed by the Host.
   static const globalNavigationInterceptor = 'demo.global.policy';
+
+  /// Active-route policy applied after Demo access state changes.
+  static const routeRevalidationPolicy = 'demo.active_route.policy';
 }

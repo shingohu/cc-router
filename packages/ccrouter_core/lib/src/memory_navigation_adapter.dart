@@ -19,12 +19,12 @@ final class _CCMemoryNavigationEntry {
 ///
 /// This adapter models stack operations and typed Pop results without Flutter.
 /// Use it for framework or component-contract tests; production applications
-/// should provide a platform navigation adapter such as the future GoRouter
-/// integration.
+/// should provide a platform navigation adapter such as native Managed.
 @visibleForTesting
 final class CCMemoryNavigationAdapter
     implements
         CCNavigationAdapter,
+        CCNavigationDispatchAdapter,
         CCNavigationTargetedCloseAdapter,
         CCNavigationPopCoordinator,
         CCNavigationPopTargetSource,
@@ -151,6 +151,11 @@ final class CCMemoryNavigationAdapter
         return Future<Object?>.value();
     }
   }
+
+  /// Returns a receipt only after the in-memory transaction commits.
+  @override
+  CCNavigationDispatch dispatchNavigation(CCNavigationRequest request) =>
+      CCNavigationDispatch(result: navigate(request));
 
   /// Removes only the selected opening, preserving every other partition.
   @override

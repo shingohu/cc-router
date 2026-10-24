@@ -1,0 +1,22 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/runtime_round_trip/test_host_disposal.dart
+00:00 +0: every concurrent TestHost dispose joins actual resource cleanup
+00:00 +0 -1: every concurrent TestHost dispose joins actual resource cleanup [E]
+  Expected: false
+    Actual: <true>
+  Awaited teardown must not finish before owned resources
+  
+  package:matcher                                                                            expect
+  package:flutter_test/src/widget_tester.dart 477:18                                         expect
+  packages/ccrouter_test/test/review_repros/runtime_round_trip/test_host_disposal.dart 72:7  main.<fn>
+  
+00:00 +0 -1: repeated TestHost dispose preserves the original cleanup failure
+00:00 +0 -2: repeated TestHost dispose preserves the original cleanup failure [E]
+  Expected: same instance as StateError:<Bad state: adapter cleanup>
+    Actual: <null>
+  Joining cleanup must not turn structural failure into success
+  
+  package:matcher                                                                            expect
+  package:flutter_test/src/widget_tester.dart 477:18                                         expect
+  packages/ccrouter_test/test/review_repros/runtime_round_trip/test_host_disposal.dart 90:7  main.<fn>
+  
+00:00 +0 -2: Some tests failed.

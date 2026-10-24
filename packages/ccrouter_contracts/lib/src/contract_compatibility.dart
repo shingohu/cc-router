@@ -56,7 +56,9 @@ final class CCSemVer implements Comparable<CCSemVer> {
       int.parse(match.group(1)!),
       int.parse(match.group(2)!),
       int.parse(match.group(3)!),
-      pre == null || pre.isEmpty ? const [] : pre.substring(1).split('.'),
+      pre == null || pre.isEmpty
+          ? const []
+          : List.unmodifiable(pre.substring(1).split('.')),
     );
   }
 
@@ -71,7 +73,7 @@ final class CCSemVer implements Comparable<CCSemVer> {
   /// Patch compatibility number.
   final int patch;
 
-  /// Pre-release identifiers, without the leading hyphen.
+  /// Immutable pre-release identifiers, without the leading hyphen.
   final List<String> preRelease;
 
   /// Whether this is a stable release without a pre-release suffix.
@@ -138,7 +140,8 @@ final RegExp _semVerPattern = RegExp(
 /// A finite, deterministic Contract version range.
 ///
 /// Supported forms are exact versions, `*`, caret ranges, tilde ranges, and
-/// whitespace-separated `>=`/`>`/`<=`/`<` comparators. Arbitrary expressions
+/// one or more `>=`/`>`/`<=`/`<` comparators separated by any whitespace.
+/// Arbitrary expressions
 /// are rejected at generation time and never interpreted at Runtime.
 final class CCContractVersionRange {
   /// Parses one supported range expression.
@@ -163,22 +166,14 @@ final class CCContractVersionRange {
         (value) => value >= minimum && value < maximum,
       );
     }
-    if (expression.contains(' ')) {
-      final predicates = expression
-          .split(RegExp(r'\s+'))
-          .where((token) => token.isNotEmpty)
-          .map(_parseComparator)
-          .toList(growable: false);
-      if (predicates.isEmpty) throw FormatException('Empty Contract range.');
-      return CCContractVersionRange._(
-        source,
-        (value) => predicates.every((predicate) => predicate(value)),
-      );
-    }
-    final exact = CCSemVer.parse(
-      expression.startsWith('=') ? expression.substring(1) : expression,
+    final predicates = expression
+        .split(RegExp(r'\s+'))
+        .map(_parseComparator)
+        .toList(growable: false);
+    return CCContractVersionRange._(
+      source,
+      (value) => predicates.every((predicate) => predicate(value)),
     );
-    return CCContractVersionRange._(source, (value) => value == exact);
   }
 
   const CCContractVersionRange._(this.source, this._allows);

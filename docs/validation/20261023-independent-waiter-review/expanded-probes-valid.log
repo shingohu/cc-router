@@ -1,0 +1,47 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/host_identity.dart
+00:00 +0: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: interceptor pending=false lateError=false releases Runtime and payload
+00:00 +1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: interceptor pending=false lateError=false releases Runtime and payload
+00:00 +1 -1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: interceptor pending=false lateError=false releases Runtime and payload
+00:00 +1 -1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/host_identity.dart: local Entry IDs remain isolated across children, collision=true [E]
+  Expected: ['1792770136337481-569806453-entry-2']
+    Actual: []
+     Which: at location [0] is [] which shorter than expected
+  
+  package:matcher                                                                            expect
+  package:flutter_test/src/widget_tester.dart 477:18                                         expect
+  packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/host_identity.dart 116:7  main.<fn>
+  
+00:00 +2 -1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: interceptor pending=false lateError=false releases Runtime and payload
+00:00 +3 -1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: interceptor pending=false lateError=false releases Runtime and payload
+00:00 +4 -1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: interceptor pending=false lateError=false releases Runtime and payload
+00:00 +4 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: interceptor pending=false lateError=false releases Runtime and payload
+00:00 +5 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: interceptor pending=false lateError=true releases Runtime and payload
+00:00 +5 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/host_identity.dart: MultiHost predictive observer failure is isolated, throws=true [E]
+  Expected: [
+              CCPredictiveBackPhase:CCPredictiveBackPhase.started,
+              CCPredictiveBackPhase:CCPredictiveBackPhase.updated,
+              CCPredictiveBackPhase:CCPredictiveBackPhase.committed,
+              CCPredictiveBackPhase:CCPredictiveBackPhase.cancelled
+            ]
+    Actual: []
+     Which: at location [0] is [] which shorter than expected
+  
+  package:matcher                                                                            expect
+  package:flutter_test/src/widget_tester.dart 477:18                                         expect
+  packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/host_identity.dart 175:7  main.<fn>
+  
+00:00 +6 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: interceptor pending=true lateError=false releases Runtime and payload
+00:00 +7 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: interceptor pending=true lateError=true releases Runtime and payload
+00:00 +8 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: failurePolicy pending=false lateError=false releases Runtime and payload
+00:00 +9 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: failurePolicy pending=false lateError=true releases Runtime and payload
+00:00 +10 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: failurePolicy pending=true lateError=false releases Runtime and payload
+00:00 +11 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: failurePolicy pending=true lateError=true releases Runtime and payload
+00:00 +12 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: revalidation pending=false lateError=false releases Runtime and payload
+00:00 +13 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: revalidation pending=false lateError=true releases Runtime and payload
+00:00 +14 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: revalidation pending=true lateError=false releases Runtime and payload
+00:00 +15 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: revalidation pending=true lateError=true releases Runtime and payload
+00:00 +16 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: diagnostics pending=false lateError=false releases Runtime and payload
+00:00 +17 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: diagnostics pending=false lateError=true releases Runtime and payload
+00:00 +18 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: diagnostics pending=true lateError=false releases Runtime and payload
+00:00 +19 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/navigation_retention.dart: diagnostics pending=true lateError=true releases Runtime and payload
+00:01 +20 -2: Some tests failed.

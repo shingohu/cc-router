@@ -1,0 +1,342 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart
+00:00 +0: completed asyncMethod fences single after switch=false
+00:00 +1: completed asyncMethod fences single after switch=true
+00:00 +1 -1: completed asyncMethod fences single after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: <Instance of 'AccountResource'>
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +1 -1: completed asyncMethod fences async after switch=false
+00:00 +2 -1: completed asyncMethod fences async after switch=true
+00:00 +2 -2: completed asyncMethod fences async after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: <Instance of 'AccountResource'>
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +2 -2: completed asyncMethod fences all after switch=false
+00:00 +3 -2: completed asyncMethod fences all after switch=true
+00:00 +3 -3: completed asyncMethod fences all after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: <Instance of 'AccountResource'>
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +3 -3: completed asyncMethod fences syncProxy after switch=false
+00:00 +4 -3: completed asyncMethod fences syncProxy after switch=true
+00:00 +4 -4: completed asyncMethod fences syncProxy after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: 'new'
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +4 -4: completed asyncMethod fences asyncProxy after switch=false
+00:00 +5 -4: completed asyncMethod fences asyncProxy after switch=true
+00:00 +5 -5: completed asyncMethod fences asyncProxy after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: 'new'
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +5 -5: completed syncMethod fences single after switch=false
+00:00 +6 -5: completed syncMethod fences single after switch=true
+00:00 +6 -6: completed syncMethod fences single after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: <Instance of 'AccountResource'>
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +6 -6: completed syncMethod fences async after switch=false
+00:00 +7 -6: completed syncMethod fences async after switch=true
+00:00 +7 -7: completed syncMethod fences async after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: <Instance of 'AccountResource'>
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +7 -7: completed syncMethod fences all after switch=false
+00:00 +8 -7: completed syncMethod fences all after switch=true
+00:00 +8 -8: completed syncMethod fences all after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: <Instance of 'AccountResource'>
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +8 -8: completed syncMethod fences syncProxy after switch=false
+00:00 +9 -8: completed syncMethod fences syncProxy after switch=true
+00:00 +9 -9: completed syncMethod fences syncProxy after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: 'new'
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +9 -9: completed syncMethod fences asyncProxy after switch=false
+00:00 +10 -9: completed syncMethod fences asyncProxy after switch=true
+00:00 +10 -10: completed syncMethod fences asyncProxy after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: 'new'
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +10 -10: completed nestedAsyncApp fences single after switch=false
+00:00 +11 -10: completed nestedAsyncApp fences single after switch=true
+00:00 +11 -11: completed nestedAsyncApp fences single after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: <Instance of 'AccountResource'>
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +11 -11: completed nestedAsyncApp fences async after switch=false
+00:00 +12 -11: completed nestedAsyncApp fences async after switch=true
+00:00 +12 -12: completed nestedAsyncApp fences async after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: <Instance of 'AccountResource'>
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +12 -12: completed nestedAsyncApp fences all after switch=false
+00:00 +13 -12: completed nestedAsyncApp fences all after switch=true
+00:00 +13 -13: completed nestedAsyncApp fences all after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: <Instance of 'AccountResource'>
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +13 -13: completed nestedAsyncApp fences syncProxy after switch=false
+00:00 +14 -13: completed nestedAsyncApp fences syncProxy after switch=true
+00:00 +14 -14: completed nestedAsyncApp fences syncProxy after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: 'new'
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +14 -14: completed nestedAsyncApp fences asyncProxy after switch=false
+00:00 +15 -14: completed nestedAsyncApp fences asyncProxy after switch=true
+00:00 +15 -15: completed nestedAsyncApp fences asyncProxy after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: 'new'
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +15 -15: completed nestedSyncApp fences single after switch=false
+00:00 +16 -15: completed nestedSyncApp fences single after switch=true
+00:00 +16 -16: completed nestedSyncApp fences single after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: <Instance of 'AccountResource'>
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +16 -16: completed nestedSyncApp fences async after switch=false
+00:00 +17 -16: completed nestedSyncApp fences async after switch=true
+00:00 +17 -17: completed nestedSyncApp fences async after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: <Instance of 'AccountResource'>
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +17 -17: completed nestedSyncApp fences all after switch=false
+00:00 +18 -17: completed nestedSyncApp fences all after switch=true
+00:00 +18 -18: completed nestedSyncApp fences all after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: <Instance of 'AccountResource'>
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +18 -18: completed nestedSyncApp fences syncProxy after switch=false
+00:00 +19 -18: completed nestedSyncApp fences syncProxy after switch=true
+00:00 +19 -19: completed nestedSyncApp fences syncProxy after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: 'new'
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +19 -19: completed nestedSyncApp fences asyncProxy after switch=false
+00:00 +20 -19: completed nestedSyncApp fences asyncProxy after switch=true
+00:00 +20 -20: completed nestedSyncApp fences asyncProxy after switch=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'>)
+    Actual: 'new'
+  Ended Session callback entered replacement account: new; original token cancelled=false
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 162:15  main.<fn>
+  
+00:00 +20 -20: completed initializer fences single after switch=false
+00:00 +21 -20: completed initializer fences single after switch=true
+00:00 +22 -20: completed initializer fences async after switch=false
+00:00 +23 -20: completed initializer fences async after switch=true
+00:00 +24 -20: completed initializer fences all after switch=false
+00:00 +25 -20: completed initializer fences all after switch=true
+00:00 +26 -20: completed initializer fences syncProxy after switch=false
+00:00 +27 -20: completed initializer fences syncProxy after switch=true
+00:00 +28 -20: completed initializer fences asyncProxy after switch=false
+00:00 +29 -20: completed initializer fences asyncProxy after switch=true
+00:00 +30 -20: root single CCServiceCreationPolicy.singleton rejects factory shutdown=false
+00:00 +31 -20: root single CCServiceCreationPolicy.singleton rejects factory shutdown=true
+00:00 +31 -21: root single CCServiceCreationPolicy.singleton rejects factory shutdown=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'> or <Instance of 'CCResolutionError'>)
+    Actual: <Instance of 'AccountResource'>
+  Shutdown factory must not deliver a disposed resource
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 227:15  main.<fn>
+  
+00:00 +31 -21: root optional CCServiceCreationPolicy.singleton rejects factory shutdown=false
+00:00 +32 -21: root optional CCServiceCreationPolicy.singleton rejects factory shutdown=true
+00:00 +32 -22: root optional CCServiceCreationPolicy.singleton rejects factory shutdown=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'> or <Instance of 'CCResolutionError'>)
+    Actual: <Instance of 'AccountResource'>
+  Shutdown factory must not deliver a disposed resource
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 227:15  main.<fn>
+  
+00:00 +32 -22: root all CCServiceCreationPolicy.singleton rejects factory shutdown=false
+00:00 +33 -22: root all CCServiceCreationPolicy.singleton rejects factory shutdown=true
+00:00 +33 -23: root all CCServiceCreationPolicy.singleton rejects factory shutdown=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'> or <Instance of 'CCResolutionError'>)
+    Actual: <Instance of 'AccountResource'>
+  Shutdown factory must not deliver a disposed resource
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 227:15  main.<fn>
+  
+00:00 +33 -23: root async CCServiceCreationPolicy.singleton rejects factory shutdown=false
+00:00 +34 -23: root async CCServiceCreationPolicy.singleton rejects factory shutdown=true
+00:00 +35 -23: root syncProxy CCServiceCreationPolicy.singleton rejects factory shutdown=false
+00:00 +35 -24: root syncProxy CCServiceCreationPolicy.singleton rejects factory shutdown=false [E]
+  Expected: same instance as <Instance of 'AccountResource'>
+    Actual: 'app'
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 237:15  main.<fn>
+  
+00:00 +35 -24: root syncProxy CCServiceCreationPolicy.singleton rejects factory shutdown=true
+00:00 +36 -24: root asyncProxy CCServiceCreationPolicy.singleton rejects factory shutdown=false
+00:00 +36 -25: root asyncProxy CCServiceCreationPolicy.singleton rejects factory shutdown=false [E]
+  Expected: same instance as <Instance of 'AccountResource'>
+    Actual: 'app'
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 237:15  main.<fn>
+  
+00:00 +36 -25: root asyncProxy CCServiceCreationPolicy.singleton rejects factory shutdown=true
+00:00 +37 -25: root single CCServiceCreationPolicy.newInstance rejects factory shutdown=false
+00:00 +38 -25: root single CCServiceCreationPolicy.newInstance rejects factory shutdown=true
+00:00 +38 -26: root single CCServiceCreationPolicy.newInstance rejects factory shutdown=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'> or <Instance of 'CCResolutionError'>)
+    Actual: <Instance of 'AccountResource'>
+  Shutdown factory must not deliver a disposed resource
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 227:15  main.<fn>
+  
+00:00 +38 -26: root optional CCServiceCreationPolicy.newInstance rejects factory shutdown=false
+00:00 +39 -26: root optional CCServiceCreationPolicy.newInstance rejects factory shutdown=true
+00:00 +39 -27: root optional CCServiceCreationPolicy.newInstance rejects factory shutdown=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'> or <Instance of 'CCResolutionError'>)
+    Actual: <Instance of 'AccountResource'>
+  Shutdown factory must not deliver a disposed resource
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 227:15  main.<fn>
+  
+00:00 +39 -27: root all CCServiceCreationPolicy.newInstance rejects factory shutdown=false
+00:00 +40 -27: root all CCServiceCreationPolicy.newInstance rejects factory shutdown=true
+00:00 +40 -28: root all CCServiceCreationPolicy.newInstance rejects factory shutdown=true [E]
+  Expected: (<Instance of 'CCInvocationCancelledError'> or <Instance of 'CCScopeClosedError'> or <Instance of 'CCResolutionError'>)
+    Actual: <Instance of 'AccountResource'>
+  Shutdown factory must not deliver a disposed resource
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 227:15  main.<fn>
+  
+00:00 +40 -28: root async CCServiceCreationPolicy.newInstance rejects factory shutdown=false
+00:00 +41 -28: root async CCServiceCreationPolicy.newInstance rejects factory shutdown=true
+00:00 +42 -28: root syncProxy CCServiceCreationPolicy.newInstance rejects factory shutdown=false
+00:00 +42 -29: root syncProxy CCServiceCreationPolicy.newInstance rejects factory shutdown=false [E]
+  Expected: same instance as <Instance of 'AccountResource'>
+    Actual: 'app'
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 237:15  main.<fn>
+  
+00:00 +42 -29: root syncProxy CCServiceCreationPolicy.newInstance rejects factory shutdown=true
+00:00 +43 -29: root asyncProxy CCServiceCreationPolicy.newInstance rejects factory shutdown=false
+00:00 +43 -30: root asyncProxy CCServiceCreationPolicy.newInstance rejects factory shutdown=false [E]
+  Expected: same instance as <Instance of 'AccountResource'>
+    Actual: 'app'
+  
+  package:matcher                                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                                expect
+  packages/ccrouter_test/test/review_repros/completed_invocation/repro.dart 237:15  main.<fn>
+  
+00:00 +43 -30: root asyncProxy CCServiceCreationPolicy.newInstance rejects factory shutdown=true
+00:00 +44 -30: Some tests failed.

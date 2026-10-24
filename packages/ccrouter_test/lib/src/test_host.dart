@@ -1,11 +1,16 @@
 // Test support intentionally consumes Core's visible-for-testing boundary.
 // ignore_for_file: invalid_use_of_visible_for_testing_member
 
+import 'dart:async';
+
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:ccrouter/ccrouter_test.dart';
 
 import 'service_override.dart';
+
+/// Original cleanup failure carried as data across joining callers' error Zones.
+typedef _TestHostCleanupFailure = ({Object error, StackTrace stackTrace});
 
 /// Owns one isolated Runtime for framework and integration tests.
 ///
@@ -29,11 +34,11 @@ final class CCRouterTestHost {
     Iterable<CCComponentManifest> components = const [],
     CCNavigationAdapter? navigationAdapter,
     Iterable<CCGlobalNavigationInterceptor> globalInterceptors = const [],
+    Iterable<CCGlobalRouteRevalidationPolicy> routeRevalidationPolicies =
+        const [],
     Iterable<CCGlobalPopGuard> globalPopGuards = const [],
     CCNavigationFailurePolicy? navigationFailurePolicy,
     Iterable<CCNavigationAspect> navigationAspects = const [],
-    CCNavigationTelemetryContextProvider? telemetryContextProvider,
-    CCRouteRestorationOpportunitySource? restorationOpportunitySource,
     CCNavigationConcurrencyPolicy navigationConcurrencyPolicy =
         CCNavigationConcurrencyPolicy.allow,
     CCDeepLinkIngressPolicy deepLinkIngressPolicy =
@@ -46,11 +51,10 @@ final class CCRouterTestHost {
       components: components,
       navigationAdapter: navigationAdapter,
       globalInterceptors: globalInterceptors,
+      routeRevalidationPolicies: routeRevalidationPolicies,
       globalPopGuards: globalPopGuards,
       navigationFailurePolicy: navigationFailurePolicy,
       navigationAspects: navigationAspects,
-      telemetryContextProvider: telemetryContextProvider,
-      restorationOpportunitySource: restorationOpportunitySource,
       navigationConcurrencyPolicy: navigationConcurrencyPolicy,
       deepLinkIngressPolicy: deepLinkIngressPolicy,
       serviceOverrides: overrides
@@ -71,7 +75,11 @@ final class CCRouterTestHost {
   /// Whether [initialize] has completed and the Runtime is usable.
   bool get isInitialized => runtime.isInitialized;
 
+  /// Whether shutdown has started and new Host work must be rejected.
   bool _disposed = false;
+
+  /// Successful completion carrying the once-only Runtime cleanup outcome.
+  Future<_TestHostCleanupFailure?>? _disposal;
 
   /// Initializes the owned Runtime and its navigation adapter.
   ///
@@ -102,9 +110,37 @@ final class CCRouterTestHost {
   ///
   /// Teardown is idempotent, which makes it safe to register [dispose] with
   /// `addTearDown` before the test starts resolving scoped resources.
-  Future<void> dispose() async {
-    if (_disposed) return;
+  /// Concurrent, reentrant and later callers all await the same cleanup and
+  /// receive its original failure and stack in their own error Zone. Handle
+  /// each returned Future in the calling Zone. A disposable must not await
+  /// shutdown of its own Host, because that would wait on itself.
+  Future<void> dispose() {
+    final existing = _disposal;
+    if (existing != null) return _joinDisposal(existing);
+    final completion = Completer<_TestHostCleanupFailure?>();
+    _disposal = completion.future;
     _disposed = true;
-    await runtime.dispose();
+    completion.complete(_captureDisposal());
+    return _joinDisposal(completion.future);
+  }
+
+  /// Observes Runtime cleanup in its initiating Zone without sharing an error Future.
+  Future<_TestHostCleanupFailure?> _captureDisposal() async {
+    try {
+      await runtime.dispose();
+      return null;
+    } catch (error, stackTrace) {
+      return (error: error, stackTrace: stackTrace);
+    }
+  }
+
+  /// Restores the common result in the current caller's error Zone.
+  static Future<void> _joinDisposal(
+    Future<_TestHostCleanupFailure?> completion,
+  ) async {
+    final failure = await completion;
+    if (failure != null) {
+      Error.throwWithStackTrace(failure.error, failure.stackTrace);
+    }
   }
 }

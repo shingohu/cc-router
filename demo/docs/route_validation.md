@@ -1,5 +1,13 @@
 # CCRouter Demo 路由验证记录
 
+> 历史记录：文中的 GoRouter 实现与验收对应原版本。2026-10-23 已移除兼容包；
+> 当前原生 Managed 能力及回归以[退役记录](../../docs/validation/go_router_retirement_20261023.md)、API 和测试为准。
+> 下表身份与恢复机会条目也属于历史验收；当前身份快照、恢复需求和布局策略归应用，
+> 见[职责收口记录](../../docs/validation/20261023-framework-boundaries/README.md)。
+
+当前 Managed 功能矩阵、后续修复及真实平台验收从[统一验证索引](../../docs/validation/README.md)
+查阅。以下测试数和 macOS 结果保持原日期，不用新源码回归覆盖旧记录。
+
 ## 验证基线
 
 - 日期：2026-09-20
@@ -35,8 +43,8 @@ Demo 的交互实现位于 `modules/navigation_lab`，宿主只负责初始化 C
 | Typed Extra | `DemoExtraPayload` | 通过，仅进程内传递，不进入 URL 或诊断 |
 | Shared WebView | public Query Codec + private Extra | 通过，私密 URL/Header 不进入 normalized URI |
 | Multi Host | `CCGoRouterMultiHostBackend` 聚合 Primary / Secondary 双 Router | 通过，自动复用 Host Catalog，Host 路由状态相互隔离 |
-| Host resize / orientation | 同一 `host.primary` 更新 `CCHostLayoutMetrics` | 通过，Host ID 与路由所有权不变 |
-| Fold / hinge | 模拟 separating `CCDisplayFeature` | 通过，不创建 Host，只切换活动 Outlet |
+| Host resize / orientation | 同一 `host.primary` 更新 `DemoHostLayoutMetrics` | 通过，Host ID 与路由所有权不变 |
+| Fold / hinge | 模拟 separating `DemoDisplayFeature` | 通过，不创建 Host，只切换活动 Outlet |
 | Adaptive list-detail | compact 单 Outlet / expanded 双 Outlet | 通过，`adaptive.list` 与 `adaptive.detail` 属于同一 Host |
 | Multi Outlet | Shell + 三个 Stateful Branch Outlet | 通过，每个 Outlet 独立 Key 与 Observer |
 | Global / Route Interceptor | Proceed / Cancel | 通过 |

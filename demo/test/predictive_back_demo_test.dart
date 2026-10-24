@@ -46,7 +46,6 @@ void main() {
       ..clear()
       ..blockDetailGlobally = false
       ..dirtyForm = true;
-    CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly);
   });
   tearDown(() async {
     await CCRouterHost.shutdown();
@@ -337,9 +336,8 @@ void main() {
 }
 
 void _demoTest(String description, WidgetTesterCallback callback) {
-  testWidgets(
-    description,
-    callback,
-    variant: TargetPlatformVariant.only(TargetPlatform.android),
-  );
+  testWidgets(description, (tester) async {
+    CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly);
+    await callback(tester);
+  }, variant: TargetPlatformVariant.only(TargetPlatform.android));
 }

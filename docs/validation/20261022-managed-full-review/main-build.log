@@ -1,0 +1,5 @@
+CCRouter preflight started for `flutter build`.
+CCRouter generation fast path hit; inputs and outputs are unchanged.
+CCRouter preflight finished: elapsed=588ms.
+Building macOS application...                                   
+✓ Built build/macos/Build/Products/Debug/ccrouter_demo.app

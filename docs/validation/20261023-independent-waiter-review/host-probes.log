@@ -1,0 +1,20 @@
+00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/host_identity.dart
+00:00 +0: foreign event in right Host preserves left Entry, collision=false
+00:00 +1: foreign event in right Host preserves left Entry, collision=true
+00:00 +2: MultiHost predictive observer failure is isolated, throws=false
+00:00 +3: MultiHost predictive observer failure is isolated, throws=true
+00:00 +3 -1: MultiHost predictive observer failure is isolated, throws=true [E]
+  Expected: [
+              CCPredictiveBackPhase:CCPredictiveBackPhase.started,
+              CCPredictiveBackPhase:CCPredictiveBackPhase.updated,
+              CCPredictiveBackPhase:CCPredictiveBackPhase.committed,
+              CCPredictiveBackPhase:CCPredictiveBackPhase.cancelled
+            ]
+    Actual: []
+     Which: at location [0] is [] which shorter than expected
+  
+  package:matcher                                                                            expect
+  package:flutter_test/src/widget_tester.dart 477:18                                         expect
+  packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/host_identity.dart 113:7  main.<fn>
+  
+00:00 +3 -1: Some tests failed.

@@ -1,5 +1,13 @@
 # CCRouter 核心价值与开发约定回归
 
+本文按日期保留审查快照；其中旧 `CCGoRouterApp`、attach 和第二 Backend 待验证等结论
+只代表当时架构。GoRouter 兼容包已退役，当前能力见[状态矩阵](README.md)，最新源码回归、
+平台证据与尚未重验范围见[验证索引](validation/README.md)，不从历史“满足”项推断当前全面通过。
+
+2026-10-23 边界收口：Core 不再接收访客/应用 Session 身份，不保留恢复需求队列或布局策略。
+下文 Telemetry Context、Restoration Listener/Source 等条目是历史实现；当前身份快照与校验
+归应用观察桥，框架仍校验稳定的导航 Source 标识。布局由应用决定，再通过 Host SPI 同步可见 Outlet。
+
 ## 2026-10-20 审查项修复
 
 下节保留 `672d057` 的修复前审查快照及首次验证结果；R01–R03 已在本次工作区修复，
@@ -134,7 +142,7 @@ Analyzer 的 declaration library 身份、typedef/part、真实构造调用证�
 主要复核入口为 [调用与 deadline](../packages/ccrouter_core/lib/src/runtime_host.dart)、
 [诊断投递 Owner](../packages/ccrouter_core/lib/src/diagnostic_delivery.dart)、
 [Host 清理](../packages/ccrouter/lib/src/host_lifecycle.dart)、
-[导航历史](../packages/ccrouter_go_router/lib/src/adapter.dart)、
+旧导航历史（历史路径 `packages/ccrouter_go_router/lib/src/adapter.dart`，现已退役）、
 [UI schema 生成](../packages/ccrouter_generator/lib/src/ui_fragment_generator.dart)、
 [UI Analyzer](../packages/ccrouter_analyzer_plugin/lib/src/ui_fragment_analysis.dart) 和
 [Demo Renderer](../demo/modules/order/lib/src/order_fragment_renderers.dart)。
@@ -249,7 +257,7 @@ opt-in 与终态、Event deadline，以及 watch 初始化失败清理；结合�
 
 - [业务 barrel](../packages/ccrouter/lib/ccrouter.dart)、[API 隔离测试](../packages/ccrouter_test/test/api_surface_test.dart)。
 - [UI generation 与 State](../packages/ccrouter_ui/lib/src/ui_fragment.dart)、[UI 生命周期测试](../packages/ccrouter_test/test/ui_fragment_test.dart)。
-- [Flutter 手势终态](../packages/ccrouter/lib/src/flutter_predictive_back.dart)、[Adapter bridge](../packages/ccrouter_go_router/lib/src/predictive_back_bridge.dart)、[预测返回测试](../packages/ccrouter_test/test/predictive_back_test.dart)。
+- [Flutter 手势终态](../packages/ccrouter/lib/src/flutter_predictive_back.dart)、旧 Adapter bridge（历史路径 `packages/ccrouter_go_router/lib/src/predictive_back_bridge.dart`，现已退役）、[预测返回测试](../packages/ccrouter_test/test/predictive_back_test.dart)。
 - [调用 deadline](../packages/ccrouter_core/lib/src/runtime_host.dart)、[Runtime 回归](../packages/ccrouter_test/test/runtime_test.dart)。
 - [watch 清理](../packages/ccrouter_generator/bin/src/generation_watch.dart)、[watch 故障测试](../packages/ccrouter_test/generator_test/generation_watch_test.dart)、[资源释放回归](../packages/ccrouter_test/test/resource_lifecycle_regression_test.dart)。
 
@@ -347,7 +355,7 @@ App 测试通过其既有 `with_ohos_build_lock.py --cwd app` 入口执行；应
 其中两个 Dart 片段已经用独立消费者的真实生成 API 编译验证，标准 Analyzer 退出 0。
 
 真实消费者已同步两个完整 Skill 目录，并修正其接入清单中的旧 `ccrouter_auto_track` 名称为
-`ccrouter_analytics_flutter`。消费者 README/接入基线注明本地来源和测试边界。
+`demo_analytics_flutter`。消费者 README/接入基线注明本地来源和测试边界。
 本轮应用侧修改仅为上述开发者指导，不改变运行时依赖或业务行为。
 
 第一阶段在当前本地开发来源下完成，第二阶段的首次接入入口与文档同步完成。
@@ -360,7 +368,7 @@ App 测试通过其既有 `with_ohos_build_lock.py --cwd app` 入口执行；应
 以下为历史审查与既有增量入口。
 
 2026-10-15 类型化 UI Fragment 的增量实施与 13 项核心价值回归见
-[专项验收记录](CCRouter-ui-fragment-acceptance.md)。下述历史测试数量不代表该增量的结果。
+[专项验收快照](archive/20261024-consolidation/CCRouter-ui-fragment-acceptance.md)。下述历史测试数量不代表该增量的结果。
 
 > 本文主体保留 2026-09-30 的审查快照。后续 2026-10-03 全框架审查发现的 F01–F18
 > 已修复；最新逐项结论、修复后核心价值与未覆盖范围见[全框架审查](CCRouter-framework-audit-2026-10-03.md#15-修复后核心价值与收尾边界2026-10-03)。

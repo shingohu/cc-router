@@ -64,6 +64,7 @@ abstract final class _DemoDetailPageRouteContractBinding {
             primary: false,
             constraints: const <String, String>{},
           ),
+          const CCRegexPattern("^/lab/regex/(?<id>[^/]+)\$"),
           const CCUriPattern(
             "ccrouter://lab/detail/:id",
             primary: false,

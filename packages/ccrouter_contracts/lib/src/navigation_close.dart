@@ -48,6 +48,11 @@ final class CCRouteCloseOutcome {
 /// unsupported if these guarantees cannot be upheld for this backend entry.
 abstract interface class CCNavigationTargetedCloseAdapter {
   /// Closes the exact opening in its original Host and Navigator Outlet.
+  /// Runtime dispatches and observes in its Host Zone. If the exact Entry,
+  /// Host or Runtime ends while external work remains pending, the caller
+  /// receives [CCRouteCloseStatus.notFound]; late completion is consumed.
+  /// Completing exact transactions retain their actual receipt. This does not
+  /// cancel Adapter-owned external tasks or wait for an outgoing Flutter frame.
   Future<CCRouteCloseOutcome> closeNavigation({
     required String navigationId,
     required String hostId,
