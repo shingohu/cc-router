@@ -63,6 +63,13 @@ final class CCManagedRouterBackendConfiguration {
 
 /// Convenience Host widget for the CCRouter Managed Backend.
 ///
+/// In this API, "Managed" means that the CCRouter Runtime owns route
+/// resolution, policy admission, Route Entries, Route Scopes, typed results,
+/// and Host/Outlet stack state. The Backend projects that state through
+/// Flutter's `RouterDelegate` and `Navigator.pages`. It does not mean that
+/// this widget owns the whole application or initializes or shuts down the
+/// Runtime.
+///
 /// The application must call `CCRouterHost.initialize` before mounting this
 /// widget. It creates one [CCManagedRouterBackend], installs it through
 /// [CCRouterApp.managed], and supplies its [RouterConfig] to

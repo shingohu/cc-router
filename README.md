@@ -8,6 +8,8 @@
 
 CCRouter 是一个面向 Flutter 大型应用的组件化运行时与类型安全路由框架。它把组件装配、路由契约、导航策略、生命周期、跨组件能力调用和诊断统一到稳定的 Core Contract。默认 Managed Backend 使用 Flutter `RouterDelegate + Navigator.pages`，不再依赖 GoRouter。
 
+本文中的 **Managed** 指“由 CCRouter Runtime 统一管理的路由”：Runtime 负责路由解析、策略、Route Entry、Route Scope、结果和 Host/Outlet 栈，Managed Backend 将这份状态投影到 Flutter Navigator。Managed 描述的是路由所有权，不表示 CCRouter 会托管整个 App，也不改变 `CCRouterHost.initialize` 与 `CCRouterHost.shutdown` 由应用显式调用的 Runtime 生命周期。Flutter 或第三方 Navigator 创建的页面属于 Foreign Route，不能获得 Managed Route 的 Entry、Scope 和 typed result 语义。
+
 第一次接入或验证真实业务时，先阅读[首次接入指南](skills/ccrouter-integration-development/references/first-integration.md)，
 完成一个 typed Route 的生成、调用、失败与释放闭环，再按需要查阅下文的高级能力和工具维护规则。
 
@@ -272,7 +274,7 @@ Diagnostics 页展示 Failure/Fallback/Pending/InitTask 和健康状态；旧 Pr
 | 页面展示 | 已支持 | 平台默认、Material、Cupertino、fade、scale、bottom-up、透明全屏 |
 | Modal Route | 已支持 | Dialog、modal bottom sheet，可选择是否纳入 CCRouter 契约与生命周期 |
 | 导航操作 | 已支持 | `push`、`replace`、`go`、`reset`、`open`、`pop`、`maybePop`、`canPop`、实例级 `close`（可选 Adapter 能力） |
-| Managed Router Backend | 已支持 | Managed Adapter 持有分区 Stack，`RouterDelegate + Navigator.pages` 负责投影，Runtime 管理 Entry/result/Scope |
+| Managed Router Backend | 已支持 | CCRouter Runtime 统一管理 Host/Outlet 分区 Stack、Entry/result/Scope，`RouterDelegate + Navigator.pages` 负责 Flutter 投影 |
 | Shell / StatefulShell / Outlet | 已支持 | Managed Shell binding、分区 Stack、分支 lazy-init/状态保留、多 Outlet 与调用级 Context 定位 |
 | Deep Link | 已支持 | Platform、Notification、QR 入口，Host allowlist 与 Route policy 双重校验 |
 | Interceptor / Redirect / Defer | 已支持 | 全局与路由级策略、超时、取消、Pending 恢复 |
@@ -453,9 +455,10 @@ Demo / 应用层，不是 CCRouter 框架的存储契约。
 
 ### 5. 初始化 Host
 
-Host 使用生成的 Manifest 与 Catalog。新项目默认使用 Managed Router Backend；Managed
-Adapter 持有各 Host/Outlet 的 Stack，并投影到 Flutter `Navigator.pages`。Runtime 负责契约、
-Entry、结果与 Scope，后端同步导航事件，不维护 GoRouter match tree：
+Host 使用生成的 Manifest 与 Catalog。新项目默认使用 Managed Router Backend。这里的
+Managed 表示 CCRouter Runtime 拥有路由状态和 Route 生命周期；Managed Adapter 持有各
+Host/Outlet 的 Stack，并投影到 Flutter `Navigator.pages`。Runtime 负责契约、Entry、结果与
+Scope，后端同步导航事件，不维护 GoRouter match tree：
 
 Host 自己的公共 barrel 只需转发生成的
 `src/ccrouter_generated/ccrouter_host.api.g.dart`；不要直接导出 `host/` 下的内部聚合文件或
@@ -482,8 +485,9 @@ Future<void> main() async {
 ```
 
 `CCManagedRouterApp` 是新 Host 的便捷接入入口：它从 `CCRouterHost.initialize` 安装的同一份
-Catalog 创建 Managed Backend，并自动组装 `CCRouterApp.managed` 与 `MaterialApp.router`。
-它不会初始化或关闭进程 Runtime；`CCRouterHost.initialize` 始终由
+Catalog 创建由 CCRouter Runtime 管理路由状态的 Managed Backend，并自动组装
+`CCRouterApp.managed` 与 `MaterialApp.router`。它不会初始化或关闭进程 Runtime；
+`CCRouterHost.initialize` 始终由
 Composition Root 显式调用；全局拦截器、Deep Link 白名单、Aspect、Telemetry 等配置也放在
 这里：
 

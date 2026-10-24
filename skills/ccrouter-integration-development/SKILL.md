@@ -7,6 +7,18 @@ description: Implement, migrate, or review Flutter application and component fea
 
 Use CCRouter as the application component boundary. Prefer its generated contracts and lifecycle ownership over direct navigation, global service locators, or ad hoc cross-package imports.
 
+## Managed terminology
+
+In this Skill, **Managed** means that the CCRouter Runtime owns the navigation
+state and route lifecycle: route resolution, policy admission, Route Entry,
+Route Scope, typed result, and Host/Outlet stack state. The Managed Backend
+projects that state through Flutter's `RouterDelegate + Navigator.pages`.
+Managed does not mean that CCRouter owns the whole Flutter application or
+implicitly initializes or shuts down the Runtime; the Composition Root still
+calls `CCRouterHost.initialize` and `CCRouterHost.shutdown` explicitly.
+Flutter or third-party Navigator pages are Foreign Routes and do not receive a
+Managed Entry, Scope, or typed-result channel.
+
 This Skill and the sibling `ccrouter-cli-development` directory form one
 installation bundle. Keep both complete directories together, including their
 references. Required guidance is bundled; framework design links are optional

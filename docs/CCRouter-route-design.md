@@ -4,7 +4,8 @@
 
 ## 1. 所有权与 API 分层
 
-CCRouter 自有 Managed Stack 是导航事实来源，Flutter `RouterDelegate + Navigator.pages` 是渲染投影。Runtime 负责契约解析、策略、Entry identity、结果与 Scope；Managed Backend 负责 RouterConfig、各 Outlet 页面投影和 Flutter Route 的精确关联。业务不得修改后端页面列表或 Flutter 内部 match tree。
+这里的 **Managed** 指由 CCRouter Runtime 统一管理路由状态与生命周期，不是托管整个 Flutter App。
+CCRouter 自有 Managed Stack 是导航事实来源，Flutter `RouterDelegate + Navigator.pages` 是渲染投影。Runtime 负责契约解析、策略、Entry identity、结果与 Scope；Managed Backend 负责 RouterConfig、各 Outlet 页面投影和 Flutter Route 的精确关联。Runtime 仍由应用 Composition Root 显式初始化和关闭；业务不得修改后端页面列表或 Flutter 内部 match tree。Flutter 或第三方 Navigator 创建的页面属于 Foreign Route，不获得 Managed Entry、Scope 或 typed result。
 
 | 调用方 | 入口与职责 |
 | --- | --- |
@@ -30,7 +31,7 @@ void main() {
 }
 ```
 
-示例中的生成 barrel 路径以本工程输出为准。该 Widget 从初始化时的 Catalog 创建 Managed Backend，组合 `CCRouterApp.managed` 和 `MaterialApp.router`；不隐式初始化或关闭 Runtime。主题、国际化等非路由参数可以直接配置，路由配置由 Backend 唯一拥有。
+示例中的生成 barrel 路径以本工程输出为准。该 Widget 从初始化时的 Catalog 创建由 CCRouter Runtime 管理路由状态的 Managed Backend，组合 `CCRouterApp.managed` 和 `MaterialApp.router`；不隐式初始化或关闭 Runtime。主题、国际化等非路由参数可以直接配置，路由配置由 Backend 唯一拥有。
 
 复杂 Shell 使用一次性的 `backendFactory`；高级 Host 可直接组合 `CCManagedRouterBackend`、`CCRouterApp.managed` 与 `MaterialApp.router(routerConfig: backend.routerConfig)`。Catalog 必须来自同一 Assembly，不在业务门面开放覆盖。挂载后 Backend 构造输入不可原地替换；拓扑变化要明确重建其 Owner。
 

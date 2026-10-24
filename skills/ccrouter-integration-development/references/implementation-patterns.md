@@ -15,6 +15,13 @@ the ordinary Route, Service, Command, Event and InitTask integration patterns.
 
 ### Host
 
+Here, **Managed** means that the CCRouter Runtime owns route resolution,
+policy admission, Route Entry, Route Scope, typed results, and Host/Outlet
+stack state. The Managed Backend only projects that state through Flutter's
+`RouterDelegate + Navigator.pages`; it does not own the whole application or
+implicitly control Runtime initialization and shutdown. Foreign Routes created
+by Flutter or another Router remain outside this ownership boundary.
+
 A new application should use `ccrouter_host.dart` with the Runtime Managed
 Backend: call
 `CCRouterHost.initialize(hostAssembly: ccrouterGeneratedHostAssembly)`, then
