@@ -244,6 +244,13 @@ whitespace separators, and parsed SemVer prerelease identifiers are immutable.
 - Connect application logging through `CCDiagnosticsConfig(sink: ...)`. A `CCDiagnosticSink` is asynchronous, bounded, observational, and failure-isolated. Category policies control external delivery and sampling only; they do not disable Runtime traces or lifecycle state. Forward only the sanitized fields supplied by `CCDiagnosticEvent` and never append raw URI, arguments, Extra, tokens, widgets, backend objects, exception messages, or business results.
 - Diagnostic delivery permits one unfinished `record` Future per Runtime; return the actual write completion, not acceptance into an unbounded application queue. Set positive `CCDiagnosticsConfig.queueCapacity` to decouple waiting capacity from navigation history; null preserves `max(64, navigationDiagnosticCapacity)`. Overflow drops the oldest waiting event of any severity. Monitor `CCRouter.diagnosticDeliverySnapshot` for depth, in-flight, peak, success/failure and drop counters. Shutdown attempts a final drain when idle (preserving synchronous shutdown logs), stops at the first unfinished Future and discards the rest without awaiting/cancelling writes or closing the Host-owned Sink; the Host owns cancellation and final flush. No automatic timeout starts replacement writes.
 - Diagnostic delivery and completion callbacks use the Runtime creation Zone, preserving Host context without inheriting later invocation Zones. Finite initial queue-length batch budgets span Future completions; reentrant diagnostics yield to the event loop after the budget is exhausted, without a Timer for every write in the same batch.
+- Use `CCRouter.diagnosticSnapshot` for lightweight Runtime identity/revision,
+  history completeness and Sink health. Compare delivery counters too: write
+  completion need not change revision. Empty history does not prove absence of
+  failures. Preserve failure placement, reason, attempt and recovery depth;
+  cancellation is warning and recovery selection is not later success. Keep
+  arbitrary business cancellation codes private. See the diagnostic semantics
+  in `references/implementation-patterns.md` before changing a logging bridge.
 - Runtime construction failure schedules the same best-effort final drain and cleanup on a later event-loop turn, since no Runtime is returned for disposal. Synchronous failure logs remain deliverable; the first unfinished write discards the remainder. The original construction error is rethrown immediately, and late completion cannot restart delivery.
 - Treat `componentGraph`, `componentRegistration`, and `runtimeInitialize` as the framework-owned component/startup diagnostic flow. Configure the Host Sink at `CCRouterHost.initialize` with `CCDiagnosticLevel.debug` when start events are needed; do not duplicate these lifecycle logs in application bootstrap code.
 - Host layout breakpoints, pane selection and fold policy are application-owned.
@@ -374,7 +381,14 @@ whitespace separators, and parsed SemVer prerelease identifiers are immutable.
 
 - Use the optional `ccrouter_devtools` package only for a Host-owned debug or
   internal diagnostics surface. `CCRouterDevToolsPanel` consumes immutable,
-  bounded snapshots and existing observation listeners.
+  bounded snapshots. The default Provider compares lightweight counters every
+  250ms while subscribed, then reads full histories only on changes. This covers
+  Command/Service, task state, Sink completion and Runtime replacement. The panel
+  removes its subscription when TickerMode is disabled or on disposal and reads
+  a fresh snapshot when resumed; custom Providers retain their own semantics.
+- Show history omissions separately from Sink filtering/loss. Protocol v1 adds
+  optional diagnostics/health fields; absent means unsupported, never zero.
+  The official Extension's Diagnostics tab uses manual Refresh.
 - Do not add navigation, Pop, retry, Scope disposal, component activation, or
   Adapter controls to the panel. Those operations would violate the Runtime
   ownership boundary and make a visualizer part of the business API.

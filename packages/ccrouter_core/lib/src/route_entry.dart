@@ -478,12 +478,8 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
       timestamp: DateTime.now(),
       reason: reason,
     );
-    if (navigationDiagnosticCapacity > 0) {
-      if (_routeEntryEvents.length == navigationDiagnosticCapacity) {
-        _routeEntryEvents.removeFirst();
-      }
-      _routeEntryEvents.add(event);
-    }
+    _routeEntryEventTotal++;
+    _retainDiagnostic(_routeEntryEvents, event, navigationDiagnosticCapacity);
     _emitAspectEntryState(entry, state);
     _enqueueRegisteredNavigationObserverBatch(
       _routeEntryListeners,

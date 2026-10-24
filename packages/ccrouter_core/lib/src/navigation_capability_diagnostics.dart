@@ -43,13 +43,12 @@ extension CCRouterRuntimeNavigationCapabilityDiagnostics on CCRouterRuntime {
       behavior: behavior,
       timestamp: DateTime.now(),
     );
-    if (navigationDiagnosticCapacity > 0) {
-      if (_navigationCapabilityFallbacks.length ==
-          navigationDiagnosticCapacity) {
-        _navigationCapabilityFallbacks.removeFirst();
-      }
-      _navigationCapabilityFallbacks.add(event);
-    }
+    _navigationFallbackTotal++;
+    _retainDiagnostic(
+      _navigationCapabilityFallbacks,
+      event,
+      navigationDiagnosticCapacity,
+    );
     _enqueueRegisteredNavigationObserverBatch(
       _navigationCapabilityFallbackListeners,
       (listener) => listener(event),

@@ -1,0 +1,129 @@
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart
+00:00 +0: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: explicit Cupertino page has readable body in Material Host
+00:01 +1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:01 +2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend materializes the shared Demo feature matrix
+00:02 +3: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend preserves typed result and policy behavior
+00:03 +4: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend preserves guarded and modal ownership
+00:03 +5: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend revalidates already-open route identities
+00:03 +6: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend preserves StatefulShell branch state
+00:04 +7: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_layout_test.dart
+00:04 +7: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_layout_test.dart: Host layout metrics classify compact, medium, and expanded
+00:04 +8: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_layout_test.dart: display features and route placement retain Host isolation
+00:04 +9: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_layout_test.dart: adaptive Outlet policy maps one, two, and multiple panes
+00:04 +10: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart
+00:05 +10: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: PopGuard remains usable in a small desktop window
+00:06 +11: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: failure fallback remains usable in a small desktop window
+00:06 +12: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:10 +13: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:13 +14: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:15 +15: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/demo_router_backend_test.dart
+00:15 +15: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/demo_router_backend_test.dart: default Demo mounts the Managed convenience Host
+00:16 +16: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/demo_router_backend_test.dart: Managed Demo factory propagates predictive-back opt-in
+00:16 +17: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/demo_router_backend_test.dart: Shell preserves cupertino presentation, arguments and result
+00:17 +18: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/demo_router_backend_test.dart: Shell preserves transparent presentation, arguments and result
+00:17 +19: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/demo_router_backend_test.dart: Shell preserves dialog presentation, arguments and result
+00:17 +20: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/demo_router_backend_test.dart: Shell preserves bottom sheet presentation, arguments and result
+00:17 +21: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/demo_router_backend_test.dart: Managed Backend preserves Shell branches and typed Pop
+00:17 +22: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart
+00:18 +22: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:19 +23: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: interactive revalidation keep reports its real outcome
+00:19 +24: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: interactive revalidation close reports its real outcome
+00:19 +25: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: interactive revalidation replace reports its real outcome
+00:19 +26: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: interactive revalidation reset reports its real outcome
+00:20 +27: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: Pending cancellation Demo releases continuation without navigating
+00:20 +28: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_renderer_lifecycle_test.dart
+00:20 +28: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
+00:22 +29: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart
+00:22 +29: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: runs typed navigation, result and cross-component route
+00:24 +30: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: cross-component Service proxy records caller and target
+00:24 +31: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: capability lab exercises Commands and initialization Gates
+00:24 +32: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: capability lab exercises Event delivery boundaries
+00:25 +33: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: diagnostics page shows the bounded Trace Bundle summary
+00:25 +34: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: diagnostics page opens the read-only CCRouter DevTools panel
+00:25 +35: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: capability lab exercises Service scopes and resolution modes
+00:26 +36: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: typed result page keeps the iOS edge-back gesture
+00:26 +37: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: OverlayEntry releases resources on close and page teardown
+00:26 +38: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: dynamic URI Pop releases its managed Route Entry
+00:26 +39: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: simulated external Deep Link preserves platform origin
+00:27 +40: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: simulated external Deep Link can select Go semantics
+00:27 +41: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: Go stack returns home without retaining the stack page
+00:27 +42: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: Reset stack returns home without retaining the stack page
+00:27 +43: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: platform link stream handles a cold-start URI after attach
+00:27 +44: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: public Web route serializes a validated URL
+00:27 +45: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: private Web route keeps URL and headers out of its URI
+00:27 +46: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: allowlisted HTTPS platform link opens the public Web route
+00:27 +47: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: public Web mapper rejects unsafe and unowned URLs
+00:27 +48: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: runs interceptor cancel, redirect and deferred resume
+00:28 +49: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: system back is evaluated by the managed PopGuard
+00:28 +50: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: failure fallback can return without leaking Route Entries
+00:28 +51: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: typed result mismatch is visible and does not leak an entry
+00:28 +52: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: managed and foreign modal routes preserve ownership
+00:29 +53: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: page lifecycle reports cover, uncover and app state
+00:29 +54: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: single Shell keeps nested routes inside its outlet
+00:29 +55: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: StatefulShell accepts an initial deep link into a branch
+00:29 +56: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: StatefulShell preserves branch state and history
+00:30 +57: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/widget_test.dart: typed Extra remains an in-process typed value
+00:30 +58: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/restoration_demand_test.dart
+00:30 +58: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/restoration_demand_test.dart: application bounds initial/runtime evidence without starting CCRouter
+00:30 +59: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/restoration_demand_test.dart: sanitizes evidence and isolates application exporter failures
+00:30 +60: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart
+00:31 +60: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:34 +61: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: auxiliary Host renders its trusted home on every mount
+00:35 +62: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/multi_host_demo_test.dart
+00:35 +62: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/multi_host_demo_test.dart: adaptive scoped button keeps the detail target without pointer focus
+00:37 +63: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/multi_host_demo_test.dart: adaptive named Outlet renders and returns a managed destination
+00:37 +64: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/multi_host_demo_test.dart: two Hosts retain independent visible navigation state
+00:38 +65: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/multi_host_demo_test.dart: interaction inside a Host activates local navigation and pop
+00:38 +66: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/multi_host_demo_test.dart: call-site context wins when semantic activation skips Host focus
+00:39 +67: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/multi_host_demo_test.dart: wide low window keeps nested NavigationRail usable
+00:39 +68: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/multi_host_demo_test.dart: narrow embedded Host keeps simulated split panes usable
+00:39 +69: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/multi_host_demo_test.dart: one Host adapts orientation, list-detail Outlets, and display features
+00:39 +70: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/ui_fragment_demo_test.dart
+00:40 +70: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/ui_fragment_demo_test.dart: real generated Host renders B UI in A with isolated State and KeepAlive
+00:41 +71: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/ui_fragment_demo_test.dart: payloads from two private loads stay instance-local and follow new Props
+00:41 +72: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/ui_fragment_demo_test.dart: business error, retry and rapid removal release pending fake requests
+00:41 +73: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/network_lifecycle_test.dart
+00:42 +73: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/network_lifecycle_test.dart: all Demo environments expose the shared anything endpoint
+00:42 +74: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/network_lifecycle_test.dart: generated network service releases authentication at App Scope end
+00:42 +75: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/network_lifecycle_test.dart: Scope waits for the owned transport, late logs cannot repopulate
+00:42 +76: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/network_lifecycle_test.dart: transport close failure preserves cleared state and shared failure
+00:42 +77: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart
+00:42 +77: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: real Demo typed page cancel/commit, bridge=false (variant: TargetPlatform.android)
+00:43 +78: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: real Demo typed page cancel/commit, bridge=true (variant: TargetPlatform.android)
+00:44 +79: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: predictive back preserves and releases typed UI Fragments (variant: TargetPlatform.android)
+00:44 +80: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: real Demo Guard denies then allows non-interactive fallback (variant: TargetPlatform.android)
+00:45 +81: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: Demo nested Outlet identity, StatefulShell=false (variant: TargetPlatform.android)
+00:45 +82: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: Demo nested Outlet identity, StatefulShell=true (variant: TargetPlatform.android)
+00:45 +83: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=false timing=before (variant: TargetPlatform.android)
+00:46 +84: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=false timing=during (variant: TargetPlatform.android)
+00:46 +85: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=false timing=transient (variant: TargetPlatform.android)
+00:46 +86: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
+00:46 +87: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:46 +88: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=transient (variant: TargetPlatform.android)
+00:47 +89: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: Demo branch switch invalidates in-flight preview (variant: TargetPlatform.android)
+00:47 +90: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart
+00:47 +90: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: root Context cannot bypass the selected Shell guard
+00:48 +91: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: close retires retained Shell ownership exactly
+00:49 +92: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: go retires retained Shell ownership exactly
+00:49 +93: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: reset retires retained Shell ownership exactly
+00:49 +94: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: first Shell page returns to the calling root
+00:49 +95: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: cross Shell Back retains the original branch and State
+00:49 +96: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: guarded page must not block a foreign dialog
+00:49 +97: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: cold nested link must return to its parent
+00:50 +98: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: maybePop from guarded nested context consumes root popup only
+00:50 +99: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: pop from guarded nested context consumes root popup only
+00:50 +100: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: go reconstructs the validated parent chain
+00:50 +101: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: reset reconstructs the validated parent chain
+00:50 +102: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: openGo reconstructs the validated parent chain
+00:50 +103: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: root overlay pop must restore Shell back target
+00:50 +104: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: retained branch URL must follow selected branch
+00:51 +105: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: default Host must honor platform startup path
+00:51 +106: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: shutdown with mounted Shell must not rebuild errors
+00:51 +107: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: foreign popup must hide underlying Runtime Entry
+00:51 +108: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: direct branch navigation must hide retained branch
+00:51 +109: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:52 +110: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: cancelled iOS swipe preserves Entry identity (variant: TargetPlatform.iOS)
+00:52 +111: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: shutdown retires mounted Shell and foreign popup safely
+00:53 +112: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: shutdown during a Shell edge swipe does not double remove (variant: TargetPlatform.iOS)
+00:53 +113: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: close covered Shell seed must keep context child
+00:53 +114: All tests passed!

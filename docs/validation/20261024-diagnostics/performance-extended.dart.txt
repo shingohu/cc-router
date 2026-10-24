@@ -1,0 +1,178 @@
+
+import 'dart:async';
+import 'dart:convert';
+import 'dart:ffi';
+import 'dart:io';
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:ccrouter_core/ccrouter_core.dart';
+import 'package:ccrouter_core_reference/ccrouter_core.dart' as legacy;
+
+Future<void> main() async {
+  const modes = ['default', 'retainedSync', 'retainedFuture', 'off', 'navDefault', 'navOff'];
+  final runs = [
+    <String, Object>{'label': 'before', 'samples': <Map<String, Object>>[]},
+    <String, Object>{'label': 'after', 'samples': <Map<String, Object>>[]},
+  ];
+  final cpu = _ThreadCpuClock.open();
+  try {
+    for (var round = 0; round < 51; round++) {
+      for (final mode in round.isEven ? modes : modes.reversed) {
+        final navigation = mode.startsWith('nav');
+        final commands = navigation ? 1000 : 10000;
+        final capacity = mode == 'off' || mode == 'navOff' ? 0 : 1000;
+        final sinks = [for (var i = 0; i < 2; i++) mode.startsWith('retained') ? _Sink(mode == 'retainedFuture') : null];
+        CCDiagnosticsConfig config(int i) => mode == 'default' || mode == 'navDefault' ? const CCDiagnosticsConfig() : CCDiagnosticsConfig(
+          sink: sinks[i], defaultEnabled: false,
+          policies: const [CCDiagnosticCategoryPolicy(category: CCDiagnosticCategory.command)],
+        );
+        final runtimes = <dynamic>[
+          legacy.CCRouterRuntime.forTesting(traceCapacity: capacity, navigationDiagnosticCapacity: capacity, diagnostics: config(0), navigationAdapter: navigation ? legacy.CCMemoryNavigationAdapter() : null),
+          CCRouterRuntime.forTesting(traceCapacity: capacity, navigationDiagnosticCapacity: capacity, diagnostics: config(1), navigationAdapter: navigation ? CCMemoryNavigationAdapter() : null),
+        ];
+        for (final runtime in runtimes) {
+          runtime.registerCommand<_Command, void>((_, _) {});
+          if (navigation) {
+            runtime.registerRoute<int, void>(CCRouteDefinition<int, void>(
+              routeId: 'perf.route',
+              patterns: const [CCPathPattern('/perf/:id', primary: true)],
+              codec: const _Codec(),
+            ));
+          }
+          runtime.initialize();
+        }
+        final commandCpu = [0.0, 0.0], totalCpu = [0.0, 0.0];
+        final commandWall = [0, 0], totalWall = [0, 0];
+        for (var index = 0; index < commands; index += 64) {
+          // Adjacent small batches share scheduling and frequency conditions;
+          // reverse order on each batch and round to avoid first-run bias.
+          for (final variant in ((index ~/ 64) + round).isEven ? [0, 1] : [1, 0]) {
+            final dynamic runtime = runtimes[variant];
+            final totalStart = cpu?.microseconds;
+            final total = Stopwatch()..start();
+            final command = Stopwatch()..start();
+            final commandStart = cpu?.microseconds;
+            for (var j = index; j < index + 64 && j < commands; j++) {
+              if (navigation) {
+                if (variant == 0) {
+                  await legacy.CCRouterRuntimeNavigation(runtime as legacy.CCRouterRuntime).openRoute(Uri.parse('/perf/42'), mode: CCDeepLinkOpenMode.go);
+                } else {
+                  await CCRouterRuntimeNavigation(runtime as CCRouterRuntime).openRoute(Uri.parse('/perf/42'), mode: CCDeepLinkOpenMode.go);
+                }
+              } else {
+                await runtime.command(const _Command());
+              }
+            }
+            if (commandStart != null) commandCpu[variant] += cpu!.microseconds - commandStart;
+            command.stop();
+            await Future<void>.delayed(Duration.zero);
+            total.stop();
+            if (totalStart != null) totalCpu[variant] += cpu!.microseconds - totalStart;
+            commandWall[variant] += command.elapsedMicroseconds;
+            totalWall[variant] += total.elapsedMicroseconds;
+          }
+        }
+        for (var variant = 0; variant < 2; variant++) {
+          final sink = sinks[variant];
+          if (sink != null && sink.count != commands) throw StateError('Lost events: ${sink.count}');
+          if (round > 1) {
+            (runs[variant]['samples'] as List<Map<String, Object>>).add({
+              'round': round, 'mode': mode, 'iterations': commands,
+              'commandUsPerEvent': commandWall[variant] / commands,
+              'deliveryUsPerEvent': totalWall[variant] / commands,
+              if (cpu != null) 'commandCpuUsPerEvent': commandCpu[variant] / commands,
+              if (cpu != null) 'deliveryCpuUsPerEvent': totalCpu[variant] / commands,
+            });
+          }
+          await runtimes[variant].dispose();
+        }
+      }
+    }
+  } finally { cpu?.dispose(); }
+  print(jsonEncode({'runs': runs}));
+}
+final class _Codec implements CCRouteCodec<int> {
+  const _Codec();
+  @override
+  int decode(CCRouteCodecValues input) => int.parse(input.path['id']!);
+  @override
+  CCRouteCodecValues encode(int arguments) => CCRouteCodecValues(path: {'id': '$arguments'});
+}
+final class _Command implements CCCommand<void> {
+  const _Command();
+}
+
+final class _Sink implements CCDiagnosticSink {
+  _Sink(this.asyncCompletion);
+  final bool asyncCompletion;
+  var count = 0;
+  @override
+  FutureOr<void> record(CCDiagnosticEvent event) {
+    count++;
+    if (asyncCompletion) return Future<void>.value();
+  }
+}
+
+// Optional test-only POSIX clock. Wall time is still reported above, but busy
+// developer machines can deschedule Flutter for unrelated builds. Thread CPU
+// time isolates synchronous mutator work; it excludes GC pauses/other threads
+// and must not be presented as end-to-end frame latency or allocation cost.
+final class _ClockTimespec extends Struct {
+  @Int64()
+  external int seconds;
+
+  @Int64()
+  external int nanoseconds;
+}
+
+final class _ThreadCpuClock {
+  _ThreadCpuClock(this._read, this._free, this._value, this._clockId);
+
+  static _ThreadCpuClock? open() {
+    if ((!Platform.isMacOS && !Platform.isLinux) || sizeOf<IntPtr>() != 8) {
+      return null;
+    }
+    final library = DynamicLibrary.process();
+    final allocate = library
+        .lookupFunction<
+          Pointer<Void> Function(IntPtr),
+          Pointer<Void> Function(int)
+        >('malloc');
+    final free = library
+        .lookupFunction<
+          Void Function(Pointer<Void>),
+          void Function(Pointer<Void>)
+        >('free');
+    final read = library
+        .lookupFunction<
+          Int32 Function(Int32, Pointer<_ClockTimespec>),
+          int Function(int, Pointer<_ClockTimespec>)
+        >('clock_gettime');
+    final pointer = allocate(sizeOf<_ClockTimespec>()).cast<_ClockTimespec>();
+    if (pointer == nullptr) throw StateError('Could not allocate CPU clock.');
+    // Darwin and Linux define different clockid_t values for thread CPU time.
+    final clock = _ThreadCpuClock(
+      read,
+      free,
+      pointer,
+      Platform.isMacOS ? 16 : 3,
+    );
+    if (read(clock._clockId, pointer) != 0) {
+      clock.dispose();
+      return null;
+    }
+    return clock;
+  }
+
+  final int Function(int, Pointer<_ClockTimespec>) _read;
+  final void Function(Pointer<Void>) _free;
+  final Pointer<_ClockTimespec> _value;
+  final int _clockId;
+
+  double get microseconds {
+    if (_read(_clockId, _value) != 0)
+      throw StateError('CPU clock read failed.');
+    return _value.ref.seconds * 1000000 + _value.ref.nanoseconds / 1000;
+  }
+
+  void dispose() => _free(_value.cast<Void>());
+}

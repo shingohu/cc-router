@@ -1,0 +1,11 @@
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart
+packages/ccrouter_test/test/diagnostic_health_cache_test.dart:69:42: Error: Member not found: 'pushed'.
+            CCNavigationBackendEventKind.pushed,
+                                         ^^^^^^
+00:00 +0 -1: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart [E]
+  Failed to load "<home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart":
+  Compilation failed for testPath=<home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: packages/ccrouter_test/test/diagnostic_health_cache_test.dart:69:42: Error: Member not found: 'pushed'.
+              CCNavigationBackendEventKind.pushed,
+                                           ^^^^^^
+  .
+00:00 +0 -1: Some tests failed.

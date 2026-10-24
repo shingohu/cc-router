@@ -1,5 +1,145 @@
 part of 'runtime.dart';
 
+/// Capacity and completeness of one named, payload-free diagnostic history.
+final class CCDiagnosticHistorySnapshot {
+  /// Captures counts since this Runtime was constructed.
+  const CCDiagnosticHistorySnapshot({
+    required this.name,
+    required this.capacity,
+    required this.retainedCount,
+    required this.omittedCount,
+  });
+
+  /// Framework-defined history name, not a caller-supplied label.
+  final String name;
+
+  /// Per-history retention limit; zero disables retention.
+  final int capacity;
+
+  /// Records currently retained; this is not a lifetime success count.
+  final int retainedCount;
+
+  /// Observations not retained because of zero capacity or capacity rotation.
+  /// Independent of external Sink filtering/sampling; queue losses have their
+  /// own delivery counter, while filtering/sampling counts are not exposed.
+  final int omittedCount;
+}
+
+/// Lightweight diagnostic health without copying event or Trace histories.
+///
+/// This read-only business/tooling value contains no Runtime back-reference.
+/// Use it to explain incomplete histories and detect changes before reading
+/// full snapshots. It is not a replay, audit, or delivery acknowledgement.
+final class CCDiagnosticSnapshot {
+  /// Captures one Runtime's revision, history limits and external delivery.
+  CCDiagnosticSnapshot({
+    required this.runtimeId,
+    required this.revision,
+    required this.sinkConfigured,
+    required this.delivery,
+    required Iterable<CCDiagnosticHistorySnapshot> histories,
+  }) : histories = List.unmodifiable(histories);
+
+  /// Non-reusable Runtime identity distinguishing shutdown/reinitialization.
+  final String runtimeId;
+
+  /// Monotonic in-Runtime observation revision, independent of Sink policies.
+  /// Delivery completion counters may change without advancing this revision.
+  final int revision;
+
+  /// Whether the Host configured an external Sink, independent of filtering.
+  final bool sinkConfigured;
+
+  /// Bounded external queue/write health, including losses and Sink failures.
+  final CCDiagnosticDeliverySnapshot delivery;
+
+  /// Completeness of invocation, navigation, Entry, visibility and backend rings.
+  /// Live state and removed backend ledger retention are not event histories.
+  final List<CCDiagnosticHistorySnapshot> histories;
+}
+
+/// Collects payload-free history counts without adding timers or listeners.
+extension CCRouterRuntimeDiagnosticHealth on CCRouterRuntime {
+  /// Returns lightweight health suitable for an optional mounted debug panel.
+  /// Reuses an immutable value while both observations and delivery are stable.
+  CCDiagnosticSnapshot get diagnosticSnapshot {
+    final delivery = diagnosticDeliverySnapshot;
+    final cached = _diagnosticSnapshot;
+    if (cached != null &&
+        cached.revision == _diagnosticRevision &&
+        identical(cached.delivery, delivery)) {
+      return cached;
+    }
+    return _diagnosticSnapshot = CCDiagnosticSnapshot(
+      runtimeId: _runtimeId,
+      revision: _diagnosticRevision,
+      sinkConfigured: diagnostics.sink != null,
+      delivery: delivery,
+      histories: [
+        _historySnapshot('traces', traceCapacity, _traces.length, _traceTotal),
+        _historySnapshot(
+          'navigation',
+          navigationDiagnosticCapacity,
+          _navigationEvents.length,
+          _navigationEventTotal,
+        ),
+        _historySnapshot(
+          'failures',
+          navigationDiagnosticCapacity,
+          _navigationFailures.length,
+          _navigationFailureTotal,
+        ),
+        _historySnapshot(
+          'fallbacks',
+          navigationDiagnosticCapacity,
+          _navigationCapabilityFallbacks.length,
+          _navigationFallbackTotal,
+        ),
+        _historySnapshot(
+          'entries',
+          navigationDiagnosticCapacity,
+          _routeEntryEvents.length,
+          _routeEntryEventTotal,
+        ),
+        _historySnapshot(
+          'visibility',
+          navigationDiagnosticCapacity,
+          _routeVisibilityEvents.length,
+          _routeVisibilityEventTotal,
+        ),
+        _historySnapshot(
+          'backend',
+          navigationDiagnosticCapacity,
+          _backendNavigationEvents.length,
+          _backendNavigationEventTotal,
+        ),
+      ],
+    );
+  }
+
+  /// Advances health and retains a record after its fixed counter is updated.
+  /// A zero capacity still advances the revision and lifetime observation count.
+  void _retainDiagnostic<T>(Queue<T> history, T record, int capacity) {
+    _diagnosticRevision++;
+    if (capacity == 0) return;
+    if (history.length == capacity) history.removeFirst();
+    history.addLast(record);
+  }
+
+  /// Copies one history's counts without enumerating its retained records.
+  CCDiagnosticHistorySnapshot _historySnapshot(
+    String name,
+    int capacity,
+    int retained,
+    int total,
+  ) => CCDiagnosticHistorySnapshot(
+    name: name,
+    capacity: capacity,
+    retainedCount: retained,
+    omittedCount: total - retained,
+  );
+}
+
 /// Immutable invocation identity retained by a completed trace record.
 ///
 /// Use this snapshot to correlate completed framework work without retaining

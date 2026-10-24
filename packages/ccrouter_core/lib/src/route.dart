@@ -148,6 +148,18 @@ final class _RouteRegistry {
   /// Stable IDs in deterministic order for diagnostics and tests.
   List<String> get routeIds => _routes.keys.toList()..sort();
 
+  /// Reads known placement for failure attribution without re-running a codec.
+  /// Missing identities remain unknown; this never matches an untrusted URI.
+  CCRoutePlacement? diagnosticPlacement(
+    String? routeId,
+    CCRoutePlacement? placementOverride,
+  ) {
+    final route = _routes[routeId];
+    return route == null
+        ? null
+        : _effectivePlacement(route.definition.placement, placementOverride);
+  }
+
   /// Adapter-facing snapshots of all installed routes in stable ID order.
   List<CCNavigationRoute> get navigationRoutes {
     final routes = _routes.values.toList()

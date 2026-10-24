@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+part 'runtime_diagnostics.dart';
+
 /// Current wire version for CCRouter DevTools snapshot envelopes.
 const ccRouterDevToolsProtocolVersion = 1;
 
@@ -409,9 +411,14 @@ final class CCDevToolsRuntimeSnapshot {
     Iterable<String> installedComponentIds = const [],
     Iterable<CCDevToolsRuntimeEntry> entries = const [],
     Iterable<CCDevToolsTraceEdge> traceEdges = const [],
+    Iterable<CCDevToolsDiagnosticRecord>? diagnostics,
+    this.diagnosticHealth,
   }) : installedComponentIds = List.unmodifiable(installedComponentIds),
        entries = List.unmodifiable(entries),
-       traceEdges = List.unmodifiable(traceEdges);
+       traceEdges = List.unmodifiable(traceEdges),
+       diagnostics = diagnostics == null
+           ? null
+           : List.unmodifiable(diagnostics);
 
   /// Capture timestamp in UTC.
   final DateTime capturedAt;
@@ -431,6 +438,13 @@ final class CCDevToolsRuntimeSnapshot {
   /// Bounded causal edges retained for the current diagnostic window.
   final List<CCDevToolsTraceEdge> traceEdges;
 
+  /// Safe failure, fallback, pending and InitTask observations. Null means the
+  /// producer predates this optional protocol-v1 extension, not zero failures.
+  final List<CCDevToolsDiagnosticRecord>? diagnostics;
+
+  /// Optional capacity/delivery health; absent on older producers.
+  final CCDevToolsDiagnosticHealth? diagnosticHealth;
+
   /// Encodes this Runtime snapshot as JSON.
   Map<String, Object?> toJson() => <String, Object?>{
     'protocolVersion': protocolVersion,
@@ -441,6 +455,12 @@ final class CCDevToolsRuntimeSnapshot {
     'traceEdges': traceEdges
         .map((edge) => edge.toJson())
         .toList(growable: false),
+    if (diagnostics != null)
+      'diagnostics': diagnostics!
+          .map((record) => record.toJson())
+          .toList(growable: false),
+    if (diagnosticHealth != null)
+      'diagnosticHealth': diagnosticHealth!.toJson(),
   };
 
   /// Decodes a Runtime snapshot from JSON.
@@ -458,6 +478,16 @@ final class CCDevToolsRuntimeSnapshot {
         traceEdges: _requiredList(json, 'traceEdges')
             .map((value) => CCDevToolsTraceEdge.fromJson(_object(value)))
             .toList(growable: false),
+        diagnostics: json['diagnostics'] == null
+            ? null
+            : _requiredList(json, 'diagnostics').map(
+                (value) => CCDevToolsDiagnosticRecord.fromJson(_object(value)),
+              ),
+        diagnosticHealth: _optionalObject(
+          json,
+          'diagnosticHealth',
+          CCDevToolsDiagnosticHealth.fromJson,
+        ),
       );
 }
 

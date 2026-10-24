@@ -1,0 +1,2428 @@
+{
+  "runs": [
+    {
+      "label": "before",
+      "samples": [
+        {
+          "round": 2,
+          "mode": "off",
+          "commandUsPerEvent": 2.5968,
+          "deliveryUsPerEvent": 2.693,
+          "commandCpuUsPerEvent": 2.5416216999999772,
+          "deliveryCpuUsPerEvent": 2.6462502999999966
+        },
+        {
+          "round": 2,
+          "mode": "sync",
+          "commandUsPerEvent": 2.7088,
+          "deliveryUsPerEvent": 2.8928,
+          "commandCpuUsPerEvent": 2.6388288,
+          "deliveryCpuUsPerEvent": 2.8178538999999816
+        },
+        {
+          "round": 2,
+          "mode": "future",
+          "commandUsPerEvent": 2.6234,
+          "deliveryUsPerEvent": 2.9108,
+          "commandCpuUsPerEvent": 2.5519629000000075,
+          "deliveryCpuUsPerEvent": 2.8471245000000285
+        },
+        {
+          "round": 3,
+          "mode": "future",
+          "commandUsPerEvent": 2.621,
+          "deliveryUsPerEvent": 2.9487,
+          "commandCpuUsPerEvent": 2.565216800000024,
+          "deliveryCpuUsPerEvent": 2.8887324999999837
+        },
+        {
+          "round": 3,
+          "mode": "sync",
+          "commandUsPerEvent": 2.6122,
+          "deliveryUsPerEvent": 2.7638,
+          "commandCpuUsPerEvent": 2.5368671000000207,
+          "deliveryCpuUsPerEvent": 2.6941134000000426
+        },
+        {
+          "round": 3,
+          "mode": "off",
+          "commandUsPerEvent": 2.5745,
+          "deliveryUsPerEvent": 2.6686,
+          "commandCpuUsPerEvent": 2.5296461000000128,
+          "deliveryCpuUsPerEvent": 2.632958099999989
+        },
+        {
+          "round": 4,
+          "mode": "off",
+          "commandUsPerEvent": 2.6002,
+          "deliveryUsPerEvent": 2.6961,
+          "commandCpuUsPerEvent": 2.523992000000016,
+          "deliveryCpuUsPerEvent": 2.6268078999999793
+        },
+        {
+          "round": 4,
+          "mode": "sync",
+          "commandUsPerEvent": 2.6889,
+          "deliveryUsPerEvent": 2.8529,
+          "commandCpuUsPerEvent": 2.5874372999999906,
+          "deliveryCpuUsPerEvent": 2.7528573999999555
+        },
+        {
+          "round": 4,
+          "mode": "future",
+          "commandUsPerEvent": 2.6181,
+          "deliveryUsPerEvent": 2.9126,
+          "commandCpuUsPerEvent": 2.537234200000041,
+          "deliveryCpuUsPerEvent": 2.835053699999978
+        },
+        {
+          "round": 5,
+          "mode": "future",
+          "commandUsPerEvent": 2.589,
+          "deliveryUsPerEvent": 2.8814,
+          "commandCpuUsPerEvent": 2.5267828999999793,
+          "deliveryCpuUsPerEvent": 2.8223796000000205
+        },
+        {
+          "round": 5,
+          "mode": "sync",
+          "commandUsPerEvent": 2.6306,
+          "deliveryUsPerEvent": 2.7995,
+          "commandCpuUsPerEvent": 2.5473962000000174,
+          "deliveryCpuUsPerEvent": 2.7154375
+        },
+        {
+          "round": 5,
+          "mode": "off",
+          "commandUsPerEvent": 2.5381,
+          "deliveryUsPerEvent": 2.6263,
+          "commandCpuUsPerEvent": 2.4935875,
+          "deliveryCpuUsPerEvent": 2.589291599999997
+        },
+        {
+          "round": 6,
+          "mode": "off",
+          "commandUsPerEvent": 2.5052,
+          "deliveryUsPerEvent": 2.5924,
+          "commandCpuUsPerEvent": 2.4709497999999903,
+          "deliveryCpuUsPerEvent": 2.567233099999989
+        },
+        {
+          "round": 6,
+          "mode": "sync",
+          "commandUsPerEvent": 2.6529,
+          "deliveryUsPerEvent": 2.8322,
+          "commandCpuUsPerEvent": 2.616500200000091,
+          "deliveryCpuUsPerEvent": 2.7959326000000235
+        },
+        {
+          "round": 6,
+          "mode": "future",
+          "commandUsPerEvent": 2.5217,
+          "deliveryUsPerEvent": 2.8127,
+          "commandCpuUsPerEvent": 2.5000495999999344,
+          "deliveryCpuUsPerEvent": 2.800262800000026
+        },
+        {
+          "round": 7,
+          "mode": "future",
+          "commandUsPerEvent": 2.5585,
+          "deliveryUsPerEvent": 2.8562,
+          "commandCpuUsPerEvent": 2.5417499999999067,
+          "deliveryCpuUsPerEvent": 2.8472419999999694
+        },
+        {
+          "round": 7,
+          "mode": "sync",
+          "commandUsPerEvent": 2.5908,
+          "deliveryUsPerEvent": 2.7502,
+          "commandCpuUsPerEvent": 2.571245600000094,
+          "deliveryCpuUsPerEvent": 2.733203199999826
+        },
+        {
+          "round": 7,
+          "mode": "off",
+          "commandUsPerEvent": 2.7138,
+          "deliveryUsPerEvent": 2.8087,
+          "commandCpuUsPerEvent": 2.6604993000001183,
+          "deliveryCpuUsPerEvent": 2.764004100000067
+        },
+        {
+          "round": 8,
+          "mode": "off",
+          "commandUsPerEvent": 2.6166,
+          "deliveryUsPerEvent": 2.7153,
+          "commandCpuUsPerEvent": 2.562537300000037,
+          "deliveryCpuUsPerEvent": 2.670016900000023
+        },
+        {
+          "round": 8,
+          "mode": "sync",
+          "commandUsPerEvent": 2.7064,
+          "deliveryUsPerEvent": 2.8718,
+          "commandCpuUsPerEvent": 2.6448841000001413,
+          "deliveryCpuUsPerEvent": 2.813917299999995
+        },
+        {
+          "round": 8,
+          "mode": "future",
+          "commandUsPerEvent": 2.5608,
+          "deliveryUsPerEvent": 2.8737,
+          "commandCpuUsPerEvent": 2.5205205999998377,
+          "deliveryCpuUsPerEvent": 2.8388287000000942
+        },
+        {
+          "round": 9,
+          "mode": "future",
+          "commandUsPerEvent": 2.7265,
+          "deliveryUsPerEvent": 3.0524,
+          "commandCpuUsPerEvent": 2.6725456999999007,
+          "deliveryCpuUsPerEvent": 3.0031663999998943
+        },
+        {
+          "round": 9,
+          "mode": "sync",
+          "commandUsPerEvent": 2.6016,
+          "deliveryUsPerEvent": 2.7708,
+          "commandCpuUsPerEvent": 2.5557958000002663,
+          "deliveryCpuUsPerEvent": 2.729733899999922
+        },
+        {
+          "round": 9,
+          "mode": "off",
+          "commandUsPerEvent": 2.4701,
+          "deliveryUsPerEvent": 2.5531,
+          "commandCpuUsPerEvent": 2.445104099999834,
+          "deliveryCpuUsPerEvent": 2.536112199999974
+        },
+        {
+          "round": 10,
+          "mode": "off",
+          "commandUsPerEvent": 2.5014,
+          "deliveryUsPerEvent": 2.586,
+          "commandCpuUsPerEvent": 2.4672044000001625,
+          "deliveryCpuUsPerEvent": 2.5598836999998893
+        },
+        {
+          "round": 10,
+          "mode": "sync",
+          "commandUsPerEvent": 2.608,
+          "deliveryUsPerEvent": 2.7623,
+          "commandCpuUsPerEvent": 2.5398793000000297,
+          "deliveryCpuUsPerEvent": 2.7028289999999804
+        },
+        {
+          "round": 10,
+          "mode": "future",
+          "commandUsPerEvent": 2.6208,
+          "deliveryUsPerEvent": 2.9234,
+          "commandCpuUsPerEvent": 2.5404212000001687,
+          "deliveryCpuUsPerEvent": 2.8409295000001786
+        },
+        {
+          "round": 11,
+          "mode": "future",
+          "commandUsPerEvent": 2.5433,
+          "deliveryUsPerEvent": 2.8312,
+          "commandCpuUsPerEvent": 2.4832129000000656,
+          "deliveryCpuUsPerEvent": 2.7723826999999814
+        },
+        {
+          "round": 11,
+          "mode": "sync",
+          "commandUsPerEvent": 2.6704,
+          "deliveryUsPerEvent": 2.831,
+          "commandCpuUsPerEvent": 2.5578448999999326,
+          "deliveryCpuUsPerEvent": 2.721983699999936
+        },
+        {
+          "round": 11,
+          "mode": "off",
+          "commandUsPerEvent": 2.6377,
+          "deliveryUsPerEvent": 2.7349,
+          "commandCpuUsPerEvent": 2.5405669999999927,
+          "deliveryCpuUsPerEvent": 2.643967500000191
+        },
+        {
+          "round": 12,
+          "mode": "off",
+          "commandUsPerEvent": 2.6932,
+          "deliveryUsPerEvent": 2.792,
+          "commandCpuUsPerEvent": 2.5676831999999004,
+          "deliveryCpuUsPerEvent": 2.670995700000087
+        },
+        {
+          "round": 12,
+          "mode": "sync",
+          "commandUsPerEvent": 2.681,
+          "deliveryUsPerEvent": 2.8348,
+          "commandCpuUsPerEvent": 2.573208600000059,
+          "deliveryCpuUsPerEvent": 2.7267082000000635
+        },
+        {
+          "round": 12,
+          "mode": "future",
+          "commandUsPerEvent": 2.762,
+          "deliveryUsPerEvent": 3.092,
+          "commandCpuUsPerEvent": 2.6187580000000774,
+          "deliveryCpuUsPerEvent": 2.944241500000027
+        },
+        {
+          "round": 13,
+          "mode": "future",
+          "commandUsPerEvent": 2.7202,
+          "deliveryUsPerEvent": 3.0452,
+          "commandCpuUsPerEvent": 2.6327120000001507,
+          "deliveryCpuUsPerEvent": 2.9587504999998493
+        },
+        {
+          "round": 13,
+          "mode": "sync",
+          "commandUsPerEvent": 2.6905,
+          "deliveryUsPerEvent": 2.8373,
+          "commandCpuUsPerEvent": 2.59580419999999,
+          "deliveryCpuUsPerEvent": 2.7500049999997485
+        },
+        {
+          "round": 13,
+          "mode": "off",
+          "commandUsPerEvent": 2.5531,
+          "deliveryUsPerEvent": 2.6448,
+          "commandCpuUsPerEvent": 2.5058215999997686,
+          "deliveryCpuUsPerEvent": 2.6049540000000504
+        },
+        {
+          "round": 14,
+          "mode": "off",
+          "commandUsPerEvent": 2.5201,
+          "deliveryUsPerEvent": 2.6145,
+          "commandCpuUsPerEvent": 2.4958539000000806,
+          "deliveryCpuUsPerEvent": 2.59772080000001
+        },
+        {
+          "round": 14,
+          "mode": "sync",
+          "commandUsPerEvent": 2.5668,
+          "deliveryUsPerEvent": 2.7067,
+          "commandCpuUsPerEvent": 2.5412340999997687,
+          "deliveryCpuUsPerEvent": 2.6893416999999897
+        },
+        {
+          "round": 14,
+          "mode": "future",
+          "commandUsPerEvent": 2.5372,
+          "deliveryUsPerEvent": 2.8202,
+          "commandCpuUsPerEvent": 2.52112490000003,
+          "deliveryCpuUsPerEvent": 2.8131784000002313
+        },
+        {
+          "round": 15,
+          "mode": "future",
+          "commandUsPerEvent": 2.458,
+          "deliveryUsPerEvent": 2.7194,
+          "commandCpuUsPerEvent": 2.4542503999998795,
+          "deliveryCpuUsPerEvent": 2.7248000999999697
+        },
+        {
+          "round": 15,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4589,
+          "deliveryUsPerEvent": 2.5768,
+          "commandCpuUsPerEvent": 2.4500250999999698,
+          "deliveryCpuUsPerEvent": 2.5755545999998692
+        },
+        {
+          "round": 15,
+          "mode": "off",
+          "commandUsPerEvent": 2.4221,
+          "deliveryUsPerEvent": 2.5048,
+          "commandCpuUsPerEvent": 2.4171417999999596,
+          "deliveryCpuUsPerEvent": 2.5086167999999596
+        },
+        {
+          "round": 16,
+          "mode": "off",
+          "commandUsPerEvent": 2.425,
+          "deliveryUsPerEvent": 2.5066,
+          "commandCpuUsPerEvent": 2.420832700000191,
+          "deliveryCpuUsPerEvent": 2.5109295999998693
+        },
+        {
+          "round": 16,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4936,
+          "deliveryUsPerEvent": 2.6192,
+          "commandCpuUsPerEvent": 2.4751254999998493,
+          "deliveryCpuUsPerEvent": 2.60769580000001
+        },
+        {
+          "round": 16,
+          "mode": "future",
+          "commandUsPerEvent": 2.4986,
+          "deliveryUsPerEvent": 2.7911,
+          "commandCpuUsPerEvent": 2.48367080000001,
+          "deliveryCpuUsPerEvent": 2.7837834999999496
+        },
+        {
+          "round": 17,
+          "mode": "future",
+          "commandUsPerEvent": 2.551,
+          "deliveryUsPerEvent": 2.8445,
+          "commandCpuUsPerEvent": 2.5275750999999698,
+          "deliveryCpuUsPerEvent": 2.82769160000002
+        },
+        {
+          "round": 17,
+          "mode": "sync",
+          "commandUsPerEvent": 2.5223,
+          "deliveryUsPerEvent": 2.6585,
+          "commandCpuUsPerEvent": 2.5088955000001008,
+          "deliveryCpuUsPerEvent": 2.654287000000151
+        },
+        {
+          "round": 17,
+          "mode": "off",
+          "commandUsPerEvent": 2.4505,
+          "deliveryUsPerEvent": 2.5367,
+          "commandCpuUsPerEvent": 2.4457795999998693,
+          "deliveryCpuUsPerEvent": 2.540866100000171
+        },
+        {
+          "round": 18,
+          "mode": "off",
+          "commandUsPerEvent": 2.447,
+          "deliveryUsPerEvent": 2.5323,
+          "commandCpuUsPerEvent": 2.43857929999996,
+          "deliveryCpuUsPerEvent": 2.53235830000001
+        },
+        {
+          "round": 18,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4652,
+          "deliveryUsPerEvent": 2.5929,
+          "commandCpuUsPerEvent": 2.4559667999999597,
+          "deliveryCpuUsPerEvent": 2.592028000000352
+        },
+        {
+          "round": 18,
+          "mode": "future",
+          "commandUsPerEvent": 2.4838,
+          "deliveryUsPerEvent": 2.7581,
+          "commandCpuUsPerEvent": 2.4739543999999296,
+          "deliveryCpuUsPerEvent": 2.7555292999999597
+        },
+        {
+          "round": 19,
+          "mode": "future",
+          "commandUsPerEvent": 2.4512,
+          "deliveryUsPerEvent": 2.7326,
+          "commandCpuUsPerEvent": 2.4461793999999295,
+          "deliveryCpuUsPerEvent": 2.734429699999839
+        },
+        {
+          "round": 19,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4855,
+          "deliveryUsPerEvent": 2.6205,
+          "commandCpuUsPerEvent": 2.478345200000191,
+          "deliveryCpuUsPerEvent": 2.6217577000001913
+        },
+        {
+          "round": 19,
+          "mode": "off",
+          "commandUsPerEvent": 2.4867,
+          "deliveryUsPerEvent": 2.5735,
+          "commandCpuUsPerEvent": 2.46998320000004,
+          "deliveryCpuUsPerEvent": 2.5649785000002012
+        },
+        {
+          "round": 20,
+          "mode": "off",
+          "commandUsPerEvent": 2.4741,
+          "deliveryUsPerEvent": 2.5515,
+          "commandCpuUsPerEvent": 2.45563759999997,
+          "deliveryCpuUsPerEvent": 2.5417167999999597
+        },
+        {
+          "round": 20,
+          "mode": "sync",
+          "commandUsPerEvent": 2.5225,
+          "deliveryUsPerEvent": 2.6533,
+          "commandCpuUsPerEvent": 2.4972825000002516,
+          "deliveryCpuUsPerEvent": 2.6356049999997486
+        },
+        {
+          "round": 20,
+          "mode": "future",
+          "commandUsPerEvent": 2.5009,
+          "deliveryUsPerEvent": 2.7844,
+          "commandCpuUsPerEvent": 2.4889501999999397,
+          "deliveryCpuUsPerEvent": 2.7798790000000504
+        },
+        {
+          "round": 21,
+          "mode": "future",
+          "commandUsPerEvent": 2.5138,
+          "deliveryUsPerEvent": 2.8026,
+          "commandCpuUsPerEvent": 2.5040210999999197,
+          "deliveryCpuUsPerEvent": 2.8002080000001004
+        },
+        {
+          "round": 21,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4638,
+          "deliveryUsPerEvent": 2.5895,
+          "commandCpuUsPerEvent": 2.458557800000161,
+          "deliveryCpuUsPerEvent": 2.59258330000001
+        },
+        {
+          "round": 21,
+          "mode": "off",
+          "commandUsPerEvent": 2.4505,
+          "deliveryUsPerEvent": 2.5264,
+          "commandCpuUsPerEvent": 2.4434666000000203,
+          "deliveryCpuUsPerEvent": 2.527971499999799
+        },
+        {
+          "round": 22,
+          "mode": "off",
+          "commandUsPerEvent": 2.4821,
+          "deliveryUsPerEvent": 2.563,
+          "commandCpuUsPerEvent": 2.468678600000171,
+          "deliveryCpuUsPerEvent": 2.5577959999999496
+        },
+        {
+          "round": 22,
+          "mode": "sync",
+          "commandUsPerEvent": 2.5046,
+          "deliveryUsPerEvent": 2.6322,
+          "commandCpuUsPerEvent": 2.501575499999849,
+          "deliveryCpuUsPerEvent": 2.6371166999999898
+        },
+        {
+          "round": 22,
+          "mode": "future",
+          "commandUsPerEvent": 2.4328,
+          "deliveryUsPerEvent": 2.6982,
+          "commandCpuUsPerEvent": 2.4308169999998994,
+          "deliveryCpuUsPerEvent": 2.703549300000211
+        },
+        {
+          "round": 23,
+          "mode": "future",
+          "commandUsPerEvent": 2.4633,
+          "deliveryUsPerEvent": 2.734,
+          "commandCpuUsPerEvent": 2.45609179999996,
+          "deliveryCpuUsPerEvent": 2.73217900000005
+        },
+        {
+          "round": 23,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4746,
+          "deliveryUsPerEvent": 2.5923,
+          "commandCpuUsPerEvent": 2.4612502999999095,
+          "deliveryCpuUsPerEvent": 2.5876125999999697
+        },
+        {
+          "round": 23,
+          "mode": "off",
+          "commandUsPerEvent": 2.4552,
+          "deliveryUsPerEvent": 2.526,
+          "commandCpuUsPerEvent": 2.44047070000004,
+          "deliveryCpuUsPerEvent": 2.5197451000002213
+        },
+        {
+          "round": 24,
+          "mode": "off",
+          "commandUsPerEvent": 2.4224,
+          "deliveryUsPerEvent": 2.4921,
+          "commandCpuUsPerEvent": 2.4179545999998693,
+          "deliveryCpuUsPerEvent": 2.4959508999997286
+        },
+        {
+          "round": 24,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4473,
+          "deliveryUsPerEvent": 2.5603,
+          "commandCpuUsPerEvent": 2.4437413000001107,
+          "deliveryCpuUsPerEvent": 2.564883699999889
+        },
+        {
+          "round": 24,
+          "mode": "future",
+          "commandUsPerEvent": 2.4691,
+          "deliveryUsPerEvent": 2.7406,
+          "commandCpuUsPerEvent": 2.4626376999999398,
+          "deliveryCpuUsPerEvent": 2.7399873000000605
+        },
+        {
+          "round": 25,
+          "mode": "future",
+          "commandUsPerEvent": 2.4209,
+          "deliveryUsPerEvent": 2.6791,
+          "commandCpuUsPerEvent": 2.4132085999999195,
+          "deliveryCpuUsPerEvent": 2.68162480000006
+        },
+        {
+          "round": 25,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4476,
+          "deliveryUsPerEvent": 2.5603,
+          "commandCpuUsPerEvent": 2.4398960999999195,
+          "deliveryCpuUsPerEvent": 2.5610873000000605
+        },
+        {
+          "round": 25,
+          "mode": "off",
+          "commandUsPerEvent": 2.4263,
+          "deliveryUsPerEvent": 2.4955,
+          "commandCpuUsPerEvent": 2.421149600000121,
+          "deliveryCpuUsPerEvent": 2.499421299999859
+        },
+        {
+          "round": 26,
+          "mode": "off",
+          "commandUsPerEvent": 2.4313,
+          "deliveryUsPerEvent": 2.5015,
+          "commandCpuUsPerEvent": 2.4216037999999243,
+          "deliveryCpuUsPerEvent": 2.50025790000041
+        },
+        {
+          "round": 26,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4946,
+          "deliveryUsPerEvent": 2.6146,
+          "commandCpuUsPerEvent": 2.4731624000003563,
+          "deliveryCpuUsPerEvent": 2.601542099999823
+        },
+        {
+          "round": 26,
+          "mode": "future",
+          "commandUsPerEvent": 2.4749,
+          "deliveryUsPerEvent": 2.7481,
+          "commandCpuUsPerEvent": 2.45800820000004,
+          "deliveryCpuUsPerEvent": 2.7377750999993644
+        },
+        {
+          "round": 27,
+          "mode": "future",
+          "commandUsPerEvent": 2.4645,
+          "deliveryUsPerEvent": 2.734,
+          "commandCpuUsPerEvent": 2.453550799999759,
+          "deliveryCpuUsPerEvent": 2.7302924999991434
+        },
+        {
+          "round": 27,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4683,
+          "deliveryUsPerEvent": 2.5853,
+          "commandCpuUsPerEvent": 2.466692499999795,
+          "deliveryCpuUsPerEvent": 2.591436899999343
+        },
+        {
+          "round": 27,
+          "mode": "off",
+          "commandUsPerEvent": 2.3982,
+          "deliveryUsPerEvent": 2.4698,
+          "commandCpuUsPerEvent": 2.3947251999999395,
+          "deliveryCpuUsPerEvent": 2.473361500000488
+        },
+        {
+          "round": 28,
+          "mode": "off",
+          "commandUsPerEvent": 2.4,
+          "deliveryUsPerEvent": 2.4681,
+          "commandCpuUsPerEvent": 2.4003043999994174,
+          "deliveryCpuUsPerEvent": 2.475695399999991
+        },
+        {
+          "round": 28,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4342,
+          "deliveryUsPerEvent": 2.5493,
+          "commandCpuUsPerEvent": 2.434579099999275,
+          "deliveryCpuUsPerEvent": 2.55772900000019
+        },
+        {
+          "round": 28,
+          "mode": "future",
+          "commandUsPerEvent": 2.412,
+          "deliveryUsPerEvent": 2.6742,
+          "commandCpuUsPerEvent": 2.4128833999999797,
+          "deliveryCpuUsPerEvent": 2.6816004999992438
+        },
+        {
+          "round": 29,
+          "mode": "future",
+          "commandUsPerEvent": 2.4261,
+          "deliveryUsPerEvent": 2.6846,
+          "commandCpuUsPerEvent": 2.4252379000001585,
+          "deliveryCpuUsPerEvent": 2.6922300999999047
+        },
+        {
+          "round": 29,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4673,
+          "deliveryUsPerEvent": 2.5881,
+          "commandCpuUsPerEvent": 2.457687599999551,
+          "deliveryCpuUsPerEvent": 2.58335360000059
+        },
+        {
+          "round": 29,
+          "mode": "off",
+          "commandUsPerEvent": 2.4288,
+          "deliveryUsPerEvent": 2.5099,
+          "commandCpuUsPerEvent": 2.417653999999631,
+          "deliveryCpuUsPerEvent": 2.503008300000336
+        },
+        {
+          "round": 30,
+          "mode": "off",
+          "commandUsPerEvent": 2.4337,
+          "deliveryUsPerEvent": 2.5038,
+          "commandCpuUsPerEvent": 2.4282333999996073,
+          "deliveryCpuUsPerEvent": 2.505600400000066
+        },
+        {
+          "round": 30,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4483,
+          "deliveryUsPerEvent": 2.5636,
+          "commandCpuUsPerEvent": 2.445246499999799,
+          "deliveryCpuUsPerEvent": 2.5689830000002867
+        },
+        {
+          "round": 30,
+          "mode": "future",
+          "commandUsPerEvent": 2.5033,
+          "deliveryUsPerEvent": 2.7655,
+          "commandCpuUsPerEvent": 2.4731299000002442,
+          "deliveryCpuUsPerEvent": 2.742436900000181
+        },
+        {
+          "round": 31,
+          "mode": "future",
+          "commandUsPerEvent": 2.4447,
+          "deliveryUsPerEvent": 2.7059,
+          "commandCpuUsPerEvent": 2.441271200000122,
+          "deliveryCpuUsPerEvent": 2.7114953999996185
+        },
+        {
+          "round": 31,
+          "mode": "sync",
+          "commandUsPerEvent": 2.5034,
+          "deliveryUsPerEvent": 2.6165,
+          "commandCpuUsPerEvent": 2.5031576000010594,
+          "deliveryCpuUsPerEvent": 2.625150700000301
+        },
+        {
+          "round": 31,
+          "mode": "off",
+          "commandUsPerEvent": 2.4254,
+          "deliveryUsPerEvent": 2.5046,
+          "commandCpuUsPerEvent": 2.4181584000005385,
+          "deliveryCpuUsPerEvent": 2.5020582999994048
+        },
+        {
+          "round": 32,
+          "mode": "off",
+          "commandUsPerEvent": 2.4043,
+          "deliveryUsPerEvent": 2.4722,
+          "commandCpuUsPerEvent": 2.405049700000137,
+          "deliveryCpuUsPerEvent": 2.4810458999995144
+        },
+        {
+          "round": 32,
+          "mode": "sync",
+          "commandUsPerEvent": 2.443,
+          "deliveryUsPerEvent": 2.5545,
+          "commandCpuUsPerEvent": 2.4434585000002755,
+          "deliveryCpuUsPerEvent": 2.563888100000005
+        },
+        {
+          "round": 32,
+          "mode": "future",
+          "commandUsPerEvent": 2.4695,
+          "deliveryUsPerEvent": 2.7407,
+          "commandCpuUsPerEvent": 2.4643245000001044,
+          "deliveryCpuUsPerEvent": 2.7415130000003614
+        },
+        {
+          "round": 33,
+          "mode": "future",
+          "commandUsPerEvent": 2.4323,
+          "deliveryUsPerEvent": 2.693,
+          "commandCpuUsPerEvent": 2.4329619999997316,
+          "deliveryCpuUsPerEvent": 2.701787099999562
+        },
+        {
+          "round": 33,
+          "mode": "sync",
+          "commandUsPerEvent": 2.439,
+          "deliveryUsPerEvent": 2.551,
+          "commandCpuUsPerEvent": 2.4377872999994086,
+          "deliveryCpuUsPerEvent": 2.557687899999507
+        },
+        {
+          "round": 33,
+          "mode": "off",
+          "commandUsPerEvent": 2.3827,
+          "deliveryUsPerEvent": 2.4503,
+          "commandCpuUsPerEvent": 2.3817297999997624,
+          "deliveryCpuUsPerEvent": 2.4579082999992186
+        },
+        {
+          "round": 34,
+          "mode": "off",
+          "commandUsPerEvent": 2.3934,
+          "deliveryUsPerEvent": 2.4615,
+          "commandCpuUsPerEvent": 2.3944454999998213,
+          "deliveryCpuUsPerEvent": 2.4703209999994376
+        },
+        {
+          "round": 34,
+          "mode": "sync",
+          "commandUsPerEvent": 2.452,
+          "deliveryUsPerEvent": 2.5627,
+          "commandCpuUsPerEvent": 2.450904699999746,
+          "deliveryCpuUsPerEvent": 2.5704538000001573
+        },
+        {
+          "round": 34,
+          "mode": "future",
+          "commandUsPerEvent": 2.4536,
+          "deliveryUsPerEvent": 2.717,
+          "commandCpuUsPerEvent": 2.4545584000003524,
+          "deliveryCpuUsPerEvent": 2.72617529999977
+        },
+        {
+          "round": 35,
+          "mode": "future",
+          "commandUsPerEvent": 2.4439,
+          "deliveryUsPerEvent": 2.7112,
+          "commandCpuUsPerEvent": 2.444129600000009,
+          "deliveryCpuUsPerEvent": 2.7194917999999597
+        },
+        {
+          "round": 35,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4364,
+          "deliveryUsPerEvent": 2.5491,
+          "commandCpuUsPerEvent": 2.4359629999996164,
+          "deliveryCpuUsPerEvent": 2.55638720000023
+        },
+        {
+          "round": 35,
+          "mode": "off",
+          "commandUsPerEvent": 2.4122,
+          "deliveryUsPerEvent": 2.4841,
+          "commandCpuUsPerEvent": 2.4083370000001976,
+          "deliveryCpuUsPerEvent": 2.486766900000535
+        },
+        {
+          "round": 36,
+          "mode": "off",
+          "commandUsPerEvent": 2.3962,
+          "deliveryUsPerEvent": 2.4646,
+          "commandCpuUsPerEvent": 2.3973791000002063,
+          "deliveryCpuUsPerEvent": 2.4745918000003324
+        },
+        {
+          "round": 36,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4286,
+          "deliveryUsPerEvent": 2.5436,
+          "commandCpuUsPerEvent": 2.4280659000003713,
+          "deliveryCpuUsPerEvent": 2.551400200000312
+        },
+        {
+          "round": 36,
+          "mode": "future",
+          "commandUsPerEvent": 2.4458,
+          "deliveryUsPerEvent": 2.7115,
+          "commandCpuUsPerEvent": 2.444349999999814,
+          "deliveryCpuUsPerEvent": 2.7168954000001775
+        },
+        {
+          "round": 37,
+          "mode": "future",
+          "commandUsPerEvent": 2.6563,
+          "deliveryUsPerEvent": 2.9461,
+          "commandCpuUsPerEvent": 2.5275877999995835,
+          "deliveryCpuUsPerEvent": 2.821148999999743
+        },
+        {
+          "round": 37,
+          "mode": "sync",
+          "commandUsPerEvent": 2.5287,
+          "deliveryUsPerEvent": 2.657,
+          "commandCpuUsPerEvent": 2.51826669999985,
+          "deliveryCpuUsPerEvent": 2.6549757999990136
+        },
+        {
+          "round": 37,
+          "mode": "off",
+          "commandUsPerEvent": 2.4188,
+          "deliveryUsPerEvent": 2.4942,
+          "commandCpuUsPerEvent": 2.419211800000351,
+          "deliveryCpuUsPerEvent": 2.503362200000044
+        },
+        {
+          "round": 38,
+          "mode": "off",
+          "commandUsPerEvent": 2.4214,
+          "deliveryUsPerEvent": 2.49,
+          "commandCpuUsPerEvent": 2.4221923000000416,
+          "deliveryCpuUsPerEvent": 2.4989250000001864
+        },
+        {
+          "round": 38,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4336,
+          "deliveryUsPerEvent": 2.5478,
+          "commandCpuUsPerEvent": 2.433150000000093,
+          "deliveryCpuUsPerEvent": 2.55575879999958
+        },
+        {
+          "round": 38,
+          "mode": "future",
+          "commandUsPerEvent": 2.4274,
+          "deliveryUsPerEvent": 2.6885,
+          "commandCpuUsPerEvent": 2.4262956000004894,
+          "deliveryCpuUsPerEvent": 2.695762900000252
+        },
+        {
+          "round": 39,
+          "mode": "future",
+          "commandUsPerEvent": 2.4431,
+          "deliveryUsPerEvent": 2.7216,
+          "commandCpuUsPerEvent": 2.44302139999941,
+          "deliveryCpuUsPerEvent": 2.725900399999786
+        },
+        {
+          "round": 39,
+          "mode": "sync",
+          "commandUsPerEvent": 2.452,
+          "deliveryUsPerEvent": 2.5669,
+          "commandCpuUsPerEvent": 2.4527091000000945,
+          "deliveryCpuUsPerEvent": 2.576799999999814
+        },
+        {
+          "round": 39,
+          "mode": "off",
+          "commandUsPerEvent": 2.4508,
+          "deliveryUsPerEvent": 2.5234,
+          "commandCpuUsPerEvent": 2.447008399999887,
+          "deliveryCpuUsPerEvent": 2.5281543000003324
+        },
+        {
+          "round": 40,
+          "mode": "off",
+          "commandUsPerEvent": 2.4112,
+          "deliveryUsPerEvent": 2.4837,
+          "commandCpuUsPerEvent": 2.409413699999638,
+          "deliveryCpuUsPerEvent": 2.4904087999999525
+        },
+        {
+          "round": 40,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4639,
+          "deliveryUsPerEvent": 2.5879,
+          "commandCpuUsPerEvent": 2.4595831000003963,
+          "deliveryCpuUsPerEvent": 2.592054200000316
+        },
+        {
+          "round": 40,
+          "mode": "future",
+          "commandUsPerEvent": 2.4486,
+          "deliveryUsPerEvent": 2.7116,
+          "commandCpuUsPerEvent": 2.4487329000002704,
+          "deliveryCpuUsPerEvent": 2.7204460999998266
+        },
+        {
+          "round": 41,
+          "mode": "future",
+          "commandUsPerEvent": 2.3954,
+          "deliveryUsPerEvent": 2.6539,
+          "commandCpuUsPerEvent": 2.3964247999995014,
+          "deliveryCpuUsPerEvent": 2.663450000000838
+        },
+        {
+          "round": 41,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4556,
+          "deliveryUsPerEvent": 2.5675,
+          "commandCpuUsPerEvent": 2.452233699999936,
+          "deliveryCpuUsPerEvent": 2.5729295999996364
+        },
+        {
+          "round": 41,
+          "mode": "off",
+          "commandUsPerEvent": 2.4151,
+          "deliveryUsPerEvent": 2.4832,
+          "commandCpuUsPerEvent": 2.4169674000001513,
+          "deliveryCpuUsPerEvent": 2.4938172999995762
+        },
+        {
+          "round": 42,
+          "mode": "off",
+          "commandUsPerEvent": 2.4274,
+          "deliveryUsPerEvent": 2.4957,
+          "commandCpuUsPerEvent": 2.428503599999845,
+          "deliveryCpuUsPerEvent": 2.505595400000643
+        },
+        {
+          "round": 42,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4405,
+          "deliveryUsPerEvent": 2.5558,
+          "commandCpuUsPerEvent": 2.4377174000006168,
+          "deliveryCpuUsPerEvent": 2.561216999999434
+        },
+        {
+          "round": 42,
+          "mode": "future",
+          "commandUsPerEvent": 2.432,
+          "deliveryUsPerEvent": 2.6963,
+          "commandCpuUsPerEvent": 2.434070999999903,
+          "deliveryCpuUsPerEvent": 2.704637799999956
+        },
+        {
+          "round": 43,
+          "mode": "future",
+          "commandUsPerEvent": 2.5047,
+          "deliveryUsPerEvent": 2.7715,
+          "commandCpuUsPerEvent": 2.491557899999898,
+          "deliveryCpuUsPerEvent": 2.765108199999947
+        },
+        {
+          "round": 43,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4491,
+          "deliveryUsPerEvent": 2.5602,
+          "commandCpuUsPerEvent": 2.449591399999987,
+          "deliveryCpuUsPerEvent": 2.5692951000004074
+        },
+        {
+          "round": 43,
+          "mode": "off",
+          "commandUsPerEvent": 2.4226,
+          "deliveryUsPerEvent": 2.4912,
+          "commandCpuUsPerEvent": 2.4228879999998028,
+          "deliveryCpuUsPerEvent": 2.499366300000064
+        },
+        {
+          "round": 44,
+          "mode": "off",
+          "commandUsPerEvent": 2.4254,
+          "deliveryUsPerEvent": 2.4931,
+          "commandCpuUsPerEvent": 2.425462999999989,
+          "deliveryCpuUsPerEvent": 2.501995399999991
+        },
+        {
+          "round": 44,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4676,
+          "deliveryUsPerEvent": 2.5834,
+          "commandCpuUsPerEvent": 2.463795799999684,
+          "deliveryCpuUsPerEvent": 2.587346699999273
+        },
+        {
+          "round": 44,
+          "mode": "future",
+          "commandUsPerEvent": 2.4532,
+          "deliveryUsPerEvent": 2.7177,
+          "commandCpuUsPerEvent": 2.4507249999995344,
+          "deliveryCpuUsPerEvent": 2.722412299999874
+        },
+        {
+          "round": 45,
+          "mode": "future",
+          "commandUsPerEvent": 2.4678,
+          "deliveryUsPerEvent": 2.7313,
+          "commandCpuUsPerEvent": 2.465178900000639,
+          "deliveryCpuUsPerEvent": 2.73730009999983
+        },
+        {
+          "round": 45,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4721,
+          "deliveryUsPerEvent": 2.5883,
+          "commandCpuUsPerEvent": 2.4668993000001644,
+          "deliveryCpuUsPerEvent": 2.590679499999527
+        },
+        {
+          "round": 45,
+          "mode": "off",
+          "commandUsPerEvent": 2.4717,
+          "deliveryUsPerEvent": 2.5456,
+          "commandCpuUsPerEvent": 2.456625699999649,
+          "deliveryCpuUsPerEvent": 2.539207699999865
+        },
+        {
+          "round": 46,
+          "mode": "off",
+          "commandUsPerEvent": 2.4257,
+          "deliveryUsPerEvent": 2.4975,
+          "commandCpuUsPerEvent": 2.4251661000006832,
+          "deliveryCpuUsPerEvent": 2.503651300000213
+        },
+        {
+          "round": 46,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4488,
+          "deliveryUsPerEvent": 2.563,
+          "commandCpuUsPerEvent": 2.4484955999999305,
+          "deliveryCpuUsPerEvent": 2.570934399999585
+        },
+        {
+          "round": 46,
+          "mode": "future",
+          "commandUsPerEvent": 2.4208,
+          "deliveryUsPerEvent": 2.684,
+          "commandCpuUsPerEvent": 2.4202456999996675,
+          "deliveryCpuUsPerEvent": 2.692520800000243
+        },
+        {
+          "round": 47,
+          "mode": "future",
+          "commandUsPerEvent": 2.4489,
+          "deliveryUsPerEvent": 2.7136,
+          "commandCpuUsPerEvent": 2.4498158000006343,
+          "deliveryCpuUsPerEvent": 2.7242084999999965
+        },
+        {
+          "round": 47,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4739,
+          "deliveryUsPerEvent": 2.5879,
+          "commandCpuUsPerEvent": 2.4760040999996478,
+          "deliveryCpuUsPerEvent": 2.597941700000502
+        },
+        {
+          "round": 47,
+          "mode": "off",
+          "commandUsPerEvent": 2.4417,
+          "deliveryUsPerEvent": 2.5111,
+          "commandCpuUsPerEvent": 2.440813199999556,
+          "deliveryCpuUsPerEvent": 2.5184588999996893
+        },
+        {
+          "round": 48,
+          "mode": "off",
+          "commandUsPerEvent": 2.4193,
+          "deliveryUsPerEvent": 2.4893,
+          "commandCpuUsPerEvent": 2.4214168000006118,
+          "deliveryCpuUsPerEvent": 2.4987792000000364
+        },
+        {
+          "round": 48,
+          "mode": "sync",
+          "commandUsPerEvent": 2.419,
+          "deliveryUsPerEvent": 2.5321,
+          "commandCpuUsPerEvent": 2.42068349999981,
+          "deliveryCpuUsPerEvent": 2.5418912000006064
+        },
+        {
+          "round": 48,
+          "mode": "future",
+          "commandUsPerEvent": 2.4375,
+          "deliveryUsPerEvent": 2.7126,
+          "commandCpuUsPerEvent": 2.435574900000356,
+          "deliveryCpuUsPerEvent": 2.7151670999995434
+        },
+        {
+          "round": 49,
+          "mode": "future",
+          "commandUsPerEvent": 2.4177,
+          "deliveryUsPerEvent": 2.6845,
+          "commandCpuUsPerEvent": 2.4194088000002316,
+          "deliveryCpuUsPerEvent": 2.6923834999999032
+        },
+        {
+          "round": 49,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4595,
+          "deliveryUsPerEvent": 2.5709,
+          "commandCpuUsPerEvent": 2.459725200000219,
+          "deliveryCpuUsPerEvent": 2.579433400000539
+        },
+        {
+          "round": 49,
+          "mode": "off",
+          "commandUsPerEvent": 2.4191,
+          "deliveryUsPerEvent": 2.4873,
+          "commandCpuUsPerEvent": 2.417783699999377,
+          "deliveryCpuUsPerEvent": 2.4940620000001044
+        },
+        {
+          "round": 50,
+          "mode": "off",
+          "commandUsPerEvent": 2.4123,
+          "deliveryUsPerEvent": 2.48,
+          "commandCpuUsPerEvent": 2.4130957999998706,
+          "deliveryCpuUsPerEvent": 2.4893252999996767
+        },
+        {
+          "round": 50,
+          "mode": "sync",
+          "commandUsPerEvent": 2.436,
+          "deliveryUsPerEvent": 2.5477,
+          "commandCpuUsPerEvent": 2.4357417999999598,
+          "deliveryCpuUsPerEvent": 2.5552046999995595
+        },
+        {
+          "round": 50,
+          "mode": "future",
+          "commandUsPerEvent": 2.4357,
+          "deliveryUsPerEvent": 2.7022,
+          "commandCpuUsPerEvent": 2.436175100000668,
+          "deliveryCpuUsPerEvent": 2.7094919000004416
+        }
+      ]
+    },
+    {
+      "label": "after",
+      "samples": [
+        {
+          "round": 2,
+          "mode": "off",
+          "commandUsPerEvent": 2.5292,
+          "deliveryUsPerEvent": 2.6233,
+          "commandCpuUsPerEvent": 2.4806206999999763,
+          "deliveryCpuUsPerEvent": 2.5841041000000433
+        },
+        {
+          "round": 2,
+          "mode": "sync",
+          "commandUsPerEvent": 2.6075,
+          "deliveryUsPerEvent": 2.7841,
+          "commandCpuUsPerEvent": 2.5500456999999996,
+          "deliveryCpuUsPerEvent": 2.7279625999999815
+        },
+        {
+          "round": 2,
+          "mode": "future",
+          "commandUsPerEvent": 2.5203,
+          "deliveryUsPerEvent": 2.8101,
+          "commandCpuUsPerEvent": 2.468987400000001,
+          "deliveryCpuUsPerEvent": 2.763442399999971
+        },
+        {
+          "round": 3,
+          "mode": "future",
+          "commandUsPerEvent": 2.5836,
+          "deliveryUsPerEvent": 2.89,
+          "commandCpuUsPerEvent": 2.5224744000000414,
+          "deliveryCpuUsPerEvent": 2.8342957999999983
+        },
+        {
+          "round": 3,
+          "mode": "sync",
+          "commandUsPerEvent": 2.5529,
+          "deliveryUsPerEvent": 2.7087,
+          "commandCpuUsPerEvent": 2.4947377000000097,
+          "deliveryCpuUsPerEvent": 2.6570835000000077
+        },
+        {
+          "round": 3,
+          "mode": "off",
+          "commandUsPerEvent": 2.51,
+          "deliveryUsPerEvent": 2.6024,
+          "commandCpuUsPerEvent": 2.4590029999999445,
+          "deliveryCpuUsPerEvent": 2.559734300000046
+        },
+        {
+          "round": 4,
+          "mode": "off",
+          "commandUsPerEvent": 2.5567,
+          "deliveryUsPerEvent": 2.655,
+          "commandCpuUsPerEvent": 2.4862957999999984,
+          "deliveryCpuUsPerEvent": 2.5874329999999843
+        },
+        {
+          "round": 4,
+          "mode": "sync",
+          "commandUsPerEvent": 2.6767,
+          "deliveryUsPerEvent": 2.8395,
+          "commandCpuUsPerEvent": 2.5673328999999794,
+          "deliveryCpuUsPerEvent": 2.7337837000000174
+        },
+        {
+          "round": 4,
+          "mode": "future",
+          "commandUsPerEvent": 2.5593,
+          "deliveryUsPerEvent": 2.8612,
+          "commandCpuUsPerEvent": 2.497962800000014,
+          "deliveryCpuUsPerEvent": 2.8037953999999794
+        },
+        {
+          "round": 5,
+          "mode": "future",
+          "commandUsPerEvent": 2.5961,
+          "deliveryUsPerEvent": 2.9066,
+          "commandCpuUsPerEvent": 2.495953799999983,
+          "deliveryCpuUsPerEvent": 2.7981532999999588
+        },
+        {
+          "round": 5,
+          "mode": "sync",
+          "commandUsPerEvent": 2.599,
+          "deliveryUsPerEvent": 2.7648,
+          "commandCpuUsPerEvent": 2.5139550000000397,
+          "deliveryCpuUsPerEvent": 2.6819003000000143
+        },
+        {
+          "round": 5,
+          "mode": "off",
+          "commandUsPerEvent": 2.4532,
+          "deliveryUsPerEvent": 2.538,
+          "commandCpuUsPerEvent": 2.3996996999999856,
+          "deliveryCpuUsPerEvent": 2.4932621999999856
+        },
+        {
+          "round": 6,
+          "mode": "off",
+          "commandUsPerEvent": 2.5009,
+          "deliveryUsPerEvent": 2.5887,
+          "commandCpuUsPerEvent": 2.4385954999999844,
+          "deliveryCpuUsPerEvent": 2.5357256000000286
+        },
+        {
+          "round": 6,
+          "mode": "sync",
+          "commandUsPerEvent": 2.6489,
+          "deliveryUsPerEvent": 2.8265,
+          "commandCpuUsPerEvent": 2.5996370000000226,
+          "deliveryCpuUsPerEvent": 2.7764878000000026
+        },
+        {
+          "round": 6,
+          "mode": "future",
+          "commandUsPerEvent": 2.4532,
+          "deliveryUsPerEvent": 2.7613,
+          "commandCpuUsPerEvent": 2.444070500000054,
+          "deliveryCpuUsPerEvent": 2.754428799999831
+        },
+        {
+          "round": 7,
+          "mode": "future",
+          "commandUsPerEvent": 2.4877,
+          "deliveryUsPerEvent": 2.7803,
+          "commandCpuUsPerEvent": 2.468338000000012,
+          "deliveryCpuUsPerEvent": 2.769736499999999
+        },
+        {
+          "round": 7,
+          "mode": "sync",
+          "commandUsPerEvent": 2.5788,
+          "deliveryUsPerEvent": 2.7465,
+          "commandCpuUsPerEvent": 2.554908899999992,
+          "deliveryCpuUsPerEvent": 2.725171500000055
+        },
+        {
+          "round": 7,
+          "mode": "off",
+          "commandUsPerEvent": 2.6333,
+          "deliveryUsPerEvent": 2.7226,
+          "commandCpuUsPerEvent": 2.5887289999998875,
+          "deliveryCpuUsPerEvent": 2.687473999999976
+        },
+        {
+          "round": 8,
+          "mode": "off",
+          "commandUsPerEvent": 2.5214,
+          "deliveryUsPerEvent": 2.6192,
+          "commandCpuUsPerEvent": 2.4777492999999784,
+          "deliveryCpuUsPerEvent": 2.584571599999955
+        },
+        {
+          "round": 8,
+          "mode": "sync",
+          "commandUsPerEvent": 2.6791,
+          "deliveryUsPerEvent": 2.8416,
+          "commandCpuUsPerEvent": 2.597129700000095,
+          "deliveryCpuUsPerEvent": 2.7637248000001535
+        },
+        {
+          "round": 8,
+          "mode": "future",
+          "commandUsPerEvent": 2.5246,
+          "deliveryUsPerEvent": 2.8385,
+          "commandCpuUsPerEvent": 2.4843753000000026,
+          "deliveryCpuUsPerEvent": 2.800582799999835
+        },
+        {
+          "round": 9,
+          "mode": "future",
+          "commandUsPerEvent": 2.6173,
+          "deliveryUsPerEvent": 2.9408,
+          "commandCpuUsPerEvent": 2.5863713000000454,
+          "deliveryCpuUsPerEvent": 2.9131382000001382
+        },
+        {
+          "round": 9,
+          "mode": "sync",
+          "commandUsPerEvent": 2.5319,
+          "deliveryUsPerEvent": 2.7012,
+          "commandCpuUsPerEvent": 2.4903168999999528,
+          "deliveryCpuUsPerEvent": 2.6611292000001763
+        },
+        {
+          "round": 9,
+          "mode": "off",
+          "commandUsPerEvent": 2.4189,
+          "deliveryUsPerEvent": 2.5107,
+          "commandCpuUsPerEvent": 2.3968045000000857,
+          "deliveryCpuUsPerEvent": 2.4912621999999507
+        },
+        {
+          "round": 10,
+          "mode": "off",
+          "commandUsPerEvent": 2.4078,
+          "deliveryUsPerEvent": 2.494,
+          "commandCpuUsPerEvent": 2.384088000000012,
+          "deliveryCpuUsPerEvent": 2.4758581000000706
+        },
+        {
+          "round": 10,
+          "mode": "sync",
+          "commandUsPerEvent": 2.5423,
+          "deliveryUsPerEvent": 2.7006,
+          "commandCpuUsPerEvent": 2.4752045999999623,
+          "deliveryCpuUsPerEvent": 2.6405503000001422
+        },
+        {
+          "round": 10,
+          "mode": "future",
+          "commandUsPerEvent": 2.6097,
+          "deliveryUsPerEvent": 2.9037,
+          "commandCpuUsPerEvent": 2.527100200000033,
+          "deliveryCpuUsPerEvent": 2.8261331999999935
+        },
+        {
+          "round": 11,
+          "mode": "future",
+          "commandUsPerEvent": 2.4911,
+          "deliveryUsPerEvent": 2.7726,
+          "commandCpuUsPerEvent": 2.4468379000000424,
+          "deliveryCpuUsPerEvent": 2.732516399999871
+        },
+        {
+          "round": 11,
+          "mode": "sync",
+          "commandUsPerEvent": 2.7163,
+          "deliveryUsPerEvent": 2.8746,
+          "commandCpuUsPerEvent": 2.581233399999817,
+          "deliveryCpuUsPerEvent": 2.742907499999902
+        },
+        {
+          "round": 11,
+          "mode": "off",
+          "commandUsPerEvent": 2.5572,
+          "deliveryUsPerEvent": 2.6574,
+          "commandCpuUsPerEvent": 2.463679300000123,
+          "deliveryCpuUsPerEvent": 2.5695910999998683
+        },
+        {
+          "round": 12,
+          "mode": "off",
+          "commandUsPerEvent": 2.6611,
+          "deliveryUsPerEvent": 2.7622,
+          "commandCpuUsPerEvent": 2.5165371999999278,
+          "deliveryCpuUsPerEvent": 2.6239841000000945
+        },
+        {
+          "round": 12,
+          "mode": "sync",
+          "commandUsPerEvent": 2.6381,
+          "deliveryUsPerEvent": 2.7899,
+          "commandCpuUsPerEvent": 2.531908099999954,
+          "deliveryCpuUsPerEvent": 2.687554300000006
+        },
+        {
+          "round": 12,
+          "mode": "future",
+          "commandUsPerEvent": 2.6598,
+          "deliveryUsPerEvent": 2.9494,
+          "commandCpuUsPerEvent": 2.5415965999999317,
+          "deliveryCpuUsPerEvent": 2.835566000000085
+        },
+        {
+          "round": 13,
+          "mode": "future",
+          "commandUsPerEvent": 2.67,
+          "deliveryUsPerEvent": 2.9873,
+          "commandCpuUsPerEvent": 2.5871336999998893,
+          "deliveryCpuUsPerEvent": 2.9054333999999797
+        },
+        {
+          "round": 13,
+          "mode": "sync",
+          "commandUsPerEvent": 2.6325,
+          "deliveryUsPerEvent": 2.7867,
+          "commandCpuUsPerEvent": 2.5397553999996276,
+          "deliveryCpuUsPerEvent": 2.6990415000000505
+        },
+        {
+          "round": 13,
+          "mode": "off",
+          "commandUsPerEvent": 2.4805,
+          "deliveryUsPerEvent": 2.5731,
+          "commandCpuUsPerEvent": 2.4362167999999595,
+          "deliveryCpuUsPerEvent": 2.536175
+        },
+        {
+          "round": 14,
+          "mode": "off",
+          "commandUsPerEvent": 2.4673,
+          "deliveryUsPerEvent": 2.5569,
+          "commandCpuUsPerEvent": 2.4467247000000905,
+          "deliveryCpuUsPerEvent": 2.5447705000001006
+        },
+        {
+          "round": 14,
+          "mode": "sync",
+          "commandUsPerEvent": 2.5343,
+          "deliveryUsPerEvent": 2.6843,
+          "commandCpuUsPerEvent": 2.502891100000171,
+          "deliveryCpuUsPerEvent": 2.6589292999999596
+        },
+        {
+          "round": 14,
+          "mode": "future",
+          "commandUsPerEvent": 2.4818,
+          "deliveryUsPerEvent": 2.7649,
+          "commandCpuUsPerEvent": 2.473328500000201,
+          "deliveryCpuUsPerEvent": 2.763625
+        },
+        {
+          "round": 15,
+          "mode": "future",
+          "commandUsPerEvent": 2.4309,
+          "deliveryUsPerEvent": 2.6948,
+          "commandCpuUsPerEvent": 2.4191217999997083,
+          "deliveryCpuUsPerEvent": 2.692745300000161
+        },
+        {
+          "round": 15,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4029,
+          "deliveryUsPerEvent": 2.5198,
+          "commandCpuUsPerEvent": 2.3970382999997586,
+          "deliveryCpuUsPerEvent": 2.5232916000000203
+        },
+        {
+          "round": 15,
+          "mode": "off",
+          "commandUsPerEvent": 2.4115,
+          "deliveryUsPerEvent": 2.4984,
+          "commandCpuUsPerEvent": 2.398007700000191,
+          "deliveryCpuUsPerEvent": 2.49355839999998
+        },
+        {
+          "round": 16,
+          "mode": "off",
+          "commandUsPerEvent": 2.3594,
+          "deliveryUsPerEvent": 2.4453,
+          "commandCpuUsPerEvent": 2.3552830000001004,
+          "deliveryCpuUsPerEvent": 2.4498876999999397
+        },
+        {
+          "round": 16,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4046,
+          "deliveryUsPerEvent": 2.5254,
+          "commandCpuUsPerEvent": 2.3976830000001006,
+          "deliveryCpuUsPerEvent": 2.5267745000001507
+        },
+        {
+          "round": 16,
+          "mode": "future",
+          "commandUsPerEvent": 2.4452,
+          "deliveryUsPerEvent": 2.7289,
+          "commandCpuUsPerEvent": 2.4286087999998593,
+          "deliveryCpuUsPerEvent": 2.72000009999997
+        },
+        {
+          "round": 17,
+          "mode": "future",
+          "commandUsPerEvent": 2.4833,
+          "deliveryUsPerEvent": 2.773,
+          "commandCpuUsPerEvent": 2.4641706000000703,
+          "deliveryCpuUsPerEvent": 2.762796299999859
+        },
+        {
+          "round": 17,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4671,
+          "deliveryUsPerEvent": 2.6107,
+          "commandCpuUsPerEvent": 2.4483585999999193,
+          "deliveryCpuUsPerEvent": 2.5988830000001006
+        },
+        {
+          "round": 17,
+          "mode": "off",
+          "commandUsPerEvent": 2.3983,
+          "deliveryUsPerEvent": 2.4834,
+          "commandCpuUsPerEvent": 2.384742799999658,
+          "deliveryCpuUsPerEvent": 2.479167299999809
+        },
+        {
+          "round": 18,
+          "mode": "off",
+          "commandUsPerEvent": 2.3908,
+          "deliveryUsPerEvent": 2.4774,
+          "commandCpuUsPerEvent": 2.3826210999999193,
+          "deliveryCpuUsPerEvent": 2.4768877999999095
+        },
+        {
+          "round": 18,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4567,
+          "deliveryUsPerEvent": 2.592,
+          "commandCpuUsPerEvent": 2.4420250999999698,
+          "deliveryCpuUsPerEvent": 2.5829752999999096
+        },
+        {
+          "round": 18,
+          "mode": "future",
+          "commandUsPerEvent": 2.4054,
+          "deliveryUsPerEvent": 2.6714,
+          "commandCpuUsPerEvent": 2.39829570000004,
+          "deliveryCpuUsPerEvent": 2.6739169999998995
+        },
+        {
+          "round": 19,
+          "mode": "future",
+          "commandUsPerEvent": 2.426,
+          "deliveryUsPerEvent": 2.7108,
+          "commandCpuUsPerEvent": 2.41772089999998,
+          "deliveryCpuUsPerEvent": 2.7090792999999596
+        },
+        {
+          "round": 19,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4149,
+          "deliveryUsPerEvent": 2.5462,
+          "commandCpuUsPerEvent": 2.4100252999999094,
+          "deliveryCpuUsPerEvent": 2.5492115000003017
+        },
+        {
+          "round": 19,
+          "mode": "off",
+          "commandUsPerEvent": 2.4452,
+          "deliveryUsPerEvent": 2.5322,
+          "commandCpuUsPerEvent": 2.42330429999996,
+          "deliveryCpuUsPerEvent": 2.5197298999997786
+        },
+        {
+          "round": 20,
+          "mode": "off",
+          "commandUsPerEvent": 2.4006,
+          "deliveryUsPerEvent": 2.4792,
+          "commandCpuUsPerEvent": 2.3918339999997986,
+          "deliveryCpuUsPerEvent": 2.4767908000002614
+        },
+        {
+          "round": 20,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4506,
+          "deliveryUsPerEvent": 2.5819,
+          "commandCpuUsPerEvent": 2.4339916999999898,
+          "deliveryCpuUsPerEvent": 2.5729576000002212
+        },
+        {
+          "round": 20,
+          "mode": "future",
+          "commandUsPerEvent": 2.5134,
+          "deliveryUsPerEvent": 2.8038,
+          "commandCpuUsPerEvent": 2.49517519999994,
+          "deliveryCpuUsPerEvent": 2.793686900000181
+        },
+        {
+          "round": 21,
+          "mode": "future",
+          "commandUsPerEvent": 2.4969,
+          "deliveryUsPerEvent": 2.7827,
+          "commandCpuUsPerEvent": 2.4867752999999095,
+          "deliveryCpuUsPerEvent": 2.7801257999997584
+        },
+        {
+          "round": 21,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4206,
+          "deliveryUsPerEvent": 2.5427,
+          "commandCpuUsPerEvent": 2.41012509999997,
+          "deliveryCpuUsPerEvent": 2.5417794999998993
+        },
+        {
+          "round": 21,
+          "mode": "off",
+          "commandUsPerEvent": 2.405,
+          "deliveryUsPerEvent": 2.4837,
+          "commandCpuUsPerEvent": 2.4015712999998593,
+          "deliveryCpuUsPerEvent": 2.4886335999999196
+        },
+        {
+          "round": 22,
+          "mode": "off",
+          "commandUsPerEvent": 2.3892,
+          "deliveryUsPerEvent": 2.4686,
+          "commandCpuUsPerEvent": 2.38117490000003,
+          "deliveryCpuUsPerEvent": 2.4695752999999097
+        },
+        {
+          "round": 22,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4783,
+          "deliveryUsPerEvent": 2.606,
+          "commandCpuUsPerEvent": 2.46884990000003,
+          "deliveryCpuUsPerEvent": 2.6043956000000703
+        },
+        {
+          "round": 22,
+          "mode": "future",
+          "commandUsPerEvent": 2.41,
+          "deliveryUsPerEvent": 2.6675,
+          "commandCpuUsPerEvent": 2.4046747000000903,
+          "deliveryCpuUsPerEvent": 2.6702253999998793
+        },
+        {
+          "round": 23,
+          "mode": "future",
+          "commandUsPerEvent": 2.4243,
+          "deliveryUsPerEvent": 2.6986,
+          "commandCpuUsPerEvent": 2.410067799999658,
+          "deliveryCpuUsPerEvent": 2.6871202000001913
+        },
+        {
+          "round": 23,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4109,
+          "deliveryUsPerEvent": 2.5249,
+          "commandCpuUsPerEvent": 2.396575,
+          "deliveryCpuUsPerEvent": 2.518971899999678
+        },
+        {
+          "round": 23,
+          "mode": "off",
+          "commandUsPerEvent": 2.4063,
+          "deliveryUsPerEvent": 2.4782,
+          "commandCpuUsPerEvent": 2.3885000999999697,
+          "deliveryCpuUsPerEvent": 2.46938759999997
+        },
+        {
+          "round": 24,
+          "mode": "off",
+          "commandUsPerEvent": 2.3323,
+          "deliveryUsPerEvent": 2.3999,
+          "commandCpuUsPerEvent": 2.33245,
+          "deliveryCpuUsPerEvent": 2.4088200000002513
+        },
+        {
+          "round": 24,
+          "mode": "sync",
+          "commandUsPerEvent": 2.3873,
+          "deliveryUsPerEvent": 2.504,
+          "commandCpuUsPerEvent": 2.384461400000332,
+          "deliveryCpuUsPerEvent": 2.50959179999996
+        },
+        {
+          "round": 24,
+          "mode": "future",
+          "commandUsPerEvent": 2.404,
+          "deliveryUsPerEvent": 2.6679,
+          "commandCpuUsPerEvent": 2.397975,
+          "deliveryCpuUsPerEvent": 2.6708248000000605
+        },
+        {
+          "round": 25,
+          "mode": "future",
+          "commandUsPerEvent": 2.3781,
+          "deliveryUsPerEvent": 2.6412,
+          "commandCpuUsPerEvent": 2.3734377999999094,
+          "deliveryCpuUsPerEvent": 2.6443002999999097
+        },
+        {
+          "round": 25,
+          "mode": "sync",
+          "commandUsPerEvent": 2.3916,
+          "deliveryUsPerEvent": 2.5045,
+          "commandCpuUsPerEvent": 2.387012000000151,
+          "deliveryCpuUsPerEvent": 2.5080289000000806
+        },
+        {
+          "round": 25,
+          "mode": "off",
+          "commandUsPerEvent": 2.341,
+          "deliveryUsPerEvent": 2.4108,
+          "commandCpuUsPerEvent": 2.3386965999997686,
+          "deliveryCpuUsPerEvent": 2.41582480000006
+        },
+        {
+          "round": 26,
+          "mode": "off",
+          "commandUsPerEvent": 2.3733,
+          "deliveryUsPerEvent": 2.4425,
+          "commandCpuUsPerEvent": 2.360799400000647,
+          "deliveryCpuUsPerEvent": 2.4393709000004455
+        },
+        {
+          "round": 26,
+          "mode": "sync",
+          "commandUsPerEvent": 2.448,
+          "deliveryUsPerEvent": 2.5674,
+          "commandCpuUsPerEvent": 2.4340040000003764,
+          "deliveryCpuUsPerEvent": 2.561883600000106
+        },
+        {
+          "round": 26,
+          "mode": "future",
+          "commandUsPerEvent": 2.4377,
+          "deliveryUsPerEvent": 2.7135,
+          "commandCpuUsPerEvent": 2.41797929999996,
+          "deliveryCpuUsPerEvent": 2.699678800000064
+        },
+        {
+          "round": 27,
+          "mode": "future",
+          "commandUsPerEvent": 2.4372,
+          "deliveryUsPerEvent": 2.7109,
+          "commandCpuUsPerEvent": 2.4249165000003763,
+          "deliveryCpuUsPerEvent": 2.7024501999997534
+        },
+        {
+          "round": 27,
+          "mode": "sync",
+          "commandUsPerEvent": 2.3898,
+          "deliveryUsPerEvent": 2.5027,
+          "commandCpuUsPerEvent": 2.3911997000005094,
+          "deliveryCpuUsPerEvent": 2.512175099999551
+        },
+        {
+          "round": 27,
+          "mode": "off",
+          "commandUsPerEvent": 2.3289,
+          "deliveryUsPerEvent": 2.3972,
+          "commandCpuUsPerEvent": 2.328691599999927,
+          "deliveryCpuUsPerEvent": 2.4062039999997245
+        },
+        {
+          "round": 28,
+          "mode": "off",
+          "commandUsPerEvent": 2.3725,
+          "deliveryUsPerEvent": 2.4417,
+          "commandCpuUsPerEvent": 2.367275300000515,
+          "deliveryCpuUsPerEvent": 2.44475449999962
+        },
+        {
+          "round": 28,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4029,
+          "deliveryUsPerEvent": 2.5183,
+          "commandCpuUsPerEvent": 2.4018003000003287,
+          "deliveryCpuUsPerEvent": 2.5242374000003562
+        },
+        {
+          "round": 28,
+          "mode": "future",
+          "commandUsPerEvent": 2.3726,
+          "deliveryUsPerEvent": 2.6317,
+          "commandCpuUsPerEvent": 2.3709923999994995,
+          "deliveryCpuUsPerEvent": 2.6366121000005864
+        },
+        {
+          "round": 29,
+          "mode": "future",
+          "commandUsPerEvent": 2.3758,
+          "deliveryUsPerEvent": 2.6378,
+          "commandCpuUsPerEvent": 2.373621499999892,
+          "deliveryCpuUsPerEvent": 2.6421327999998816
+        },
+        {
+          "round": 29,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4447,
+          "deliveryUsPerEvent": 2.5647,
+          "commandCpuUsPerEvent": 2.4291700999999417,
+          "deliveryCpuUsPerEvent": 2.556999900000263
+        },
+        {
+          "round": 29,
+          "mode": "off",
+          "commandUsPerEvent": 2.3549,
+          "deliveryUsPerEvent": 2.425,
+          "commandCpuUsPerEvent": 2.3530498000008984,
+          "deliveryCpuUsPerEvent": 2.431967399999779
+        },
+        {
+          "round": 30,
+          "mode": "off",
+          "commandUsPerEvent": 2.3559,
+          "deliveryUsPerEvent": 2.4272,
+          "commandCpuUsPerEvent": 2.3494210999999194,
+          "deliveryCpuUsPerEvent": 2.4271631999998355
+        },
+        {
+          "round": 30,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4263,
+          "deliveryUsPerEvent": 2.5415,
+          "commandCpuUsPerEvent": 2.413529000000283,
+          "deliveryCpuUsPerEvent": 2.5378380000001752
+        },
+        {
+          "round": 30,
+          "mode": "future",
+          "commandUsPerEvent": 2.4595,
+          "deliveryUsPerEvent": 2.7396,
+          "commandCpuUsPerEvent": 2.416342200000025,
+          "deliveryCpuUsPerEvent": 2.6955163999999874
+        },
+        {
+          "round": 31,
+          "mode": "future",
+          "commandUsPerEvent": 2.4071,
+          "deliveryUsPerEvent": 2.6681,
+          "commandCpuUsPerEvent": 2.4021988000001757,
+          "deliveryCpuUsPerEvent": 2.672229300000705
+        },
+        {
+          "round": 31,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4755,
+          "deliveryUsPerEvent": 2.5902,
+          "commandCpuUsPerEvent": 2.4680545999996366,
+          "deliveryCpuUsPerEvent": 2.590321199999377
+        },
+        {
+          "round": 31,
+          "mode": "off",
+          "commandUsPerEvent": 2.3604,
+          "deliveryUsPerEvent": 2.4317,
+          "commandCpuUsPerEvent": 2.3528460000001825,
+          "deliveryCpuUsPerEvent": 2.432696200000495
+        },
+        {
+          "round": 32,
+          "mode": "off",
+          "commandUsPerEvent": 2.3328,
+          "deliveryUsPerEvent": 2.4017,
+          "commandCpuUsPerEvent": 2.3332707999998705,
+          "deliveryCpuUsPerEvent": 2.409883100000396
+        },
+        {
+          "round": 32,
+          "mode": "sync",
+          "commandUsPerEvent": 2.3731,
+          "deliveryUsPerEvent": 2.4838,
+          "commandCpuUsPerEvent": 2.371916499999445,
+          "deliveryCpuUsPerEvent": 2.491728800000064
+        },
+        {
+          "round": 32,
+          "mode": "future",
+          "commandUsPerEvent": 2.4004,
+          "deliveryUsPerEvent": 2.6603,
+          "commandCpuUsPerEvent": 2.3985623999994248,
+          "deliveryCpuUsPerEvent": 2.667162100000121
+        },
+        {
+          "round": 33,
+          "mode": "future",
+          "commandUsPerEvent": 2.4073,
+          "deliveryUsPerEvent": 2.6686,
+          "commandCpuUsPerEvent": 2.406929399999976,
+          "deliveryCpuUsPerEvent": 2.6755132000001147
+        },
+        {
+          "round": 33,
+          "mode": "sync",
+          "commandUsPerEvent": 2.3881,
+          "deliveryUsPerEvent": 2.5011,
+          "commandCpuUsPerEvent": 2.380875,
+          "deliveryCpuUsPerEvent": 2.5022036000003105
+        },
+        {
+          "round": 33,
+          "mode": "off",
+          "commandUsPerEvent": 2.3191,
+          "deliveryUsPerEvent": 2.3878,
+          "commandCpuUsPerEvent": 2.3156501999997534,
+          "deliveryCpuUsPerEvent": 2.393145900000166
+        },
+        {
+          "round": 34,
+          "mode": "off",
+          "commandUsPerEvent": 2.3422,
+          "deliveryUsPerEvent": 2.4093,
+          "commandCpuUsPerEvent": 2.3420204000002705,
+          "deliveryCpuUsPerEvent": 2.417571100000013
+        },
+        {
+          "round": 34,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4064,
+          "deliveryUsPerEvent": 2.5198,
+          "commandCpuUsPerEvent": 2.4066377000003123,
+          "deliveryCpuUsPerEvent": 2.5275508999992162
+        },
+        {
+          "round": 34,
+          "mode": "future",
+          "commandUsPerEvent": 2.4144,
+          "deliveryUsPerEvent": 2.6767,
+          "commandCpuUsPerEvent": 2.4135371999999506,
+          "deliveryCpuUsPerEvent": 2.684920300000161
+        },
+        {
+          "round": 35,
+          "mode": "future",
+          "commandUsPerEvent": 2.4231,
+          "deliveryUsPerEvent": 2.6903,
+          "commandCpuUsPerEvent": 2.419588099999819,
+          "deliveryCpuUsPerEvent": 2.695012200000137
+        },
+        {
+          "round": 35,
+          "mode": "sync",
+          "commandUsPerEvent": 2.3748,
+          "deliveryUsPerEvent": 2.4868,
+          "commandCpuUsPerEvent": 2.3761998000004327,
+          "deliveryCpuUsPerEvent": 2.495430099999532
+        },
+        {
+          "round": 35,
+          "mode": "off",
+          "commandUsPerEvent": 2.3518,
+          "deliveryUsPerEvent": 2.4208,
+          "commandCpuUsPerEvent": 2.351279300000612,
+          "deliveryCpuUsPerEvent": 2.429108299999498
+        },
+        {
+          "round": 36,
+          "mode": "off",
+          "commandUsPerEvent": 2.3751,
+          "deliveryUsPerEvent": 2.4437,
+          "commandCpuUsPerEvent": 2.3717919999998065,
+          "deliveryCpuUsPerEvent": 2.448970600000117
+        },
+        {
+          "round": 36,
+          "mode": "sync",
+          "commandUsPerEvent": 2.3941,
+          "deliveryUsPerEvent": 2.5079,
+          "commandCpuUsPerEvent": 2.392895700000413,
+          "deliveryCpuUsPerEvent": 2.514458200000133
+        },
+        {
+          "round": 36,
+          "mode": "future",
+          "commandUsPerEvent": 2.3955,
+          "deliveryUsPerEvent": 2.6625,
+          "commandCpuUsPerEvent": 2.3963211000000126,
+          "deliveryCpuUsPerEvent": 2.67007900000019
+        },
+        {
+          "round": 37,
+          "mode": "future",
+          "commandUsPerEvent": 2.4569,
+          "deliveryUsPerEvent": 2.7466,
+          "commandCpuUsPerEvent": 2.447279199999757,
+          "deliveryCpuUsPerEvent": 2.7311547999998553
+        },
+        {
+          "round": 37,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4512,
+          "deliveryUsPerEvent": 2.5783,
+          "commandCpuUsPerEvent": 2.445149200000521,
+          "deliveryCpuUsPerEvent": 2.580916800000146
+        },
+        {
+          "round": 37,
+          "mode": "off",
+          "commandUsPerEvent": 2.3895,
+          "deliveryUsPerEvent": 2.4667,
+          "commandCpuUsPerEvent": 2.3815294000004417,
+          "deliveryCpuUsPerEvent": 2.467275200000126
+        },
+        {
+          "round": 38,
+          "mode": "off",
+          "commandUsPerEvent": 2.3276,
+          "deliveryUsPerEvent": 2.396,
+          "commandCpuUsPerEvent": 2.327458999999892,
+          "deliveryCpuUsPerEvent": 2.404345599999931
+        },
+        {
+          "round": 38,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4105,
+          "deliveryUsPerEvent": 2.5232,
+          "commandCpuUsPerEvent": 2.410816300000064,
+          "deliveryCpuUsPerEvent": 2.532140800000541
+        },
+        {
+          "round": 38,
+          "mode": "future",
+          "commandUsPerEvent": 2.3656,
+          "deliveryUsPerEvent": 2.6267,
+          "commandCpuUsPerEvent": 2.3678245000000113,
+          "deliveryCpuUsPerEvent": 2.63644150000019
+        },
+        {
+          "round": 39,
+          "mode": "future",
+          "commandUsPerEvent": 2.385,
+          "deliveryUsPerEvent": 2.6501,
+          "commandCpuUsPerEvent": 2.384437700000312,
+          "deliveryCpuUsPerEvent": 2.6580124000001697
+        },
+        {
+          "round": 39,
+          "mode": "sync",
+          "commandUsPerEvent": 2.3957,
+          "deliveryUsPerEvent": 2.5123,
+          "commandCpuUsPerEvent": 2.394862700000033,
+          "deliveryCpuUsPerEvent": 2.5192161000000315
+        },
+        {
+          "round": 39,
+          "mode": "off",
+          "commandUsPerEvent": 2.3539,
+          "deliveryUsPerEvent": 2.4281,
+          "commandCpuUsPerEvent": 2.3543084999996235,
+          "deliveryCpuUsPerEvent": 2.4365081000006756
+        },
+        {
+          "round": 40,
+          "mode": "off",
+          "commandUsPerEvent": 2.3609,
+          "deliveryUsPerEvent": 2.437,
+          "commandCpuUsPerEvent": 2.357887799999118,
+          "deliveryCpuUsPerEvent": 2.4412123000002466
+        },
+        {
+          "round": 40,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4118,
+          "deliveryUsPerEvent": 2.5363,
+          "commandCpuUsPerEvent": 2.413832600000035,
+          "deliveryCpuUsPerEvent": 2.5459169999999927
+        },
+        {
+          "round": 40,
+          "mode": "future",
+          "commandUsPerEvent": 2.4118,
+          "deliveryUsPerEvent": 2.6821,
+          "commandCpuUsPerEvent": 2.4129715999992563,
+          "deliveryCpuUsPerEvent": 2.691061899999995
+        },
+        {
+          "round": 41,
+          "mode": "future",
+          "commandUsPerEvent": 2.3582,
+          "deliveryUsPerEvent": 2.6214,
+          "commandCpuUsPerEvent": 2.359283699999843,
+          "deliveryCpuUsPerEvent": 2.629645499998983
+        },
+        {
+          "round": 41,
+          "mode": "sync",
+          "commandUsPerEvent": 2.393,
+          "deliveryUsPerEvent": 2.5068,
+          "commandCpuUsPerEvent": 2.390424400000926,
+          "deliveryCpuUsPerEvent": 2.511854099999461
+        },
+        {
+          "round": 41,
+          "mode": "off",
+          "commandUsPerEvent": 2.339,
+          "deliveryUsPerEvent": 2.4125,
+          "commandCpuUsPerEvent": 2.3396455000001937,
+          "deliveryCpuUsPerEvent": 2.419917000000458
+        },
+        {
+          "round": 42,
+          "mode": "off",
+          "commandUsPerEvent": 2.3608,
+          "deliveryUsPerEvent": 2.4292,
+          "commandCpuUsPerEvent": 2.36264120000042,
+          "deliveryCpuUsPerEvent": 2.4390583999996074
+        },
+        {
+          "round": 42,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4123,
+          "deliveryUsPerEvent": 2.5268,
+          "commandCpuUsPerEvent": 2.408033999999333,
+          "deliveryCpuUsPerEvent": 2.5304619000004602
+        },
+        {
+          "round": 42,
+          "mode": "future",
+          "commandUsPerEvent": 2.4011,
+          "deliveryUsPerEvent": 2.662,
+          "commandCpuUsPerEvent": 2.4014330999991857,
+          "deliveryCpuUsPerEvent": 2.6702373000002466
+        },
+        {
+          "round": 43,
+          "mode": "future",
+          "commandUsPerEvent": 2.4239,
+          "deliveryUsPerEvent": 2.6865,
+          "commandCpuUsPerEvent": 2.4220868000006304,
+          "deliveryCpuUsPerEvent": 2.69334570000004
+        },
+        {
+          "round": 43,
+          "mode": "sync",
+          "commandUsPerEvent": 2.3821,
+          "deliveryUsPerEvent": 2.4932,
+          "commandCpuUsPerEvent": 2.382082899999805,
+          "deliveryCpuUsPerEvent": 2.5012878999999724
+        },
+        {
+          "round": 43,
+          "mode": "off",
+          "commandUsPerEvent": 2.3688,
+          "deliveryUsPerEvent": 2.4361,
+          "commandCpuUsPerEvent": 2.3689243999998086,
+          "deliveryCpuUsPerEvent": 2.444925799999945
+        },
+        {
+          "round": 44,
+          "mode": "off",
+          "commandUsPerEvent": 2.3889,
+          "deliveryUsPerEvent": 2.4594,
+          "commandCpuUsPerEvent": 2.381366000000201,
+          "deliveryCpuUsPerEvent": 2.4596214000007137
+        },
+        {
+          "round": 44,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4542,
+          "deliveryUsPerEvent": 2.569,
+          "commandCpuUsPerEvent": 2.4504914000000806,
+          "deliveryCpuUsPerEvent": 2.5734496000000275
+        },
+        {
+          "round": 44,
+          "mode": "future",
+          "commandUsPerEvent": 2.3956,
+          "deliveryUsPerEvent": 2.6662,
+          "commandCpuUsPerEvent": 2.3921796000001954,
+          "deliveryCpuUsPerEvent": 2.669495400000084
+        },
+        {
+          "round": 45,
+          "mode": "future",
+          "commandUsPerEvent": 2.4021,
+          "deliveryUsPerEvent": 2.6722,
+          "commandCpuUsPerEvent": 2.4025336999996565,
+          "deliveryCpuUsPerEvent": 2.6791506999996493
+        },
+        {
+          "round": 45,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4135,
+          "deliveryUsPerEvent": 2.5358,
+          "commandCpuUsPerEvent": 2.404957800000254,
+          "deliveryCpuUsPerEvent": 2.533379800000321
+        },
+        {
+          "round": 45,
+          "mode": "off",
+          "commandUsPerEvent": 2.4192,
+          "deliveryUsPerEvent": 2.4949,
+          "commandCpuUsPerEvent": 2.4053617999999783,
+          "deliveryCpuUsPerEvent": 2.488237799999863
+        },
+        {
+          "round": 46,
+          "mode": "off",
+          "commandUsPerEvent": 2.3438,
+          "deliveryUsPerEvent": 2.4124,
+          "commandCpuUsPerEvent": 2.3452537000000477,
+          "deliveryCpuUsPerEvent": 2.421261900000088
+        },
+        {
+          "round": 46,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4166,
+          "deliveryUsPerEvent": 2.5315,
+          "commandCpuUsPerEvent": 2.416769900000002,
+          "deliveryCpuUsPerEvent": 2.5392995000010354
+        },
+        {
+          "round": 46,
+          "mode": "future",
+          "commandUsPerEvent": 2.3772,
+          "deliveryUsPerEvent": 2.6412,
+          "commandCpuUsPerEvent": 2.378995699999761,
+          "deliveryCpuUsPerEvent": 2.6514871000005864
+        },
+        {
+          "round": 47,
+          "mode": "future",
+          "commandUsPerEvent": 2.4162,
+          "deliveryUsPerEvent": 2.6813,
+          "commandCpuUsPerEvent": 2.4163506000000052,
+          "deliveryCpuUsPerEvent": 2.689866399999801
+        },
+        {
+          "round": 47,
+          "mode": "sync",
+          "commandUsPerEvent": 2.4014,
+          "deliveryUsPerEvent": 2.5151,
+          "commandCpuUsPerEvent": 2.401171599999908,
+          "deliveryCpuUsPerEvent": 2.523691199999582
+        },
+        {
+          "round": 47,
+          "mode": "off",
+          "commandUsPerEvent": 2.3542,
+          "deliveryUsPerEvent": 2.4222,
+          "commandCpuUsPerEvent": 2.3541120000000113,
+          "deliveryCpuUsPerEvent": 2.4308998000001534
+        },
+        {
+          "round": 48,
+          "mode": "off",
+          "commandUsPerEvent": 2.3615,
+          "deliveryUsPerEvent": 2.4301,
+          "commandCpuUsPerEvent": 2.3605958999996073,
+          "deliveryCpuUsPerEvent": 2.437295699999761
+        },
+        {
+          "round": 48,
+          "mode": "sync",
+          "commandUsPerEvent": 2.3981,
+          "deliveryUsPerEvent": 2.5118,
+          "commandCpuUsPerEvent": 2.3989247000004164,
+          "deliveryCpuUsPerEvent": 2.5208672000000254
+        },
+        {
+          "round": 48,
+          "mode": "future",
+          "commandUsPerEvent": 2.3957,
+          "deliveryUsPerEvent": 2.659,
+          "commandCpuUsPerEvent": 2.390904400000442,
+          "deliveryCpuUsPerEvent": 2.6611920999997296
+        },
+        {
+          "round": 49,
+          "mode": "future",
+          "commandUsPerEvent": 2.3934,
+          "deliveryUsPerEvent": 2.6495,
+          "commandCpuUsPerEvent": 2.3947960999999194,
+          "deliveryCpuUsPerEvent": 2.658387900000252
+        },
+        {
+          "round": 49,
+          "mode": "sync",
+          "commandUsPerEvent": 2.3975,
+          "deliveryUsPerEvent": 2.5116,
+          "commandCpuUsPerEvent": 2.397366499999445,
+          "deliveryCpuUsPerEvent": 2.5185213000000455
+        },
+        {
+          "round": 49,
+          "mode": "off",
+          "commandUsPerEvent": 2.3593,
+          "deliveryUsPerEvent": 2.4276,
+          "commandCpuUsPerEvent": 2.3577173000006937,
+          "deliveryCpuUsPerEvent": 2.434199799999688
+        },
+        {
+          "round": 50,
+          "mode": "off",
+          "commandUsPerEvent": 2.3557,
+          "deliveryUsPerEvent": 2.4235,
+          "commandCpuUsPerEvent": 2.3545083999998866,
+          "deliveryCpuUsPerEvent": 2.431024399999529
+        },
+        {
+          "round": 50,
+          "mode": "sync",
+          "commandUsPerEvent": 2.3844,
+          "deliveryUsPerEvent": 2.4968,
+          "commandCpuUsPerEvent": 2.3858628999998794,
+          "deliveryCpuUsPerEvent": 2.505870900000166
+        },
+        {
+          "round": 50,
+          "mode": "future",
+          "commandUsPerEvent": 2.3921,
+          "deliveryUsPerEvent": 2.6504,
+          "commandCpuUsPerEvent": 2.3937418000000528,
+          "deliveryCpuUsPerEvent": 2.660720800000336
+        }
+      ]
+    }
+  ],
+  "referenceCorePath": "/private/tmp/ccrouter-diagnostics-preopt-AijhN7",
+  "platform": "macOS-26.6.1-arm64-arm-64bit-Mach-O",
+  "method": "same-process AOT Core libraries alternating adjacent 64-command batches; common contracts; dynamic Runtime dispatch on both paths",
+  "measuredRounds": 49,
+  "batchSize": 64,
+  "samplesPerModePerVariant": 49,
+  "summary": {
+    "off": {
+      "before": {
+        "commandUsPerEvent": 2.4313,
+        "deliveryUsPerEvent": 2.5066,
+        "commandCpuUsPerEvent": 2.4282333999996073,
+        "deliveryCpuUsPerEvent": 2.5086167999999596
+      },
+      "after": {
+        "commandUsPerEvent": 2.3751,
+        "deliveryUsPerEvent": 2.4453,
+        "commandCpuUsPerEvent": 2.3717919999998065,
+        "deliveryCpuUsPerEvent": 2.4498876999999397
+      },
+      "commandUsPerEventChangePercent": -2.3115205856948817,
+      "deliveryUsPerEventChangePercent": -2.4455437644618216,
+      "commandCpuUsPerEventChangePercent": -2.3243811735646935,
+      "deliveryCpuUsPerEventChangePercent": -2.3410949013823346
+    },
+    "sync": {
+      "before": {
+        "commandUsPerEvent": 2.4683,
+        "deliveryUsPerEvent": 2.5883,
+        "commandCpuUsPerEvent": 2.463795799999684,
+        "deliveryCpuUsPerEvent": 2.592028000000352
+      },
+      "after": {
+        "commandUsPerEvent": 2.4166,
+        "deliveryUsPerEvent": 2.5415,
+        "commandCpuUsPerEvent": 2.413529000000283,
+        "deliveryCpuUsPerEvent": 2.5417794999998993
+      },
+      "commandUsPerEventChangePercent": -2.094559008224295,
+      "deliveryUsPerEventChangePercent": -1.8081366147664424,
+      "commandCpuUsPerEventChangePercent": -2.040217781011211,
+      "deliveryCpuUsPerEventChangePercent": -1.9385785956188006
+    },
+    "future": {
+      "before": {
+        "commandUsPerEvent": 2.4678,
+        "deliveryUsPerEvent": 2.734,
+        "commandCpuUsPerEvent": 2.45800820000004,
+        "deliveryCpuUsPerEvent": 2.73730009999983
+      },
+      "after": {
+        "commandUsPerEvent": 2.4239,
+        "deliveryUsPerEvent": 2.6903,
+        "commandCpuUsPerEvent": 2.4163506000000052,
+        "deliveryCpuUsPerEvent": 2.692745300000161
+      },
+      "commandUsPerEventChangePercent": -1.7789123916038485,
+      "deliveryUsPerEventChangePercent": -1.598390636430136,
+      "commandCpuUsPerEventChangePercent": -1.6947705870157037,
+      "deliveryCpuUsPerEventChangePercent": -1.6276914613663207
+    }
+  }
+}

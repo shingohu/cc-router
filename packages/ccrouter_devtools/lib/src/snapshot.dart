@@ -21,6 +21,7 @@ final class CCRouterDevToolsSnapshot {
     required this.capturedAt,
     required this.runtimeState,
     this.catalog,
+    this.diagnosticHealth,
     List<CCComponentManifest> components = const [],
     List<CCRouteEntrySnapshot> routeEntries = const [],
     List<CCBackendEntrySnapshot> backendEntries = const [],
@@ -61,6 +62,10 @@ final class CCRouterDevToolsSnapshot {
   /// Optional generated static source index linked by stable capability IDs.
   final CCDevToolsStaticCatalogSnapshot? catalog;
 
+  /// Lightweight history completeness and external Sink delivery counters.
+  /// Null means that the producer did not provide health, not zero losses.
+  final CCDiagnosticSnapshot? diagnosticHealth;
+
   /// Installed component manifests in dependency order.
   final List<CCComponentManifest> components;
 
@@ -97,7 +102,8 @@ final class CCRouterDevToolsSnapshot {
   /// Converts this widget-facing view into the versioned tooling protocol.
   ///
   /// The conversion copies only stable identities, lifecycle states, Host and
-  /// Outlet placement, and bounded trace timing. It intentionally omits route
+  /// Outlet placement, fixed diagnostic states, health counts and trace timing.
+  /// It intentionally omits route
   /// addresses, arguments, results, Widget instances, and backend objects.
   CCDevToolsRuntimeSnapshot toProtocolRuntimeSnapshot({
     String hostId = 'default',
@@ -144,5 +150,97 @@ final class CCRouterDevToolsSnapshot {
           ownerComponentId: trace.context.targetComponentId,
         ),
     ],
+    diagnostics: [
+      for (final event in navigationFailures)
+        CCDevToolsDiagnosticRecord(
+          kind: 'failure',
+          id: event.context.navigationId,
+          status: event.recovered
+              ? 'recoverySelected'
+              : event.context.reason == CCNavigationFailureReason.cancelled
+              ? 'cancelled'
+              : 'failed',
+          timestamp: event.timestamp,
+          routeId: event.context.routeId,
+          initialRouteId: event.context.initialRouteId,
+          hostId: event.context.hostId,
+          outlet: event.context.outlet,
+          operation: event.context.operation.name,
+          stage: event.context.stage.name,
+          reason: event.context.reason.name,
+          attempt: event.context.attempt.name,
+          errorType: event.context.errorType,
+          recoveryDepth: event.context.recoveryDepth,
+          recoverySelected: event.recovered,
+        ),
+      for (final event in capabilityFallbacks)
+        CCDevToolsDiagnosticRecord(
+          kind: 'fallback',
+          id: event.navigationId,
+          status: 'fallbackSelected',
+          timestamp: event.timestamp,
+          routeId: event.routeId,
+          hostId: event.hostId,
+          outlet: event.navigatorOutlet,
+          operation: event.operation.name,
+          capability: event.capability.name,
+          behavior: event.behavior.name,
+        ),
+      for (final pending in pendingNavigations)
+        CCDevToolsDiagnosticRecord(
+          kind: 'pending',
+          id: pending.navigationId,
+          status: 'pending',
+          timestamp: pending.createdAt,
+          expiresAt: pending.expiresAt,
+          routeId: pending.routeId,
+          hostId: pending.hostId,
+          outlet: pending.outlet,
+          operation: pending.operation.name,
+          origin: pending.origin.name,
+        ),
+      for (final task in initTasks)
+        CCDevToolsDiagnosticRecord(
+          kind: 'initTask',
+          id: task.id,
+          status: task.state.name,
+          ownerComponentId: task.ownerComponentId,
+          gateId: task.gateId,
+          failurePolicy: task.failurePolicy.name,
+          blockedByTaskId: task.blockedByTaskId,
+          errorType: task.errorType,
+          durationMicros: task.duration?.inMicroseconds,
+          dependsOn: task.dependsOn,
+        ),
+    ],
+    diagnosticHealth: diagnosticHealth == null
+        ? null
+        : _protocolHealth(diagnosticHealth!),
+  );
+}
+
+/// Copies fixed counters without leaking a Runtime, Sink, queue or payload.
+CCDevToolsDiagnosticHealth _protocolHealth(CCDiagnosticSnapshot health) {
+  final delivery = health.delivery;
+  return CCDevToolsDiagnosticHealth(
+    runtimeId: health.runtimeId,
+    revision: health.revision,
+    sinkConfigured: health.sinkConfigured,
+    queueCapacity: delivery.queueCapacity,
+    queued: delivery.queuedEventCount,
+    inFlight: delivery.inFlightWriteCount,
+    peakQueued: delivery.peakQueueDepth,
+    delivered: delivery.deliveredEventCount,
+    failed: delivery.failedEventCount,
+    dropped: delivery.droppedEventCount,
+    closed: delivery.isClosed,
+    histories: health.histories.map(
+      (history) => CCDevToolsHistoryStatus(
+        name: history.name,
+        capacity: history.capacity,
+        retainedCount: history.retainedCount,
+        omittedCount: history.omittedCount,
+      ),
+    ),
   );
 }

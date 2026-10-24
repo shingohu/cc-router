@@ -2,6 +2,10 @@
 
 ## 0.1.0 - Unreleased
 
+- Track bounded history completeness independently of external Sink policy and
+  retain exact failure placement across redirect, recovery and pending replay.
+  Expose payload-free health counters without Runtime timers or subscriptions.
+
 - Added a read-only, weak Host-registration lease for framework-scoped navigation
   clients; same-ID replacement cannot revive a retired registration.
 - Preserve a concrete call-site Host named `default` across focus changes and

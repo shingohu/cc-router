@@ -50,6 +50,126 @@ void main() {
     expect(called, isFalse);
   });
 
+  test(
+    'protocol conversion includes safe failure, fallback, pending, task and health state',
+    () {
+      final snapshot = CCRouterDevToolsSnapshot(
+        capturedAt: DateTime.utc(2026),
+        runtimeState: CCDevToolsRuntimeState.initialized,
+        navigationFailures: [
+          CCNavigationFailureEvent(
+            context: const CCNavigationFailureContext(
+              navigationId: 'nav-1',
+              operation: CCNavigationOperation.push,
+              origin: CCNavigationOrigin.internal,
+              openMode: null,
+              stage: CCNavigationFailureStage.interception,
+              errorType: 'CCRouteCancelledError',
+              recoveryDepth: 2,
+              reason: CCNavigationFailureReason.cancelled,
+              attempt: CCNavigationFailureAttempt.pendingResume,
+              hostId: 'right',
+              outlet: 'detail',
+              routeId: 'orders.detail',
+              initialRouteId: 'orders.start',
+            ),
+            timestamp: DateTime.utc(2026),
+            recovered: false,
+          ),
+        ],
+        capabilityFallbacks: [
+          CCNavigationCapabilityFallbackEvent(
+            navigationId: 'nav-2',
+            operation: CCNavigationOperation.go,
+            routeId: 'orders.detail',
+            hostId: 'left',
+            navigatorOutlet: 'root',
+            capability: CCNavigationCapabilityType.managedPopObservation,
+            behavior: CCNavigationCapabilityFallbackBehavior
+                .partitionLocalReconciliation,
+            timestamp: DateTime.utc(2026),
+          ),
+        ],
+        pendingNavigations: [
+          CCPendingNavigation(
+            navigationId: 'nav-3',
+            operation: CCNavigationOperation.push,
+            routeId: 'orders.detail',
+            address: const CCRouteAddressSummary(
+              routePattern: '/orders/:id',
+              hasPathParameters: true,
+              hasQueryParameters: true,
+              hasFragment: true,
+            ),
+            origin: CCNavigationOrigin.internal,
+            openMode: null,
+            source: null,
+            hostId: 'right',
+            outlet: 'detail',
+            createdAt: DateTime.utc(2026),
+            expiresAt: DateTime.utc(2027),
+          ),
+        ],
+        initTasks: [
+          CCInitTaskSnapshot(
+            id: 'orders.prepare',
+            ownerComponentId: 'orders',
+            gateId: 'appStarted',
+            state: CCInitTaskState.failed,
+            failurePolicy: CCInitTaskFailurePolicy.optional,
+            dependsOn: ['account.prepare'],
+            errorType: 'StateError',
+            duration: const Duration(microseconds: 12),
+          ),
+        ],
+        diagnosticHealth: CCDiagnosticSnapshot(
+          runtimeId: 'runtime-1',
+          revision: 3,
+          sinkConfigured: false,
+          delivery: const CCDiagnosticDeliverySnapshot(
+            queueCapacity: 4,
+            queuedEventCount: 0,
+            inFlightWriteCount: 0,
+            peakQueueDepth: 0,
+            deliveredEventCount: 0,
+            failedEventCount: 0,
+            droppedEventCount: 0,
+            isClosed: false,
+          ),
+          histories: [
+            const CCDiagnosticHistorySnapshot(
+              name: 'failures',
+              capacity: 1,
+              retainedCount: 1,
+              omittedCount: 2,
+            ),
+          ],
+        ),
+      );
+      final protocol = CCDevToolsRuntimeSnapshot.fromJson(
+        snapshot.toProtocolRuntimeSnapshot().toJson(),
+      );
+      final records = protocol.diagnostics!;
+      expect(records.map((r) => r.kind), [
+        'failure',
+        'fallback',
+        'pending',
+        'initTask',
+      ]);
+      expect(records[0].status, 'cancelled');
+      expect(records[0].hostId, 'right');
+      expect(records[0].outlet, 'detail');
+      expect(records[0].recoveryDepth, 2);
+      expect(records[0].attempt, 'pendingResume');
+      expect(records[1].behavior, 'partitionLocalReconciliation');
+      expect(records[2].expiresAt, DateTime.utc(2027));
+      expect(records[3].dependsOn, ['account.prepare']);
+      expect(records[3].durationMicros, 12);
+      expect(protocol.diagnosticHealth!.histories.single.omittedCount, 2);
+      expect(protocol.toJson().toString(), isNot(contains('/orders/:id')));
+    },
+  );
+
   test('runtime snapshot conversion keeps stable IDs and omits payloads', () {
     final snapshot = CCRouterDevToolsSnapshot(
       capturedAt: DateTime.utc(2026, 1, 1),

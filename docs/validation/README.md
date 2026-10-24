@@ -6,6 +6,9 @@
 
 ## 最新源码自动化证据
 
+[2026-10-24 诊断与 DevTools 修复](20261024-diagnostics/report.md)：失败 Host/Outlet 与恢复链归属、
+取消告警、历史完整性、Sink 健康、非导航刷新及 optional 协议兼容；包含检查失败和复核边界。
+
 [2026-10-24 遗留项收口](20261024-closure/report.md)：Demo Cupertino 正文、小屏标题、
 遗留文案与图标资源修复，验收材料可逆脱敏，以及华为同引擎固定场景复测。
 

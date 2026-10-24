@@ -3,6 +3,9 @@
 Flutter-facing CCRouter facade for application and component code. Its business
 entry point exposes typed navigation, Service/Command/Event access, Session
 operations, and page lifecycle integration.
+Read-only `CCRouter.diagnosticSnapshot` reports history completeness and external
+Sink health. Failure diagnostics preserve attempted Host/Outlet and fixed reason,
+attempt and recovery depth; arbitrary business payloads remain excluded.
 
 Business code normally imports:
 

@@ -128,7 +128,7 @@ final class _SnapshotView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('CCRouter'),
@@ -146,6 +146,7 @@ final class _SnapshotView extends StatelessWidget {
               Tab(text: 'Catalog'),
               Tab(text: 'Components'),
               Tab(text: 'Call Graph'),
+              Tab(text: 'Diagnostics'),
             ],
           ),
         ),
@@ -155,6 +156,7 @@ final class _SnapshotView extends StatelessWidget {
             _CatalogTab(envelope: envelope),
             _ComponentsTab(envelope: envelope),
             _CallGraphTab(envelope: envelope),
+            _DiagnosticsTab(runtime: envelope.runtime),
           ],
         ),
       ),
@@ -201,6 +203,101 @@ final class _OverviewTab extends StatelessWidget {
             subtitle: Text('${entry.kind} · ${entry.hostId}/${entry.outlet}'),
             trailing: Text(entry.state),
           ),
+      ],
+    );
+  }
+}
+
+/// Renders optional protocol diagnostics with explicit old-producer states.
+final class _DiagnosticsTab extends StatelessWidget {
+  const _DiagnosticsTab({required this.runtime});
+
+  final CCDevToolsRuntimeSnapshot runtime;
+
+  @override
+  Widget build(BuildContext context) {
+    final health = runtime.diagnosticHealth;
+    final diagnostics = runtime.diagnostics;
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        if (health == null)
+          const ListTile(
+            title: Text('Diagnostic health not provided by producer'),
+          )
+        else ...[
+          ListTile(
+            title: Text(
+              health.sinkConfigured
+                  ? 'External Sink configured'
+                  : 'External Sink not configured',
+            ),
+            subtitle: Text(
+              'queued=${health.queued}/${health.queueCapacity} · inFlight=${health.inFlight} · peak=${health.peakQueued}\n'
+              'delivered=${health.delivered} · failed=${health.failed} · dropped=${health.dropped} · closed=${health.closed}',
+            ),
+          ),
+          const Text(
+            'History omissions and external Sink losses are independent. Empty history does not prove absence of failures. Delivered means Sink completion only.',
+          ),
+          for (final history in health.histories)
+            ListTile(
+              dense: true,
+              title: Text(
+                '${history.name}${history.capacity == 0 ? ' · retention disabled' : ''}',
+              ),
+              subtitle: Text(
+                'retained=${history.retainedCount}/${history.capacity} · omitted=${history.omittedCount}',
+              ),
+            ),
+        ],
+        if (diagnostics == null)
+          const ListTile(
+            title: Text(
+              'Failure / Fallback / Pending / InitTask diagnostics not provided by producer',
+            ),
+          )
+        else if (diagnostics.isEmpty)
+          const ListTile(
+            title: Text('No retained diagnostics or live task/pending state'),
+          )
+        else
+          for (final record in diagnostics)
+            ListTile(
+              dense: true,
+              title: Text(
+                '${record.kind} · ${record.routeId ?? record.id} · ${record.status}',
+              ),
+              subtitle: Text(
+                [
+                  'id=${record.id}',
+                  if (record.kind != 'initTask')
+                    '${record.hostId ?? 'unknown'}/${record.outlet ?? 'unknown'}',
+                  if (record.operation != null) 'operation=${record.operation}',
+                  if (record.reason != null) 'reason=${record.reason}',
+                  if (record.stage != null) 'stage=${record.stage}',
+                  if (record.attempt != null)
+                    'attempt=${record.attempt} · depth=${record.recoveryDepth}',
+                  if (record.initialRouteId != null)
+                    'initial=${record.initialRouteId}',
+                  if (record.errorType != null) 'error=${record.errorType}',
+                  if (record.capability != null)
+                    '${record.capability} → ${record.behavior}',
+                  if (record.origin != null) 'origin=${record.origin}',
+                  if (record.expiresAt != null) 'expires=${record.expiresAt}',
+                  if (record.ownerComponentId != null)
+                    'owner=${record.ownerComponentId}',
+                  if (record.gateId != null)
+                    'gate=${record.gateId} · policy=${record.failurePolicy}',
+                  if (record.dependsOn.isNotEmpty)
+                    'dependsOn=${record.dependsOn.join(', ')}',
+                  if (record.blockedByTaskId != null)
+                    'blockedBy=${record.blockedByTaskId}',
+                  if (record.durationMicros != null)
+                    'duration=${record.durationMicros}µs',
+                ].join('\n'),
+              ),
+            ),
       ],
     );
   }

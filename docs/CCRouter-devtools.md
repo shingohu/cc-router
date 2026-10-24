@@ -86,7 +86,7 @@ Debug 默认开启，可用 `CCROUTER_DEVTOOLS=false` 关闭；Profile 默认关
 ## 视图
 
 - **Overview**：Runtime 状态、组件数、Managed Route Entry、Backend Entry、Pending
-  导航、Failure 和 InitTask 数量。
+  导航、Failure 和 InitTask 数量；历史保留完整性与外部 Sink 投递健康。
 - **Catalog**：搜索 Route、Service、Command、Event、InitTask，显示它是否出现在当前
   Runtime，并展示可复制的源码位置。Host 可以提供 `onOpenSource` 做 IDE/源码浏览器映射。
 - **Components**：组件版本、必选/可选依赖组成的只读 Component Graph，支持搜索、聚焦和反向
@@ -95,13 +95,23 @@ Debug 默认开启，可用 `CCROUTER_DEVTOOLS=false` 关闭；Profile 默认关
   opaque Backend Entry ledger。foreign/opaque 只表示观察结果，不代表可以由面板操作。
 - **Timeline**：有界 Trace、导航生命周期事件和 Backend transition，显示稳定 ID、状态、
   Host/Outlet 和耗时，不显示 URI 参数或业务返回值。
-- **Failures**：导航失败阶段、原因、错误类型、恢复结果、能力降级和等待策略决策的请求。
+- **Failures**：导航失败阶段、原因、错误类型、navigationId、Host/Outlet、attempt、
+  recoveryDepth、initialRouteId、恢复选择、能力降级和等待策略决策的请求。恢复选择并不保证
+  最终成功。正常取消以 warning 记录；最终 Sink status 为 cancelled，生命周期 phase 保持 failed。
 - **InitTask DAG**：任务状态、Gate、Owner 和 `dependsOn` 边；缺失的依赖会明确标记，
   但面板不会尝试修复或重排任务。
 - **Call Graph**：静态 Catalog 关系和当前有界 Trace Edge 的只读调用链。静态关系用于解释
   预期协作，Runtime 边用于确认本次实际发生的调用；两者不互相猜测或补全。
 
-所有列表都来自 CCRouter 已有的容量限制。刷新和事件订阅只重新读取快照，不改变 Runtime。
+历史列表受已有容量限制，Pending/InitTask 是当前状态而非事件 ring。
+默认 Provider 在订阅期间每 250ms 比较轻量 `CCRouter.diagnosticSnapshot`，仅在 Runtime
+identity/revision 或独立 Sink 计数变化后通知重读完整快照，覆盖 Command/Service、InitTask、
+延迟导航、Sink 完成和 shutdown/重初始化。面板在 TickerMode 关闭时取消订阅，恢复时立即
+读快照；卸载时取消 Timer。手动刷新仍可用，不改变 Runtime。
+七类事件历史分别显示 retained/capacity/omitted，capacity=0 为关闭保留；omitted 为容量关闭
+或轮转造成的未保留，不包含外部 Sink 过滤和采样损失。Sink 单独显示 queued/capacity、inFlight、
+peak、delivered/failed/dropped/closed；delivered 只表示 Sink 调用完成，不保证持久化上传。
+订阅者错误与已移除 Backend ledger 不在该七类历史列表内。空历史不能证明从未失败。
 恢复需求采集属于应用，不进入 Runtime Snapshot 或 DevTools 面板；完整路由状态恢复尚未实现。
 
 ## Snapshot 协议
@@ -112,6 +122,12 @@ Debug 默认开启，可用 `CCROUTER_DEVTOOLS=false` 关闭；Profile 默认关
 或 Entry ID 关联；静态存在但运行时未安装、或运行时条目没有静态声明时，工具应显示“未解析”，
 不能删除一侧或推断完整历史调用链。
 
+协议版本仍为 1，以可选 `diagnostics` 与 `diagnosticHealth` 扩展固定白名单字段。
+diagnostics 包含 Failure、Fallback、Pending、InitTask；无任意 metadata Map，Pending
+不导出 address/source，Failure 不导出业务取消 code。旧 reader 忽略未知字段；新 reader 对
+旧 producer 缺失或 null 字段保持 null，UI 显示未提供而非零失败。存在但格式错误的已知字段
+必须拒绝。Host/Outlet 未解析时不猜测；Failure Host 在解析前保留调用入口归属。
+
 协议只允许源码位置、Owner、Host/Outlet、生命周期、稳定 Trace ID 和耗时等白名单字段，
 不包含 URI 参数、Extra、Token、Widget、Navigator、业务返回值或任意业务 Map。Envelope
 带有协议版本和捕获时间，解码方必须拒绝缺失字段和不支持的结构；协议升级通过新版本迁移，
@@ -119,12 +135,12 @@ Debug 默认开启，可用 `CCROUTER_DEVTOOLS=false` 关闭；Profile 默认关
 
 ## 数据和隐私边界
 
-面板消费 `CCRouter` 门面提供的只读 getter 与观察 listener，永远不持有
+面板消费 `CCRouter` 门面提供的只读 getter，永远不持有
 `CCRouterRuntime`、`CCScope`、`Navigator`、Flutter `Route`、Widget、Extra、Token、完整 URI、
 Query 值或业务结果。`CCRouterDevToolsSnapshot` 会再次复制列表边界，测试替身可以使用
 `CCStaticDevToolsSnapshotProvider` 注入静态快照。
 
-面板的 listener 在 `dispose` 时全部移除；监听器异常由 Runtime 自己隔离。面板不应被当作
+面板订阅在隐藏或 `dispose` 时移除；默认 Provider 的 Timer 回调隔离 listener 异常。面板不应被当作
 审计日志、Replay 数据源或生产监控传输器。需要外部日志时，应使用 `CCDiagnosticsConfig`
 与应用自己的日志 Sink。
 
@@ -140,7 +156,8 @@ CCDevToolsServiceExtension.register(
 ```
 
 Extension 通过 `ext.ccrouter.snapshot` 读取版本化 Envelope；它提供 Overview、Catalog、
-Components 和 Call Graph 四个只读页，并将静态 Catalog 与 Runtime Entry/Trace 按稳定 ID
+Components、Call Graph 和 Diagnostics 五个只读页，使用手动 Refresh。Diagnostics 显示上述
+四类诊断与健康状态，缺少协议扩展时明确标为未提供；静态 Catalog 与 Runtime Entry/Trace 按稳定 ID
 关联。它不能导航、重试、销毁 Scope、激活组件或修改 Adapter。发布前使用支持 Web
 的稳定 Flutter SDK 执行：
 

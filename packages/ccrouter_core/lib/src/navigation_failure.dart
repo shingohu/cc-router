@@ -80,6 +80,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
     var currentValidateResult = validateResult;
     var suppressRecoveryResult = false;
     var attemptedRouteId = routeIdHint;
+    CCRoutePlacement? attemptedPlacement;
     String? initialRouteId = routeIdHint;
     var failureAttempt = CCNavigationFailureAttempt.request;
 
@@ -101,6 +102,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
           prepared = _bindPreparedNavigationHost(prepared, navigationHostId);
           _bindNavigationHost(_resolveNavigationHostId(prepared.placement));
           attemptedRouteId = prepared.routeId;
+          attemptedPlacement = prepared.placement;
           initialRouteId ??= prepared.routeId;
         } finally {
           resolveClock.stop();
@@ -121,7 +123,10 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
                 validateResult: currentValidateResult,
                 coordinateConcurrency: coordinateConcurrency,
                 requestCancellation: requestCancellation,
-                onAttempt: (routeId) => attemptedRouteId = routeId,
+                onAttempt: (routeId, placement) {
+                  attemptedRouteId = routeId;
+                  attemptedPlacement = placement;
+                },
                 onInterceptorRedirect: () {
                   failureAttempt =
                       CCNavigationFailureAttempt.interceptorRedirect;
@@ -140,7 +145,10 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
                 onEntryCommitted: onEntryCommitted,
                 validateResult: currentValidateResult,
                 requestCancellation: requestCancellation,
-                onAttempt: (routeId) => attemptedRouteId = routeId,
+                onAttempt: (routeId, placement) {
+                  attemptedRouteId = routeId;
+                  attemptedPlacement = placement;
+                },
                 onInterceptorRedirect: () {
                   failureAttempt =
                       CCNavigationFailureAttempt.interceptorRedirect;
@@ -155,14 +163,22 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
           _bindNavigationHost(navigationHostId);
         }
         final resumedPending = _pendingResumeFailures.remove(navigationId);
+        final failedRouteId =
+            attemptedRouteId ?? _navigationFailureRouteId(error);
+        final failedPlacement =
+            attemptedPlacement ??
+            _routeRegistry.diagnosticPlacement(
+              failedRouteId,
+              placementOverride,
+            );
         final context = CCNavigationFailureContext(
           navigationId: navigationId,
           operation: operation,
-          routeId:
-              attemptedRouteId ??
-              prepared?.routeId ??
-              currentRouteIdHint ??
-              _navigationFailureRouteId(error),
+          hostId: failedPlacement == null || failedPlacement.hostId == 'default'
+              ? navigationHostId
+              : failedPlacement.hostId,
+          outlet: failedPlacement?.navigatorOutlet,
+          routeId: failedRouteId,
           initialRouteId:
               initialRouteId ??
               attemptedRouteId ??
@@ -207,6 +223,8 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
               CCNavigationFailureContext(
                 navigationId: context.navigationId,
                 operation: context.operation,
+                hostId: context.hostId,
+                outlet: context.outlet,
                 origin: context.origin,
                 openMode: context.openMode,
                 stage: CCNavigationFailureStage.interception,
@@ -253,6 +271,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
         currentRouteIdHint = target.intent?.routeId;
         failureAttempt = CCNavigationFailureAttempt.failureRecovery;
         attemptedRouteId = currentRouteIdHint;
+        attemptedPlacement = null;
         currentPrepare = target.intent == null
             ? () => _routeRegistry.prepareUri(
                 target.uri!,
@@ -439,12 +458,8 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
       timestamp: DateTime.now(),
       recovered: recovered,
     );
-    if (navigationDiagnosticCapacity > 0) {
-      if (_navigationFailures.length == navigationDiagnosticCapacity) {
-        _navigationFailures.removeFirst();
-      }
-      _navigationFailures.add(event);
-    }
+    _navigationFailureTotal++;
+    _retainDiagnostic(_navigationFailures, event, navigationDiagnosticCapacity);
     _enqueueRegisteredNavigationObserverBatch(
       _navigationFailureListeners,
       (listener) => listener(event),
@@ -453,14 +468,25 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
     );
     _emitDiagnostic(
       category: CCDiagnosticCategory.navigation,
-      level: recovered ? CCDiagnosticLevel.warning : CCDiagnosticLevel.error,
+      level: recovered || context.reason == CCNavigationFailureReason.cancelled
+          ? CCDiagnosticLevel.warning
+          : CCDiagnosticLevel.error,
       occurredAt: event.timestamp,
       operation: event.context.operation.name,
-      status: recovered ? 'recovered' : 'failed',
+      status: recovered
+          ? 'recovered'
+          : context.reason == CCNavigationFailureReason.cancelled
+          ? 'cancelled'
+          : 'failed',
       duration: Duration.zero,
       navigationId: event.context.navigationId,
       routeId: event.context.routeId,
+      hostId: context.hostId,
+      outlet: context.outlet,
       failureStage: event.context.stage.name,
+      failureReason: context.reason.name,
+      failureAttempt: context.attempt.name,
+      recoveryDepth: context.recoveryDepth,
       errorType: event.context.errorType,
     );
   }

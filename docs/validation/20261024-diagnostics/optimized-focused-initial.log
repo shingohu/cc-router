@@ -1,0 +1,92 @@
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart
+00:00 +0: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: idle health is reused and no-Sink commands invalidate at 0
+00:00 +1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: idle health is reused and no-Sink commands invalidate at 1
+00:00 +2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: delivery changes invalidate health including late failure=false
+00:00 +2 -1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: delivery changes invalidate health including late failure=false [E]
+  Expected: <1>
+    Actual: <2>
+  
+  package:matcher                                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18                   expect
+  packages/ccrouter_test/test/diagnostic_health_cache_test.dart 107:9  main.<fn>
+  
+00:00 +2 -1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: delivery changes invalidate health including late failure=true
+00:00 +2 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: delivery changes invalidate health including late failure=true [E]
+  Expected: <1>
+    Actual: <2>
+  
+  package:matcher                                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18                   expect
+  packages/ccrouter_test/test/diagnostic_health_cache_test.dart 107:9  main.<fn>
+  
+00:00 +2 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: shutdown invalidates a snapshot read after delivery closes
+00:00 +3 -2: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_context_test.dart
+00:00 +3 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_context_test.dart: cancel diagnostics preserve exact placement without error alarms
+00:00 +4 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_context_test.dart: typed parameter failure uses declared placement without running codec twice
+00:01 +5 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_context_test.dart: unresolved URI redirect does not inherit the previous route or outlet
+00:01 +6 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_context_test.dart: failure recovery attributes the new target and preserves original identity
+00:01 +7 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_context_test.dart: pending replay redirect reports its actual attempted Host and Outlet
+00:01 +8 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_context_test.dart: history completeness survives disabled Sink and capacity 0
+00:01 +9 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_context_test.dart: history completeness survives disabled Sink and capacity 1
+00:01 +10 -2: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostics_test.dart
+00:01 +10 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostics_test.dart: timeout cleanup isolates throwing listeners and sanitizes diagnostics
+00:02 +11 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostics_test.dart: component assembly and Runtime startup emit full diagnostics
+00:02 +12 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostics_test.dart: component Registrar failure emits sanitized diagnostics
+00:02 +13 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostics_test.dart: Runtime validation failure identifies its startup stage
+00:02 +14 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostics_test.dart: typed Event subscriber keeps Event type and subscriber identity
+00:02 +15 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostics_test.dart: diagnostic category policy filters external delivery only
+00:02 +16 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostics_test.dart: trace bundle groups retained nested invocation records
+00:02 +17 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostics_test.dart: Sink failures do not change the framework result
+00:02 +18 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostics_test.dart: typed Event subscriber IDs use the stable identifier format
+00:02 +19 -2: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart
+00:03 +19 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: nested delivery retains Host Zone, not Runtime; idle close=false
+00:03 +20 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: nested delivery retains Host Zone, not Runtime; idle close=true
+00:04 +21 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: reentrant sync yields after 1 initial writes
+00:04 +22 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: reentrant sync yields after 3 initial writes
+00:04 +23 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: reentrant throw yields after 1 initial writes
+00:04 +24 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: reentrant throw yields after 3 initial writes
+00:04 +25 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: reentrant synchronousFuture yields after 1 initial writes
+00:04 +26 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: reentrant synchronousFuture yields after 3 initial writes
+00:04 +27 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: reentrant future yields after 1 initial writes
+00:04 +28 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: reentrant future yields after 3 initial writes
+00:04 +29 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: reentrant error yields after 1 initial writes
+00:04 +30 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: reentrant error yields after 3 initial writes
+00:04 +31 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: slow Sink keeps only one unfinished write at capacity 0
+00:04 +32 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: slow Sink keeps only one unfinished write at capacity 64
+00:05 +33 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: slow Sink keeps only one unfinished write at capacity 128
+00:05 +34 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: slow Sink keeps only one unfinished write at capacity 1000
+00:05 +35 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: async failure releases the slot and preserves surviving FIFO order
+00:05 +36 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: explicit capacity is independent and drops oldest before first turn
+00:05 +37 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: synchronous throw and synchronously completing Future keep progressing
+00:05 +38 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: reentrant Sink can emit diagnostics and close without deadlock
+00:05 +39 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: late failed write after close is handled without starting waiting data
+00:05 +40 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: idle close preserves synchronous final delivery and cancels the timer
+00:05 +41 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: idle close starts at most one async write and discards the rest
+00:05 +42 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: unfinished application Future does not retain a disposed Runtime
+00:05 +43 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_backpressure_test.dart: invalid independent capacities fail before component installation
+00:05 +44 -2: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart
+00:06 +44 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart: construction without a Sink does not schedule diagnostic cleanup
+00:06 +45 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart: _FailureStage.manifest preserves startup error if terminal scheduling fails
+00:07 +46 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart: _FailureStage.manifest releases Sink with unfinished Future; lateError=false
+00:07 +47 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart: _FailureStage.manifest releases Sink with unfinished Future; lateError=true
+00:07 +48 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart: _FailureStage.manifest preserves deferred final diagnostics with sync Sink
+00:07 +49 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart: _FailureStage.manifest preserves deferred final diagnostics with throw Sink
+00:07 +50 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart: _FailureStage.manifest preserves deferred final diagnostics with synchronousFuture Sink
+00:07 +51 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart: _FailureStage.registrar preserves startup error if terminal scheduling fails
+00:07 +52 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart: _FailureStage.registrar releases Sink with unfinished Future; lateError=false
+00:07 +53 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart: _FailureStage.registrar releases Sink with unfinished Future; lateError=true
+00:07 +54 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart: _FailureStage.registrar preserves deferred final diagnostics with sync Sink
+00:07 +55 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart: _FailureStage.registrar preserves deferred final diagnostics with throw Sink
+00:07 +56 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart: _FailureStage.registrar preserves deferred final diagnostics with synchronousFuture Sink
+00:07 +57 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart: _FailureStage.serviceOverride preserves startup error if terminal scheduling fails
+00:08 +58 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart: _FailureStage.serviceOverride releases Sink with unfinished Future; lateError=false
+00:08 +59 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart: _FailureStage.serviceOverride releases Sink with unfinished Future; lateError=true
+00:08 +60 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart: _FailureStage.serviceOverride preserves deferred final diagnostics with sync Sink
+00:08 +61 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart: _FailureStage.serviceOverride preserves deferred final diagnostics with throw Sink
+00:08 +62 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/diagnostic_construction_failure_test.dart: _FailureStage.serviceOverride preserves deferred final diagnostics with synchronousFuture Sink
+00:08 +63 -2: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_devtools/test/provider_test.dart
+00:09 +63 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_devtools/test/provider_test.dart: burst invocation changes are coalesced into one refresh interval
+00:10 +64 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_devtools/test/provider_test.dart: provider follows startup, non-navigation calls, tasks and replacement
+00:10 +65 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_devtools/test/provider_test.dart: Sink completion refreshes even without another Runtime observation
+00:10 +66 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_devtools/test/provider_test.dart: a throwing listener is isolated and removal cancels its Timer
+00:10 +67 -2: Some tests failed.

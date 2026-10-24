@@ -125,6 +125,8 @@ final class CCNavigationFailureContext {
     this.routeId,
     this.initialRouteId,
     this.source,
+    this.hostId,
+    this.outlet,
   });
 
   /// Runtime-unique identity preserved across failure recovery attempts.
@@ -142,6 +144,13 @@ final class CCNavigationFailureContext {
   /// redirect. This lets a policy distinguish the original request from the
   /// current failed recovery target.
   final String? initialRouteId;
+
+  /// Concrete attempted Host, or the invocation Host before target resolution.
+  /// It never follows a later active-Host change.
+  final String? hostId;
+
+  /// Resolved target Outlet; null when target placement is not yet known.
+  final String? outlet;
 
   /// Trusted ingress classification preserved from the original attempt.
   final CCNavigationOrigin origin;

@@ -36,12 +36,12 @@ extension CCRouterRuntimeRouteVisibility on CCRouterRuntime {
       timestamp: DateTime.now(),
       reason: reason,
     );
-    if (navigationDiagnosticCapacity > 0) {
-      if (_routeVisibilityEvents.length == navigationDiagnosticCapacity) {
-        _routeVisibilityEvents.removeFirst();
-      }
-      _routeVisibilityEvents.add(event);
-    }
+    _routeVisibilityEventTotal++;
+    _retainDiagnostic(
+      _routeVisibilityEvents,
+      event,
+      navigationDiagnosticCapacity,
+    );
     _enqueueRegisteredNavigationObserverBatch(
       _routeVisibilityListeners,
       (listener) => listener(event),

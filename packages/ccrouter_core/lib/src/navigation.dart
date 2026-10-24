@@ -502,7 +502,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     void Function(Object? result)? validateResult,
     bool coordinateConcurrency = true,
     CCCancellationToken? requestCancellation,
-    void Function(String routeId)? onAttempt,
+    void Function(String? routeId, CCRoutePlacement? placement)? onAttempt,
     void Function()? onInterceptorRedirect,
   }) {
     if (!coordinateConcurrency ||
@@ -626,7 +626,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     _emitNavigationEvent(
       request,
       CCNavigationLifecyclePhase.failed,
-      errorType: errorType,
+      error: error,
     );
   }
 
@@ -655,7 +655,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       _emitNavigationEvent(
         request,
         CCNavigationLifecyclePhase.failed,
-        errorType: errorType,
+        error: error,
       );
       Error.throwWithStackTrace(error, stackTrace);
     }
@@ -680,7 +680,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     void Function(_RouteEntryRecord entry)? onEntryCommitted,
     void Function(Object? result)? validateResult,
     CCCancellationToken? requestCancellation,
-    void Function(String routeId)? onAttempt,
+    void Function(String? routeId, CCRoutePlacement? placement)? onAttempt,
     void Function()? onInterceptorRedirect,
   }) async {
     final effectiveNavigationId =
@@ -700,7 +700,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         source,
         navigationId: effectiveNavigationId,
       );
-      onAttempt?.call(request.routeId);
+      onAttempt?.call(request.routeId, request.placement);
       _emitAspectFound(request);
       var adapterDispatchStarted = false;
       try {
@@ -779,6 +779,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
               source: source,
               code: code,
               timeout: timeout,
+              onAttempt: onAttempt,
               action: action,
               commitEntry: commitEntry,
               onEntryCommitted: onEntryCommitted,
@@ -796,13 +797,14 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
             final redirectResolveClock = Stopwatch()..start();
             try {
               if (intent != null) {
-                onAttempt?.call(intent.routeId);
+                onAttempt?.call(intent.routeId, null);
                 current = _routeRegistry.prepareIntent(
                   intent,
                   origin: origin,
                   placementOverride: placementOverride,
                 );
               } else {
+                onAttempt?.call(null, null);
                 current = _routeRegistry.prepareUri(
                   uri!,
                   origin,
@@ -837,7 +839,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
           _emitNavigationEvent(
             request,
             CCNavigationLifecyclePhase.failed,
-            errorType: error.runtimeType.toString(),
+            error: error,
           );
         }
         rethrow;
@@ -857,7 +859,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
           _emitNavigationEvent(
             request,
             CCNavigationLifecyclePhase.failed,
-            errorType: error.runtimeType.toString(),
+            error: error,
           );
         }
         if (error is _RouteRevalidationRequestError) rethrow;
@@ -1121,7 +1123,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       _emitNavigationEvent(
         request,
         CCNavigationLifecyclePhase.failed,
-        errorType: error.runtimeType.toString(),
+        error: error,
       );
       rethrow;
     } catch (error) {
@@ -1143,7 +1145,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       _emitNavigationEvent(
         request,
         CCNavigationLifecyclePhase.failed,
-        errorType: error.runtimeType.toString(),
+        error: error,
       );
       if (error is _RouteRevalidationRequestError) rethrow;
       throw CCNavigationAdapterError(

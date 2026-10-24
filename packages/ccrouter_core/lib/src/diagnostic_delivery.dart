@@ -54,17 +54,37 @@ final class _DiagnosticDelivery {
   /// Waiting events discarded on overflow or close.
   int _dropped = 0;
 
-  /// Copies payload-free state without exposing live queue ownership.
-  CCDiagnosticDeliverySnapshot get snapshot => CCDiagnosticDeliverySnapshot(
-    queueCapacity: capacity,
-    queuedEventCount: _queue.length,
-    inFlightWriteCount: _writing ? 1 : 0,
-    peakQueueDepth: _peakQueueDepth,
-    deliveredEventCount: _delivered,
-    failedEventCount: _failed,
-    droppedEventCount: _dropped,
-    isClosed: _closed,
-  );
+  /// Cached scalar health without Sink, event, Future or Runtime references.
+  CCDiagnosticDeliverySnapshot? _snapshot;
+
+  /// Copies changed state without exposing live queue ownership.
+  /// Comparing scalars also detects late write completion after close, without
+  /// adding cache invalidation work to the enqueue/drain hot path.
+  CCDiagnosticDeliverySnapshot get snapshot {
+    final cached = _snapshot;
+    final queued = _queue.length;
+    final inFlight = _writing ? 1 : 0;
+    if (cached != null &&
+        cached.queuedEventCount == queued &&
+        cached.inFlightWriteCount == inFlight &&
+        cached.peakQueueDepth == _peakQueueDepth &&
+        cached.deliveredEventCount == _delivered &&
+        cached.failedEventCount == _failed &&
+        cached.droppedEventCount == _dropped &&
+        cached.isClosed == _closed) {
+      return cached;
+    }
+    return _snapshot = CCDiagnosticDeliverySnapshot(
+      queueCapacity: capacity,
+      queuedEventCount: queued,
+      inFlightWriteCount: inFlight,
+      peakQueueDepth: _peakQueueDepth,
+      deliveredEventCount: _delivered,
+      failedEventCount: _failed,
+      droppedEventCount: _dropped,
+      isClosed: _closed,
+    );
+  }
 
   /// Accepts a sanitized event without waiting for the external Sink.
   void enqueue(CCDiagnosticEvent event) {

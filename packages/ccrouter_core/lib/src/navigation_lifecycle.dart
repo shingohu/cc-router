@@ -28,10 +28,12 @@ extension CCRouterRuntimeNavigationLifecycle on CCRouterRuntime {
   }
 
   /// Emits a lifecycle event for one Runtime-validated request.
+  /// Classifies cancellation before retaining only the sanitized error type;
+  /// severity must not depend on runtime type names surviving obfuscation.
   void _emitNavigationEvent(
     CCNavigationRequest request,
     CCNavigationLifecyclePhase phase, {
-    String? errorType,
+    Object? error,
   }) {
     final event = CCNavigationLifecycleEvent(
       navigationId: request.navigationId,
@@ -44,14 +46,10 @@ extension CCRouterRuntimeNavigationLifecycle on CCRouterRuntime {
       openMode: request.openMode,
       source: request.source,
       timestamp: DateTime.now(),
-      errorType: errorType,
+      errorType: error?.runtimeType.toString(),
     );
-    if (navigationDiagnosticCapacity > 0) {
-      if (_navigationEvents.length == navigationDiagnosticCapacity) {
-        _navigationEvents.removeFirst();
-      }
-      _navigationEvents.add(event);
-    }
+    _navigationEventTotal++;
+    _retainDiagnostic(_navigationEvents, event, navigationDiagnosticCapacity);
     _enqueueRegisteredNavigationObserverBatch(
       _navigationListeners,
       (listener) => listener(event),
@@ -61,7 +59,9 @@ extension CCRouterRuntimeNavigationLifecycle on CCRouterRuntime {
     _emitDiagnostic(
       category: CCDiagnosticCategory.navigation,
       level: phase == CCNavigationLifecyclePhase.failed
-          ? CCDiagnosticLevel.error
+          ? error is CCRouteCancelledError
+                ? CCDiagnosticLevel.warning
+                : CCDiagnosticLevel.error
           : phase == CCNavigationLifecyclePhase.completed
           ? CCDiagnosticLevel.info
           : CCDiagnosticLevel.debug,

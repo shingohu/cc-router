@@ -1,0 +1,343 @@
+diff -ru /tmp/ccrouter-diagnostics-preopt-AijhN7/lib/src/diagnostic_delivery.dart packages/ccrouter_core/lib/src/diagnostic_delivery.dart
+--- /tmp/ccrouter-diagnostics-preopt-AijhN7/lib/src/diagnostic_delivery.dart	2026-10-24 19:12:01
++++ packages/ccrouter_core/lib/src/diagnostic_delivery.dart	2026-10-24 19:14:15
+@@ -54,17 +54,37 @@
+   /// Waiting events discarded on overflow or close.
+   int _dropped = 0;
+ 
+-  /// Copies payload-free state without exposing live queue ownership.
+-  CCDiagnosticDeliverySnapshot get snapshot => CCDiagnosticDeliverySnapshot(
+-    queueCapacity: capacity,
+-    queuedEventCount: _queue.length,
+-    inFlightWriteCount: _writing ? 1 : 0,
+-    peakQueueDepth: _peakQueueDepth,
+-    deliveredEventCount: _delivered,
+-    failedEventCount: _failed,
+-    droppedEventCount: _dropped,
+-    isClosed: _closed,
+-  );
++  /// Cached scalar health without Sink, event, Future or Runtime references.
++  CCDiagnosticDeliverySnapshot? _snapshot;
++
++  /// Copies changed state without exposing live queue ownership.
++  /// Comparing scalars also detects late write completion after close, without
++  /// adding cache invalidation work to the enqueue/drain hot path.
++  CCDiagnosticDeliverySnapshot get snapshot {
++    final cached = _snapshot;
++    final queued = _queue.length;
++    final inFlight = _writing ? 1 : 0;
++    if (cached != null &&
++        cached.queuedEventCount == queued &&
++        cached.inFlightWriteCount == inFlight &&
++        cached.peakQueueDepth == _peakQueueDepth &&
++        cached.deliveredEventCount == _delivered &&
++        cached.failedEventCount == _failed &&
++        cached.droppedEventCount == _dropped &&
++        cached.isClosed == _closed) {
++      return cached;
++    }
++    return _snapshot = CCDiagnosticDeliverySnapshot(
++      queueCapacity: capacity,
++      queuedEventCount: queued,
++      inFlightWriteCount: inFlight,
++      peakQueueDepth: _peakQueueDepth,
++      deliveredEventCount: _delivered,
++      failedEventCount: _failed,
++      droppedEventCount: _dropped,
++      isClosed: _closed,
++    );
++  }
+ 
+   /// Accepts a sanitized event without waiting for the external Sink.
+   void enqueue(CCDiagnosticEvent event) {
+diff -ru /tmp/ccrouter-diagnostics-preopt-AijhN7/lib/src/diagnostics.dart packages/ccrouter_core/lib/src/diagnostics.dart
+--- /tmp/ccrouter-diagnostics-preopt-AijhN7/lib/src/diagnostics.dart	2026-10-24 19:12:01
++++ packages/ccrouter_core/lib/src/diagnostics.dart	2026-10-24 19:14:15
+@@ -61,54 +61,65 @@
+ /// Collects payload-free history counts without adding timers or listeners.
+ extension CCRouterRuntimeDiagnosticHealth on CCRouterRuntime {
+   /// Returns lightweight health suitable for an optional mounted debug panel.
+-  CCDiagnosticSnapshot get diagnosticSnapshot => CCDiagnosticSnapshot(
+-    runtimeId: _runtimeId,
+-    revision: _diagnosticRevision,
+-    sinkConfigured: diagnostics.sink != null,
+-    delivery: diagnosticDeliverySnapshot,
+-    histories: [
+-      _historySnapshot('traces', traceCapacity, _traces.length),
+-      _historySnapshot(
+-        'navigation',
+-        navigationDiagnosticCapacity,
+-        _navigationEvents.length,
+-      ),
+-      _historySnapshot(
+-        'failures',
+-        navigationDiagnosticCapacity,
+-        _navigationFailures.length,
+-      ),
+-      _historySnapshot(
+-        'fallbacks',
+-        navigationDiagnosticCapacity,
+-        _navigationCapabilityFallbacks.length,
+-      ),
+-      _historySnapshot(
+-        'entries',
+-        navigationDiagnosticCapacity,
+-        _routeEntryEvents.length,
+-      ),
+-      _historySnapshot(
+-        'visibility',
+-        navigationDiagnosticCapacity,
+-        _routeVisibilityEvents.length,
+-      ),
+-      _historySnapshot(
+-        'backend',
+-        navigationDiagnosticCapacity,
+-        _backendNavigationEvents.length,
+-      ),
+-    ],
+-  );
++  /// Reuses an immutable value while both observations and delivery are stable.
++  CCDiagnosticSnapshot get diagnosticSnapshot {
++    final delivery = diagnosticDeliverySnapshot;
++    final cached = _diagnosticSnapshot;
++    if (cached != null &&
++        cached.revision == _diagnosticRevision &&
++        identical(cached.delivery, delivery)) {
++      return cached;
++    }
++    return _diagnosticSnapshot = CCDiagnosticSnapshot(
++      runtimeId: _runtimeId,
++      revision: _diagnosticRevision,
++      sinkConfigured: diagnostics.sink != null,
++      delivery: delivery,
++      histories: [
++        _historySnapshot('traces', traceCapacity, _traces.length, _traceTotal),
++        _historySnapshot(
++          'navigation',
++          navigationDiagnosticCapacity,
++          _navigationEvents.length,
++          _navigationEventTotal,
++        ),
++        _historySnapshot(
++          'failures',
++          navigationDiagnosticCapacity,
++          _navigationFailures.length,
++          _navigationFailureTotal,
++        ),
++        _historySnapshot(
++          'fallbacks',
++          navigationDiagnosticCapacity,
++          _navigationCapabilityFallbacks.length,
++          _navigationFallbackTotal,
++        ),
++        _historySnapshot(
++          'entries',
++          navigationDiagnosticCapacity,
++          _routeEntryEvents.length,
++          _routeEntryEventTotal,
++        ),
++        _historySnapshot(
++          'visibility',
++          navigationDiagnosticCapacity,
++          _routeVisibilityEvents.length,
++          _routeVisibilityEventTotal,
++        ),
++        _historySnapshot(
++          'backend',
++          navigationDiagnosticCapacity,
++          _backendNavigationEvents.length,
++          _backendNavigationEventTotal,
++        ),
++      ],
++    );
++  }
+ 
+-  /// Counts every accepted observation, including histories disabled by capacity.
+-  void _retainDiagnostic<T>(
+-    String name,
+-    Queue<T> history,
+-    T record,
+-    int capacity,
+-  ) {
+-    _diagnosticHistoryTotals[name] = (_diagnosticHistoryTotals[name] ?? 0) + 1;
++  /// Advances health and retains a record after its fixed counter is updated.
++  /// A zero capacity still advances the revision and lifetime observation count.
++  void _retainDiagnostic<T>(Queue<T> history, T record, int capacity) {
+     _diagnosticRevision++;
+     if (capacity == 0) return;
+     if (history.length == capacity) history.removeFirst();
+@@ -120,11 +131,12 @@
+     String name,
+     int capacity,
+     int retained,
++    int total,
+   ) => CCDiagnosticHistorySnapshot(
+     name: name,
+     capacity: capacity,
+     retainedCount: retained,
+-    omittedCount: (_diagnosticHistoryTotals[name] ?? 0) - retained,
++    omittedCount: total - retained,
+   );
+ }
+ 
+diff -ru /tmp/ccrouter-diagnostics-preopt-AijhN7/lib/src/navigation_backend.dart packages/ccrouter_core/lib/src/navigation_backend.dart
+--- /tmp/ccrouter-diagnostics-preopt-AijhN7/lib/src/navigation_backend.dart	2026-10-24 19:12:01
++++ packages/ccrouter_core/lib/src/navigation_backend.dart	2026-10-24 19:14:14
+@@ -275,8 +275,8 @@
+     _applyObservedManagedPop(event);
+     _applyObservedBackendTop(event);
+     final diagnosticEvent = _backendDiagnosticEvent(event);
++    _backendNavigationEventTotal++;
+     _retainDiagnostic(
+-      'backend',
+       _backendNavigationEvents,
+       diagnosticEvent,
+       navigationDiagnosticCapacity,
+diff -ru /tmp/ccrouter-diagnostics-preopt-AijhN7/lib/src/navigation_capability_diagnostics.dart packages/ccrouter_core/lib/src/navigation_capability_diagnostics.dart
+--- /tmp/ccrouter-diagnostics-preopt-AijhN7/lib/src/navigation_capability_diagnostics.dart	2026-10-24 19:12:01
++++ packages/ccrouter_core/lib/src/navigation_capability_diagnostics.dart	2026-10-24 19:14:14
+@@ -43,8 +43,8 @@
+       behavior: behavior,
+       timestamp: DateTime.now(),
+     );
++    _navigationFallbackTotal++;
+     _retainDiagnostic(
+-      'fallbacks',
+       _navigationCapabilityFallbacks,
+       event,
+       navigationDiagnosticCapacity,
+diff -ru /tmp/ccrouter-diagnostics-preopt-AijhN7/lib/src/navigation_failure.dart packages/ccrouter_core/lib/src/navigation_failure.dart
+--- /tmp/ccrouter-diagnostics-preopt-AijhN7/lib/src/navigation_failure.dart	2026-10-24 19:12:01
++++ packages/ccrouter_core/lib/src/navigation_failure.dart	2026-10-24 19:14:15
+@@ -458,12 +458,8 @@
+       timestamp: DateTime.now(),
+       recovered: recovered,
+     );
+-    _retainDiagnostic(
+-      'failures',
+-      _navigationFailures,
+-      event,
+-      navigationDiagnosticCapacity,
+-    );
++    _navigationFailureTotal++;
++    _retainDiagnostic(_navigationFailures, event, navigationDiagnosticCapacity);
+     _enqueueRegisteredNavigationObserverBatch(
+       _navigationFailureListeners,
+       (listener) => listener(event),
+diff -ru /tmp/ccrouter-diagnostics-preopt-AijhN7/lib/src/navigation_lifecycle.dart packages/ccrouter_core/lib/src/navigation_lifecycle.dart
+--- /tmp/ccrouter-diagnostics-preopt-AijhN7/lib/src/navigation_lifecycle.dart	2026-10-24 19:12:01
++++ packages/ccrouter_core/lib/src/navigation_lifecycle.dart	2026-10-24 19:14:15
+@@ -48,12 +48,8 @@
+       timestamp: DateTime.now(),
+       errorType: error?.runtimeType.toString(),
+     );
+-    _retainDiagnostic(
+-      'navigation',
+-      _navigationEvents,
+-      event,
+-      navigationDiagnosticCapacity,
+-    );
++    _navigationEventTotal++;
++    _retainDiagnostic(_navigationEvents, event, navigationDiagnosticCapacity);
+     _enqueueRegisteredNavigationObserverBatch(
+       _navigationListeners,
+       (listener) => listener(event),
+diff -ru /tmp/ccrouter-diagnostics-preopt-AijhN7/lib/src/route_entry.dart packages/ccrouter_core/lib/src/route_entry.dart
+--- /tmp/ccrouter-diagnostics-preopt-AijhN7/lib/src/route_entry.dart	2026-10-24 19:12:01
++++ packages/ccrouter_core/lib/src/route_entry.dart	2026-10-24 19:14:15
+@@ -478,12 +478,8 @@
+       timestamp: DateTime.now(),
+       reason: reason,
+     );
+-    _retainDiagnostic(
+-      'entries',
+-      _routeEntryEvents,
+-      event,
+-      navigationDiagnosticCapacity,
+-    );
++    _routeEntryEventTotal++;
++    _retainDiagnostic(_routeEntryEvents, event, navigationDiagnosticCapacity);
+     _emitAspectEntryState(entry, state);
+     _enqueueRegisteredNavigationObserverBatch(
+       _routeEntryListeners,
+diff -ru /tmp/ccrouter-diagnostics-preopt-AijhN7/lib/src/route_visibility.dart packages/ccrouter_core/lib/src/route_visibility.dart
+--- /tmp/ccrouter-diagnostics-preopt-AijhN7/lib/src/route_visibility.dart	2026-10-24 19:12:01
++++ packages/ccrouter_core/lib/src/route_visibility.dart	2026-10-24 19:14:14
+@@ -36,8 +36,8 @@
+       timestamp: DateTime.now(),
+       reason: reason,
+     );
++    _routeVisibilityEventTotal++;
+     _retainDiagnostic(
+-      'visibility',
+       _routeVisibilityEvents,
+       event,
+       navigationDiagnosticCapacity,
+diff -ru /tmp/ccrouter-diagnostics-preopt-AijhN7/lib/src/runtime_host.dart packages/ccrouter_core/lib/src/runtime_host.dart
+--- /tmp/ccrouter-diagnostics-preopt-AijhN7/lib/src/runtime_host.dart	2026-10-24 19:12:01
++++ packages/ccrouter_core/lib/src/runtime_host.dart	2026-10-24 19:14:14
+@@ -367,9 +367,30 @@
+   /// Monotonic diagnostic change hint, independent of external Sink filtering.
+   int _diagnosticRevision = 0;
+ 
+-  /// Fixed framework history keys with lifetime observation counts, no payloads.
+-  final Map<String, int> _diagnosticHistoryTotals = {};
++  /// Lifetime invocation observations, including disabled trace retention.
++  int _traceTotal = 0;
+ 
++  /// Lifetime navigation lifecycle observations, independent of Sink policy.
++  int _navigationEventTotal = 0;
++
++  /// Lifetime sanitized failure observations, including rotated history.
++  int _navigationFailureTotal = 0;
++
++  /// Lifetime capability fallback observations, including disabled retention.
++  int _navigationFallbackTotal = 0;
++
++  /// Lifetime Entry transitions, independent of observer delivery.
++  int _routeEntryEventTotal = 0;
++
++  /// Lifetime visibility transitions, including rotated history.
++  int _routeVisibilityEventTotal = 0;
++
++  /// Lifetime backend observations accepted into diagnostic history.
++  int _backendNavigationEventTotal = 0;
++
++  /// Last immutable health value; retains scalar DTOs, never live event data.
++  CCDiagnosticSnapshot? _diagnosticSnapshot;
++
+   /// Validated per-category external diagnostic policies.
+   late final Map<CCDiagnosticCategory, CCDiagnosticCategoryPolicy>
+   _diagnosticPolicies;
+@@ -2074,6 +2095,9 @@
+     _routeExitWaiters.clear();
+     _backendNavigationListeners.clear();
+     _backendNavigationEvents.clear();
++    // Scope disposal can read health after delivery closes but before history
++    // cleanup. Invalidate that snapshot even when no further event is emitted.
++    _diagnosticRevision++;
+     _backendEntries.clear();
+     _processedBackendOperations.clear();
+     _backendSequencesByHost.clear();
+@@ -3025,7 +3049,8 @@
+       status: status,
+       errorType: errorType,
+     );
+-    _retainDiagnostic('traces', _traces, record, traceCapacity);
++    _traceTotal++;
++    _retainDiagnostic(_traces, record, traceCapacity);
+     final category = _diagnosticCategory(operation);
+     final level = _diagnosticLevel(status);
+     _emitDiagnostic(
+@@ -3079,7 +3104,10 @@
+     String? fallbackKind,
+   }) {
+     _diagnosticRevision++;
+-    if (!_shouldDeliverDiagnostic(category, level)) return;
++    if (diagnostics.sink == null ||
++        !_shouldDeliverDiagnostic(category, level)) {
++      return;
++    }
+     _enqueueDiagnostic(
+       CCDiagnosticEvent(
+         category: category,

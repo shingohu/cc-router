@@ -275,12 +275,12 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
     _applyObservedManagedPop(event);
     _applyObservedBackendTop(event);
     final diagnosticEvent = _backendDiagnosticEvent(event);
-    if (navigationDiagnosticCapacity > 0) {
-      if (_backendNavigationEvents.length == navigationDiagnosticCapacity) {
-        _backendNavigationEvents.removeFirst();
-      }
-      _backendNavigationEvents.add(diagnosticEvent);
-    }
+    _backendNavigationEventTotal++;
+    _retainDiagnostic(
+      _backendNavigationEvents,
+      diagnosticEvent,
+      navigationDiagnosticCapacity,
+    );
     _enqueueRegisteredNavigationObserverBatch(
       _backendNavigationListeners,
       (listener) => listener(diagnosticEvent),

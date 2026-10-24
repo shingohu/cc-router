@@ -43,22 +43,39 @@ final class _CCRouterDevToolsPanelState extends State<CCRouterDevToolsPanel> {
   late CCRouterDevToolsSnapshot _snapshot;
   VoidCallback? _removeListener;
 
+  /// Hidden retained routes suspend observation until their ticker is enabled.
+  bool _observing = false;
+
   @override
   void initState() {
     super.initState();
     _provider = widget.provider ?? const CCRouterDevToolsSnapshotProvider();
     _snapshot = _provider.snapshot();
-    _removeListener = _provider.addListener(_refresh);
+  }
+
+  @override
+  /// Suspends the subscription for retained hidden pages and refreshes on return.
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final enabled = TickerMode.valuesOf(context).enabled;
+    if (_observing == enabled) return;
+    _observing = enabled;
+    _removeListener?.call();
+    _removeListener = null;
+    if (enabled) {
+      _snapshot = _provider.snapshot();
+      _removeListener = _provider.addListener(_refresh);
+    }
   }
 
   @override
   void didUpdateWidget(covariant CCRouterDevToolsPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.provider == widget.provider) return;
+    if (identical(oldWidget.provider, widget.provider)) return;
     _removeListener?.call();
     _provider = widget.provider ?? const CCRouterDevToolsSnapshotProvider();
     _snapshot = _provider.snapshot();
-    _removeListener = _provider.addListener(_refresh);
+    _removeListener = _observing ? _provider.addListener(_refresh) : null;
   }
 
   @override
@@ -146,7 +163,9 @@ final class _SectionTitle extends StatelessWidget {
     padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
     child: Row(
       children: [
-        Text(title, style: Theme.of(context).textTheme.titleMedium),
+        Flexible(
+          child: Text(title, style: Theme.of(context).textTheme.titleMedium),
+        ),
         const SizedBox(width: 8),
         Chip(label: Text('$count')),
       ],
@@ -222,6 +241,62 @@ final class _OverviewView extends StatelessWidget {
                     ),
                   ),
               ],
+            ),
+          ),
+        if (snapshot.runtimeState == CCDevToolsRuntimeState.initialized)
+          _DiagnosticHealthView(snapshot.diagnosticHealth),
+      ],
+    );
+  }
+}
+
+/// Shows delivery and bounded-history completeness without business payloads.
+final class _DiagnosticHealthView extends StatelessWidget {
+  /// Creates the optional health section for one captured Runtime.
+  const _DiagnosticHealthView(this.health);
+
+  /// Null means unsupported by the producer, not zero loss.
+  final CCDiagnosticSnapshot? health;
+
+  @override
+  Widget build(BuildContext context) {
+    final health = this.health;
+    if (health == null) {
+      return const ListTile(
+        title: Text('Diagnostic health unavailable from producer'),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _SectionTitle('Diagnostic health', health.histories.length),
+        ListTile(
+          title: Text(
+            health.sinkConfigured
+                ? 'External Sink configured'
+                : 'External Sink not configured',
+          ),
+          subtitle: Text(
+            'queued=${health.delivery.queuedEventCount}/${health.delivery.queueCapacity} · '
+            'inFlight=${health.delivery.inFlightWriteCount} · peak=${health.delivery.peakQueueDepth}\n'
+            'delivered=${health.delivery.deliveredEventCount} · failed=${health.delivery.failedEventCount} · '
+            'dropped=${health.delivery.droppedEventCount} · closed=${health.delivery.isClosed}',
+          ),
+        ),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            '历史未保留数与外部 Sink 过滤、采样无关；队列丢弃另计。空历史不代表从未失败。delivered 仅表示 Sink 调用完成。',
+          ),
+        ),
+        for (final history in health.histories)
+          ListTile(
+            dense: true,
+            title: Text(
+              '${history.name}${history.capacity == 0 ? ' · retention disabled' : ''}',
+            ),
+            subtitle: Text(
+              'retained=${history.retainedCount}/${history.capacity} · omitted=${history.omittedCount}',
             ),
           ),
       ],
@@ -623,7 +698,13 @@ final class _FailuresView extends StatelessWidget {
         for (final event in snapshot.navigationFailures.reversed)
           ListTile(
             dense: true,
-            leading: Icon(event.recovered ? Icons.replay : Icons.error_outline),
+            leading: Icon(
+              event.recovered
+                  ? Icons.replay
+                  : event.context.reason == CCNavigationFailureReason.cancelled
+                  ? Icons.cancel_outlined
+                  : Icons.error_outline,
+            ),
             title: Text(
               '${event.context.routeId ?? 'unknown'} · '
               '${event.context.stage.name}',
@@ -631,7 +712,13 @@ final class _FailuresView extends StatelessWidget {
             subtitle: Text(
               '${event.context.reason.name} · '
               '${event.context.errorType} · '
-              'recovered=${event.recovered}',
+              '${event.recovered
+                  ? 'recovery selected'
+                  : event.context.reason == CCNavigationFailureReason.cancelled
+                  ? 'cancelled'
+                  : 'failed'}\n'
+              '${event.context.navigationId} · ${event.context.hostId ?? 'unknown'}/${event.context.outlet ?? 'unknown'}\n'
+              'attempt=${event.context.attempt.name} · depth=${event.context.recoveryDepth} · initial=${event.context.initialRouteId ?? 'unknown'}',
             ),
             trailing: Text(_time(event.timestamp)),
           ),
@@ -646,7 +733,9 @@ final class _FailuresView extends StatelessWidget {
           ListTile(
             dense: true,
             title: Text('${event.capability.name} · ${event.routeId}'),
-            subtitle: Text('${event.operation.name} → ${event.behavior.name}'),
+            subtitle: Text(
+              '${event.operation.name} → ${event.behavior.name}\n${event.navigationId} · ${event.hostId}/${event.navigatorOutlet}',
+            ),
             trailing: Text(_time(event.timestamp)),
           ),
       _SectionTitle('Pending navigation', snapshot.pendingNavigations.length),
@@ -658,7 +747,8 @@ final class _FailuresView extends StatelessWidget {
             dense: true,
             title: Text(pending.routeId),
             subtitle: Text(
-              '${pending.operation.name} · ${pending.navigationId}',
+              '${pending.operation.name} · ${pending.navigationId}\n'
+              '${pending.hostId ?? 'unknown'}/${pending.outlet ?? 'unknown'}',
             ),
             trailing: Text(_time(pending.createdAt)),
           ),

@@ -3,6 +3,8 @@
 Pure Dart CCRouter Runtime implementation. It owns component registration,
 dependency validation, scopes, typed capability dispatch, navigation policy,
 bounded diagnostics, and lifecycle cleanup.
+Payload-free diagnostic health reports history omissions separately from external
+Sink delivery; reading it does not copy histories or create a subscription.
 
 This is an implementation dependency of the Flutter facade, not the normal
 business API. Applications and components should import `package:ccrouter/ccrouter.dart`

@@ -3,6 +3,10 @@
 Optional read-only Flutter diagnostics UI for a CCRouter Host. It displays
 sanitized static Catalog and bounded Runtime snapshots, component relationships,
 Route/Backend entries, failures, InitTask state, and a single trace call chain.
+Overview shows bounded history completeness and external Sink delivery health.
+While subscribed the default Provider compares lightweight state every 250ms;
+full histories refresh only on changes, including non-navigation work and Runtime
+restart. The panel unsubscribes when TickerMode is disabled or it is disposed.
 
 The panel cannot navigate, retry work, dispose scopes, activate components, or
 control an Adapter. Keep it behind the documented Debug/Profile gate; Release

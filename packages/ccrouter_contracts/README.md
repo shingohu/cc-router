@@ -3,6 +3,9 @@
 Pure Dart contracts and immutable value types shared by CCRouter packages and
 independent component contract packages. It contains Route, Service, Command,
 Event, InitTask, diagnostics, lifecycle, and navigation backend contracts.
+Failure and Pending snapshots retain optional Host/Outlet attribution; structured
+diagnostic events expose fixed failure reason, attempt and recovery depth without
+arbitrary business cancellation codes or exception messages.
 
 Use this package when a contracts-only package must stay independent from
 Flutter and implementation packages. Application feature code should normally

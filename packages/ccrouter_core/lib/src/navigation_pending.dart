@@ -19,6 +19,7 @@ final class _PendingNavigationRecord {
     required this.placementOverride,
     required this.validateResult,
     required this.ownership,
+    required this.onAttempt,
     this.requestCancellation,
     this.code = 'deferred',
     this.expiresAt,
@@ -78,6 +79,9 @@ final class _PendingNavigationRecord {
   /// Original operation retained across a replay initiated in another Zone.
   final _NavigationOperationLifetime? ownership;
 
+  /// Updates the original failure boundary when replay redirects elsewhere.
+  final void Function(String? routeId, CCRoutePlacement? placement)? onAttempt;
+
   /// Releases Host cancellation when this continuation leaves the queue.
   void Function()? removeHostCancellationListener;
 
@@ -98,6 +102,8 @@ final class _PendingNavigationRecord {
     source: source,
     createdAt: createdAt,
     expiresAt: expiresAt,
+    hostId: request.hostId,
+    outlet: request.placement.navigatorOutlet,
   );
 }
 
@@ -127,6 +133,7 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
     required void Function(_RouteEntryRecord entry)? onEntryCommitted,
     required CCRoutePlacement? placementOverride,
     required void Function(Object? result)? validateResult,
+    void Function(String? routeId, CCRoutePlacement? placement)? onAttempt,
     CCCancellationToken? requestCancellation,
   }) {
     final completer = Completer<Object?>();
@@ -163,8 +170,10 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
       validateResult: validateResult,
       requestCancellation: requestCancellation,
       ownership: _navigationOperation,
+      onAttempt: onAttempt,
     );
     _pendingNavigations[request.navigationId] = record;
+    _diagnosticRevision++;
     if (timeout != null) {
       record.timer = Timer(timeout, () {
         _cancelPendingNavigationInternal(
@@ -204,6 +213,7 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
     _ensureInitialized();
     final record = _pendingNavigations.remove(navigationId);
     if (record == null) throw const CCNavigationPendingNotFoundError();
+    _diagnosticRevision++;
     return _inNavigationOwnership(
       record.ownership,
       () => _resumeOwnedPendingNavigation(record),
@@ -284,6 +294,7 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
         placementOverride: record.placementOverride,
         validateResult: record.validateResult,
         requestCancellation: record.requestCancellation,
+        onAttempt: record.onAttempt,
       );
       record.completer.complete(result);
       return result;
@@ -303,7 +314,7 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
         _emitNavigationEvent(
           record.request,
           CCNavigationLifecyclePhase.failed,
-          errorType: errorType,
+          error: error,
         );
       }
       _pendingResumeFailures.add(record.request.navigationId);
@@ -348,7 +359,7 @@ extension CCRouterRuntimePendingNavigation on CCRouterRuntime {
     _emitNavigationEvent(
       record.request,
       CCNavigationLifecyclePhase.failed,
-      errorType: error.runtimeType.toString(),
+      error: error,
     );
     return true;
   }

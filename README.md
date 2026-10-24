@@ -252,6 +252,10 @@ const diagnosticsPage = CCRouterDevToolsPanel();
 
 面板只读展示静态 Catalog 与 Runtime 的联动、源码位置、可搜索/聚焦的 Component Graph、
 Managed/Backend Entries、Trace Timeline、Failure/Fallback、InitTask DAG 和能力调用链。
+Overview 还显示历史 retained/capacity/omitted 和外部 Sink 队列、在途、成功、失败、丢弃计数。
+默认 Provider 在订阅期间每 250ms 比较轻量状态，变化后才读取完整快照，覆盖非导航调用和
+Runtime 重启；面板在 `TickerMode` 关闭或卸载时停止订阅。官方 Extension 手动刷新，
+Diagnostics 页展示 Failure/Fallback/Pending/InitTask 和健康状态；旧 Producer 缺字段时标为未提供。
 源码位置默认以可复制的 `package:` URI 展示；Host 可以通过 `onOpenSource` 映射到自己的 IDE
 或源码浏览器。它不会初始化 Runtime、导航、Pop、重试任务、销毁 Scope 或控制 Adapter；
 未初始化时显示空状态。当前 Demo 的“实时诊断”分区会读取生成式 Host Catalog，并同时验证
@@ -1134,6 +1138,14 @@ Host 诊断容量按容器分别计算：`traceCapacity` 默认 1000，分别约
 不是所有历史共用的 1000 条总预算。设为 0 关闭对应历史，但不会关闭 live listener、活动路由、
 去重或运行队列。该值还关联最小 64 的观察队列和去重窗口；Sink 未单独配置 `queueCapacity` 时也沿用该容量，调整前应验证突发负载。
 导航历史统一读取脱敏 Runtime 快照，不能保留 Route、Widget、Context、参数或业务结果。
+`CCRouter.diagnosticSnapshot` 提供 Runtime identity、revision、七类事件历史的
+retained/capacity/omitted 和独立 Sink 投递计数，不复制历史内容。revision 是变更提示，
+Sink 完成计数可独立变化；历史 omitted 表示容量关闭或轮转造成的未保留，与外部采样及丢弃无关。
+该列表不包含订阅者错误和已移除 Backend ledger 等其他存储；空历史不能证明从未发生失败。
+Failure Context 增加具体 Host/Outlet：目标未解析时 Host 保留调用入口归属，未知 Outlet 为 null。
+Sink 同步提供 `failureReason`、`failureAttempt`、`recoveryDepth`；正常导航取消以 warning 记录，
+最终 status 为 `cancelled`，生命周期 phase 仍为 `failed`。`recovered` 仅表示已选择恢复，
+不保证后续恢复成功。任意业务取消 code 不会导出。
 Host 如需同步原生 Route 回调，可配置 `additionalObservers`，但不应保存回调对象。
 
 `CCNavigationAspect` 只观察导航阶段，不做决策。它适合 PV/UV 与来源归因、route found/arrival/completion/failure 观察、耗时、跨 Host/Outlet 链路追踪和脱敏日志。Aspect 回调异常会被隔离；回调中不得同步重入导航。请求参数、完整 URI、Extra、Token 和业务返回对象不会进入默认诊断记录。

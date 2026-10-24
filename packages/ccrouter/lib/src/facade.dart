@@ -111,6 +111,13 @@ abstract final class CCRouter {
   /// business events or sensitive request payloads.
   static List<CCTraceRecord> get recentTraces => _runtime.recentTraces;
 
+  /// Lightweight history completeness and delivery health without event copies.
+  ///
+  /// Debug tooling can compare Runtime identity, revision and delivery counters
+  /// before capturing full histories. This value contains no business payload.
+  static CCDiagnosticSnapshot get diagnosticSnapshot =>
+      _runtime.diagnosticSnapshot;
+
   /// Payload-free external diagnostic queue, write and drop counters.
   ///
   /// Use this to tune Host sampling and Sink capacity without reading events.

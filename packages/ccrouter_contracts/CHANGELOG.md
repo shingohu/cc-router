@@ -2,6 +2,9 @@
 
 ## 0.1.0 - Unreleased
 
+- Add optional Host/Outlet failure and pending attribution plus fixed Sink
+  reason/attempt/recovery-depth fields; arbitrary cancellation codes stay private.
+
 - Added immutable RouteEntry handles/close outcomes and active-route revalidation
   contexts, policies and reports without exposing Scope or Flutter objects.
 - Added optional Host/Adapter protocols for exact close, synchronous navigation

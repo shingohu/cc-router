@@ -18,6 +18,8 @@ final class CCPendingNavigation {
     required this.source,
     required this.createdAt,
     required this.expiresAt,
+    this.hostId,
+    this.outlet,
   });
 
   /// Stable navigation identity retained across resume.
@@ -28,6 +30,12 @@ final class CCPendingNavigation {
 
   /// Stable resolved route ID.
   final String routeId;
+
+  /// Concrete Host captured before policy defer, when provided by the producer.
+  final String? hostId;
+
+  /// Target Outlet captured before policy defer; never inferred from later focus.
+  final String? outlet;
 
   /// Sanitized target address retained for host UI and diagnostics.
   ///

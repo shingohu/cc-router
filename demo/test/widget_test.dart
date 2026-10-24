@@ -783,6 +783,16 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.textContaining('CCRouteCancelledError'), findsWidgets);
     expect(find.text('不应到达的页面'), findsNothing);
+    await _flushApplicationLogs(tester);
+    final cancellation = demoApplicationLogger.entries.singleWhere(
+      (entry) => entry.failureReason == 'cancelled',
+    );
+    expect(cancellation.level, 'warning');
+    expect(cancellation.status, 'cancelled');
+    expect(cancellation.failureAttempt, 'request');
+    expect(cancellation.recoveryDepth, 0);
+    expect(cancellation.hostId, isNotNull);
+    expect(cancellation.outlet, 'root');
 
     await tester.tap(find.text('Route Interceptor · Redirect'));
     await tester.pumpAndSettle();

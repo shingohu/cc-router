@@ -2,6 +2,10 @@
 
 ## 0.1.0 - Unreleased
 
+- Expose lightweight read-only diagnostic health, history omissions and Runtime
+  revision; navigation failures retain attempted Host/Outlet and safe reason,
+  attempt and recovery depth. Normal cancellation no longer emits error alarms.
+
 - Added `CCRouter.navigatorOf(context)` for reusable Host/Outlet-bound navigation
   without retaining Context. Existing calls remain unchanged; stale Host/Runtime
   generations fail explicitly and declared destination placement stays authoritative.

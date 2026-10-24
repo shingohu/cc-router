@@ -1135,7 +1135,9 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
                 ),
                 subtitle: Text(
                   'trace=${event.traceId ?? '-'} · '
-                  'target=${event.target ?? event.routeId ?? event.eventId ?? '-'}',
+                  'target=${event.target ?? event.routeId ?? event.eventId ?? '-'}\n'
+                  'nav=${event.navigationId ?? '-'} · ${event.hostId ?? '-'}/${event.outlet ?? '-'}'
+                  '${event.failureReason == null ? '' : '\nreason=${event.failureReason} · attempt=${event.failureAttempt} · depth=${event.recoveryDepth}'}',
                 ),
               ),
             ),
@@ -1195,7 +1197,8 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
                   'trace=${entry.traceId ?? '-'} · '
                   'nav=${entry.navigationId ?? '-'} · '
                   'route=${entry.routeId ?? '-'} · '
-                  'subscriber=${entry.subscriberId ?? '-'}',
+                  'subscriber=${entry.subscriberId ?? '-'} · ${entry.hostId ?? '-'}/${entry.outlet ?? '-'}'
+                  '${entry.failureReason == null ? '' : '\nreason=${entry.failureReason} · attempt=${entry.failureAttempt} · depth=${entry.recoveryDepth}'}',
                 ),
               ),
             ),

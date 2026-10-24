@@ -142,6 +142,9 @@ final class CCDiagnosticEvent {
     this.hostId,
     this.outlet,
     this.failureStage,
+    this.failureReason,
+    this.failureAttempt,
+    this.recoveryDepth,
     this.errorType,
     this.fallbackKind,
   });
@@ -211,6 +214,15 @@ final class CCDiagnosticEvent {
 
   /// Sanitized navigation failure stage.
   final String? failureStage;
+
+  /// Stable framework failure reason, without caller-defined cancellation text.
+  final String? failureReason;
+
+  /// Original request, interceptor redirect, failure recovery, or pending resume.
+  final String? failureAttempt;
+
+  /// Previous recovery decisions; selection does not prove recovery succeeded.
+  final int? recoveryDepth;
 
   /// Error type without the original message or payload.
   final String? errorType;

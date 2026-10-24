@@ -364,6 +364,33 @@ final class CCRouterRuntime {
   /// Bounded completed invocation trace buffer.
   final Queue<CCTraceRecord> _traces = Queue();
 
+  /// Monotonic diagnostic change hint, independent of external Sink filtering.
+  int _diagnosticRevision = 0;
+
+  /// Lifetime invocation observations, including disabled trace retention.
+  int _traceTotal = 0;
+
+  /// Lifetime navigation lifecycle observations, independent of Sink policy.
+  int _navigationEventTotal = 0;
+
+  /// Lifetime sanitized failure observations, including rotated history.
+  int _navigationFailureTotal = 0;
+
+  /// Lifetime capability fallback observations, including disabled retention.
+  int _navigationFallbackTotal = 0;
+
+  /// Lifetime Entry transitions, independent of observer delivery.
+  int _routeEntryEventTotal = 0;
+
+  /// Lifetime visibility transitions, including rotated history.
+  int _routeVisibilityEventTotal = 0;
+
+  /// Lifetime backend observations accepted into diagnostic history.
+  int _backendNavigationEventTotal = 0;
+
+  /// Last immutable health value; retains scalar DTOs, never live event data.
+  CCDiagnosticSnapshot? _diagnosticSnapshot;
+
   /// Validated per-category external diagnostic policies.
   late final Map<CCDiagnosticCategory, CCDiagnosticCategoryPolicy>
   _diagnosticPolicies;
@@ -1846,6 +1873,7 @@ final class CCRouterRuntime {
   /// Executes one task inside the shared invocation and cancellation pipeline.
   Future<_InitTaskFailure?> _runInitTask(_InitTaskRecord record) async {
     record.state = CCInitTaskState.running;
+    _diagnosticRevision++;
     final watch = Stopwatch()..start();
     try {
       await _invoke<void>(
@@ -1871,6 +1899,7 @@ final class CCRouterRuntime {
     } finally {
       watch.stop();
       record.duration = watch.elapsed;
+      _diagnosticRevision++;
     }
   }
 
@@ -1887,6 +1916,7 @@ final class CCRouterRuntime {
               dependencyState == CCInitTaskState.skipped) {
             record.state = CCInitTaskState.skipped;
             record.blockedByTaskId = dependency;
+            _diagnosticRevision++;
             changed = true;
             break;
           }
@@ -2065,6 +2095,9 @@ final class CCRouterRuntime {
     _routeExitWaiters.clear();
     _backendNavigationListeners.clear();
     _backendNavigationEvents.clear();
+    // Scope disposal can read health after delivery closes but before history
+    // cleanup. Invalidate that snapshot even when no further event is emitted.
+    _diagnosticRevision++;
     _backendEntries.clear();
     _processedBackendOperations.clear();
     _backendSequencesByHost.clear();
@@ -3016,10 +3049,8 @@ final class CCRouterRuntime {
       status: status,
       errorType: errorType,
     );
-    if (traceCapacity > 0) {
-      if (_traces.length == traceCapacity) _traces.removeFirst();
-      _traces.add(record);
-    }
+    _traceTotal++;
+    _retainDiagnostic(_traces, record, traceCapacity);
     final category = _diagnosticCategory(operation);
     final level = _diagnosticLevel(status);
     _emitDiagnostic(
@@ -3066,10 +3097,17 @@ final class CCRouterRuntime {
     String? hostId,
     String? outlet,
     String? failureStage,
+    String? failureReason,
+    String? failureAttempt,
+    int? recoveryDepth,
     String? errorType,
     String? fallbackKind,
   }) {
-    if (!_shouldDeliverDiagnostic(category, level)) return;
+    _diagnosticRevision++;
+    if (diagnostics.sink == null ||
+        !_shouldDeliverDiagnostic(category, level)) {
+      return;
+    }
     _enqueueDiagnostic(
       CCDiagnosticEvent(
         category: category,
@@ -3094,6 +3132,9 @@ final class CCRouterRuntime {
         hostId: hostId,
         outlet: outlet,
         failureStage: failureStage,
+        failureReason: failureReason,
+        failureAttempt: failureAttempt,
+        recoveryDepth: recoveryDepth,
         errorType: errorType,
         fallbackKind: fallbackKind,
       ),

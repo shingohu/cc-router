@@ -86,6 +86,9 @@ final class DemoApplicationLogEntry {
     this.hostId,
     this.outlet,
     this.failureStage,
+    this.failureReason,
+    this.failureAttempt,
+    this.recoveryDepth,
     this.errorType,
     this.fallbackKind,
   });
@@ -162,6 +165,15 @@ final class DemoApplicationLogEntry {
   /// Navigation failure stage.
   final String? failureStage;
 
+  /// Stable framework failure reason, without application cancellation text.
+  final String? failureReason;
+
+  /// Original, redirect, recovery or pending-resume attempt.
+  final String? failureAttempt;
+
+  /// Number of earlier recovery selections in this navigation chain.
+  final int? recoveryDepth;
+
   /// Sanitized error type.
   final String? errorType;
 
@@ -209,6 +221,9 @@ final class DemoApplicationLogger {
         hostId: event.hostId,
         outlet: event.outlet,
         failureStage: event.failureStage,
+        failureReason: event.failureReason,
+        failureAttempt: event.failureAttempt,
+        recoveryDepth: event.recoveryDepth,
         errorType: event.errorType,
         fallbackKind: event.fallbackKind,
       ),

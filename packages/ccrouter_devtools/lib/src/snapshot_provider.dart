@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter_devtools_protocol/ccrouter_devtools_protocol.dart';
 import 'package:flutter/foundation.dart';
@@ -45,6 +47,7 @@ final class CCRouterDevToolsSnapshotProvider
         capturedAt: DateTime.now(),
         runtimeState: CCDevToolsRuntimeState.initialized,
         catalog: catalog ?? CCDevToolsHostState.catalog,
+        diagnosticHealth: CCRouter.diagnosticSnapshot,
         components: CCRouter.registeredComponents,
         routeEntries: CCRouter.activeRouteEntries,
         backendEntries: CCRouter.backendEntries,
@@ -64,32 +67,48 @@ final class CCRouterDevToolsSnapshotProvider
   }
 
   @override
-  /// Observes existing Runtime diagnostic streams and never starts navigation.
+  /// Checks lightweight counters every 250ms while subscribed.
+  ///
+  /// Full histories are read by the consumer only after a change. This covers
+  /// non-navigation work, Sink completions and Runtime replacement without
+  /// attaching observers to a Runtime. The remover cancels the sole Timer.
   void Function() addListener(VoidCallback listener) {
-    if (!CCRouter.isInitialized) return () {};
-    final removers = <void Function()>[];
-    try {
-      removers.add(CCRouter.addNavigationListener((_) => listener()));
-      removers.add(CCRouter.addNavigationFailureListener((_) => listener()));
-      removers.add(
-        CCRouter.addNavigationCapabilityFallbackListener((_) => listener()),
-      );
-      removers.add(CCRouter.addRouteVisibilityListener((_) => listener()));
-      removers.add(CCRouter.addBackendNavigationListener((_) => listener()));
-    } on StateError {
-      for (final remove in removers) {
-        remove();
+    var previous = _changeToken();
+    final timer = Timer.periodic(const Duration(milliseconds: 250), (_) {
+      final current = _changeToken();
+      if (current == previous) return;
+      previous = current;
+      try {
+        listener();
+      } catch (_) {
+        // A visualization callback cannot fail application work or the Timer.
       }
-      return () {};
-    }
-    var removed = false;
+    });
     return () {
-      if (removed) return;
-      removed = true;
-      for (final remove in removers) {
-        remove();
-      }
+      timer.cancel();
     };
+  }
+}
+
+/// Payload-free equality token including independently changing Sink counters.
+Object? _changeToken() {
+  if (!CCRouter.isInitialized) return null;
+  try {
+    final health = CCRouter.diagnosticSnapshot;
+    final delivery = health.delivery;
+    return (
+      health.runtimeId,
+      health.revision,
+      delivery.queuedEventCount,
+      delivery.inFlightWriteCount,
+      delivery.peakQueueDepth,
+      delivery.deliveredEventCount,
+      delivery.failedEventCount,
+      delivery.droppedEventCount,
+      delivery.isClosed,
+    );
+  } on StateError {
+    return null;
   }
 }
 

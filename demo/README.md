@@ -75,7 +75,9 @@ Demo 全部使用原生 Managed Backend，包括默认入口、多 Host、自适
   可选查找，以及 Session/Route 关闭时自动 dispose；首页还通过生成的组件专属 Proxy 验证
   跨组件同步方法、Future、getter、caller attribution 和方法级 Trace。
 - 诊断：typed Subscriber ID、分类 Sink、失败隔离、采样策略和有界 Trace Bundle；首页“实时诊断”
-  会展示脱敏 Sink 事件、Managed/Backend Entries 与最近一次 Trace 聚合。
+  会展示脱敏 Sink 事件、Managed/Backend Entries 与最近一次 Trace 聚合；失败日志保留
+  Host/Outlet、reason、attempt 和 recoveryDepth。打开只读 DevTools 的 Overview 可核对历史
+  retained/capacity/omitted 和 Sink delivery health；在其他窗口触发非导航能力后可观察自动刷新。
 - KV Storage：基本类型和 JSON Map 的类型化读写，以及全局、游客、用户、API 环境、硬件五类
   命名空间隔离。Demo 已通过 Scoped Facade 和 Host-owned Context Provider 避免业务每次手传
   user/environment/device ID，并使用内存 Backend 保证可重复测试。生产实现可替换为文件、数据库

@@ -6,6 +6,10 @@ embedded diagnostics, and the official DevTools Extension.
 The protocol carries sanitized immutable Catalog, Runtime, and Trace Edge data.
 It intentionally excludes Widgets, Navigator objects, full URIs, route
 arguments, tokens, exceptions, and business results.
+Protocol v1 adds optional fixed-field Failure/Fallback/Pending/InitTask records
+and history/Sink health. Absent extension fields remain null (unsupported),
+not empty/zero; malformed present fields fail decoding. Recovery selection does
+not promise later success, and history omissions are independent of Sink loss.
 
 Applications normally use `ccrouter_devtools` rather than this protocol package
 directly. See the

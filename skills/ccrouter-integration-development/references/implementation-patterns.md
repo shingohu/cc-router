@@ -1198,6 +1198,25 @@ raw URI, arguments, Extra, tokens, widgets, backend objects, exception text, or
 business result data. `CCRouter.traceBundle(traceId)` is a bounded troubleshooting
 view, not an audit log or replay source.
 
+Preserve failure placement and the fixed `failureReason`, `failureAttempt`,
+`recoveryDepth` fields when bridging to a logger. Failure Context attributes
+the attempted Host/Outlet, not later focus; before target resolution it uses
+invocation Host ownership and an unknown Outlet remains null. A registered typed
+target can report declaration placement even when its codec fails. Navigation
+cancellation is warning with final Sink status `cancelled`; lifecycle phase stays
+`failed`. Existing `recovered` status means recovery was selected, not that it
+subsequently succeeded. Do not export application cancellation codes.
+
+`CCRouter.diagnosticSnapshot` is a lightweight immutable health view: Runtime
+identity/revision, seven named event-history counts, and external Sink counters.
+It copies no event payload history. Sink completion can change counters without
+changing revision. Capacity zero/rotation contributes to history `omittedCount`;
+Sink filtering, sampling and dropped writes are independent. Subscriber-error
+and removed-backend ledger storage are outside this history list. Do not infer
+no failure from an empty or disabled history. Optional embedded DevTools polls
+these counters every 250ms only while subscribed, coalesces full snapshot reads,
+and stops its Timer when hidden through TickerMode or disposed.
+
 Sink writes start FIFO, with at most one unfinished `record` Future per
 Runtime. Return actual write completion, not acceptance into an unbounded queue.
 An unfinished write pauses delivery; overflow keeps the latest waiting events.
