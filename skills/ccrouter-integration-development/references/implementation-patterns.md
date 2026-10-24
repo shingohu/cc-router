@@ -244,7 +244,12 @@ Native close removes the selected Entry by identity. It preserves foreign
 popups even when closing the last root/Shell Entry: an empty structural boundary
 survives only until those popups end, with no business content or Scope.
 A copied Page key does not establish managed ownership. A direct Flutter
-Navigator.pop(result) must preserve the original typed result exactly once.
+Navigator.pop(result) is observed after Flutter commits the Pop and must preserve
+the original typed result exactly once. It is a compatibility reconciliation path,
+not a policy-aware CCRouter Pop: it cannot reliably run PopGuards, async
+confirmation, cancellation, or the complete leave policy. Use
+`CCRouter.navigator.maybePop()` for policy-aware Back and
+`CCRouter.navigator.pop` after an explicit business decision.
 
 ### Optional Android predictive back
 

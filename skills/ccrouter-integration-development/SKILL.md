@@ -205,6 +205,13 @@ whitespace separators, and parsed SemVer prerelease identifiers are immutable.
 - Use a generated typed Intent for a statically known destination. Use `CCRouter.navigator.open` only for an application-controlled dynamic URI.
 - Route platform links, notification URIs, and scanned values through `CCDeepLinkIngress`; never treat them as internal `open` calls.
 - Do not call `Navigator.push/pop`, `GoRouter.push/go`, or an Adapter for a CCRouter-managed page.
+- The Native Managed Adapter observes an already-completed direct
+  `Navigator.pop(result)` on a Managed Navigator and reconciles the exact
+  Entry/result/Scope lifetime as a compatibility path. This observation is
+  post-pop and does not run CCRouter PopGuards, async confirmation, cancellation,
+  or the complete leave policy. Use `CCRouter.navigator.maybePop()` when those
+  semantics are required; use `CCRouter.navigator.pop` only after the business
+  decision is explicit.
 - Local Flutter Dialog, BottomSheet, Menu, and Overlay may use Flutter APIs when they do not need a cross-component contract, typed result, Interceptor, Trace, or Route Scope.
 - Do not import `ccrouter_core/src/*`, `ccrouter_host.dart`, Adapter types, generated binding/package/host files, or another component's page implementation from feature code.
 - Import a component's generated `<componentId>.api.g.dart` stable barrel for its typed Route,

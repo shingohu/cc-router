@@ -770,6 +770,8 @@ Widget 同时占用同一逻辑 Host。多 Host Demo 的“Host 生命周期”�
 
 禁止业务代码直接调用 `Navigator.push/pop`、`GoRouter.push/go` 或 Adapter 来操作 CCRouter 管理的页面。临时、局部且不需要组件契约的 Flutter Dialog/BottomSheet 可以继续使用原生 API；它们属于 foreign/overlay，不应改变 Managed Route Scope。
 
+Managed Adapter 会观察同一 Navigator 上已经发生的直接 `Navigator.pop(result)`，并尽力将实际 Flutter Route 与对应 Entry、结果和 Scope 生命周期同步。这是旧集成的兼容路径，不是完整的 CCRouter Pop API；直接 Pop 不保证执行 CCRouter PopGuard、异步确认、取消或完整的离开策略。需要这些语义时使用 `CCRouter.navigator.maybePop()`，业务确认后再使用 `CCRouter.navigator.pop(result: ...)`。
+
 ### 精确关闭被覆盖的页面
 
 异步流程结束时，当前栈顶可能已经是另一页或局部弹窗。页面在初始化阶段（例如

@@ -130,6 +130,8 @@ Scope-owned Service、共享 readiness 和清理在 Host 上下文运行，不�
 
 普通 Flutter Dialog、BottomSheet、Popup 和外部 Navigator Route 以 foreign identity 观察；返回优先处理真正顶层 Route，不让底页 Guard 拦截上方弹窗。它们不建立 Managed Scope，也不借用底页 Scope 拥有独立资源。
 
+同一 Managed Navigator 上直接执行 `Navigator.pop(result)` 时，Adapter 会在 Flutter 确认移除后关联实际 Route，完成对应 Managed Entry 的结果和生命周期同步。这是兼容性回收路径；Observer 只能在 Pop 发生后观察，不能把直接 Pop 变成可等待的 CCRouter PopGuard 或异步拦截。业务页面需要离开策略时必须使用 `CCRouter.navigator.maybePop()` 或 CCRouter 的其它导航 API。
+
 LocalHistory 由实际 Flutter Route 的返回流程协调；系统/业务 maybePop 只能移除一次。精确 close 则按目标身份执行，不消费覆盖 Popup 或 LocalHistory。关闭最后一个 Managed Entry 仍保留覆盖的 foreign Popup；空 anchor 在最后一个 Popup 真正离开后回收。
 
 Host 的 `foreignRouteBridge` 用于报告无法由内置观察覆盖的第三方 Route。返回的不透明 handle 只用于诊断关联，push/replace/pop/remove 报告不执行导航、不创建 Scope、不完成业务结果。已被内置 Observer 覆盖的 Route 不双报；opaque 非 Route UI 显式报告，不按 Widget 文本猜测身份。
