@@ -1,11 +1,33 @@
 part of 'runtime.dart';
 
+/// Read-only Host integration lease for one concrete navigation registration.
+///
+/// Flutter facades use this with their Runtime identity to reject retained
+/// navigation clients after detach. Logical Host IDs may be reused; leases
+/// cannot. The weak signal retains no Runtime, Adapter, Context or caller Zone.
+/// This is framework SPI and is not exported by the business facade.
+final class CCNavigationHostLifetime {
+  /// Observes an existing registration without extending its lifetime.
+  CCNavigationHostLifetime._(CCCancellationToken registration)
+    : _registration = WeakReference(registration);
+
+  /// Signal owned strongly only by the live Runtime registration.
+  final WeakReference<CCCancellationToken> _registration;
+
+  /// Whether the original registration still exists and has not ended.
+  bool get isActive => _registration.target?.isCancelled == false;
+}
+
 /// Captures the Host registrations visited by one navigation operation.
 ///
 /// A logical Host ID can be reused after detach; its cancellation token cannot.
 /// Losing any visited registration ends the operation, including recovery and
 /// deferred replay. This record owns only listener removers, never UI payloads.
 final class _NavigationOperationLifetime {
+  /// Concrete call-site default, including a real Host whose ID is `default`.
+  /// Unlike a route declaration's sentinel, this identity must not follow focus.
+  String? defaultHostId;
+
   /// Cancellation shared by all policy waits belonging to this operation.
   final CCCancellationToken cancellation = CCCancellationToken();
 
@@ -43,6 +65,32 @@ final class _NavigationOperationLifetime {
 
 /// Keeps navigation lifecycle ownership internal to the Runtime library.
 extension CCRouterRuntimeNavigationOwnership on CCRouterRuntime {
+  /// Captures a read-only lease for a Host-scoped Flutter navigation client.
+  ///
+  /// The application integration must resolve the registered Host/Outlet first.
+  /// Capturing establishes identity even before that Host's first navigation.
+  /// Detach invalidates the lease permanently; callers must also check their
+  /// original Runtime identity before dispatch. This method installs no listener.
+  CCNavigationHostLifetime captureNavigationHostLifetime(String hostId) {
+    _ensureInitialized();
+    final adapter = _requiredNavigationAdapter;
+    if (adapter is CCNavigationHostCapabilitySource) {
+      if ((adapter as CCNavigationHostCapabilitySource).capabilitiesForHost(
+            hostId,
+          ) ==
+          null) {
+        throw const CCNavigationAdapterError(
+          'Navigation Host is not available.',
+        );
+      }
+    } else if (adapter is CCNavigationAdapterHostBinding &&
+        (adapter as CCNavigationAdapterHostBinding).hostId != hostId) {
+      throw const CCNavigationAdapterError('Navigation Host does not match.');
+    }
+    _ensureInitialized();
+    return CCNavigationHostLifetime._(_navigationHostRegistration(hostId));
+  }
+
   /// Operation propagated by identity without retaining the owning Runtime.
   _NavigationOperationLifetime? get _navigationOperation {
     final current = Zone.current[CCRouterRuntime._navigationOwnershipZoneKey];

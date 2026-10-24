@@ -8,6 +8,44 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  _hostTest(
+    'adaptive scoped button keeps the detail target without pointer focus',
+    (tester) async {
+      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(createMultiHostDemoApp());
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('自适应布局'));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.descendant(
+          of: find.byKey(const ValueKey('adaptive-list-pane')),
+          matching: find.text('Item 3'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      final client = CCRouter.navigatorOf(
+        tester.element(find.text('Detail View · adaptive.detail')),
+      );
+      final button = tester.widget<FilledButton>(
+        find.widgetWithText(FilledButton, '在此 Outlet 打开栈页'),
+      );
+      // Invoke as a semantic/keyboard action, without changing pointer focus.
+      button.onPressed!();
+      await tester.pumpAndSettle();
+      final entry = CCRouter.activeRouteEntries.last;
+      expect(entry.hostId, 'host.primary');
+      expect(entry.placement.navigatorOutlet, 'adaptive.detail');
+      expect(find.text('栈操作 · Level 3'), findsOneWidget);
+      client.pop(result: 'scoped-done');
+      await tester.pumpAndSettle();
+      expect(find.text('Detail View · adaptive.detail'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   _hostTest('adaptive named Outlet renders and returns a managed destination', (
     tester,
   ) async {

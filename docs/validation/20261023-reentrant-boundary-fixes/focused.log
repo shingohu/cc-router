@@ -1,203 +1,203 @@
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart
-00:00 +0: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
-00:00 +1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
-00:00 +2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
-00:00 +3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
-00:00 +4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
-00:00 +5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
-00:00 +6: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
-00:00 +7: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
-00:00 +8: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
-00:00 +9: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: registrars assemble in deterministic dependency order
-00:00 +10: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: registrars assemble in deterministic dependency order
-00:00 +11: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
-00:00 +12: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
-00:00 +13: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
-00:00 +14: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
-00:00 +15: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
-00:00 +16: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
-00:00 +17: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
-00:00 +18: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
-00:00 +19: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
-00:00 +20: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
-00:00 +21: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
-00:00 +22: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
-00:00 +23: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
-00:00 +24: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
-00:00 +25: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
-00:00 +26: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
-00:00 +27: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: push consumes late Backend failure after synchronous detach
-00:00 +28: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: MultiHost refuses Replace before mutation when child receipt is unsupported
-00:00 +29: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: MultiHost refuses Replace before mutation when child receipt is unsupported
-00:00 +30: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: MultiHost refuses Replace before mutation when child receipt is unsupported
-00:00 +31: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: MultiHost refuses Replace before mutation when child receipt is unsupported
-00:00 +32: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: MultiHost refuses Replace before mutation when child receipt is unsupported
-00:00 +33: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: MultiHost refuses Replace before mutation when child receipt is unsupported
-00:00 +34: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: go consumes late Backend failure after synchronous detach
-00:00 +35: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: go consumes late Backend failure after synchronous detach
-00:00 +36: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: go consumes late Backend failure after synchronous detach
-00:00 +37: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: MultiHost refuses Replace before mutation when child receipt is unavailable
-00:00 +38: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: MultiHost refuses Replace before mutation when child receipt is unavailable
-00:00 +39: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: MultiHost refuses Replace before mutation when child receipt is unavailable
-00:00 +40: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: reset consumes late Backend failure after synchronous detach
-00:00 +41: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: stable service token and legacy type lookup share one instance
-00:00 +42: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: runtime rejects invalid handwritten route identities and policies
-00:00 +43: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet replace pins inactive Host through direct
-00:00 +44: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet replace pins inactive Host through direct
-00:00 +45: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet replace pins inactive Host through direct
-00:00 +46: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet replace pins inactive Host through direct
-00:00 +47: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: duplicate service keys and multiple defaults fail
-00:00 +48: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: runtime applies generator expression bounds to handwritten routes
-00:00 +49: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: runtime applies generator expression bounds to handwritten routes
-00:00 +50: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: old Scope cancellation during commit fences detach
-00:00 +51: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: old Scope cancellation during commit fences detach
-00:00 +52: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: old Scope cancellation during commit fences detach
-00:00 +53: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: runtime validates component identity, SemVer, and dependencies
-00:00 +54: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet replace pins inactive Host through recovery
-00:00 +55: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: lazy Service readiness is single-flight per singleton
-00:00 +56: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: lazy Service readiness is single-flight per singleton
-00:00 +57: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: lazy Service readiness is single-flight per singleton
-00:00 +58: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: lazy Service readiness is single-flight per singleton
-00:00 +59: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: lazy Service readiness is single-flight per singleton
-00:00 +60: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet replace pins inactive Host through resume
-00:00 +61: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet replace pins inactive Host through resume
-00:00 +62: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet replace pins inactive Host through resume
-00:00 +63: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance Service readiness runs for every resolution
-00:00 +64: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance Service readiness runs for every resolution
-00:00 +65: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: unstarted Service method stays cancelled after caller
-00:00 +66: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: unstarted Service method stays cancelled after caller
-00:00 +67: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: unstarted Service method stays cancelled after caller
-00:00 +68: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: unstarted Service method stays cancelled after caller
-00:00 +69: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: unstarted Service method stays cancelled after caller
-00:00 +70: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: all asynchronous Services preserve deterministic key order
-00:00 +71: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet reset pins inactive Host through redirect
-00:00 +72: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: generated Service invocation records sanitized ownership trace
-00:00 +73: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: generated Service invocation records sanitized ownership trace
-00:00 +74: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: generated Service invocation records sanitized ownership trace
-00:00 +75: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: generated Service invocation records sanitized ownership trace
-00:00 +76: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Service readiness failure is sanitized and stable
-00:00 +77: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: cancellation after ready lookup affects only the unentered caller
-00:00 +78: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet reset pins inactive Host through resume
-00:00 +79: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: generated synchronous Service invocation preserves its result type
-00:00 +80: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: caller timeout does not poison shared Service readiness
-00:00 +81: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: caller timeout does not poison shared Service readiness
-00:00 +82: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: caller timeout does not poison shared Service readiness
-00:00 +83: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: caller timeout does not poison shared Service readiness
-00:00 +84: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: caller timeout does not poison shared Service readiness
-00:00 +85: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: caller timeout does not poison shared Service readiness
-00:00 +86: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: caller timeout does not poison shared Service readiness
-00:00 +87: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: caller timeout does not poison shared Service readiness
-00:00 +88: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
-00:00 +89: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
-00:00 +90: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
-00:00 +91: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
-00:00 +92: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
-00:00 +93: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
-00:00 +94: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
-00:00 +95: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
-00:00 +96: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
-00:00 +97: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
-00:00 +98: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: three concurrent keyed Session roots fail once and a new Session starts clean
-00:00 +99: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: routes and pops remain isolated across dynamically selected Hosts
-00:00 +100: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: routes and pops remain isolated across dynamically selected Hosts
-00:00 +101: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: routes and pops remain isolated across dynamically selected Hosts
-00:00 +102: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: routes and pops remain isolated across dynamically selected Hosts
-00:00 +103: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: timed-out dependency wait removes its edge without poisoning the singleton
-00:00 +104: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: timed-out dependency wait removes its edge without poisoning the singleton
-00:00 +105: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: timed-out dependency wait removes its edge without poisoning the singleton
-00:00 +106: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: timed-out dependency wait removes its edge without poisoning the singleton
-00:00 +107: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Scope is isolated by exact managed navigation
-00:00 +108: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Scope is isolated by exact managed navigation
-00:00 +109: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Scope is isolated by exact managed navigation
-00:00 +110: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Scope is isolated by exact managed navigation
-00:00 +111: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Scope is isolated by exact managed navigation
-00:00 +112: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Scope is isolated by exact managed navigation
-00:00 +113: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Scope is isolated by exact managed navigation
-00:00 +114: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: missing service reports stable identity and requested key
-00:00 +115: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: missing service reports stable identity and requested key
-00:00 +116: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: missing service reports stable identity and requested key
-00:00 +117: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Pop cancels only its exact Service invocation
-00:00 +118: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: registry releases every Host when one synchronous dispose fails
-00:00 +119: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: circular construction is detected and failed construction can retry
-00:00 +120: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Service invocation requires a retained navigation ID
-00:00 +121: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: detaching a Host removes only its Entries and completes pending results
-00:00 +122: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: detaching a Host removes only its Entries and completes pending results
-00:00 +123: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Pop cancels pending Route Service readiness
-00:00 +124: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Session IDs are unique across independent Runtime instances
-00:00 +125: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Host visibility preserves identities, results, Scopes and other Hosts
-00:00 +126: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Host visibility preserves identities, results, Scopes and other Hosts
-00:00 +127: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Scope survives a rejected Pop guard
-00:00 +128: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: closing Session rejects new resolutions until disposal ends
-00:00 +129: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Service cannot capture a Session Service
-00:00 +130: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Service cannot capture a Session Service
-00:00 +131: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: scopes dispose in reverse construction order and isolate failures
-00:00 +132: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: scopes dispose in reverse construction order and isolate failures
-00:00 +133: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: App service cannot capture Session service through a new instance
-00:00 +134: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: scope disposal timeout does not block other instances
-00:00 +135: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: scope disposal timeout does not block other instances
-00:00 +136: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: initialization DAG runs ready layers concurrently exactly once
-00:00 +137: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: initialization Gates retain blocked work until explicitly opened
-00:00 +138: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: overlapping Gate opens cannot lose a newly ready task
-00:00 +139: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: optional initialization failure skips dependents and continues
-00:00 +140: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: required failure returns a sanitized result and isolates branches
-00:00 +141: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: required InitTask cannot depend on an optional branch
-00:00 +142: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: initialization validates missing dependencies and cycles
-00:00 +143: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: initialization rejects invalid and duplicate task metadata
-00:00 +144: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: initialization timeout and Runtime disposal cancel pending work
-00:00 +145: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: commands return typed results and reject duplicates
-00:00 +146: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: missing handler fails with a diagnostic trace
-00:00 +147: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: timeout completes promptly and cancels downstream context
-00:00 +148: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: zero deadline does not invoke handler
-00:00 +149: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: cancellation works before and during invocation
-00:00 +150: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: nested calls share trace and propagate deadline and cancellation
-00:00 +151: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: disposal cancels pending calls and a disposed Runtime cannot restart
-00:00 +152: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: void command reports completion without a business result
-00:00 +153: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Event subscribers are isolated and errors are bounded diagnostics
-00:00 +154: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Event subscribers start concurrently in stable ID order
-00:00 +155: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Event with no subscribers succeeds and remains traceable
-00:00 +156: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Event timeout cancels subscriber contexts without failure noise
-00:00 +157: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: sub-millisecond Event deadlines never succeed or add failure noise
-00:00 +158: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: a shorter nested timeout remains an isolated subscriber failure
-00:00 +159: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Event caller cancellation reaches pending subscribers
-00:00 +160: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Runtime disposal cancels pending Event delivery
-00:00 +161: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Event subscriber IDs are globally unique
-00:00 +162: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: trace buffer is bounded and can be disabled
-00:00 +163: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +164: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +165: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +166: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +167: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +168: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +169: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +170: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +171: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +172: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +173: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +174: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +175: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +176: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +177: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +178: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +179: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +180: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +181: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +182: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +183: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +184: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +185: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +186: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +187: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +188: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
-00:00 +189: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: unreconstructible tree.missing leaves the existing stack intact
-00:00 +190: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: unreconstructible tree.editor leaves the existing stack intact
-00:00 +191: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: ancestor policy cancels atomically before leaf policy or allocation
-00:00 +192: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: browser route information rebuilds the complete parent hierarchy
-00:00 +193: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: MultiHost reconstructs only the selected child and preserves its sibling
-00:00 +194: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: scoped foreign ownership is independent of the active Host
-00:00 +195: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: ancestor redirect discards the old plan and resolves a new target
-00:00 +196: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: deferred ancestor resumes the leaf with one freshly validated chain
-00:00 +197: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: shutdown fences a late ancestor policy before Backend mutation
-00:00 +198: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: platform startup stays external across ancestor interception
-00:00 +199: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: Host can explicitly override a non-root platform startup URI
-00:00 +200: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: default platform startup cannot bypass the Host ingress deny policy
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart
+00:00 +0: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
+00:00 +1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
+00:00 +2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
+00:00 +3: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
+00:00 +4: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
+00:00 +5: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
+00:00 +6: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
+00:00 +7: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
+00:00 +8: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: repeated Host detach releases each Route Scope once (capacity=0)
+00:00 +9: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: registrars assemble in deterministic dependency order
+00:00 +10: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: registrars assemble in deterministic dependency order
+00:00 +11: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
+00:00 +12: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
+00:00 +13: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
+00:00 +14: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
+00:00 +15: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
+00:00 +16: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
+00:00 +17: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
+00:00 +18: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
+00:00 +19: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
+00:00 +20: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
+00:00 +21: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
+00:00 +22: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
+00:00 +23: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
+00:00 +24: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
+00:00 +25: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
+00:00 +26: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance construction detects cycles without caching instances
+00:00 +27: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: push consumes late Backend failure after synchronous detach
+00:00 +28: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: MultiHost refuses Replace before mutation when child receipt is unsupported
+00:00 +29: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: MultiHost refuses Replace before mutation when child receipt is unsupported
+00:00 +30: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: MultiHost refuses Replace before mutation when child receipt is unsupported
+00:00 +31: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: MultiHost refuses Replace before mutation when child receipt is unsupported
+00:00 +32: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: MultiHost refuses Replace before mutation when child receipt is unsupported
+00:00 +33: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: MultiHost refuses Replace before mutation when child receipt is unsupported
+00:00 +34: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: go consumes late Backend failure after synchronous detach
+00:00 +35: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: go consumes late Backend failure after synchronous detach
+00:00 +36: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: go consumes late Backend failure after synchronous detach
+00:00 +37: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: MultiHost refuses Replace before mutation when child receipt is unavailable
+00:00 +38: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: MultiHost refuses Replace before mutation when child receipt is unavailable
+00:00 +39: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: MultiHost refuses Replace before mutation when child receipt is unavailable
+00:00 +40: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: reset consumes late Backend failure after synchronous detach
+00:00 +41: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: stable service token and legacy type lookup share one instance
+00:00 +42: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: runtime rejects invalid handwritten route identities and policies
+00:00 +43: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet replace pins inactive Host through direct
+00:00 +44: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet replace pins inactive Host through direct
+00:00 +45: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet replace pins inactive Host through direct
+00:00 +46: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet replace pins inactive Host through direct
+00:00 +47: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: duplicate service keys and multiple defaults fail
+00:00 +48: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: runtime applies generator expression bounds to handwritten routes
+00:00 +49: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: runtime applies generator expression bounds to handwritten routes
+00:00 +50: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: old Scope cancellation during commit fences detach
+00:00 +51: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: old Scope cancellation during commit fences detach
+00:00 +52: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: old Scope cancellation during commit fences detach
+00:00 +53: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: runtime validates component identity, SemVer, and dependencies
+00:00 +54: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet replace pins inactive Host through recovery
+00:00 +55: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: lazy Service readiness is single-flight per singleton
+00:00 +56: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: lazy Service readiness is single-flight per singleton
+00:00 +57: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: lazy Service readiness is single-flight per singleton
+00:00 +58: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: lazy Service readiness is single-flight per singleton
+00:00 +59: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: lazy Service readiness is single-flight per singleton
+00:00 +60: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet replace pins inactive Host through resume
+00:00 +61: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet replace pins inactive Host through resume
+00:00 +62: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet replace pins inactive Host through resume
+00:00 +63: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance Service readiness runs for every resolution
+00:00 +64: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: New-instance Service readiness runs for every resolution
+00:00 +65: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: unstarted Service method stays cancelled after caller
+00:00 +66: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: unstarted Service method stays cancelled after caller
+00:00 +67: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: unstarted Service method stays cancelled after caller
+00:00 +68: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: unstarted Service method stays cancelled after caller
+00:00 +69: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: unstarted Service method stays cancelled after caller
+00:00 +70: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: all asynchronous Services preserve deterministic key order
+00:00 +71: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet reset pins inactive Host through redirect
+00:00 +72: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: generated Service invocation records sanitized ownership trace
+00:00 +73: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: generated Service invocation records sanitized ownership trace
+00:00 +74: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: generated Service invocation records sanitized ownership trace
+00:00 +75: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: generated Service invocation records sanitized ownership trace
+00:00 +76: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Service readiness failure is sanitized and stable
+00:00 +77: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: cancellation after ready lookup affects only the unentered caller
+00:00 +78: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Outlet reset pins inactive Host through resume
+00:00 +79: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: generated synchronous Service invocation preserves its result type
+00:00 +80: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: caller timeout does not poison shared Service readiness
+00:00 +81: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: caller timeout does not poison shared Service readiness
+00:00 +82: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: caller timeout does not poison shared Service readiness
+00:00 +83: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: caller timeout does not poison shared Service readiness
+00:00 +84: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: caller timeout does not poison shared Service readiness
+00:00 +85: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: caller timeout does not poison shared Service readiness
+00:00 +86: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: caller timeout does not poison shared Service readiness
+00:00 +87: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: caller timeout does not poison shared Service readiness
+00:00 +88: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
+00:00 +89: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
+00:00 +90: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
+00:00 +91: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
+00:00 +92: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
+00:00 +93: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
+00:00 +94: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
+00:00 +95: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
+00:00 +96: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
+00:00 +97: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Service timeout and caller cancellation reach invocation context
+00:00 +98: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: three concurrent keyed Session roots fail once and a new Session starts clean
+00:00 +99: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: routes and pops remain isolated across dynamically selected Hosts
+00:00 +100: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: routes and pops remain isolated across dynamically selected Hosts
+00:00 +101: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: routes and pops remain isolated across dynamically selected Hosts
+00:00 +102: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: routes and pops remain isolated across dynamically selected Hosts
+00:00 +103: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: timed-out dependency wait removes its edge without poisoning the singleton
+00:00 +104: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: timed-out dependency wait removes its edge without poisoning the singleton
+00:00 +105: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: timed-out dependency wait removes its edge without poisoning the singleton
+00:00 +106: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: timed-out dependency wait removes its edge without poisoning the singleton
+00:00 +107: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Scope is isolated by exact managed navigation
+00:00 +108: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Scope is isolated by exact managed navigation
+00:00 +109: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Scope is isolated by exact managed navigation
+00:00 +110: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Scope is isolated by exact managed navigation
+00:00 +111: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Scope is isolated by exact managed navigation
+00:00 +112: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Scope is isolated by exact managed navigation
+00:00 +113: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Scope is isolated by exact managed navigation
+00:00 +114: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: missing service reports stable identity and requested key
+00:00 +115: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: missing service reports stable identity and requested key
+00:00 +116: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: missing service reports stable identity and requested key
+00:00 +117: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Pop cancels only its exact Service invocation
+00:00 +118: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: registry releases every Host when one synchronous dispose fails
+00:00 +119: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: circular construction is detected and failed construction can retry
+00:00 +120: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Service invocation requires a retained navigation ID
+00:00 +121: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: detaching a Host removes only its Entries and completes pending results
+00:00 +122: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: detaching a Host removes only its Entries and completes pending results
+00:00 +123: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Pop cancels pending Route Service readiness
+00:00 +124: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Session IDs are unique across independent Runtime instances
+00:00 +125: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Host visibility preserves identities, results, Scopes and other Hosts
+00:00 +126: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/multi_host_test.dart: Host visibility preserves identities, results, Scopes and other Hosts
+00:00 +127: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Scope survives a rejected Pop guard
+00:00 +128: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: closing Session rejects new resolutions until disposal ends
+00:00 +129: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Service cannot capture a Session Service
+00:00 +130: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: Route Service cannot capture a Session Service
+00:00 +131: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: scopes dispose in reverse construction order and isolate failures
+00:00 +132: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: scopes dispose in reverse construction order and isolate failures
+00:00 +133: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/component_test.dart: App service cannot capture Session service through a new instance
+00:00 +134: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: scope disposal timeout does not block other instances
+00:00 +135: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: scope disposal timeout does not block other instances
+00:00 +136: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: initialization DAG runs ready layers concurrently exactly once
+00:00 +137: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: initialization Gates retain blocked work until explicitly opened
+00:00 +138: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: overlapping Gate opens cannot lose a newly ready task
+00:00 +139: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: optional initialization failure skips dependents and continues
+00:00 +140: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: required failure returns a sanitized result and isolates branches
+00:00 +141: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: required InitTask cannot depend on an optional branch
+00:00 +142: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: initialization validates missing dependencies and cycles
+00:00 +143: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: initialization rejects invalid and duplicate task metadata
+00:00 +144: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: initialization timeout and Runtime disposal cancel pending work
+00:00 +145: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: commands return typed results and reject duplicates
+00:00 +146: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: missing handler fails with a diagnostic trace
+00:00 +147: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: timeout completes promptly and cancels downstream context
+00:00 +148: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: zero deadline does not invoke handler
+00:00 +149: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: cancellation works before and during invocation
+00:00 +150: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: nested calls share trace and propagate deadline and cancellation
+00:00 +151: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: disposal cancels pending calls and a disposed Runtime cannot restart
+00:00 +152: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: void command reports completion without a business result
+00:00 +153: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Event subscribers are isolated and errors are bounded diagnostics
+00:00 +154: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Event subscribers start concurrently in stable ID order
+00:00 +155: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Event with no subscribers succeeds and remains traceable
+00:00 +156: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Event timeout cancels subscriber contexts without failure noise
+00:00 +157: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: sub-millisecond Event deadlines never succeed or add failure noise
+00:00 +158: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: a shorter nested timeout remains an isolated subscriber failure
+00:00 +159: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Event caller cancellation reaches pending subscribers
+00:00 +160: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Runtime disposal cancels pending Event delivery
+00:00 +161: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: Event subscriber IDs are globally unique
+00:00 +162: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/runtime_test.dart: trace buffer is bounded and can be disabled
+00:00 +163: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +164: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +165: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +166: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +167: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +168: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +169: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +170: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +171: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +172: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +173: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +174: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +175: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +176: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +177: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +178: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +179: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +180: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +181: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +182: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +183: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +184: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +185: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +186: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +187: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +188: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:00 +189: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: unreconstructible tree.missing leaves the existing stack intact
+00:00 +190: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: unreconstructible tree.editor leaves the existing stack intact
+00:00 +191: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: ancestor policy cancels atomically before leaf policy or allocation
+00:00 +192: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: browser route information rebuilds the complete parent hierarchy
+00:00 +193: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: MultiHost reconstructs only the selected child and preserves its sibling
+00:00 +194: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: scoped foreign ownership is independent of the active Host
+00:00 +195: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: ancestor redirect discards the old plan and resolves a new target
+00:00 +196: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: deferred ancestor resumes the leaf with one freshly validated chain
+00:00 +197: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: shutdown fences a late ancestor policy before Backend mutation
+00:00 +198: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: platform startup stays external across ancestor interception
+00:00 +199: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: Host can explicitly override a non-root platform startup URI
+00:00 +200: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: default platform startup cannot bypass the Host ingress deny policy
 00:01 +201: All tests passed!

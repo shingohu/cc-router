@@ -1,4 +1,4 @@
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/construction_ownership_lifecycle_test.dart
 00:00 +0: retained navigation callback Zone releases Runtime decision=false
 00:00 +0 -1: retained navigation callback Zone releases Runtime decision=false [E]
   Expected: null

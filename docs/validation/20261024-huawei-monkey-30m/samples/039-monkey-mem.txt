@@ -1,0 +1,57 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 107844485 Realtime: 468632945
+
+** MEMINFO in pid 24424 [dev.ccrouter.demo] **
+                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap   136740   136636       68    19314   138104   177316   170138     7177
+  Dalvik Heap     4060     3988        4      114     5532     8150     2006     6144
+ Dalvik Other     4546     2188        4      821     7500                           
+        Stack      940      940        0      440      956                           
+       Ashmem        9        0        0        0      344                           
+    Other dev        8        0        4        0      420                           
+     .so mmap     6193      184     1488      117    32060                           
+    .jar mmap     1589        0       80        0    24156                           
+    .apk mmap    12649      280    12232       80    13260                           
+    .ttf mmap     1973        0      312        0     5500                           
+    .dex mmap     2261     2148       68     5288     3184                           
+    .oat mmap       31        0        0        0     1192                           
+    .art mmap     3367     2956       68     4705    13448                           
+   Other mmap      944        8        0        0     2572                           
+    GL mtrack    38008    38008        0        0    38008                           
+      Unknown    26073    26028       16     1534    26652                           
+        TOTAL   271804   213364    14344    32413   312888   185466   172144    13321
+ 
+ App Summary
+                       Pss(KB)                        Rss(KB)
+                        ------                         ------
+           Java Heap:     7012                          18980
+         Native Heap:   136636                         138104
+                Code:    16872                          84048
+               Stack:      940                            956
+            Graphics:    38008                          38008
+       Private Other:    28240
+              System:    44096
+             Unknown:                                   32792
+ 
+           TOTAL PSS:   271804            TOTAL RSS:   312888       TOTAL SWAP PSS:    32413
+ 
+ Objects
+               Views:       -1         ViewRootImpl:       -1
+         AppContexts:       -1           Activities:       -1
+              Assets:        8        AssetManagers:        0
+       Local Binders:       17        Proxy Binders:       49
+       Parcel memory:        8         Parcel count:       39
+    Death Recipients:        1      OpenSSL Sockets:       -1
+            WebViews:       -1
+ 
+ SQL
+         MEMORY_USED:        0
+  PAGECACHE_OVERFLOW:        0          MALLOC_SIZE:        0
+ 
+ 
+ Asset Allocations
+    : 16K
+    : 17K
+    : 21K

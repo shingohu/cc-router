@@ -6,6 +6,7 @@ resolution: workspace
 environment:
   sdk: ^3.11.5
 dependencies:
+  cupertino_icons: ^1.0.8
   demo_analytics: ^0.1.0
   demo_analytics_flutter: ^0.1.0
   ccrouter: ^0.1.0

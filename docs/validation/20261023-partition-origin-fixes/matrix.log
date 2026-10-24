@@ -1,4 +1,4 @@
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_navigation_partition_regression_test.dart
 00:00 +0: singleFlight must not skip external origin policy
 00:00 +1: context-free redirect stays in originally selected Host
 00:00 +2: pending context-free Back keeps actual Host in receipt

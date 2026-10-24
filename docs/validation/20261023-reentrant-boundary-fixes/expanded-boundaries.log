@@ -1,20 +1,20 @@
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart
-00:00 +0: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: aggregate disposal during initialize releases the pending owner once
-00:00 +1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/cross_capability_cancellation_regression_test.dart: late readiness of closed account cannot enter the next Session
-00:00 +2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/cross_capability_cancellation_regression_test.dart: late readiness of closed account cannot enter the next Session
-00:00 +3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/cross_capability_cancellation_regression_test.dart: late readiness of closed account cannot enter the next Session
-00:00 +4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/cross_capability_cancellation_regression_test.dart: late readiness of closed account cannot enter the next Session
-00:00 +5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/cross_capability_cancellation_regression_test.dart: late readiness of closed account cannot enter the next Session
-00:00 +6: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/cross_capability_cancellation_regression_test.dart: late readiness of closed account cannot enter the next Session
-00:00 +7: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/cross_capability_cancellation_regression_test.dart: late readiness of closed account cannot enter the next Session
-00:00 +8: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: push consumes late Backend failure after synchronous detach
-00:00 +9: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: push consumes late Backend failure after synchronous detach
-00:00 +10: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: replace consumes late Backend failure after synchronous detach
-00:00 +11: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: go consumes late Backend failure after synchronous detach
-00:00 +12: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: reset consumes late Backend failure after synchronous detach
-00:00 +13: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: open consumes late Backend failure after synchronous detach
-00:00 +14: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: old Scope cancellation during commit fences detach
-00:00 +14 -1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: old Scope cancellation during commit fences detach [E]
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart
+00:00 +0: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: aggregate disposal during initialize releases the pending owner once
+00:00 +1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/cross_capability_cancellation_regression_test.dart: late readiness of closed account cannot enter the next Session
+00:00 +2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/cross_capability_cancellation_regression_test.dart: late readiness of closed account cannot enter the next Session
+00:00 +3: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/cross_capability_cancellation_regression_test.dart: late readiness of closed account cannot enter the next Session
+00:00 +4: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/cross_capability_cancellation_regression_test.dart: late readiness of closed account cannot enter the next Session
+00:00 +5: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/cross_capability_cancellation_regression_test.dart: late readiness of closed account cannot enter the next Session
+00:00 +6: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/cross_capability_cancellation_regression_test.dart: late readiness of closed account cannot enter the next Session
+00:00 +7: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/cross_capability_cancellation_regression_test.dart: late readiness of closed account cannot enter the next Session
+00:00 +8: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: push consumes late Backend failure after synchronous detach
+00:00 +9: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: push consumes late Backend failure after synchronous detach
+00:00 +10: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: replace consumes late Backend failure after synchronous detach
+00:00 +11: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: go consumes late Backend failure after synchronous detach
+00:00 +12: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: reset consumes late Backend failure after synchronous detach
+00:00 +13: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: open consumes late Backend failure after synchronous detach
+00:00 +14: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: old Scope cancellation during commit fences detach
+00:00 +14 -1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: old Scope cancellation during commit fences detach [E]
   Expected: throws <Instance of 'CCRouteCancelledError'>
     Actual: <Instance of 'Future<void>'>
      Which: emitted <null>
@@ -26,8 +26,8 @@
   dart:async                                                                   _CustomZone.registerUnaryCallback
   packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart 390:7   main.<fn>
   
-00:00 +14 -1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: old Scope cancellation during commit fences shutdown
-00:00 +14 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: old Scope cancellation during commit fences shutdown [E]
+00:00 +14 -1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: old Scope cancellation during commit fences shutdown
+00:00 +14 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: old Scope cancellation during commit fences shutdown [E]
   Expected: throws <Instance of 'CCRouteCancelledError'>
     Actual: <Instance of 'Future<void>'>
      Which: emitted <null>
@@ -39,10 +39,10 @@
   dart:async                                                                   _CustomZone.registerUnaryCallback
   packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart 390:7   main.<fn>
   
-00:00 +14 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: synchronous detach during dispatch cannot commit a retired Entry
-00:00 +15 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: synchronous shutdown during dispatch cannot recreate an Entry
-00:00 +16 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: unstarted Service method stays cancelled after caller
-00:00 +17 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: unstarted Service method stays cancelled after session
-00:00 +18 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: unstarted Service method stays cancelled after shutdown
-00:00 +19 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: cancellation after ready lookup affects only the unentered caller
+00:00 +14 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: synchronous detach during dispatch cannot commit a retired Entry
+00:00 +15 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: synchronous shutdown during dispatch cannot recreate an Entry
+00:00 +16 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: unstarted Service method stays cancelled after caller
+00:00 +17 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: unstarted Service method stays cancelled after session
+00:00 +18 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: unstarted Service method stays cancelled after shutdown
+00:00 +19 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart: cancellation after ready lookup affects only the unentered caller
 00:00 +20 -2: Some tests failed.

@@ -1,7 +1,7 @@
 # 独立等待者、Host Entry 身份与预测返回转发修复
 
 2026-10-23 开始，2026-10-24 验证；分支 `codex/managed-navigation-runtime`，工作树
-`/Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router`。
+`<home>/.codex/worktrees/managed-navigation-runtime/cc-router`。
 基于 HEAD `09cb21d78381bbdeab431cf6bca279f909827db1` 及此前未提交成果。
 
 已修复[上一轮审查](../20261023-independent-waiter-review/report.md)的三个缺陷：

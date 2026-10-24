@@ -1,0 +1,19 @@
+--------- beginning of main
+10-24 17:03:42.323 32533 32533 D InsetsSourceConsumer: ViewUI_insets setControl -> ITYPE_IME on dev.ccrouter.demo/dev.ccrouter.demo.MainActivity
+10-24 17:03:46.882 32533 32533 I AwareBitmapCacher: init lrucache size: 4194304 pid=32533
+10-24 17:03:47.522 32533 32566 I v.ccrouter.dem: Restrict Explicit GC
+10-24 17:03:47.602 32533 32667 D ProfileInstaller: Installing profile for dev.ccrouter.demo
+10-24 17:03:54.519 32533 32566 I v.ccrouter.dem: Restrict Explicit GC
+10-24 17:03:57.230 32533 32533 I flutter : FONT_PROBE start finite 72-style set, three rounds
+10-24 17:03:57.632 32533 32533 I flutter : FONT_PROBE round 1
+10-24 17:04:17.521 32533 32557 I v.ccrouter.dem: Restrict Explicit GC
+10-24 17:04:26.432 32533 32533 I flutter : FONT_PROBE round 2
+10-24 17:04:47.519 32533 32557 I v.ccrouter.dem: Restrict Explicit GC
+10-24 17:04:55.232 32533 32533 I flutter : FONT_PROBE round 3
+10-24 17:05:22.591 32533 32557 I v.ccrouter.dem: Explicit concurrent copying GC freed 33379(1099KB) AllocSpace objects, 4(80KB) LOS objects, 76% free, 1920KB/8064KB,  current_footprint is 7936KB, capacity is 384MB, growth limit is 384MB, paused 92us,75us total 25.720ms cpu time 25.252ms DisableRefAccess:0.742ms(0.709ms), OnTop
+10-24 17:05:23.632 32533 32533 I flutter : FONT_PROBE completed; idle with final style
+10-24 17:05:57.521 32533 32557 I v.ccrouter.dem: Restrict Explicit GC
+10-24 17:06:27.527 32533 32557 I v.ccrouter.dem: Restrict Explicit GC
+10-24 17:06:28.003 32533 32557 I v.ccrouter.dem: Restrict Explicit GC
+10-24 17:06:28.375 32533 32533 I WindowManager: trimMemory level: 15
+10-24 17:06:48.552 32533   742 I v.ccrouter.dem: Explicit concurrent copying GC freed 31996(1024KB) AllocSpace objects, 4(80KB) LOS objects, 76% free, 1920KB/8064KB,  current_footprint is 7936KB, capacity is 384MB, growth limit is 384MB, paused 52us,22us total 10.290ms cpu time 10.223ms DisableRefAccess:0.296ms(0.293ms), OnTop

@@ -1,4 +1,4 @@
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/20261023/repro.dart
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/20261023/repro.dart
 00:00 +0: initialization reentry cannot overwrite an accepted registration
 00:00 +0 -1: initialization reentry cannot overwrite an accepted registration [E]
   Expected: <1>

@@ -43,9 +43,21 @@ final class DemoCupertinoPage extends StatelessWidget {
   const DemoCupertinoPage({super.key});
 
   @override
-  Widget build(BuildContext context) => const CupertinoPageScaffold(
-    navigationBar: CupertinoNavigationBar(middle: Text('Cupertino PageRoute')),
-    child: SafeArea(child: Center(child: Text('显式 Cupertino 页面与返回手势语义'))),
+  Widget build(BuildContext context) => CupertinoPageScaffold(
+    navigationBar: const CupertinoNavigationBar(
+      middle: Text('Cupertino PageRoute'),
+    ),
+    child: DefaultTextStyle(
+      style: CupertinoTheme.of(context).textTheme.textStyle,
+      child: const SafeArea(
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(16),
+            child: Text('显式 Cupertino 页面与返回手势语义', textAlign: TextAlign.center),
+          ),
+        ),
+      ),
+    ),
   );
 }
 

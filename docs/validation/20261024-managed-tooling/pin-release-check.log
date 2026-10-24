@@ -1,8 +1,8 @@
 CCRouter Analyzer status
-  host: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo
+  host: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo
   state: healthy
   plugin: ccrouter_demo_analyzer_plugin
-  bootstrap: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/tools/ccrouter_analyzer_plugin_host/tools/analyzer_plugin
+  bootstrap: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/tools/ccrouter_analyzer_plugin_host/tools/analyzer_plugin
   source: git
   version: 0.1.0
   ref: c066213027573f7c6dfe4900680d8c6ffb2df83f

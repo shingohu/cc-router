@@ -1,0 +1,2 @@
+ +0% 24424/dev.ccrouter.demo: 0% user + 0% kernel
+23% TOTAL: 11% user + 6.6% kernel + 4.2% iowait + 0.8% irq + 0.3% softirq

@@ -188,7 +188,8 @@ whitespace separators, and parsed SemVer prerelease identifiers are immutable.
 
 ## Non-Negotiable Boundaries
 
-- Navigate CCRouter-managed destinations only through `CCRouter.navigator`.
+- Navigate CCRouter-managed destinations only through `CCRouter.navigator` or
+  the `CCNavigator` returned by `CCRouter.navigatorOf(context)`.
 - Use a generated typed Intent for a statically known destination. Use `CCRouter.navigator.open` only for an application-controlled dynamic URI.
 - Route platform links, notification URIs, and scanned values through `CCDeepLinkIngress`; never treat them as internal `open` calls.
 - Do not call `Navigator.push/pop`, `GoRouter.push/go`, or an Adapter for a CCRouter-managed page.
@@ -220,6 +221,10 @@ whitespace separators, and parsed SemVer prerelease identifiers are immutable.
 - Do not add a generated `part` to a page, Service, component definition, or contribution. Generated libraries are standalone files assembled by the generator.
 - Keep an internal route on `@CCRoute`. Promote it to `@CCRouteContract` only when a real external component consumer appears.
 - 默认 PageRoute 和 DialogRoute 按最近宿主选择：MaterialApp 使用随主题平台适配的 Material 路由，CupertinoApp 使用 Cupertino 路由；显式 routeType 优先。MaterialApp 也提供 CupertinoTheme，不能以该 Theme 判断宿主或在 Android 额外启用 iOS 边缘返回手势；没有已知 App 祖先的自定义 Host 才使用显式 CupertinoTheme 作为 Cupertino 策略 fallback。
+- Explicit Cupertino route selection controls transitions, not body typography.
+  Under MaterialApp, wrap CupertinoPageScaffold body content with DefaultTextStyle
+  using CupertinoTheme.of(context).textTheme.textStyle; declare cupertino_icons
+  in the application/component when using its glyphs. Verify small-screen layout.
 - Use `@CCExtraParam` only for typed, process-local, short-lived objects. Generated page bindings preserve the declared static type and reject a mismatched runtime object with `CCRouteParameterError`; Extra is not a Deep Link, restoration, persistence, or cross-process channel.
 - Put promoted CCRouter cross-component contracts in a Pure Dart contracts package. Their consumers depend on that contracts package, not page implementations. Ordinary capability interfaces may remain in their owning Package when the dependency direction is valid.
 - Re-export generated Route contracts from the Package's stable
@@ -354,9 +359,11 @@ whitespace separators, and parsed SemVer prerelease identifiers are immutable.
   Composition Root must activate the Host on pointer/focus entry; feature pages
   must not call `activateHost`. Keep large-screen panes, tabs, and Shell branches
   as Outlets of one Host. Managed pages resolve exact Host/Outlet from the
-  optional `BuildContext`; `activateHost` is only a fallback for context-free
-  Pop/system-back. The aggregate does not render a layout or model a native
-  platform Window.
+  optional `BuildContext` or reuse `CCRouter.navigatorOf(context)` for repeated
+  local operations. Bound clients keep their original target independently of
+  `activateHost`; active-Host selection supplies the fallback for unbound
+  context-free calls and system back. The aggregate does not render a layout
+  or model a native platform Window.
   A dynamically mounted auxiliary Host with a fixed trusted home keeps initial
   route initialization enabled and explicitly overrides the platform startup
   location. Do not consume the primary Host's startup link again or describe an
@@ -565,6 +572,16 @@ the Service Contract.
   back to the sole visible mounted Outlet for context-free Back; ambiguous panes
   still need Host selection and root popup priority remains in effect.
 - Pass `BuildContext` to navigator calls only when call-site Host/Outlet resolution is required. Do not store it globally.
+- For repeated local navigation, acquire `CCRouter.navigatorOf(context)` inside
+  the intended Navigator (build, didChangeDependencies or interaction callback,
+  not initState). Reuse its `CCNavigator` without Context; it retains no Context,
+  Navigator or Runtime and needs no disposal. Reacquire when the component moves
+  to another Host/Outlet. Explicit route placement still wins. Host unregister
+  or Runtime shutdown permanently retires the client, synchronously throwing
+  `CCRouteCancelledError('host_detached')`, including after same-ID replacement.
+  Page/renderer unmount alone does not retire it; it is not page-task cancellation.
+  An optional per-call Context must resolve to the same Host/Outlet or throws
+  `CCNavigationOutletResolutionError`. Exact close still targets its handle.
 - Custom Host Adapters must build destinations from the immutable
   `CCNavigationRequest.pathParameters` resolved by Runtime. Never rematch the
   request URI against a primary pattern; doing so breaks aliases, Regex routes,

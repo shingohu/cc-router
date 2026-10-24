@@ -2,7 +2,7 @@ CCRouter profile build-plan suggested=runBuilder actual=runBuilder reasons=no-ca
 CCRouter profile input-delta={"status":"unavailable"}
 CCRouter profile dependency-preflight=159ms
 CCRouter profile build-targets=9 packages=ccrouter_demo,demo_kv_storage,demo_navigation_lab,demo_network,demo_order,demo_order_contracts,demo_payment,demo_web,demo_web_contracts
-Generating Package artifacts for ccrouter_demo, demo_kv_storage, demo_navigation_lab, demo_network, demo_order, demo_order_contracts, demo_payment, demo_web, demo_web_contracts from /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router...
+Generating Package artifacts for ccrouter_demo, demo_kv_storage, demo_navigation_lab, demo_network, demo_order, demo_order_contracts, demo_payment, demo_web, demo_web_contracts from <home>/.codex/worktrees/managed-navigation-runtime/cc-router...
   0.00s ccrouter_generator:ui_metadata on 42 inputs; demo_web_contracts|lib/src/web_request.dart
   0.00s ccrouter_generator:ui_fragments on 42 inputs; demo_web_contracts|lib/src/web_request.dart
   0.00s ccrouter_generator:service_contracts on 42 inputs; demo_web_contracts|lib/src/web_request.dart

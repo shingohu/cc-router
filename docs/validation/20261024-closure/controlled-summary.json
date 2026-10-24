@@ -1,0 +1,1 @@
+{"completed":true,"cycles":240,"pid":"18579","isolateId":"isolates/3493788281324667","build":{"count":13960,"p50Ms":1.822,"p95Ms":3.146,"maxMs":77.392,"over100ms":0},"raster":{"count":13960,"p50Ms":4.336,"p95Ms":7.226,"maxMs":28.7,"over100ms":0},"endedAt":"2026-10-24T08:15:01.174Z"}

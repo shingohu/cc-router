@@ -1,0 +1,3 @@
+[185.295] perfetto_cmd.cc:792     Connected to the Perfetto traced service, TTL: 240s
+[374.546] perfetto_cmd.cc:951     SIGINT/SIGTERM received: disabling tracing.
+[374.601] perfetto_cmd.cc:916     Wrote 386145 bytes into /data/misc/perfetto-traces/ccrouter-font-1792832617534.perfetto-trace

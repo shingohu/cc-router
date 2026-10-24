@@ -1,4 +1,4 @@
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/repro.dart
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/shared_waiter_lifetime/repro.dart
 00:00 +0: shared pending=false releases second caller after cancel
 00:00 +1: shared pending=true releases second caller after cancel
 00:00 +1 -1: shared pending=true releases second caller after cancel [E]

@@ -8,7 +8,7 @@ CCRouter 自有 Managed Stack 是导航事实来源，Flutter `RouterDelegate + 
 
 | 调用方 | 入口与职责 |
 | --- | --- |
-| 业务组件 | `ccrouter.dart`、自身生成 Client/Intent、公开 contracts；只调用 `CCRouter.navigator` |
+| 业务组件 | `ccrouter.dart`、自身生成 Client/Intent、公开 contracts；导航使用 `CCRouter.navigator` 或 `CCRouter.navigatorOf(context)` 返回的 `CCNavigator` |
 | Composition Root | `ccrouter_host.dart`；Assembly、初始化/关闭、Backend、Shell、全局策略和外部 ingress |
 | 自定义 Backend | Host-only Adapter SPI；明确声明可选能力，执行 Runtime 已校验请求 |
 | 生成代码 | Generated SPI；业务不能手写身份或通过 SPI 绕过依赖 |
@@ -72,7 +72,20 @@ Composition Root 通过 `CCManagedShellBinding`、`CCManagedOutlet` 显式声明
 
 业务 `push/replace/go/reset/open/pop/maybePop/canPop` 可传调用点 `context`。框架同步解析稳定 Host/Outlet ID，不保存 BuildContext；解析失败报错，不猜另一个 pane。目标显式声明的 Host/Placement 保持权威，Context 不把 Shell/parent 强制改成 root。
 
-无 Context 时，使用调用开始时的 active Host fallback。Host 的 Pointer/Focus 接入可调用 `activateHost` 更新默认目标；一次操作已固定的归属不会因异步拦截、redirect、recovery、defer/resume 期间焦点改变而漂移。原 Host 退役则取消，不把旧请求转给同名 replacement。
+同一组件反复导航时，使用 `CCRouter.navigatorOf(context)` 获取绑定当前 Host/Outlet 的
+`CCNavigator`，后续调用无需重复传 Context；所有操作仍经过同一 Runtime 管线。
+在目标 Navigator 内的 build、didChangeDependencies 或交互回调中获取，不在 initState 获取。
+对象不保存 Context、Navigator 或 Runtime，无须 dispose；组件移动到其他 Host/Outlet 后重新获取。
+显式目的 placement 仍优先，`pop` 仍返回绑定区域，`close` 仍按 handle 精确定位。
+若另传 per-call Context，必须解析到相同 Host/Outlet，否则同步抛出
+`CCNavigationOutletResolutionError`，不会重新绑定。
+
+绑定对象属于原 Host 注册轮次。Host 注销或 Runtime 关闭后，全部操作同步抛出
+`CCRouteCancelledError`（`code == 'host_detached'`）；同名 Host 或 Runtime 重建不能复活旧对象。
+页面退出或 Outlet renderer 卸载本身不会使其失效，它不代替页面异步任务取消。
+具体用法与入口选择见 [README](../README.md#buildcontext-与-outlet)。
+
+使用未绑定的 `CCRouter.navigator` 且不传 Context 时，使用调用开始时的 active Host fallback。Host 的 Pointer/Focus 接入可调用 `activateHost` 更新默认目标；一次操作已固定的归属不会因异步拦截、redirect、recovery、defer/resume 期间焦点改变而漂移。原 Host 退役则取消，不把旧请求转给同名 replacement。
 
 同名 Host 重开属于新的注册轮次；聚合 backend Entry ID 是不透明身份，不能与子后端原始 ID 混用。聚合器不负责原生窗口创建、Flutter View 映射或平台关闭手势。动态注册、注销、shutdown 和异步等待的边界按[接入模式](../skills/ccrouter-integration-development/references/implementation-patterns.md#multiple-hosts-and-shells)执行。
 

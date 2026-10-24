@@ -44,7 +44,7 @@ Downloading packages...
 Got dependencies!
 41 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/backend_wait_boundaries_test.dart
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/backend_wait_boundaries_test.dart
 00:00 +0: PopGuard Host replacement cannot receive the old Back async=false
 00:00 +1: PopGuard Host replacement cannot receive the old Back async=true
 00:00 +2: All tests passed!

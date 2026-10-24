@@ -1,0 +1,115 @@
+00:00 +0: loading <workspace>/demo/test/managed_demo_feature_matrix_test.dart
+00:00 +0: <workspace>/demo/test/adaptive_layout_test.dart: Host layout metrics classify compact, medium, and expanded
+00:00 +1: <workspace>/demo/test/adaptive_layout_test.dart: display features and route placement retain Host isolation
+00:00 +2: <workspace>/demo/test/adaptive_layout_test.dart: adaptive Outlet policy maps one, two, and multiple panes
+00:00 +3: <workspace>/demo/test/monkey_test.dart: PopGuard remains usable in a small desktop window
+00:00 +4: <workspace>/demo/test/monkey_test.dart: PopGuard remains usable in a small desktop window
+00:00 +5: <workspace>/demo/test/monkey_test.dart: PopGuard remains usable in a small desktop window
+00:01 +6: <workspace>/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:01 +7: <workspace>/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:01 +8: <workspace>/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:01 +9: <workspace>/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:01 +10: <workspace>/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:01 +11: <workspace>/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:01 +12: <workspace>/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
+00:01 +13: <workspace>/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
+00:01 +14: <workspace>/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
+00:01 +15: <workspace>/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
+00:02 +16: <workspace>/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
+00:02 +17: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:02 +18: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:02 +19: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:02 +20: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:02 +21: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:02 +22: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:03 +23: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:03 +24: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:03 +25: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:03 +26: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:04 +27: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:04 +28: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:04 +29: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:04 +30: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:04 +31: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:04 +32: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:05 +33: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:05 +34: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:05 +35: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:05 +36: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:05 +37: <workspace>/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:06 +38: <workspace>/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:06 +39: <workspace>/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:06 +40: <workspace>/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:06 +41: <workspace>/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:06 +42: <workspace>/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:06 +43: <workspace>/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:06 +44: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:06 +45: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:06 +46: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:07 +47: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:07 +48: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:07 +49: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:07 +50: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:07 +51: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:07 +52: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:07 +53: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:07 +54: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:07 +55: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:07 +56: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:07 +57: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:07 +58: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:07 +59: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:07 +60: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:08 +61: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:08 +62: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:08 +63: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:08 +64: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:08 +65: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:08 +66: <workspace>/demo/test/predictive_back_demo_test.dart: real Demo typed page cancel/commit, bridge=false (variant: TargetPlatform.android)
+00:08 +67: <workspace>/demo/test/predictive_back_demo_test.dart: real Demo typed page cancel/commit, bridge=false (variant: TargetPlatform.android)
+00:08 +68: <workspace>/demo/test/predictive_back_demo_test.dart: real Demo typed page cancel/commit, bridge=false (variant: TargetPlatform.android)
+00:09 +69: <workspace>/demo/test/predictive_back_demo_test.dart: real Demo typed page cancel/commit, bridge=false (variant: TargetPlatform.android)
+00:09 +70: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:09 +71: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:09 +72: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:09 +73: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:09 +74: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:09 +75: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:09 +76: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:09 +77: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:09 +78: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:10 +79: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:10 +80: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:10 +81: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:10 +82: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:10 +83: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:10 +84: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:10 +85: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:10 +86: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:10 +87: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:10 +88: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:10 +89: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:10 +90: <workspace>/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:10 +91: <workspace>/demo/test/predictive_back_demo_test.dart: Demo nested Outlet identity, StatefulShell=true (variant: TargetPlatform.android)
+00:10 +92: <workspace>/demo/test/predictive_back_demo_test.dart: Demo nested Outlet identity, StatefulShell=true (variant: TargetPlatform.android)
+00:11 +93: <workspace>/demo/test/managed_parity_regression_test.dart: Managed: reset reconstructs the validated parent chain
+00:11 +94: <workspace>/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=false timing=before (variant: TargetPlatform.android)
+00:11 +95: <workspace>/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=false timing=before (variant: TargetPlatform.android)
+00:11 +96: <workspace>/demo/test/managed_parity_regression_test.dart: Managed: root overlay pop must restore Shell back target
+00:11 +97: <workspace>/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=false timing=during (variant: TargetPlatform.android)
+00:11 +98: <workspace>/demo/test/managed_parity_regression_test.dart: Managed: retained branch URL must follow selected branch
+00:11 +99: <workspace>/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=false timing=transient (variant: TargetPlatform.android)
+00:11 +100: <workspace>/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=false timing=transient (variant: TargetPlatform.android)
+00:11 +101: <workspace>/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=false timing=transient (variant: TargetPlatform.android)
+00:11 +102: <workspace>/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=false timing=transient (variant: TargetPlatform.android)
+00:11 +103: <workspace>/demo/test/managed_parity_regression_test.dart: Managed: direct branch navigation must hide retained branch
+00:11 +104: <workspace>/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
+00:11 +105: <workspace>/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:12 +106: <workspace>/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:12 +107: <workspace>/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:12 +108: <workspace>/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:12 +109: <workspace>/demo/test/managed_parity_regression_test.dart: Managed: cancelled iOS swipe preserves Entry identity (variant: TargetPlatform.iOS)
+00:13 +110: <workspace>/demo/test/managed_parity_regression_test.dart: Managed: shutdown retires mounted Shell and foreign popup safely
+00:13 +111: <workspace>/demo/test/managed_parity_regression_test.dart: Managed: shutdown during a Shell edge swipe does not double remove (variant: TargetPlatform.iOS)
+00:13 +112: <workspace>/demo/test/managed_parity_regression_test.dart: Managed: close covered Shell seed must keep context child
+00:13 +113: All tests passed!

@@ -790,7 +790,18 @@ if (handle != null) {
 
 ### BuildContext 与 Outlet
 
-通常不传 `BuildContext`，行为与全局 Host 路由一致。只有同一路由需要按调用位置落入当前 Shell、Pane 或嵌套 Navigator 时才传：
+单 Host 的普通导航可沿用全局入口。需要按调用位置选择 Shell、Pane 或嵌套 Navigator 时，
+使用 `context:` 或先获取绑定对象：
+
+| 场景 | 推荐入口 | 默认目标 |
+| --- | --- | --- |
+| 使用应用当前导航目标 | `CCRouter.navigator` | 调用开始时的 active Host，结合后端当前 Outlet 选择 |
+| 单次按调用位置导航 | `CCRouter.navigator.push(intent, context: context)` 等 | 本次 Context 解析的 Host/Outlet |
+| 同一区域多次导航 | `CCRouter.navigatorOf(context)` 返回的 `CCNavigator` | 获取时绑定的 Host/Outlet，不随焦点切换 |
+
+三种方式均遵循目标路由的显式 placement；无 Context 的全局入口不能自动推断调用组件所在区域。
+
+单次导航示例：
 
 ```dart
 await CCRouter.navigator.push<void>(
@@ -808,6 +819,29 @@ final canPop = CCRouter.navigator.canPop(context: context);
 ```
 
 Context 只用于严格解析最近的 Host/Outlet，不会被全局保存。解析失败会报错，不会猜测另一个 Host 或 Outlet。
+
+同一个页面或组件需要多次导航时，可以先绑定一次，后续不再重复传 Context：
+
+```dart
+final navigator = CCRouter.navigatorOf(context);
+await loadData();
+final result = await navigator.push(DetailRoutes.detail(id: 1));
+```
+
+`navigatorOf` 返回相同的 `CCNavigator` 接口，支持 push/replace/go/reset/open、
+pop/maybePop/maybePopOutcome/canPop 和按句柄 close。它与 `context:` 调用使用相同管线，
+路由显式 placement 继续优先；焦点、active Host 切换不会改变绑定目标。
+真实 Host 的 ID 为 `default` 时也按具体目标处理，不会因 active Host 改变而转投。
+从目标 Navigator 内部的 Context 获取，可在 build、didChangeDependencies 或交互回调中调用，
+不要在 initState 解析。组件移动到其他 Host/Outlet 时应重新获取。
+对象不保存 Context、Navigator、Runtime，也不注册监听，无须 dispose。
+它绑定导航 Host 的原注册代次：Host 注销或 Runtime 关闭后，调用同步抛出
+`CCRouteCancelledError('host_detached')`，同 ID 重建不会使其复活。
+单独卸载页面或 Outlet 渲染器不等于注销 Host；它不是页面级异步任务取消器。
+如每次调用仍传 `context:`，必须属于同一 Host/Outlet，否则抛出
+`CCNavigationOutletResolutionError`；跨区域调用应另取对应对象。
+`close` 始终按句柄确定目标，不改为关闭绑定区域栈顶。
+原有 `CCRouter.navigator` 及其 `context:` 调用方式保持不变。Demo 自适应详情区演示此入口。
 
 ### 动态 URI
 
@@ -923,6 +957,11 @@ CupertinoTheme 不代表 Cupertino 宿主，不应导致 Android 页面额外挂
 自定义 Host 可通过显式 CupertinoTheme 保留 Cupertino 默认策略。显式
 `CCPageRouteType.material` / `cupertino` 和 `CCDialogRouteType.material` / `cupertino` 仍优先于
 宿主默认值。
+
+显式 Cupertino 路由只选择转场，不为页面正文注入字体。MaterialApp 中的
+`CupertinoPageScaffold` 正文应通过 `DefaultTextStyle` 使用
+`CupertinoTheme.of(context).textTheme.textStyle`；使用 Cupertino 图标时由应用组件声明
+`cupertino_icons` 依赖。Demo 的 Cupertino 场景包含该接入与小屏回归。
 
 `CCRoute.presentation` 是后端中立描述。当前支持：
 

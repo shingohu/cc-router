@@ -2,11 +2,22 @@
 
 ## 状态说明
 
+- 2026-10-24 [Native 分配归因](validation/20261024-native-attribution/report.md)：匹配引擎符号、
+  全程采样、诊断对照与纯 Flutter 字体复现。内存问题按实际分配路径归因，不以 PSS 判定框架泄漏。
+- 2026-10-24 [遗留项收口](validation/20261024-closure/report.md)：修复 Demo Cupertino 正文、
+  小屏标题、遗留文案与图标资源；历史证据完成可逆路径脱敏，原敏感信息门禁恢复通过。
+  华为受控复测及性能结论单独记录，不覆盖旧 Monkey 的未定位事实。
+
+- 2026-10-24 [核心价值收口回归](validation/20261024-core-value-final/report.md)：按 13 条
+  约定复核原生 Managed、绑定导航 API、契约/生成、API 隔离、生命周期和工具链。
+  当轮历史验收路径导致敏感信息门禁失败；后续闭环见上一条。真机内存/长帧与 Demo
+  结果按各轮报告区分，不将源码自动化通过等同于正式发布或全平台验收。
+
 - 2026-10-24 文档合并：DevTools/Service/返回手势/UI/Analyzer/Managed 路由的重复规则已归并，未完成工作与发布门禁分开维护。18 份合并前快照与映射见[归档索引](archive/20261024-consolidation/README.md)，旧路径仅保留导航页。
 
 - 2026-10-24 文档收口：统一 Managed-only、Route Scope 退出渲染期、业务异步返回确认及
   Deep Link push/go 语义。当前源码与历史平台证据分列于[验证索引](validation/README.md)。
-  最近源码回归为[外部导航等待与所有权修复](validation/20261024-backend-wait-fixes/report.md)：
+  此前源码回归见[外部导航等待与所有权修复](validation/20261024-backend-wait-fixes/report.md)：
   Flutter 1537 项、Dart 55 项、Generator API 隔离专项 4 项通过；不是全平台重新验收。
 
 - 2026-10-23 产品埋点移到应用侧 `demo_analytics` / `demo_analytics_flutter`，公开类型
@@ -58,7 +69,8 @@
 - 可选类型化 UI Fragment：Pure Dart DTO/enum 契约、消费 Client、Renderer 静态装配、
   Host generation 校验与 Flutter State 生命周期；集合、sealed Action 和动态 Slot 未支持。
 - 原生 Managed Host、Shell、StatefulShell、多 Outlet、MultiHost 和调用级 Context 定位。
-  渐进接入使用局部 Managed Outlet；不再提供 GoRouter attach。
+  可选 `CCRouter.navigatorOf(context)` 复用绑定当前 Host/Outlet 的原 `CCNavigator` 接口，
+  原全局与 per-call Context 调用保留。渐进接入使用局部 Managed Outlet；不再提供 GoRouter attach。
 - 默认 Page/Dialog 路由族按最近 MaterialApp/CupertinoApp 宿主选择，显式类型优先；Material
   路由仍随主题平台适配。Android 预测返回可选自动桥默认关闭，支持普通 Material 页面与
   显式接线的自定义 Page；Guard、模态和不支持的 Theme 保留 fallback，平台验收见

@@ -1,0 +1,43 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const script = fileURLToPath(new URL('../sanitize_validation_evidence.mjs', import.meta.url));
+test('evidence normalization preserves results, binary data and recoverable originals', t => {
+  const root = mkdtempSync(join(tmpdir(), 'ccrouter-sanitize-test-'));
+  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const git = (...args) => execFileSync('git', args, { cwd: root });
+  git('init', '-q');
+  const dir = join(root, 'docs/validation');
+  mkdirSync(dir, { recursive: true });
+  // Assemble synthetic home paths without storing real or scanner-matching identities.
+  const home = ['/', 'Users', '/', 'synthetic', '/'].join('');
+  const original = `FAILED: 3\r\n${home}repo/a.dart:17\r\n`;
+  writeFileSync(join(dir, 'tracked.log'), original);
+  git('add', 'docs/validation/tracked.log');
+  const untracked = JSON.stringify({ path: home + 'repo', count: 42 });
+  writeFileSync(join(dir, 'new.ndjson'), untracked);
+  const binary = Buffer.from([0, 255, 43, 91]);
+  writeFileSync(join(dir, 'image.bin'), binary);
+  writeFileSync(join(root, 'source.txt'), original);
+  assert.throws(() => execFileSync(process.execPath, [script], { cwd: root, stdio: 'pipe' }));
+  assert.equal(readFileSync(join(dir, 'tracked.log'), 'utf8'), original);
+  const result = execFileSync(process.execPath, [script, '--write'], { cwd: root, encoding: 'utf8' });
+  assert.match(result, /Normalized 2 evidence files/);
+  const backup = result.trim().split('Recoverable originals: ')[1];
+  t.after(() => rmSync(backup, { recursive: true, force: true }));
+  assert.equal(readFileSync(join(backup, 'docs/validation/tracked.log'), 'utf8'), original);
+  assert.equal(readFileSync(join(backup, 'docs/validation/new.ndjson'), 'utf8'), untracked);
+  assert.equal(readFileSync(join(dir, 'tracked.log'), 'utf8'), 'FAILED: 3\r\n<home>/repo/a.dart:17\r\n');
+  assert.deepEqual(JSON.parse(readFileSync(join(dir, 'new.ndjson'), 'utf8')), { path: '<home>/repo', count: 42 });
+  assert.deepEqual(readFileSync(join(dir, 'image.bin')), binary);
+  assert.equal(readFileSync(join(root, 'source.txt'), 'utf8'), original);
+  assert.match(execFileSync(process.execPath, [script], { cwd: root, encoding: 'utf8' }), /normalization: 0/);
+  symlinkSync(join(root, 'source.txt'), join(dir, 'external.log'));
+  assert.throws(() => execFileSync(process.execPath, [script, '--write'], { cwd: root, stdio: 'pipe' }));
+  assert.equal(readFileSync(join(root, 'source.txt'), 'utf8'), original);
+});

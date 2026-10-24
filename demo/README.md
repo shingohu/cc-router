@@ -183,6 +183,20 @@ Host generation：没有 watch 时执行 one-shot；已有 active watch 时等�
 在本机 DevEco Studio 中配置自己的签名材料，并确保这些本地值不会提交到
 `ohos/build-profile.json5`。
 
+## 独立字体内存诊断
+
+`tool/native_font_probe.dart` 是不初始化 CCRouter 的纯 Flutter 对照入口，不属于普通
+Demo 功能或路由 API。它先等待 15 秒，再以 400ms 间隔重复渲染 72 种固定字体组合三轮，
+结束后停留观察。用于区分系统字体/引擎分配与导航资源；不能据此证明框架没有泄漏。
+
+```sh
+# 在 demo/ 执行；该产物会替换通常的 app-profile.apk，先另存需要保留的原 APK。
+fvm flutter build apk --profile --no-pub --target-platform android-arm64 -t tool/native_font_probe.dart
+```
+
+同进程的采样、内存压力与还原记录见[Native 分配归因](../docs/validation/20261024-native-attribution/report.md)。
+回到普通 Demo 时重新选择 `lib/main.dart` 构建/运行。
+
 ## 组件模块与生成
 
 新增组件统一放到 `modules/`，作为独立 Flutter 库包；平台目录由 demo 宿主持有。

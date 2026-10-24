@@ -1,0 +1,8 @@
+CCRouter preflight started for `flutter build`.
+CCRouter generation fast path hit; inputs and outputs are unchanged.
+CCRouter preflight finished: elapsed=1649ms.
+Running Gradle task 'assembleProfile'...                        
+Font asset "CupertinoIcons.ttf" was tree-shaken, reducing it from 257628 to 848 bytes (99.7% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Font asset "MaterialIcons-Regular.otf" was tree-shaken, reducing it from 1645184 to 16728 bytes (99.0% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
+Running Gradle task 'assembleProfile'...                           24.5s
+✓ Built build/app/outputs/flutter-apk/app-profile.apk (36.9MB)

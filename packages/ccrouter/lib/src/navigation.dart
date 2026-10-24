@@ -6,6 +6,9 @@ part of 'facade.dart';
 /// passes them here instead of invoking an adapter or Flutter Navigator
 /// directly. Dynamic locations use [open] and still pass through Runtime route
 /// matching, policy checks, and Codec decoding.
+/// [CCRouter.navigatorOf] returns the same interface bound to one Host/Outlet.
+/// Bound clients reject use after their registration or Runtime ends. Their
+/// optional per-call Context must resolve to that same Host/Outlet.
 abstract interface class CCNavigator {
   /// Pushes [intent] and completes with the route's typed Pop result.
   ///
@@ -100,8 +103,17 @@ abstract interface class CCNavigator {
 
 /// Runtime-backed implementation retained privately by [CCRouter].
 final class _CCNavigator implements CCNavigator {
-  /// Creates the stateless process-local navigation facade.
-  const _CCNavigator();
+  /// Creates either the global facade or an explicitly scoped client.
+  const _CCNavigator({this.binding});
+
+  /// Immutable location and non-owning lifetime, absent for global navigation.
+  final _CCNavigationBinding? binding;
+
+  /// Rejects a retired scoped client before consulting a replacement Runtime.
+  CCRouterRuntime get _runtime {
+    binding?.ensureActive();
+    return CCRouter._runtime;
+  }
 
   /// Pushes through the Runtime owned by [CCRouter].
   @override
@@ -109,7 +121,7 @@ final class _CCNavigator implements CCNavigator {
     CCRouteIntent<R> intent, {
     CCNavigationSource? source,
     BuildContext? context,
-  }) => CCRouter._runtime.pushRoute(
+  }) => _runtime.pushRoute(
     intent,
     source: source,
     placementOverride: _resolvePlacement(context),
@@ -121,7 +133,7 @@ final class _CCNavigator implements CCNavigator {
     CCRouteIntent<R> intent, {
     CCNavigationSource? source,
     BuildContext? context,
-  }) => CCRouter._runtime.replaceRoute(
+  }) => _runtime.replaceRoute(
     intent,
     source: source,
     placementOverride: _resolvePlacement(context),
@@ -130,7 +142,7 @@ final class _CCNavigator implements CCNavigator {
   /// Attempts to pop through the Runtime owned by [CCRouter].
   @override
   Future<bool> maybePop<R>({R? result, BuildContext? context}) =>
-      CCRouter._runtime.maybePopRoute(
+      _runtime.maybePopRoute(
         result: result,
         placementOverride: _resolvePlacement(context),
       );
@@ -141,7 +153,7 @@ final class _CCNavigator implements CCNavigator {
     R? result,
     CCPopTrigger trigger = CCPopTrigger.system,
     BuildContext? context,
-  }) => CCRouter._runtime.maybePopOutcomeRoute(
+  }) => _runtime.maybePopOutcomeRoute(
     result: result,
     trigger: trigger,
     placementOverride: _resolvePlacement(context),
@@ -153,7 +165,7 @@ final class _CCNavigator implements CCNavigator {
     CCRouteIntent<R> intent, {
     CCNavigationSource? source,
     BuildContext? context,
-  }) => CCRouter._runtime.goRoute(
+  }) => _runtime.goRoute(
     intent,
     source: source,
     placementOverride: _resolvePlacement(context),
@@ -165,7 +177,7 @@ final class _CCNavigator implements CCNavigator {
     CCRouteIntent<R> intent, {
     CCNavigationSource? source,
     BuildContext? context,
-  }) => CCRouter._runtime.resetRoute(
+  }) => _runtime.resetRoute(
     intent,
     source: source,
     placementOverride: _resolvePlacement(context),
@@ -177,7 +189,7 @@ final class _CCNavigator implements CCNavigator {
     Uri uri, {
     CCNavigationSource? source,
     BuildContext? context,
-  }) => CCRouter._runtime.openRoute(
+  }) => _runtime.openRoute(
     uri,
     origin: CCNavigationOrigin.internal,
     mode: CCDeepLinkOpenMode.push,
@@ -187,7 +199,7 @@ final class _CCNavigator implements CCNavigator {
 
   /// Pops through the Runtime owned by [CCRouter].
   @override
-  void pop<R>({R? result, BuildContext? context}) => CCRouter._runtime.popRoute(
+  void pop<R>({R? result, BuildContext? context}) => _runtime.popRoute(
     result: result,
     placementOverride: _resolvePlacement(context),
   );
@@ -197,16 +209,52 @@ final class _CCNavigator implements CCNavigator {
   Future<CCRouteCloseOutcome> close<R>(
     CCRouteEntryHandle handle, {
     R? result,
-  }) => CCRouter._runtime.closeRoute(handle, result: result);
+  }) => _runtime.closeRoute(handle, result: result);
 
   /// Reads Pop capability from the configured Runtime adapter.
   @override
-  bool canPop({BuildContext? context}) => CCRouter._runtime.canPopRoute(
-    placementOverride: _resolvePlacement(context),
-  );
+  bool canPop({BuildContext? context}) =>
+      _runtime.canPopRoute(placementOverride: _resolvePlacement(context));
 
   /// Converts an optional Flutter Context into a strict route placement.
   CCRoutePlacement? _resolvePlacement(BuildContext? context) {
-    return _resolveContextPlacement(context);
+    final resolved = _resolveContextPlacement(context);
+    final placement = binding?.placement;
+    if (placement == null) return resolved;
+    if (resolved != null &&
+        (resolved.hostId != placement.hostId ||
+            resolved.navigatorOutlet != placement.navigatorOutlet)) {
+      throw const CCNavigationOutletResolutionError();
+    }
+    // Context lookup can invoke application Element code. Recheck before dispatch.
+    binding!.ensureActive();
+    return placement;
+  }
+}
+
+/// Payload-free binding; retaining a client cannot retain its original owners.
+final class _CCNavigationBinding {
+  /// Captures an exact registration after synchronous Context resolution.
+  const _CCNavigationBinding({
+    required this.placement,
+    required this.runtimeIdentity,
+    required this.lifetime,
+  });
+
+  /// Immutable call-site default; explicit route placement remains authoritative.
+  final CCRoutePlacement placement;
+
+  /// Identity without a Runtime back-reference, also distinguishing test overlays.
+  final Object runtimeIdentity;
+
+  /// Read-only weak lease that cannot be reused after Host detach.
+  final CCNavigationHostLifetime lifetime;
+
+  /// Rejects ended or different Runtime generations without selecting fallback.
+  void ensureActive() {
+    if (!identical(runtimeIdentity, _runtimeResolver.activeIdentity) ||
+        !lifetime.isActive) {
+      throw const CCRouteCancelledError('host_detached');
+    }
   }
 }

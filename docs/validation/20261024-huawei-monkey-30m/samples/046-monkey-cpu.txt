@@ -1,0 +1,2 @@
+  23% 24424/dev.ccrouter.demo: 17% user + 5.6% kernel / faults: 1938 minor
+32% TOTAL: 15% user + 12% kernel + 0% iowait + 2.9% irq + 1% softirq

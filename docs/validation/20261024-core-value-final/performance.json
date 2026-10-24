@@ -1,0 +1,163 @@
+{
+  "schemaVersion": 1,
+  "suite": "ccrouter-performance-regression",
+  "full": false,
+  "sdk": "3.11.5 (stable) (Fri Aug 7 16:17:51 2026 +0800) on \"macos_arm64\"",
+  "platform": "macos",
+  "revision": "7d9b51211ddae3e55349c64773ec7d4e2675e391",
+  "benchmarks": [
+    {
+      "benchmark": "runtime_scaling.dart",
+      "wallMs": 7820,
+      "results": [
+        {
+          "scenario": "runtime-scaling",
+          "routes": 10,
+          "lifecycleSamples": 20,
+          "navigationSamples": 100,
+          "initializeUsP50": 51,
+          "initializeUsP95": 138,
+          "dynamicOpenUsP50": 102,
+          "dynamicOpenUsP95": 287,
+          "disposeUsP50": 17,
+          "disposeUsP95": 69
+        },
+        {
+          "scenario": "runtime-scaling",
+          "routes": 100,
+          "lifecycleSamples": 20,
+          "navigationSamples": 100,
+          "initializeUsP50": 123,
+          "initializeUsP95": 346,
+          "dynamicOpenUsP50": 115,
+          "dynamicOpenUsP95": 360,
+          "disposeUsP50": 54,
+          "disposeUsP95": 105
+        },
+        {
+          "scenario": "runtime-scaling",
+          "routes": 1000,
+          "lifecycleSamples": 20,
+          "navigationSamples": 100,
+          "initializeUsP50": 493,
+          "initializeUsP95": 659,
+          "dynamicOpenUsP50": 452,
+          "dynamicOpenUsP95": 593,
+          "disposeUsP50": 51,
+          "disposeUsP95": 62
+        }
+      ]
+    },
+    {
+      "benchmark": "runtime_concurrency.dart",
+      "wallMs": 495,
+      "results": [
+        {
+          "scenario": "runtime-concurrency-and-reclamation",
+          "cycles": 10,
+          "concurrentPushesPerCycle": 100,
+          "cycleUsP50": 7065,
+          "cycleUsP95": 20103,
+          "peakActiveEntries": 101,
+          "peakPendingNavigations": 0,
+          "finalActiveEntries": 1,
+          "finalPendingNavigations": 0,
+          "finalAdapterEntries": 1
+        }
+      ]
+    },
+    {
+      "benchmark": "service_scaling.dart",
+      "wallMs": 649,
+      "results": [
+        {
+          "scenario": "service-scaling",
+          "providers": 10,
+          "lifecycleSamples": 20,
+          "lookupSamples": 1000,
+          "invocationSamples": 1000,
+          "readinessSamples": 100,
+          "assembleInitializeUsP50": 145,
+          "assembleInitializeUsP95": 236,
+          "singletonLookupUsP50": 7,
+          "singletonLookupUsP95": 20,
+          "invokeSyncUsP50": 15,
+          "invokeSyncUsP95": 99,
+          "newInstanceReadinessUsP50": 32,
+          "newInstanceReadinessUsP95": 165,
+          "disposeUsP50": 58,
+          "disposeUsP95": 85
+        },
+        {
+          "scenario": "service-scaling",
+          "providers": 100,
+          "lifecycleSamples": 20,
+          "lookupSamples": 1000,
+          "invocationSamples": 1000,
+          "readinessSamples": 100,
+          "assembleInitializeUsP50": 193,
+          "assembleInitializeUsP95": 291,
+          "singletonLookupUsP50": 1,
+          "singletonLookupUsP95": 1,
+          "invokeSyncUsP50": 4,
+          "invokeSyncUsP95": 6,
+          "newInstanceReadinessUsP50": 21,
+          "newInstanceReadinessUsP95": 26,
+          "disposeUsP50": 117,
+          "disposeUsP95": 170
+        },
+        {
+          "scenario": "service-scaling",
+          "providers": 1000,
+          "lifecycleSamples": 20,
+          "lookupSamples": 1000,
+          "invocationSamples": 1000,
+          "readinessSamples": 100,
+          "assembleInitializeUsP50": 3926,
+          "assembleInitializeUsP95": 4277,
+          "singletonLookupUsP50": 3,
+          "singletonLookupUsP95": 3,
+          "invokeSyncUsP50": 6,
+          "invokeSyncUsP95": 14,
+          "newInstanceReadinessUsP50": 15,
+          "newInstanceReadinessUsP95": 63,
+          "disposeUsP50": 181,
+          "disposeUsP95": 631
+        }
+      ]
+    },
+    {
+      "benchmark": "runtime_long_run.dart",
+      "wallMs": 437,
+      "results": [
+        {
+          "scenario": "runtime-long-run-rss",
+          "cycles": 1000,
+          "recreateEvery": 100,
+          "completedCycles": 1000,
+          "cycleUsP50": 65,
+          "cycleUsP95": 169,
+          "peakActiveEntries": 1,
+          "peakPendingNavigations": 0,
+          "initialRssBytes": 205144064,
+          "finalRssBytes": 256589824,
+          "rssDeltaBytes": 51445760,
+          "rssSamplesBytes": [
+            210616320,
+            214269952,
+            217661440,
+            221003776,
+            227229696,
+            227885056,
+            231243776,
+            234586112,
+            237846528,
+            241319936,
+            256458752
+          ],
+          "rssObservation": "trend-only; compare same SDK, platform, and process conditions"
+        }
+      ]
+    }
+  ]
+}

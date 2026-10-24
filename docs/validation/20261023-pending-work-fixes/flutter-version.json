@@ -11,5 +11,5 @@
   "dartSdkVersion": "3.11.5",
   "devToolsVersion": "2.54.1",
   "flutterVersion": "3.41.10-ohos-1.0.0",
-  "flutterRoot": "/Users/shingo/fvm/versions/ohos/oh-3.41.9-release"
+  "flutterRoot": "<home>/fvm/versions/ohos/oh-3.41.9-release"
 }

@@ -10,7 +10,8 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   ///
   /// A Host-only Flutter facade may pass [placementOverride] after resolving a
   /// call-site Outlet. The route's explicit non-root placement always wins;
-  /// Core never reads a Flutter `BuildContext`.
+  /// Core never reads a Flutter `BuildContext`. A supplied Host ID is concrete,
+  /// including `default`; omit the override to follow the active Adapter Host.
   Future<R?> pushRoute<R>(
     CCRouteIntent<R> intent, {
     CCNavigationSource? source,
@@ -947,12 +948,15 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     return _routeRegistry.routeDefinition(routeId).interceptorIds.isNotEmpty;
   }
 
-  /// Resolves the route's default Host through the active Adapter binding.
+  /// Resolves default placement through the operation snapshot, then Adapter.
   ///
   /// Explicit non-default placement remains unchanged so a single-Host
-  /// Adapter can reject requests intended for another Host.
+  /// Adapter can reject requests intended for another Host. A captured real
+  /// Host named `default` must not be interpreted as the declaration sentinel.
   String _resolveNavigationHostId(CCRoutePlacement placement) {
     if (placement.hostId != 'default') return placement.hostId;
+    final captured = _navigationOperation?.defaultHostId;
+    if (captured != null) return captured;
     final adapter = _navigationAdapter;
     if (adapter is CCNavigationAdapterHostBinding) {
       final binding = adapter as CCNavigationAdapterHostBinding;

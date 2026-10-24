@@ -1,0 +1,12 @@
+{"time":"2026-10-24T09:03:47.962Z","event":"sample","phase":"at-5s","pid":"32533","totalPssKb":90286}
+{"time":"2026-10-24T09:03:54.917Z","event":"sample","phase":"at-12s","pid":"32533","totalPssKb":90460}
+{"time":"2026-10-24T09:04:18.006Z","event":"sample","phase":"at-35s","pid":"32533","totalPssKb":139383}
+{"time":"2026-10-24T09:04:47.964Z","event":"sample","phase":"at-65s","pid":"32533","totalPssKb":184116}
+{"time":"2026-10-24T09:05:22.992Z","event":"sample","phase":"at-100s","pid":"32533","totalPssKb":229849}
+{"time":"2026-10-24T09:05:57.952Z","event":"sample","phase":"at-135s","pid":"32533","totalPssKb":229357}
+{"time":"2026-10-24T09:06:27.971Z","event":"sample","phase":"at-165s","pid":"32533","totalPssKb":229675}
+{"time":"2026-10-24T09:06:28.437Z","event":"sample","phase":"before-trim","pid":"32533","totalPssKb":229937}
+{"time":"2026-10-24T09:06:28.492Z","event":"trim_sent"}
+{"time":"2026-10-24T09:06:48.949Z","event":"sample","phase":"after-trim-20s","pid":"32533","totalPssKb":230111}
+{"time":"2026-10-24T09:06:49.082Z","event":"completed"}
+{"time":"2026-10-24T09:06:50.917Z","event":"original_demo_restored"}

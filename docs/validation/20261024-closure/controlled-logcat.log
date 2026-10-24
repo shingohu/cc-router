@@ -1,0 +1,1964 @@
+--------- beginning of main
+10-24 16:08:04.965 18579 18579 D InsetsSourceConsumer: ViewUI_insets setControl -> ITYPE_IME on dev.ccrouter.demo/dev.ccrouter.demo.MainActivity
+10-24 16:08:07.334 18579 18611 I v.ccrouter.dem: Restrict Explicit GC
+10-24 16:08:08.711 18579 18579 I AwareBitmapCacher: init lrucache size: 4194304 pid=18579
+10-24 16:08:09.711 18579 18880 D ProfileInstaller: Installing profile for dev.ccrouter.demo
+10-24 16:08:10.320 18579 18579 D stylus  : init stylus touchlistener.
+10-24 16:08:10.323 18579 18579 I Hwaps   : APS: EventAnalyzed: initAPS: version is 11.0.0.4
+10-24 16:08:10.325 18579 18579 D Hwaps   : Fpsrequest create,type:EXACTLY_IDENTIFY
+10-24 16:08:10.325 18579 18579 D Hwaps   : Fpsrequest create,type:EXACTLY_IDENTIFY
+10-24 16:08:10.325 18579 18579 D Hwaps   : Fpsrequest create,type:OPENGL_SETTING
+10-24 16:08:10.325 18579 18579 D Hwaps   : FpsController create
+10-24 16:08:10.336 18579 18579 D Hwaps   : APS: EventAnalyzed: reInitFpsPara :mBaseFps = 90; mMaxFps = 90
+10-24 16:08:10.337 18579 18579 W Settings: Setting device_provisioned has moved from android.provider.Settings.Secure to android.provider.Settings.Global.
+10-24 16:08:10.340 18579 18579 V HiTouch_HiTouchSensor: User setup is finished.
+10-24 16:08:10.349 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:10.357 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+--------- beginning of system
+10-24 16:08:10.361 18579 18579 W HwApsManager: HwApsManagerService, registerCallback, start !
+10-24 16:08:10.363 18579 18579 D Hwaps   : APS: EventAnalyzed: registerCallbackInApsManagerService, mPkgName:dev.ccrouter.demo; result = true
+10-24 16:08:10.364 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:10.364 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:10.369 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:10.370 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:13.267 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:13.268 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:13.271 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:13.272 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:13.276 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:13.276 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:14.261 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:14.272 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:14.902 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:14.904 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:14.914 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:14.914 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:14.921 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:14.922 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:15.549 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:15.555 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:16.184 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:16.185 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:16.191 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:16.191 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:16.197 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:16.198 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:16.222 18579 18654 I v.ccrouter.dem: xdraw: Third-Thread 1.raster(18654) uid 11642 (1080x2376) detected success
+10-24 16:08:16.831 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:16.837 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:17.469 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:17.471 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:17.477 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:17.477 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:17.484 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:17.485 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:18.109 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:18.115 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:18.749 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:18.750 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:18.757 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:18.757 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:18.764 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:18.765 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:19.390 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:19.396 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:20.030 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:20.031 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:20.037 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:20.038 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:20.044 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:20.044 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:20.668 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:20.673 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:21.300 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:21.301 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:21.307 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:21.307 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:21.314 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:21.315 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:21.934 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:21.939 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:22.567 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:22.568 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:22.574 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:22.574 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:22.580 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:22.581 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:23.205 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:23.211 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:23.856 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:23.857 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:23.863 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:23.863 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:23.870 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:23.870 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:24.495 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:24.501 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:25.130 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:25.131 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:25.137 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:25.137 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:25.143 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:25.144 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:25.762 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:25.768 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:26.395 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:26.396 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:26.402 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:26.402 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:26.408 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:26.409 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:27.033 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:27.039 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:27.669 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:27.670 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:27.676 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:27.676 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:27.683 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:27.684 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:28.307 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:28.313 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:28.935 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:28.936 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:28.941 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:28.942 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:28.947 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:28.948 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:29.568 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:29.574 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:30.201 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:30.202 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:30.208 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:30.208 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:30.214 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:30.215 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:30.834 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:30.840 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:31.465 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:31.466 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:31.473 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:31.473 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:31.480 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:31.481 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:32.100 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:32.114 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:32.745 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:32.746 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:32.751 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:32.751 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:32.757 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:32.758 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:33.377 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:33.383 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:34.013 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:34.014 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:34.019 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:34.019 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:34.024 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:34.025 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:34.656 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:34.661 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:35.282 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:35.283 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:35.288 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:35.289 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:35.295 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:35.295 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:35.911 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:35.917 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:36.541 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:36.542 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:36.547 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:36.547 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:36.552 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:36.553 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:37.173 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:37.180 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:37.805 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:37.806 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:37.811 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:37.811 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:37.817 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:37.817 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:38.441 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:38.448 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:41.143 18579 18611 I v.ccrouter.dem: Explicit concurrent copying GC freed 38614(1674KB) AllocSpace objects, 1(20KB) LOS objects, 75% free, 1951KB/8095KB,  current_footprint is 7967KB, capacity is 384MB, growth limit is 384MB, paused 153us,86us total 41.365ms cpu time 39.268ms DisableRefAccess:1.39ms(1.274ms), OnTop
+10-24 16:08:41.720 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:41.721 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:41.724 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:41.725 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:41.728 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:41.728 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:42.352 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:42.359 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:42.986 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:42.987 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:42.991 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:42.992 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:42.997 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:42.997 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:43.618 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:43.624 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:44.250 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:44.251 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:44.255 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:44.256 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:44.261 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:44.261 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:44.883 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:44.888 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:45.512 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:45.512 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:45.516 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:45.517 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:45.522 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:45.522 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:46.145 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:46.152 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:46.776 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:46.777 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:46.781 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:46.782 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:46.787 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:46.788 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:47.408 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:47.415 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:48.042 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:48.042 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:48.047 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:48.047 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:48.052 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:48.053 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:48.674 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:48.681 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:49.309 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:49.310 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:49.314 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:49.314 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:49.320 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:49.320 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:49.942 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:49.949 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:50.571 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:50.571 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:50.576 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:50.576 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:50.581 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:50.582 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:51.198 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:51.205 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:51.832 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:51.833 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:51.837 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:51.837 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:51.842 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:51.843 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:52.474 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:52.481 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:53.112 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:53.113 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:53.118 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:53.118 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:53.123 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:53.123 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:53.748 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:53.754 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:54.377 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:54.378 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:54.384 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:54.384 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:54.388 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:54.388 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:55.012 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:55.019 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:55.650 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:55.651 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:55.655 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:55.655 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:55.660 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:55.660 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:56.286 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:56.292 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:56.921 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:56.921 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:56.925 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:56.926 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:56.931 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:56.931 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:57.555 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:57.560 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:58.184 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:58.185 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:58.189 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:58.189 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:58.194 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:58.194 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:08:58.829 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:58.836 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:08:59.466 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:59.466 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:08:59.468 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:08:59.468 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:08:59.471 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:08:59.472 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:00.096 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:00.100 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:00.731 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:00.731 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:00.735 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:00.735 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:00.741 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:00.741 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:01.358 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:01.363 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:01.983 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:01.984 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:01.988 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:01.988 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:01.993 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:01.994 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:02.617 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:02.623 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:03.252 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:03.252 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:03.257 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:03.257 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:03.262 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:03.262 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:03.884 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:03.891 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:04.515 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:04.516 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:04.520 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:04.520 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:04.525 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:04.526 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:05.150 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:05.156 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:05.779 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:05.779 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:05.784 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:05.784 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:05.791 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:05.791 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:06.415 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:06.422 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:09.120 18579 18611 I v.ccrouter.dem: Explicit concurrent copying GC freed 31316(1345KB) AllocSpace objects, 1(20KB) LOS objects, 75% free, 1949KB/8093KB,  current_footprint is 7965KB, capacity is 384MB, growth limit is 384MB, paused 145us,84us total 39.150ms cpu time 38.082ms DisableRefAccess:1.461ms(1.407ms), OnTop
+10-24 16:09:09.679 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:09.679 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:09.682 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:09.682 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:09.685 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:09.685 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:10.310 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:10.318 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:10.943 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:10.943 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:10.947 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:10.947 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:10.950 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:10.950 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:11.576 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:11.583 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:12.208 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:12.209 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:12.213 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:12.213 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:12.218 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:12.219 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:12.848 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:12.855 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:13.480 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:13.481 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:13.485 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:13.485 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:13.490 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:13.490 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:14.113 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:14.119 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:14.748 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:14.748 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:14.752 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:14.752 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:14.758 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:14.758 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:15.383 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:15.389 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:16.016 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:16.017 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:16.021 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:16.021 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:16.026 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:16.026 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:16.649 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:16.655 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:17.280 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:17.281 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:17.285 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:17.285 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:17.290 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:17.290 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:17.903 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:17.908 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:18.535 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:18.536 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:18.540 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:18.540 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:18.545 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:18.546 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:19.168 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:19.175 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:19.801 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:19.802 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:19.806 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:19.806 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:19.811 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:19.811 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:20.448 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:20.455 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:21.099 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:21.100 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:21.104 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:21.104 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:21.107 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:21.107 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:21.735 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:21.742 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:22.366 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:22.367 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:22.372 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:22.372 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:22.378 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:22.378 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:23.003 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:23.010 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:23.635 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:23.635 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:23.640 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:23.640 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:23.645 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:23.646 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:24.268 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:24.275 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:24.895 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:24.895 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:24.899 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:24.899 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:24.905 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:24.905 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:25.531 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:25.538 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:26.164 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:26.164 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:26.168 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:26.168 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:26.174 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:26.174 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:26.798 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:26.804 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:27.432 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:27.433 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:27.437 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:27.437 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:27.442 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:27.443 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:28.065 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:28.071 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:28.700 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:28.700 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:28.704 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:28.704 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:28.710 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:28.710 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:29.336 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:29.343 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:29.969 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:29.970 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:29.974 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:29.974 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:29.979 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:29.979 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:30.602 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:30.608 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:31.234 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:31.235 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:31.239 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:31.239 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:31.244 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:31.244 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:31.870 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:31.877 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:32.504 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:32.505 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:32.509 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:32.509 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:32.514 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:32.515 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:33.138 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:33.142 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:33.765 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:33.766 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:33.772 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:33.772 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:33.778 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:33.778 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:34.394 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:34.399 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:37.104 18579 18611 I v.ccrouter.dem: Explicit concurrent copying GC freed 31231(1343KB) AllocSpace objects, 1(20KB) LOS objects, 75% free, 1949KB/8093KB,  current_footprint is 7965KB, capacity is 384MB, growth limit is 384MB, paused 147us,76us total 41.910ms cpu time 39.909ms DisableRefAccess:1.524ms(1.464ms), OnTop
+10-24 16:09:37.682 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:37.682 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:37.685 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:37.685 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:37.689 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:37.689 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:38.316 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:38.323 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:38.950 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:38.951 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:38.955 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:38.955 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:38.960 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:38.961 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:39.577 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:39.583 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:40.213 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:40.214 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:40.218 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:40.218 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:40.223 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:40.223 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:40.850 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:40.857 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:41.504 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:41.504 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:41.508 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:41.508 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:41.513 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:41.513 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:42.142 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:42.148 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:42.772 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:42.773 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:42.777 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:42.777 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:42.782 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:42.782 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:43.399 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:43.405 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:44.032 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:44.033 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:44.037 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:44.037 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:44.042 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:44.042 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:44.670 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:44.677 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:45.306 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:45.307 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:45.311 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:45.311 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:45.316 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:45.317 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:45.937 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:45.944 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:46.557 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:46.557 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:46.561 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:46.561 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:46.566 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:46.566 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:47.182 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:47.189 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:47.822 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:47.823 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:47.827 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:47.827 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:47.834 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:47.835 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:48.454 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:48.462 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:49.096 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:49.096 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:49.100 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:49.100 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:49.103 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:49.103 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:49.732 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:49.739 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:50.369 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:50.370 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:50.374 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:50.374 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:50.379 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:50.380 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:50.997 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:51.004 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:51.634 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:51.635 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:51.639 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:51.639 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:51.644 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:51.644 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:52.274 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:52.281 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:52.914 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:52.914 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:52.918 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:52.918 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:52.924 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:52.924 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:53.551 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:53.557 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:54.190 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:54.191 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:54.195 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:54.195 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:54.198 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:54.198 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:54.837 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:54.844 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:55.471 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:55.472 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:55.476 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:55.476 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:55.481 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:55.481 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:56.106 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:56.112 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:56.742 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:56.742 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:56.745 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:56.745 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:56.748 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:56.748 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:57.374 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:57.381 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:58.012 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:58.013 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:58.017 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:58.017 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:58.022 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:58.022 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:58.649 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:58.655 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:59.286 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:59.287 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:09:59.291 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:09:59.291 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:09:59.296 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:09:59.296 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:09:59.928 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:09:59.936 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:00.564 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:00.565 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:00.568 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:00.569 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:00.574 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:00.575 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:01.208 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:01.215 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:01.847 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:01.848 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:01.851 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:01.852 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:01.856 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:01.857 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:02.483 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:02.490 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:05.192 18579 18611 I v.ccrouter.dem: Explicit concurrent copying GC freed 31232(1343KB) AllocSpace objects, 1(20KB) LOS objects, 75% free, 1949KB/8093KB,  current_footprint is 7965KB, capacity is 384MB, growth limit is 384MB, paused 213us,81us total 37.518ms cpu time 36.258ms DisableRefAccess:1.639ms(1.599ms), OnTop
+10-24 16:10:05.769 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:05.769 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:05.772 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:05.772 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:05.775 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:05.775 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:06.406 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:06.411 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:07.041 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:07.041 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:07.045 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:07.045 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:07.050 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:07.051 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:07.679 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:07.685 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:08.315 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:08.316 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:08.320 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:08.320 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:08.324 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:08.325 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:08.947 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:08.954 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:09.579 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:09.580 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:09.583 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:09.584 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:09.588 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:09.589 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:10.193 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:10.198 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:10.827 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:10.827 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:10.830 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:10.830 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:10.832 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:10.833 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:11.455 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:11.462 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:12.091 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:12.091 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:12.095 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:12.095 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:12.100 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:12.100 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:12.736 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:12.742 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:13.373 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:13.374 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:13.377 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:13.377 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:13.382 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:13.383 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:14.019 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:14.025 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:14.678 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:14.678 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:14.683 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:14.683 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:14.689 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:14.689 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:15.337 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:15.344 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:15.987 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:15.988 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:15.991 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:15.992 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:15.997 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:15.997 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:16.642 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:16.649 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:17.283 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:17.283 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:17.286 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:17.286 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:17.291 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:17.291 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:17.928 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:17.935 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:18.574 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:18.575 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:18.578 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:18.578 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:18.583 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:18.584 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:19.225 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:19.231 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:19.875 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:19.876 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:19.879 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:19.880 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:19.884 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:19.885 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:20.519 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:20.527 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:21.163 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:21.164 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:21.168 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:21.168 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:21.173 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:21.173 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:21.825 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:21.830 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:22.475 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:22.476 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:22.480 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:22.481 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:22.487 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:22.488 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:23.122 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:23.127 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:23.927 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:23.927 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:23.931 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:23.931 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:23.937 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:23.937 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:24.590 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:24.596 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:25.244 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:25.245 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:25.249 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:25.249 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:25.255 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:25.256 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:25.896 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:25.902 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:26.540 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:26.540 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:26.544 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:26.545 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:26.550 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:26.551 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:27.204 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:27.210 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:27.862 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:27.863 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:27.866 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:27.866 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:27.870 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:27.870 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:28.495 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:28.500 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:29.142 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:29.142 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:29.146 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:29.146 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:29.151 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:29.151 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:29.790 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:29.796 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:30.434 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:30.434 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:30.438 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:30.438 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:30.443 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:30.443 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:31.073 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:31.080 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:33.826 18579 18611 I v.ccrouter.dem: Explicit concurrent copying GC freed 31233(1343KB) AllocSpace objects, 1(20KB) LOS objects, 75% free, 1949KB/8093KB,  current_footprint is 7965KB, capacity is 384MB, growth limit is 384MB, paused 201us,78us total 40.563ms cpu time 39.136ms DisableRefAccess:1.718ms(1.715ms), OnTop
+10-24 16:10:34.457 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:34.458 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:34.460 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:34.460 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:34.463 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:34.464 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:35.097 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:35.105 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:35.739 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:35.740 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:35.744 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:35.744 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:35.749 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:35.749 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:36.379 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:36.385 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:36.987 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:36.987 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:36.989 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:36.989 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:36.992 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:36.993 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:37.604 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:37.610 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:38.220 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:38.221 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:38.224 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:38.224 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:38.229 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:38.229 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:38.846 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:38.853 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:39.470 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:39.471 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:39.474 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:39.474 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:39.478 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:39.479 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:40.091 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:40.096 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:40.741 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:40.742 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:40.745 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:40.745 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:40.750 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:40.750 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:41.378 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:41.384 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:42.019 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:42.019 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:42.024 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:42.024 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:42.029 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:42.029 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:42.660 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:42.666 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:43.307 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:43.307 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:43.311 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:43.311 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:43.316 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:43.317 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:43.953 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:43.960 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:44.596 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:44.597 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:44.601 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:44.601 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:44.606 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:44.606 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:45.248 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:45.255 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:45.891 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:45.892 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:45.895 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:45.895 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:45.900 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:45.900 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:46.513 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:46.517 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:47.147 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:47.148 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:47.152 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:47.152 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:47.155 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:47.155 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:47.788 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:47.795 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:48.429 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:48.430 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:48.433 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:48.434 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:48.438 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:48.439 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:49.071 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:49.080 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:49.719 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:49.720 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:49.723 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:49.723 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:49.728 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:49.728 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:50.357 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:50.363 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:50.992 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:50.992 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:50.996 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:50.996 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:51.000 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:51.001 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:51.633 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:51.639 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:52.289 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:52.290 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:52.293 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:52.293 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:52.298 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:52.299 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:52.949 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:52.954 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:53.609 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:53.610 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:53.613 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:53.614 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:53.619 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:53.619 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:54.256 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:54.262 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:54.889 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:54.890 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:54.893 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:54.893 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:54.898 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:54.898 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:55.528 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:55.534 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:56.183 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:56.183 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:56.187 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:56.187 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:56.192 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:56.193 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:56.830 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:56.836 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:57.473 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:57.474 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:57.477 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:57.477 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:57.482 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:57.483 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:58.124 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:58.130 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:58.760 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:58.760 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:10:58.763 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:10:58.764 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:10:58.768 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:10:58.768 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:10:59.404 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:10:59.410 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:02.143 18579 18653 I v.ccrouter.dem: Explicit concurrent copying GC freed 31231(1343KB) AllocSpace objects, 1(20KB) LOS objects, 75% free, 1949KB/8093KB,  current_footprint is 7965KB, capacity is 384MB, growth limit is 384MB, paused 150us,81us total 39.754ms cpu time 38.721ms DisableRefAccess:1.783ms(1.779ms), OnTop
+10-24 16:11:05.067 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:05.067 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:05.071 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:05.071 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:05.074 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:05.075 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:07.920 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:07.921 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:07.925 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:07.925 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:07.930 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:07.930 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:08.943 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:08.949 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:09.592 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:09.592 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:09.597 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:09.598 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:09.604 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:09.605 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:10.246 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:10.250 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:10.894 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:10.895 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:10.898 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:10.898 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:10.903 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:10.903 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:11.532 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:11.537 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:12.165 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:12.165 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:12.169 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:12.169 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:12.174 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:12.174 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:12.803 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:12.808 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:13.452 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:13.453 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:13.457 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:13.457 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:13.462 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:13.462 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:14.092 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:14.098 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:14.732 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:14.733 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:14.736 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:14.736 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:14.740 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:14.741 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:15.381 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:15.387 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:16.015 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:16.015 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:16.019 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:16.019 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:16.024 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:16.025 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:16.658 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:16.663 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:17.293 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:17.294 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:17.297 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:17.298 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:17.302 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:17.302 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:17.932 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:17.937 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:18.548 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:18.549 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:18.551 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:18.551 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:18.554 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:18.555 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:19.183 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:19.188 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:19.821 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:19.821 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:19.824 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:19.825 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:19.829 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:19.829 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:20.456 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:20.463 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:21.089 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:21.090 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:21.094 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:21.094 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:21.098 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:21.099 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:21.729 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:21.737 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:22.375 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:22.375 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:22.379 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:22.379 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:22.384 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:22.385 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:23.013 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:23.018 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:23.653 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:23.654 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:23.657 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:23.657 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:23.662 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:23.663 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:24.291 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:24.296 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:24.932 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:24.933 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:24.936 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:24.936 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:24.940 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:24.940 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:25.564 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:25.570 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:26.213 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:26.214 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:26.217 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:26.217 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:26.225 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:26.226 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:26.836 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:26.842 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:27.470 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:27.471 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:27.475 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:27.475 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:27.480 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:27.480 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:28.118 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:28.124 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:28.767 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:28.768 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:28.771 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:28.771 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:28.775 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:28.776 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:29.405 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:29.411 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:30.046 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:30.047 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:30.051 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:30.051 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:30.057 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:30.058 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:30.686 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:30.692 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:31.328 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:31.329 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:31.333 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:31.333 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:31.338 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:31.339 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:31.978 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:31.983 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:32.618 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:32.618 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:32.621 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:32.621 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:32.625 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:32.625 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:33.258 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:33.263 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:36.003 18579 18616 I v.ccrouter.dem: Explicit concurrent copying GC freed 44715(1876KB) AllocSpace objects, 1(20KB) LOS objects, 75% free, 1951KB/8095KB,  current_footprint is 7967KB, capacity is 384MB, growth limit is 384MB, paused 149us,65us total 40.631ms cpu time 39.388ms DisableRefAccess:1.937ms(1.934ms), OnTop
+10-24 16:11:36.602 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:36.602 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:36.605 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:36.605 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:36.608 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:36.608 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:37.250 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:37.256 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:37.886 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:37.887 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:37.890 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:37.890 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:37.895 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:37.895 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:38.532 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:38.538 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:39.171 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:39.172 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:39.175 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:39.175 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:39.179 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:39.180 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:39.817 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:39.824 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:40.472 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:40.472 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:40.475 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:40.475 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:40.480 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:40.480 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:41.117 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:41.124 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:41.765 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:41.766 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:41.770 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:41.770 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:41.777 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:41.778 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:42.409 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:42.416 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:43.045 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:43.045 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:43.048 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:43.048 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:43.053 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:43.054 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:43.689 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:43.694 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:44.325 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:44.325 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:44.328 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:44.329 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:44.333 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:44.334 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:44.977 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:44.984 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:45.619 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:45.620 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:45.623 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:45.623 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:45.628 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:45.628 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:46.253 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:46.258 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:46.889 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:46.890 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:46.893 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:46.893 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:46.898 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:46.898 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:47.529 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:47.534 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:48.171 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:48.172 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:48.175 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:48.175 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:48.180 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:48.180 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:48.816 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:48.824 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:49.453 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:49.454 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:49.457 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:49.457 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:49.461 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:49.462 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:50.106 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:50.112 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:50.746 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:50.746 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:50.750 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:50.750 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:50.755 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:50.755 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:51.384 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:51.390 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:52.022 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:52.023 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:52.026 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:52.026 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:52.031 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:52.031 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:52.668 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:52.674 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:53.303 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:53.303 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:53.306 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:53.306 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:53.311 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:53.311 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:53.950 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:53.956 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:54.586 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:54.586 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:54.589 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:54.590 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:54.594 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:54.594 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:55.224 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:55.230 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:55.866 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:55.867 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:55.870 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:55.870 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:55.875 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:55.876 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:56.511 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:56.517 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:57.153 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:57.153 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:57.156 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:57.157 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:57.161 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:57.162 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:57.793 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:57.808 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:58.451 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:58.452 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:58.455 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:58.455 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:58.458 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:58.458 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:11:59.098 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:59.104 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:11:59.742 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:59.742 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:11:59.745 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:11:59.745 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:11:59.749 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:11:59.750 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:00.390 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:00.396 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:01.030 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:01.030 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:01.034 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:01.034 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:01.038 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:01.038 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:01.676 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:01.682 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:04.415 18579 18607 I v.ccrouter.dem: Explicit concurrent copying GC freed 36438(1569KB) AllocSpace objects, 1(20KB) LOS objects, 75% free, 1951KB/8095KB,  current_footprint is 7967KB, capacity is 384MB, growth limit is 384MB, paused 138us,75us total 37.218ms cpu time 36.113ms DisableRefAccess:2.006ms(2.003ms), OnTop
+10-24 16:12:04.991 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:04.992 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:04.994 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:04.994 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:04.997 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:04.997 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:05.634 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:05.640 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:06.274 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:06.275 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:06.279 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:06.279 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:06.284 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:06.284 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:06.927 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:06.933 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:07.566 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:07.566 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:07.570 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:07.570 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:07.575 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:07.575 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:08.215 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:08.220 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:08.851 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:08.852 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:08.855 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:08.855 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:08.860 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:08.860 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:09.497 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:09.503 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:10.132 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:10.132 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:10.136 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:10.136 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:10.139 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:10.139 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:10.775 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:10.781 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:11.411 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:11.411 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:11.415 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:11.415 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:11.420 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:11.420 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:12.051 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:12.057 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:12.688 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:12.689 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:12.693 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:12.693 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:12.699 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:12.699 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:13.335 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:13.341 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:13.968 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:13.969 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:13.972 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:13.972 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:13.977 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:13.977 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:14.612 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:14.619 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:15.255 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:15.255 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:15.259 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:15.259 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:15.263 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:15.264 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:15.898 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:15.904 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:16.534 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:16.535 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:16.538 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:16.538 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:16.542 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:16.543 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:17.178 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:17.184 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:17.814 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:17.814 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:17.817 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:17.817 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:17.821 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:17.821 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:18.459 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:18.466 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:19.091 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:19.092 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:19.095 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:19.095 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:19.100 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:19.100 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:19.734 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:19.740 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:20.374 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:20.375 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:20.378 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:20.378 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:20.383 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:20.383 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:21.018 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:21.024 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:21.660 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:21.660 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:21.663 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:21.663 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:21.667 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:21.668 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:22.303 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:22.310 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:22.941 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:22.942 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:22.945 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:22.945 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:22.949 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:22.950 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:23.592 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:23.598 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:24.230 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:24.231 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:24.234 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:24.234 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:24.239 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:24.239 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:24.883 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:24.888 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:25.523 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:25.524 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:25.528 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:25.528 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:25.532 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:25.532 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:26.169 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:26.175 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:26.809 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:26.809 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:26.812 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:26.812 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:26.817 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:26.818 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:27.457 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:27.463 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:28.092 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:28.093 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:28.096 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:28.096 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:28.101 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:28.101 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:28.805 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:28.809 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:29.445 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:29.446 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:29.449 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:29.449 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:29.455 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:29.455 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:30.088 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:30.094 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:32.790 18579 18607 I v.ccrouter.dem: Explicit concurrent copying GC freed 36429(1569KB) AllocSpace objects, 1(20KB) LOS objects, 75% free, 1951KB/8095KB,  current_footprint is 7967KB, capacity is 384MB, growth limit is 384MB, paused 106us,56us total 27.873ms cpu time 27.331ms DisableRefAccess:2.071ms(2.071ms), OnTop
+10-24 16:12:33.344 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:33.344 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:33.347 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:33.347 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:33.349 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:33.350 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:33.986 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:33.991 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:34.620 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:34.621 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:34.625 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:34.625 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:34.629 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:34.630 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:35.258 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:35.263 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:35.895 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:35.895 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:35.899 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:35.899 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:35.903 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:35.904 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:36.528 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:36.533 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:37.174 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:37.174 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:37.177 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:37.178 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:37.182 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:37.182 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:37.817 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:37.824 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:38.455 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:38.456 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:38.460 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:38.460 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:38.465 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:38.465 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:39.102 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:39.107 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:39.734 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:39.734 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:39.738 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:39.738 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:39.742 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:39.743 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:40.376 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:40.381 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:41.014 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:41.014 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:41.018 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:41.018 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:41.022 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:41.023 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:41.667 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:41.674 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:42.305 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:42.305 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:42.308 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:42.308 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:42.313 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:42.313 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:42.953 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:42.959 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:43.589 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:43.590 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:43.592 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:43.593 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:43.597 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:43.597 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:44.236 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:44.242 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:44.874 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:44.875 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:44.878 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:44.878 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:44.883 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:44.883 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:45.518 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:45.523 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:46.158 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:46.159 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:46.162 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:46.163 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:46.167 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:46.168 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:46.804 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:46.810 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:47.444 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:47.445 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:47.448 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:47.449 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:47.453 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:47.454 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:48.060 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:48.063 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:48.706 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:48.707 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:48.710 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:48.710 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:48.714 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:48.715 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:49.356 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:49.362 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:50.002 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:50.003 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:50.006 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:50.006 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:50.010 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:50.011 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:50.644 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:50.650 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:51.282 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:51.283 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:51.286 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:51.286 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:51.290 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:51.290 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:51.931 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:51.938 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:52.568 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:52.569 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:52.573 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:52.573 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:52.578 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:52.578 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:53.207 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:53.214 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:53.846 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:53.846 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:53.849 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:53.849 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:53.851 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:53.852 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:54.494 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:54.501 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:55.129 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:55.130 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:55.132 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:55.132 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:55.134 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:55.135 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:55.772 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:55.778 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:56.410 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:56.411 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:56.414 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:56.414 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:56.418 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:56.419 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:57.054 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:57.060 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:57.690 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:57.690 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:12:57.694 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:12:57.694 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:12:57.698 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:12:57.698 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:12:58.337 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:12:58.343 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:01.065 18579 18653 I v.ccrouter.dem: Explicit concurrent copying GC freed 36432(1569KB) AllocSpace objects, 1(20KB) LOS objects, 75% free, 1951KB/8095KB,  current_footprint is 7967KB, capacity is 384MB, growth limit is 384MB, paused 151us,76us total 41.202ms cpu time 39.949ms DisableRefAccess:2.24ms(2.179ms), OnTop
+10-24 16:13:01.624 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:01.625 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:01.627 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:01.627 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:01.630 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:01.630 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:02.265 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:02.271 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:02.897 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:02.898 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:02.901 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:02.901 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:02.905 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:02.906 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:03.546 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:03.553 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:04.203 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:04.203 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:04.206 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:04.206 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:04.211 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:04.211 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:04.851 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:04.857 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:05.491 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:05.492 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:05.495 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:05.495 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:05.499 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:05.499 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:06.145 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:06.151 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:06.782 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:06.782 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:06.786 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:06.786 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:06.791 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:06.791 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:07.426 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:07.432 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:08.066 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:08.067 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:08.070 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:08.070 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:08.074 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:08.075 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:08.714 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:08.720 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:09.367 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:09.368 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:09.371 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:09.371 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:09.376 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:09.376 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:10.015 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:10.021 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:10.654 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:10.655 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:10.658 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:10.658 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:10.663 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:10.663 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:11.298 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:11.304 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:11.937 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:11.938 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:11.940 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:11.941 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:11.946 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:11.946 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:12.571 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:12.576 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:13.211 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:13.211 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:13.215 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:13.215 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:13.219 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:13.220 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:13.862 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:13.868 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:14.509 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:14.510 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:14.513 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:14.513 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:14.518 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:14.518 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:15.156 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:15.162 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:15.808 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:15.808 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:15.811 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:15.811 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:15.816 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:15.816 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:16.453 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:16.459 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:17.099 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:17.099 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:17.102 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:17.102 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:17.107 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:17.107 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:17.745 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:17.751 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:18.424 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:18.424 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:18.427 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:18.427 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:18.432 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:18.432 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:19.075 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:19.083 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:19.723 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:19.723 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:19.726 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:19.726 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:19.730 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:19.730 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:20.367 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:20.376 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:21.009 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:21.009 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:21.012 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:21.012 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:21.017 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:21.017 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:21.653 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:21.658 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:22.292 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:22.293 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:22.296 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:22.296 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:22.300 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:22.301 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:22.937 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:22.943 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:23.579 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:23.580 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:23.583 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:23.583 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:23.586 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:23.587 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:24.225 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:24.230 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:24.862 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:24.863 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:24.867 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:24.867 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:24.873 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:24.874 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:25.496 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:25.501 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:26.134 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:26.136 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:26.139 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:26.139 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:26.144 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:26.144 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:26.786 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:26.791 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:29.487 18579 18653 I v.ccrouter.dem: Explicit concurrent copying GC freed 36441(1569KB) AllocSpace objects, 1(20KB) LOS objects, 75% free, 1951KB/8095KB,  current_footprint is 7967KB, capacity is 384MB, growth limit is 384MB, paused 152us,76us total 41.713ms cpu time 39.927ms DisableRefAccess:2.343ms(2.261ms), OnTop
+10-24 16:13:30.068 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:30.068 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:30.072 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:30.072 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:30.074 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:30.074 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:30.715 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:30.722 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:31.365 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:31.366 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:31.369 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:31.369 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:31.373 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:31.374 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:32.002 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:32.007 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:32.647 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:32.647 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:32.650 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:32.650 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:32.652 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:32.653 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:33.293 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:33.298 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:33.929 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:33.930 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:33.933 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:33.933 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:33.937 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:33.938 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:34.584 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:34.590 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:35.229 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:35.230 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:35.233 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:35.233 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:35.238 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:35.238 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:35.878 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:35.884 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:36.516 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:36.517 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:36.521 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:36.521 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:36.525 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:36.525 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:37.165 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:37.169 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:37.801 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:37.802 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:37.805 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:37.805 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:37.810 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:37.810 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:38.542 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:38.547 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:39.203 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:39.204 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:39.207 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:39.207 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:39.213 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:39.214 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:39.865 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:39.871 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:40.503 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:40.503 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:40.506 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:40.507 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:40.511 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:40.511 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:41.140 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:41.145 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:41.775 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:41.776 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:41.779 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:41.779 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:41.783 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:41.784 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:42.410 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:42.415 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:43.045 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:43.045 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:43.050 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:43.050 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:43.053 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:43.053 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:43.685 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:43.691 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:44.327 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:44.328 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:44.330 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:44.330 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:44.334 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:44.334 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:44.970 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:44.975 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:45.611 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:45.612 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:45.615 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:45.615 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:45.619 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:45.619 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:46.252 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:46.257 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:46.893 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:46.893 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:46.896 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:46.896 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:46.899 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:46.899 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:47.535 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:47.541 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:48.175 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:48.176 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:48.179 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:48.179 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:48.184 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:48.185 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:48.815 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:48.821 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:49.462 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:49.463 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:49.465 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:49.466 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:49.470 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:49.470 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:50.119 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:50.125 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:50.779 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:50.779 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:50.782 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:50.782 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:50.787 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:50.787 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:51.429 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:51.434 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:52.077 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:52.078 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:52.081 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:52.081 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:52.084 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:52.085 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:52.723 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:52.730 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:53.352 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:53.353 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:53.356 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:53.356 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:53.360 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:53.360 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:53.992 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:53.999 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:54.637 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:54.638 18579 18579 D HwDragEnhancementImpl: handleTimerDrag: false
+10-24 16:13:54.641 18579 18579 D WebViewDragEnhancement: dragReset.
+10-24 16:13:54.641 18579 18579 D WebViewDragEnhancement: dragReset cacheSize = 0
+10-24 16:13:54.646 18579 18579 V AudioManager: querySoundEffectsEnabled...
+10-24 16:13:54.646 18579 18579 I AudioManager: querySoundEffectsEnabled fail id: 0
+10-24 16:13:55.282 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:55.287 18579 18579 V InputMethodManager: dispatchInputEvent
+10-24 16:13:58.007 18579 18607 I v.ccrouter.dem: Explicit concurrent copying GC freed 36444(1585KB) AllocSpace objects, 1(20KB) LOS objects, 75% free, 1951KB/8095KB,  current_footprint is 7967KB, capacity is 384MB, growth limit is 384MB, paused 153us,72us total 40.266ms cpu time 39.171ms DisableRefAccess:2.296ms(2.294ms), OnTop
+10-24 16:14:29.061 18579 18607 I v.ccrouter.dem: Restrict Explicit GC
+10-24 16:15:00.100 18579 18607 I v.ccrouter.dem: Restrict Explicit GC

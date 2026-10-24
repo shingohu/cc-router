@@ -16,7 +16,7 @@ import 'package:ccrouter_demo/src/ccrouter_generated/host/ccrouter_demo_ccrouter
 final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
   capturedAt: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
   catalogFingerprint:
-      "9cfcd0a8bd0dc432f06f15002437537367727263368b3631b71b609d19b053be",
+      "571eefd73ce280035374357fc27bf5be3acaee800b3f66e7a2ef6b8d9ecfd5c7",
   components: [
     CCDevToolsCatalogComponent(
       id: "demo_kv_storage_component",
@@ -411,7 +411,7 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
       source: CCDevToolsSourceLocation(
         packageName: "demo_navigation_lab",
         packageUri: "package:demo_navigation_lab/src/presentation_pages.dart",
-        line: 61,
+        line: 73,
         column: 13,
       ),
     ),
@@ -435,7 +435,7 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
       source: CCDevToolsSourceLocation(
         packageName: "demo_navigation_lab",
         packageUri: "package:demo_navigation_lab/src/presentation_pages.dart",
-        line: 139,
+        line: 151,
         column: 13,
       ),
     ),
@@ -471,7 +471,7 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
       source: CCDevToolsSourceLocation(
         packageName: "demo_navigation_lab",
         packageUri: "package:demo_navigation_lab/src/presentation_pages.dart",
-        line: 172,
+        line: 184,
         column: 13,
       ),
     ),
@@ -484,7 +484,7 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
       source: CCDevToolsSourceLocation(
         packageName: "demo_navigation_lab",
         packageUri: "package:demo_navigation_lab/src/presentation_pages.dart",
-        line: 82,
+        line: 94,
         column: 13,
       ),
     ),

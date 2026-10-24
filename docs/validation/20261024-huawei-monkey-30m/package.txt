@@ -1,0 +1,240 @@
+Activity Resolver Table:
+  Non-Data Actions:
+      android.intent.action.MAIN:
+        6e57683 dev.ccrouter.demo/.MainActivity filter 6219000
+          Action: "android.intent.action.MAIN"
+          Category: "android.intent.category.LAUNCHER"
+
+Receiver Resolver Table:
+  Non-Data Actions:
+      androidx.profileinstaller.action.SAVE_PROFILE:
+        62a8039 dev.ccrouter.demo/androidx.profileinstaller.ProfileInstallReceiver filter 50fac2c
+          Action: "androidx.profileinstaller.action.SAVE_PROFILE"
+      androidx.profileinstaller.action.INSTALL_PROFILE:
+        62a8039 dev.ccrouter.demo/androidx.profileinstaller.ProfileInstallReceiver filter 840267e
+          Action: "androidx.profileinstaller.action.INSTALL_PROFILE"
+      androidx.profileinstaller.action.SKIP_FILE:
+        62a8039 dev.ccrouter.demo/androidx.profileinstaller.ProfileInstallReceiver filter 27ef7df
+          Action: "androidx.profileinstaller.action.SKIP_FILE"
+      androidx.profileinstaller.action.BENCHMARK_OPERATION:
+        62a8039 dev.ccrouter.demo/androidx.profileinstaller.ProfileInstallReceiver filter 429e6f5
+          Action: "androidx.profileinstaller.action.BENCHMARK_OPERATION"
+
+Domain verification status:
+
+Permissions:
+  Permission [dev.ccrouter.demo.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION] (8d1ed9a):
+    sourcePackage=dev.ccrouter.demo
+    uid=11642 gids=[] type=0 prot=signature
+    perm=PermissionInfo{6e346cb dev.ccrouter.demo.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION}
+
+Registered ContentProviders:
+  dev.ccrouter.demo/androidx.startup.InitializationProvider:
+    Provider{a592ea8 dev.ccrouter.demo/androidx.startup.InitializationProvider}
+
+ContentProvider Authorities:
+  [dev.ccrouter.demo.androidx-startup]:
+    Provider{a592ea8 dev.ccrouter.demo/androidx.startup.InitializationProvider}
+      applicationInfo=ApplicationInfo{2203dc1 dev.ccrouter.demo}
+
+Key Set Manager:
+  [dev.ccrouter.demo]
+      Signing KeySets: 1158
+
+Packages:
+  Package [dev.ccrouter.demo] (ed14966):
+    userId=11642
+    pkg=Package{774a932 dev.ccrouter.demo}
+    codePath=/data/app/~~wq74nKDozLTEOY-Em-hy9Q==/dev.ccrouter.demo-Rcn5q6SE1NUX6X2-F9eJIg==
+    resourcePath=/data/app/~~wq74nKDozLTEOY-Em-hy9Q==/dev.ccrouter.demo-Rcn5q6SE1NUX6X2-F9eJIg==
+    legacyNativeLibraryDir=/data/app/~~wq74nKDozLTEOY-Em-hy9Q==/dev.ccrouter.demo-Rcn5q6SE1NUX6X2-F9eJIg==/lib
+    extractNativeLibs=false
+    primaryCpuAbi=arm64-v8a
+    secondaryCpuAbi=null
+    cpuAbiOverride=null
+    versionCode=1 minSdk=24 targetSdk=36
+    minExtensionVersions=[]
+    versionName=0.1.0
+    usesNonSdkApi=false
+    splits=[base]
+    apkSigningVersion=2
+    applicationInfo=PackageImpl{774a932 dev.ccrouter.demo}
+    applicationInfo.owns=-1
+    flags=[ DEBUGGABLE HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP ]
+    hwflags=[ ]
+    privateFlags=[ PRIVATE_FLAG_ACTIVITIES_RESIZE_MODE_RESIZEABLE_VIA_SDK_VERSION ALLOW_AUDIO_PLAYBACK_CAPTURE PRIVATE_FLAG_ALLOW_NATIVE_HEAP_POINTER_TAGGING ]
+    forceQueryable=false
+    queriesPackages=[]
+    queriesIntents=[Intent { act=android.intent.action.PROCESS_TEXT dat=content://*/* typ=text/plain }]
+    dataDir=/data/user/0/dev.ccrouter.demo
+    supportsScreens=[small, medium, large, xlarge, resizeable, anyDensity]
+    usesOptionalLibraries:
+      androidx.window.extensions
+      androidx.window.sidecar
+    timeStamp=2026-10-24 12:27:33
+    firstInstallTime=2026-10-24 12:27:34
+    lastUpdateTime=2026-10-24 12:27:34
+    signatures=PackageSignatures{e5d84a7 version:2, signatures:[47e8ab2c], past signatures:[]}
+    installPermissionsFixed=true
+    pkgFlags=[ DEBUGGABLE HAS_CODE ALLOW_CLEAR_USER_DATA ALLOW_BACKUP ]
+    declared permissions:
+      dev.ccrouter.demo.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: prot=signature, INSTALLED
+    requested permissions:
+      android.permission.INTERNET
+      dev.ccrouter.demo.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+      android.permission.POST_NOTIFICATIONS
+    install permissions:
+      android.permission.INTERNET: granted=true
+      dev.ccrouter.demo.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION: granted=true
+    User 0: ceDataInode=72596 installed=true hidden=false suspended=false distractionFlags=0 stopped=true notLaunched=true enabled=0 instant=false virtual=false
+      gids=[3003]
+      runtime permissions:
+        android.permission.POST_NOTIFICATIONS: granted=false, flags=[ REVIEW_REQUIRED|USER_SENSITIVE_WHEN_GRANTED|USER_SENSITIVE_WHEN_DENIED]
+
+Queries:
+  system apps queryable: false
+  queries via package name:
+  queries via intent:
+    [com.android.server.telecom,com.huawei.systemmanager,com.huawei.gateway,com.huawei.android.projectmenu,com.android.keychain,com.huawei.waudio,com.huawei.hwddmp,com.huawei.vrservice,com.android.inputdevices,com.huawei.harmonyos.foundation,com.huawei.android.chr,com.huawei.hiview,com.android.networkstack.inprocess,com.huawei.android.hwaps,com.android.location.fused,com.huawei.audioaccessorymanager,com.huawei.nb.service,com.huawei.android.internal.app,com.huawei.ca,com.android.settings,com.huawei.msdp,com.huawei.hwdetectrepair,androidhwext,com.huawei.dmsdp,com.huawei.powergenie,com.huawei.game.kitserver,com.android.localtransport,android,com.huawei.searchservice,com.android.networkstack.tethering.inprocess,com.android.providers.settings,com.android.wallpaperbackup,com.huawei.iaware,com.huawei.mmitest,com.huawei.systemserver,com.huawei.android.karaoke]:
+      dev.ccrouter.demo
+    com.huawei.nemo:
+      dev.ccrouter.demo
+    com.baidu.input_huawei:
+      dev.ccrouter.demo
+    com.huawei.music:
+      dev.ccrouter.demo
+    com.baidu.duer.superapp:
+      dev.ccrouter.demo
+    com.aliyun.tongyi:
+      dev.ccrouter.demo
+    com.jingdong.app.mall:
+      dev.ccrouter.demo
+    com.autonavi.minimap:
+      dev.ccrouter.demo
+    com.xunmeng.pinduoduo:
+      dev.ccrouter.demo
+    com.baidu.BaiduMap:
+      dev.ccrouter.demo
+    com.baidu.netdisk:
+      dev.ccrouter.demo
+    com.tencent.mm:
+      dev.ccrouter.demo
+    com.MobileTicket:
+      dev.ccrouter.demo
+    com.icbc:
+      dev.ccrouter.demo
+    com.sankuai.meituan:
+      dev.ccrouter.demo
+    com.taobao.idlefish:
+      dev.ccrouter.demo
+    com.estrongs.android.pop:
+      dev.ccrouter.demo
+    com.tmri.app.main:
+      dev.ccrouter.demo
+    com.vanke.activity:
+      dev.ccrouter.demo
+    com.sinyee.babybus.recommendapp:
+      dev.ccrouter.demo
+    com.tencent.wework:
+      dev.ccrouter.demo
+    air.tv.douyu.android:
+      dev.ccrouter.demo
+    com.sohu.inputmethod.sogou:
+      dev.ccrouter.demo
+    com.taptap:
+      dev.ccrouter.demo
+    com.youdao.translator:
+      dev.ccrouter.demo
+    com.taobao.taobao:
+      dev.ccrouter.demo
+    com.netease.cloudmusic:
+      dev.ccrouter.demo
+    com.greenpoint.android.mc10086.activity:
+      dev.ccrouter.demo
+    top.pixeldance.blehelper:
+      dev.ccrouter.demo
+    cn.zfs.bledebugger:
+      dev.ccrouter.demo
+    com.ct.client:
+      dev.ccrouter.demo
+    dev.ccrouter.demo:
+      com.huawei.browser
+      com.ss.android.article.news
+      com.baidu.BaiduMap
+      com.microsoft.emmx
+  queryable via interaction:
+    User 0:
+  queryable via uses-library:
+
+Package Changes:
+  Sequence number=31
+  User 0:
+    seq=1, package=com.huawei.hwstartupguide
+    seq=3, package=com.huawei.health
+    seq=4, package=com.aliyun.tongyi
+    seq=5, package=com.huawei.hwdiagnosis
+    seq=6, package=com.huawei.gamebox
+    seq=7, package=com.up.liberlive_c1.downloadverify
+    seq=9, package=com.liberlive.flutter_module.host
+    seq=15, package=com.android.bluetooth
+    seq=28, package=com.up.liberlive_c1
+    seq=29, package=com.up.liberlive_flutter
+    seq=30, package=dev.ccrouter.demo
+
+
+
+Compiler stats:
+  [dev.ccrouter.demo]
+    (No recorded stats)
+
+APEX session state:
+
+Active APEX packages:
+
+
+Inactive APEX packages:
+
+
+Factory APEX packages:
+
+
+Snapshot statistics
+   Unrecorded-hits: 2539  Cork-level: 0
+   Summary stats               TotBlds     TotUsed     TotCork     BigBlds    ShortLvd     TotTime     MaxTime
+          0:27         now           0           0           0           0           0           0           0
+          1:27        0:27           8      159386           0           1           2          94          86
+          2:27        1:27           0           0           0           0           0           0           0
+          3:27        2:27           0           0           0           0           0           0           0
+          4:27        3:27           0           0           0           0           0           0           0
+          5:27        4:27           0           0           0           0           0           0           0
+          6:27        5:27           0           0           0           0           0           0           0
+          7:27        6:27           0           0           0           0           0           0           0
+          8:27        7:27           0           0           0           0           0           0           0
+          9:27        8:27           0           0           0           0           0           0           0
+    5:09:50:45         now        1074     5112103           0          27         240        2751         101
+
+   Build times                  <= 1ms      <= 2ms      <= 5ms     <= 10ms     <= 20ms     <= 50ms    <= 100ms     > 100ms
+          0:27         now           0           0           0           0           0           0           0           0
+          1:27        0:27           6           0           1           0           0           0           1           0
+          2:27        1:27           0           0           0           0           0           0           0           0
+          3:27        2:27           0           0           0           0           0           0           0           0
+          4:27        3:27           0           0           0           0           0           0           0           0
+          5:27        4:27           0           0           0           0           0           0           0           0
+          6:27        5:27           0           0           0           0           0           0           0           0
+          7:27        6:27           0           0           0           0           0           0           0           0
+          8:27        7:27           0           0           0           0           0           0           0           0
+          9:27        8:27           0           0           0           0           0           0           0           0
+    5:09:50:45         now         869         107          63          10           3           9          12           1
+
+   Use counters                   <= 1        <= 2        <= 5       <= 10       <= 20       <= 50      <= 100       > 100
+          0:27         now           0           0           0           0           0           0           0           0
+          1:27        0:27           2           0           0           0           0           0           1           5
+          2:27        1:27           0           0           0           0           0           0           0           0
+          3:27        2:27           0           0           0           0           0           0           0           0
+          4:27        3:27           0           0           0           0           0           0           0           0
+          5:27        4:27           0           0           0           0           0           0           0           0
+          6:27        5:27           0           0           0           0           0           0           0           0
+          7:27        6:27           0           0           0           0           0           0           0           0
+          8:27        7:27           0           0           0           0           0           0           0           0
+          9:27        8:27           0           0           0           0           0           0           0           0
+    5:09:50:45         now         133          32          74          66          52          67          69         580

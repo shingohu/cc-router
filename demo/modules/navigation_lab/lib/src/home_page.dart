@@ -188,7 +188,13 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           children: [
             Icon(Icons.hub_outlined),
             SizedBox(width: 10),
-            Text('CCRouter Lab'),
+            Flexible(
+              child: Text(
+                'CCRouter Lab',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
           ],
         ),
         actions: [
@@ -403,16 +409,16 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       title: 'Push + typed result',
       subtitle: 'int/List<String> 参数由生成 Codec 编解码。',
       onTap: () {
+        final navigator = CCRouter.navigatorOf(context);
         demoAnalyticsTracker.click(eventId: 'demo.navigation.typed_result');
         return _run(
           'Push typed detail',
-          () => CCRouter.navigator.push<String>(
+          () => navigator.push<String>(
             DemoNavigationLabRoutes.detail(
               id: 42,
               tags: const ['typed', 'query', 'result'],
             ),
             source: const CCNavigationSource.feature('navigation.typed'),
-            context: context,
           ),
         );
       },

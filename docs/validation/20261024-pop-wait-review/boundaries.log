@@ -44,9 +44,9 @@ Downloading packages...
 Got dependencies!
 41 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart
-00:00 +0: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=0 scoped=false priorRuntimeNavigation=false
-00:00 +0 -1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=0 scoped=false priorRuntimeNavigation=false [E]
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart
+00:00 +0: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=0 scoped=false priorRuntimeNavigation=false
+00:00 +0 -1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=0 scoped=false priorRuntimeNavigation=false [E]
   Expected: empty
     Actual: Set:['right']
   A retired initial stack cannot taint its replacement.
@@ -55,9 +55,9 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                                      expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart 102:13  main.<fn>
   
-00:00 +0 -1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=0 scoped=false priorRuntimeNavigation=true
-00:00 +1 -1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=0 scoped=true priorRuntimeNavigation=false
-00:00 +1 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=0 scoped=true priorRuntimeNavigation=false [E]
+00:00 +0 -1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=0 scoped=false priorRuntimeNavigation=true
+00:00 +1 -1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=0 scoped=true priorRuntimeNavigation=false
+00:00 +1 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=0 scoped=true priorRuntimeNavigation=false [E]
   Expected: empty
     Actual: Set:['right']
   A retired initial stack cannot taint its replacement.
@@ -66,9 +66,9 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                                      expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart 102:13  main.<fn>
   
-00:00 +1 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=0 scoped=true priorRuntimeNavigation=true
-00:00 +2 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=4 scoped=false priorRuntimeNavigation=false
-00:00 +2 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=4 scoped=false priorRuntimeNavigation=false [E]
+00:00 +1 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=0 scoped=true priorRuntimeNavigation=true
+00:00 +2 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=4 scoped=false priorRuntimeNavigation=false
+00:00 +2 -3: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=4 scoped=false priorRuntimeNavigation=false [E]
   Expected: empty
     Actual: Set:['right']
   A retired initial stack cannot taint its replacement.
@@ -77,9 +77,9 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                                      expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart 102:13  main.<fn>
   
-00:00 +2 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=4 scoped=false priorRuntimeNavigation=true
-00:00 +3 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=4 scoped=true priorRuntimeNavigation=false
-00:00 +3 -4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=4 scoped=true priorRuntimeNavigation=false [E]
+00:00 +2 -3: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=4 scoped=false priorRuntimeNavigation=true
+00:00 +3 -3: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=4 scoped=true priorRuntimeNavigation=false
+00:00 +3 -4: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=4 scoped=true priorRuntimeNavigation=false [E]
   Expected: empty
     Actual: Set:['right']
   A retired initial stack cannot taint its replacement.
@@ -88,11 +88,11 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                                      expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart 102:13  main.<fn>
   
-00:00 +3 -4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=4 scoped=true priorRuntimeNavigation=true
-00:00 +4 -4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy dispose pending=false error=false
-00:00 +5 -4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy dispose pending=false error=true
-00:00 +6 -4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy dispose pending=true error=false
-00:01 +6 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy dispose pending=true error=false [E]
+00:00 +3 -4: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/initial_stack.dart: initial stack late Pop: history=4 scoped=true priorRuntimeNavigation=true
+00:00 +4 -4: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy dispose pending=false error=false
+00:00 +5 -4: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy dispose pending=false error=true
+00:00 +6 -4: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy dispose pending=true error=false
+00:01 +6 -5: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy dispose pending=true error=false [E]
   Expected: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: false, routePayload: false, runtime: false), settled: true)>
     Actual: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: true, routePayload: false, runtime: true), settled: false)>
   Owner teardown must end framework waits before backend completion.
@@ -101,8 +101,8 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                              expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart 216:13  main.<fn>
   
-00:01 +6 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy dispose pending=true error=true
-00:01 +6 -6: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy dispose pending=true error=true [E]
+00:01 +6 -5: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy dispose pending=true error=true
+00:01 +6 -6: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy dispose pending=true error=true [E]
   Expected: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: false, routePayload: false, runtime: false), settled: true)>
     Actual: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: true, routePayload: false, runtime: true), settled: false)>
   Owner teardown must end framework waits before backend completion.
@@ -111,10 +111,10 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                              expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart 216:13  main.<fn>
   
-00:01 +6 -6: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy detach pending=false error=false
-00:01 +7 -6: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy detach pending=false error=true
-00:01 +8 -6: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy detach pending=true error=false
-00:01 +8 -7: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy detach pending=true error=false [E]
+00:01 +6 -6: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy detach pending=false error=false
+00:01 +7 -6: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy detach pending=false error=true
+00:01 +8 -6: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy detach pending=true error=false
+00:01 +8 -7: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy detach pending=true error=false [E]
   Expected: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: false, routePayload: false, runtime: false), settled: true)>
     Actual: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: true, routePayload: false, runtime: true), settled: false)>
   Owner teardown must end framework waits before backend completion.
@@ -123,8 +123,8 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                              expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart 216:13  main.<fn>
   
-00:01 +8 -7: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy detach pending=true error=true
-00:02 +8 -8: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy detach pending=true error=true [E]
+00:01 +8 -7: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy detach pending=true error=true
+00:02 +8 -8: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: legacy detach pending=true error=true [E]
   Expected: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: false, routePayload: false, runtime: false), settled: true)>
     Actual: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: true, routePayload: false, runtime: true), settled: false)>
   Owner teardown must end framework waits before backend completion.
@@ -133,10 +133,10 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                              expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart 216:13  main.<fn>
   
-00:02 +8 -8: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator dispose pending=false error=false
-00:02 +9 -8: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator dispose pending=false error=true
-00:02 +10 -8: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator dispose pending=true error=false
-00:02 +10 -9: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator dispose pending=true error=false [E]
+00:02 +8 -8: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator dispose pending=false error=false
+00:02 +9 -8: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator dispose pending=false error=true
+00:02 +10 -8: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator dispose pending=true error=false
+00:02 +10 -9: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator dispose pending=true error=false [E]
   Expected: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: false, routePayload: false, runtime: false), settled: true)>
     Actual: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: true, routePayload: false, runtime: true), settled: false)>
   Owner teardown must end framework waits before backend completion.
@@ -145,8 +145,8 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                              expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart 216:13  main.<fn>
   
-00:02 +10 -9: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator dispose pending=true error=true
-00:02 +10 -10: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator dispose pending=true error=true [E]
+00:02 +10 -9: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator dispose pending=true error=true
+00:02 +10 -10: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator dispose pending=true error=true [E]
   Expected: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: false, routePayload: false, runtime: false), settled: true)>
     Actual: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: true, routePayload: false, runtime: true), settled: false)>
   Owner teardown must end framework waits before backend completion.
@@ -155,10 +155,10 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                              expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart 216:13  main.<fn>
   
-00:02 +10 -10: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator detach pending=false error=false
-00:02 +11 -10: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator detach pending=false error=true
-00:03 +12 -10: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator detach pending=true error=false
-00:03 +12 -11: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator detach pending=true error=false [E]
+00:02 +10 -10: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator detach pending=false error=false
+00:02 +11 -10: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator detach pending=false error=true
+00:03 +12 -10: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator detach pending=true error=false
+00:03 +12 -11: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator detach pending=true error=false [E]
   Expected: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: false, routePayload: false, runtime: false), settled: true)>
     Actual: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: true, routePayload: false, runtime: true), settled: false)>
   Owner teardown must end framework waits before backend completion.
@@ -167,8 +167,8 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                              expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart 216:13  main.<fn>
   
-00:03 +12 -11: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator detach pending=true error=true
-00:03 +12 -12: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator detach pending=true error=true [E]
+00:03 +12 -11: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator detach pending=true error=true
+00:03 +12 -12: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: coordinator detach pending=true error=true [E]
   Expected: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: false, routePayload: false, runtime: false), settled: true)>
     Actual: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: true, routePayload: false, runtime: true), settled: false)>
   Owner teardown must end framework waits before backend completion.
@@ -177,10 +177,10 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                              expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart 216:13  main.<fn>
   
-00:03 +12 -12: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped dispose pending=false error=false
-00:03 +13 -12: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped dispose pending=false error=true
-00:04 +14 -12: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped dispose pending=true error=false
-00:04 +14 -13: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped dispose pending=true error=false [E]
+00:03 +12 -12: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped dispose pending=false error=false
+00:03 +13 -12: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped dispose pending=false error=true
+00:04 +14 -12: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped dispose pending=true error=false
+00:04 +14 -13: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped dispose pending=true error=false [E]
   Expected: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: false, routePayload: false, runtime: false), settled: true)>
     Actual: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: true, routePayload: false, runtime: true), settled: false)>
   Owner teardown must end framework waits before backend completion.
@@ -189,8 +189,8 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                              expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart 216:13  main.<fn>
   
-00:04 +14 -13: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped dispose pending=true error=true
-00:04 +14 -14: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped dispose pending=true error=true [E]
+00:04 +14 -13: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped dispose pending=true error=true
+00:04 +14 -14: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped dispose pending=true error=true [E]
   Expected: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: false, routePayload: false, runtime: false), settled: true)>
     Actual: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: true, routePayload: false, runtime: true), settled: false)>
   Owner teardown must end framework waits before backend completion.
@@ -199,10 +199,10 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                              expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart 216:13  main.<fn>
   
-00:04 +14 -14: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped detach pending=false error=false
-00:04 +15 -14: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped detach pending=false error=true
-00:04 +16 -14: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped detach pending=true error=false
-00:04 +16 -15: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped detach pending=true error=false [E]
+00:04 +14 -14: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped detach pending=false error=false
+00:04 +15 -14: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped detach pending=false error=true
+00:04 +16 -14: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped detach pending=true error=false
+00:04 +16 -15: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped detach pending=true error=false [E]
   Expected: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: false, routePayload: false, runtime: false), settled: true)>
     Actual: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: true, routePayload: false, runtime: true), settled: false)>
   Owner teardown must end framework waits before backend completion.
@@ -211,8 +211,8 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                              expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart 216:13  main.<fn>
   
-00:04 +16 -15: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped detach pending=true error=true
-00:05 +16 -16: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped detach pending=true error=true [E]
+00:04 +16 -15: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped detach pending=true error=true
+00:05 +16 -16: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: scoped detach pending=true error=true [E]
   Expected: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: false, routePayload: false, runtime: false), settled: true)>
     Actual: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: true, routePayload: false, runtime: true), settled: false)>
   Owner teardown must end framework waits before backend completion.
@@ -221,10 +221,10 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                              expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart 216:13  main.<fn>
   
-00:05 +16 -16: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close dispose pending=false error=false
-00:05 +17 -16: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close dispose pending=false error=true
-00:05 +18 -16: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close dispose pending=true error=false
-00:05 +18 -17: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close dispose pending=true error=false [E]
+00:05 +16 -16: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close dispose pending=false error=false
+00:05 +17 -16: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close dispose pending=false error=true
+00:05 +18 -16: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close dispose pending=true error=false
+00:05 +18 -17: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close dispose pending=true error=false [E]
   Expected: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: false, routePayload: false, runtime: false), settled: true)>
     Actual: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: true, routePayload: true, runtime: true), settled: false)>
   Owner teardown must end framework waits before backend completion.
@@ -233,8 +233,8 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                              expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart 216:13  main.<fn>
   
-00:05 +18 -17: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close dispose pending=true error=true
-00:05 +18 -18: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close dispose pending=true error=true [E]
+00:05 +18 -17: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close dispose pending=true error=true
+00:05 +18 -18: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close dispose pending=true error=true [E]
   Expected: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: false, routePayload: false, runtime: false), settled: true)>
     Actual: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: true, routePayload: true, runtime: true), settled: false)>
   Owner teardown must end framework waits before backend completion.
@@ -243,10 +243,10 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                              expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart 216:13  main.<fn>
   
-00:05 +18 -18: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close detach pending=false error=false
-00:06 +19 -18: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close detach pending=false error=true
-00:06 +20 -18: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close detach pending=true error=false
-00:06 +20 -19: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close detach pending=true error=false [E]
+00:05 +18 -18: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close detach pending=false error=false
+00:06 +19 -18: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close detach pending=false error=true
+00:06 +20 -18: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close detach pending=true error=false
+00:06 +20 -19: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close detach pending=true error=false [E]
   Expected: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: false, routePayload: false, runtime: false), settled: true)>
     Actual: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: true, routePayload: true, runtime: true), settled: false)>
   Owner teardown must end framework waits before backend completion.
@@ -255,8 +255,8 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                              expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart 216:13  main.<fn>
   
-00:06 +20 -19: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close detach pending=true error=true
-00:06 +20 -20: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close detach pending=true error=true [E]
+00:06 +20 -19: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close detach pending=true error=true
+00:06 +20 -20: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close detach pending=true error=true [E]
   Expected: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: false, routePayload: false, runtime: false), settled: true)>
     Actual: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: true, routePayload: true, runtime: true), settled: false)>
   Owner teardown must end framework waits before backend completion.
@@ -265,10 +265,10 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                              expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart 216:13  main.<fn>
   
-00:06 +20 -20: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close replace pending=false error=false
-00:07 +21 -20: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close replace pending=false error=true
-00:07 +22 -20: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close replace pending=true error=false
-00:07 +22 -21: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close replace pending=true error=false [E]
+00:06 +20 -20: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close replace pending=false error=false
+00:07 +21 -20: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close replace pending=false error=true
+00:07 +22 -20: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close replace pending=true error=false
+00:07 +22 -21: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close replace pending=true error=false [E]
   Expected: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: false, routePayload: false, runtime: false), settled: true)>
     Actual: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: true, routePayload: true, runtime: true), settled: false)>
   Owner teardown must end framework waits before backend completion.
@@ -277,8 +277,8 @@ Try `flutter pub outdated` for more information.
   package:flutter_test/src/widget_tester.dart 477:18                              expect
   packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart 216:13  main.<fn>
   
-00:07 +22 -21: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close replace pending=true error=true
-00:07 +22 -22: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close replace pending=true error=true [E]
+00:07 +22 -21: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close replace pending=true error=true
+00:07 +22 -22: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart: close replace pending=true error=true [E]
   Expected: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: false, routePayload: false, runtime: false), settled: true)>
     Actual: ({({bool callerPayload, bool routePayload, bool runtime}) retained, bool settled}):<(retained: (callerPayload: true, routePayload: true, runtime: true), settled: false)>
   Owner teardown must end framework waits before backend completion.

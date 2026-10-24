@@ -1,4 +1,4 @@
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/runtime_round_trip/test_host_disposal.dart
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/runtime_round_trip/test_host_disposal.dart
 00:00 +0: every concurrent TestHost dispose joins actual resource cleanup
 00:00 +0 -1: every concurrent TestHost dispose joins actual resource cleanup [E]
   Expected: false

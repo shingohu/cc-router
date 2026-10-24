@@ -183,6 +183,7 @@ void probe() {
   print(CCNavigationDispatchAdapter);
   print(CCNavigationParentStackAdapter);
   print(CCNavigationScopedPopTargetSource);
+  print(CCNavigationHostLifetime);
   print(contracts.CCNavigationTelemetryContext);
   print(contracts.CCRouteRestorationOpportunitySource);
   print(contracts.CCAdaptiveLayoutPolicy);
@@ -207,6 +208,7 @@ void probe() {
           'CCNavigationDispatchAdapter',
           'CCNavigationParentStackAdapter',
           'CCNavigationScopedPopTargetSource',
+          'CCNavigationHostLifetime',
           'CCNavigationTelemetryContext',
           'CCRouteRestorationOpportunitySource',
           'CCAdaptiveLayoutPolicy',
@@ -216,6 +218,8 @@ void probe() {
         probe.writeAsStringSync("""
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
+import 'package:flutter/widgets.dart';
+CCNavigator scoped(BuildContext context) => CCRouter.navigatorOf(context);
 Future<void> probe() async {
   CCRouterHost.initialize(hostAssembly: CCHostAssembly.fromComponents(components: const []));
   await CCRouterHost.runInitTasks(gate: CCInitTaskGate.appStarted);

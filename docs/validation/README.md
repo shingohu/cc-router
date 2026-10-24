@@ -6,13 +6,24 @@
 
 ## 最新源码自动化证据
 
+[2026-10-24 遗留项收口](20261024-closure/report.md)：Demo Cupertino 正文、小屏标题、
+遗留文案与图标资源修复，验收材料可逆脱敏，以及华为同引擎固定场景复测。
+
+[2026-10-24 核心价值收口回归](20261024-core-value-final/report.md)：按 13 条约定复核框架、
+生成、隔离 Plugin、Demo/独立 Host、工具、API 边界与压力场景。Generator 全量 668 项
+通过、1 项远端 smoke 跳过；敏感信息门禁失败及真机遗留待办在报告中独立列明。
+
+[2026-10-24 Host / Outlet 绑定导航与实现后 review](20261024-scoped-navigator/report.md)：
+新增 `CCRouter.navigatorOf(context)`，修复真实 `default` Host 的归属歧义；
+框架 1,411 项、Demo 113 项通过，包含旧对象换代拒绝和 Context / Runtime / Navigator GC 验证。
+
 [2026-10-24 Managed 工具链接入修复](20261024-managed-tooling/report.md)记录 Generator 脚手架、
 隔离 Analyzer、真实 LSP 和独立消费者验证；与下方 Runtime 回归的范围分别计数。
 后续[两阶段推送与 Demo Plugin pin 验证](20261024-managed-tooling/pin-release.md)记录远端来源、
 bootstrap 加载验证及现有 IDE 缓存边界。
 
-[2026-10-24 外部导航等待与所有权修复](20261024-backend-wait-fixes/report.md)是本次收口时
-最近一轮源码回归记录，包含修复前失败、修复内容与原始日志：
+[2026-10-24 外部导航等待与所有权修复](20261024-backend-wait-fixes/report.md)记录此前专项，
+包含修复前失败、修复内容与原始日志：
 
 | 项目 | 该轮结果与边界 |
 | --- | --- |
@@ -27,6 +38,14 @@ bootstrap 加载验证及现有 IDE 缓存边界。
 所有平台均无缺陷、不证明性能优于旧架构，也不自动关闭发布阻塞项。
 
 ## 真实平台与功能覆盖
+
+[2026-10-24 Android Native 分配归因](20261024-native-attribution/report.md)：匹配 Engine
+符号、完整随机负载 trace、诊断开关对照及不初始化 CCRouter 的纯 Flutter 字体复现。
+原生字体分配、诊断开销和框架 Owner 分开归因；不延续旧 trace 的丢失数据。
+
+[2026-10-24 华为 Android 真机 30 分钟 Monkey](20261024-huawei-monkey-30m/report.md)：
+Profile 构建、内存/CPU/Flutter 帧、真实 UI 问题及系统录屏/温控干扰分段记录；
+内存增长和长帧仍有待定位项，不能据此宣称零泄漏或全功能通过。
 
 | 日期 | 记录 | 适用范围 |
 | --- | --- | --- |
@@ -75,3 +94,7 @@ GoRouter 比较仅作历史证据，兼容包与入口已删除。当前运行�
 - 真实窗口、系统手势、构建 smoke、Widget 回归和性能/heap 分开记录，不能相互替代。
 - 后续修复新增前向链接或索引，不重写旧报告的源码身份、失败事实、测试数和设备结果。
 - README 与专项契约引用本索引或对应报告；完整日志保留在原目录，不复制成多份状态表。
+- 保存日志前运行 `node tool/sanitize_validation_evidence.mjs` 检查本机路径；需要归一化时
+  加 `--write`，工具先将所有原件备份到仓库外再修改，包含 tracked 和未追踪验收文件。
+  仅做路径归一化，不能替代敏感信息扫描。提交前执行
+  `fvm dart tool/release_sensitivity_check.dart --include-untracked`，暂存后仍执行原 tracked 门禁。

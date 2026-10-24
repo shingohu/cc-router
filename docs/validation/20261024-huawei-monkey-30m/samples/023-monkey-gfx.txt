@@ -1,0 +1,88 @@
+Applications Graphics Acceleration Info:
+Uptime: 107364488 Realtime: 468152948
+
+** Graphics info for pid 24424 [dev.ccrouter.demo] **
+
+Stats since: 106674424503514ns
+Total frames rendered: 36
+Janky frames: 1 (2.78%)
+Janky frames (legacy): 1 (2.78%)
+50th percentile: 5ms
+90th percentile: 8ms
+95th percentile: 10ms
+99th percentile: 21ms
+Number Missed Vsync: 0
+Number High input latency: 1
+Number Slow UI thread: 0
+Number Slow bitmap uploads: 0
+Number Slow issue draw commands: 1
+Number Frame deadline missed: 1
+Number Frame deadline missed (legacy): 1
+HISTOGRAM: 5ms=28 6ms=3 7ms=1 8ms=2 9ms=0 10ms=1 11ms=0 12ms=0 13ms=0 14ms=0 15ms=0 16ms=0 17ms=0 18ms=0 19ms=0 20ms=0 21ms=1 22ms=0 23ms=0 24ms=0 25ms=0 26ms=0 27ms=0 28ms=0 29ms=0 30ms=0 31ms=0 32ms=0 34ms=0 36ms=0 38ms=0 40ms=0 42ms=0 44ms=0 46ms=0 48ms=0 53ms=0 57ms=0 61ms=0 65ms=0 69ms=0 73ms=0 77ms=0 81ms=0 85ms=0 89ms=0 93ms=0 97ms=0 101ms=0 105ms=0 109ms=0 113ms=0 117ms=0 121ms=0 125ms=0 129ms=0 133ms=0 150ms=0 200ms=0 250ms=0 300ms=0 350ms=0 400ms=0 450ms=0 500ms=0 550ms=0 600ms=0 650ms=0 700ms=0 750ms=0 800ms=0 850ms=0 900ms=0 950ms=0 1000ms=0 1050ms=0 1100ms=0 1150ms=0 1200ms=0 1250ms=0 1300ms=0 1350ms=0 1400ms=0 1450ms=0 1500ms=0 1550ms=0 1600ms=0 1650ms=0 1700ms=0 1750ms=0 1800ms=0 1850ms=0 1900ms=0 1950ms=0 2000ms=0 2050ms=0 2100ms=0 2150ms=0 2200ms=0 2250ms=0 2300ms=0 2350ms=0 2400ms=0 2450ms=0 2500ms=0 2550ms=0 2600ms=0 2650ms=0 2700ms=0 2750ms=0 2800ms=0 2850ms=0 2900ms=0 2950ms=0 3000ms=0 3050ms=0 3100ms=0 3150ms=0 3200ms=0 3250ms=0 3300ms=0 3350ms=0 3400ms=0 3450ms=0 3500ms=0 3550ms=0 3600ms=0 3650ms=0 3700ms=0 3750ms=0 3800ms=0 3850ms=0 3900ms=0 3950ms=0 4000ms=0 4050ms=0 4100ms=0 4150ms=0 4200ms=0 4250ms=0 4300ms=0 4350ms=0 4400ms=0 4450ms=0 4500ms=0 4550ms=0 4600ms=0 4650ms=0 4700ms=0 4750ms=0 4800ms=0 4850ms=0 4900ms=0 4950ms=0
+50th gpu percentile: 3ms
+90th gpu percentile: 4ms
+95th gpu percentile: 4ms
+99th gpu percentile: 4ms
+GPU HISTOGRAM: 1ms=6 2ms=8 3ms=18 4ms=4 5ms=0 6ms=0 7ms=0 8ms=0 9ms=0 10ms=0 11ms=0 12ms=0 13ms=0 14ms=0 15ms=0 16ms=0 17ms=0 18ms=0 19ms=0 20ms=0 21ms=0 22ms=0 23ms=0 24ms=0 25ms=0 4950ms=0
+Pipeline=Skia (OpenGL)
+CPU Caches:
+  Glyph Cache: 0.00 bytes (1 entry)
+  Glyph Count: 0 
+Total CPU memory usage:
+  0 bytes, 0.00 bytes (0.00 bytes is purgeable)
+GPU Caches:
+  Other:
+    Other: 0.00 bytes (1 entry)
+  Image:
+    Texture: 36.00 KB (1 entry)
+  Scratch:
+    Buffer Object: 48.00 KB (1 entry)
+Total GPU memory usage:
+  86016 bytes, 84.00 KB (36.00 KB is purgeable)
+
+Profile data in ms:
+
+	dev.ccrouter.demo/dev.ccrouter.demo.MainActivity/android.view.ViewRootImpl@6d080c (visibility=0)
+Window: dev.ccrouter.demo/dev.ccrouter.demo.MainActivity
+Stats since: 107320693613311ns
+Total frames rendered: 4
+Janky frames: 0 (0.00%)
+Janky frames (legacy): 0 (0.00%)
+50th percentile: 8ms
+90th percentile: 8ms
+95th percentile: 8ms
+99th percentile: 8ms
+Number Missed Vsync: 0
+Number High input latency: 1
+Number Slow UI thread: 0
+Number Slow bitmap uploads: 0
+Number Slow issue draw commands: 0
+Number Frame deadline missed: 0
+Number Frame deadline missed (legacy): 0
+HISTOGRAM: 5ms=2 6ms=0 7ms=0 8ms=2 9ms=0 10ms=0 11ms=0 12ms=0 13ms=0 14ms=0 15ms=0 16ms=0 17ms=0 18ms=0 19ms=0 20ms=0 21ms=0 22ms=0 23ms=0 24ms=0 25ms=0 26ms=0 27ms=0 28ms=0 29ms=0 30ms=0 31ms=0 32ms=0 34ms=0 36ms=0 38ms=0 40ms=0 42ms=0 44ms=0 46ms=0 48ms=0 53ms=0 57ms=0 61ms=0 65ms=0 69ms=0 73ms=0 77ms=0 81ms=0 85ms=0 89ms=0 93ms=0 97ms=0 101ms=0 105ms=0 109ms=0 113ms=0 117ms=0 121ms=0 125ms=0 129ms=0 133ms=0 150ms=0 200ms=0 250ms=0 300ms=0 350ms=0 400ms=0 450ms=0 500ms=0 550ms=0 600ms=0 650ms=0 700ms=0 750ms=0 800ms=0 850ms=0 900ms=0 950ms=0 1000ms=0 1050ms=0 1100ms=0 1150ms=0 1200ms=0 1250ms=0 1300ms=0 1350ms=0 1400ms=0 1450ms=0 1500ms=0 1550ms=0 1600ms=0 1650ms=0 1700ms=0 1750ms=0 1800ms=0 1850ms=0 1900ms=0 1950ms=0 2000ms=0 2050ms=0 2100ms=0 2150ms=0 2200ms=0 2250ms=0 2300ms=0 2350ms=0 2400ms=0 2450ms=0 2500ms=0 2550ms=0 2600ms=0 2650ms=0 2700ms=0 2750ms=0 2800ms=0 2850ms=0 2900ms=0 2950ms=0 3000ms=0 3050ms=0 3100ms=0 3150ms=0 3200ms=0 3250ms=0 3300ms=0 3350ms=0 3400ms=0 3450ms=0 3500ms=0 3550ms=0 3600ms=0 3650ms=0 3700ms=0 3750ms=0 3800ms=0 3850ms=0 3900ms=0 3950ms=0 4000ms=0 4050ms=0 4100ms=0 4150ms=0 4200ms=0 4250ms=0 4300ms=0 4350ms=0 4400ms=0 4450ms=0 4500ms=0 4550ms=0 4600ms=0 4650ms=0 4700ms=0 4750ms=0 4800ms=0 4850ms=0 4900ms=0 4950ms=0
+50th gpu percentile: 3ms
+90th gpu percentile: 4ms
+95th gpu percentile: 4ms
+99th gpu percentile: 4ms
+GPU HISTOGRAM: 1ms=0 2ms=2 3ms=1 4ms=1 5ms=0 6ms=0 7ms=0 8ms=0 9ms=0 10ms=0 11ms=0 12ms=0 13ms=0 14ms=0 15ms=0 16ms=0 17ms=0 18ms=0 19ms=0 20ms=0 21ms=0 22ms=0 23ms=0 24ms=0 25ms=0 4950ms=0
+
+
+---PROFILEDATA---
+Flags,FrameTimelineVsyncId,IntendedVsync,Vsync,InputEventId,HandleInputStart,AnimationStart,PerformTraversalsStart,DrawStart,FrameDeadline,FrameInterval,FrameStartTime,SyncQueued,SyncStart,IssueDrawCommandsStart,SwapBuffers,FrameCompleted,DequeueBufferDuration,QueueBufferDuration,GpuCompleted,SwapBuffersCompleted,DisplayPresentTime,MetaDataFps,
+1,638455,107320847142003,107320847142003,0,107320847469561,107320847470082,107320847470603,107320847865394,107320863808669,107320847430499,16666666,107320848711749,107320848754978,107320848821644,107320853799249,107320855793519,3459375,762500,107320855265394,107320855793519,0,0,
+0,640248,107337181710378,107337181710378,-824632237,107337182048204,107337182048725,107337182049246,107337182208100,107337198377044,107337182034663,16666666,107337182669038,107337182784663,107337182821642,107337186986746,107337190151329,3685937,440625,107337190151329,107337188776850,0,0,
+0,640594,107342338659092,107342338659092,0,107342339012266,107342339012787,107342339013308,107342339192474,107342355325758,107342338960704,16666666,107342339500808,107342339540391,107342339573724,107342341638829,107342343259141,1546354,296875,107342343259141,107342342342474,0,0,
+0,641454,107362363964866,107362363964866,1770898706,107362364685180,107362364688305,107362364690388,107362365179451,107362380631532,107362364653930,16666666,107362366184659,107362366229451,107362366267992,107362366650805,107362369056534,12500,413021,107362369056534,107362368086742,0,0,
+---PROFILEDATA---
+
+
+View hierarchy:
+
+  dev.ccrouter.demo/dev.ccrouter.demo.MainActivity/android.view.ViewRootImpl@6d080c
+  7 views, 13.06 kB of render nodes
+
+
+Total ViewRootImpl   : 1
+Total attached Views : 7
+Total RenderNode     : 13.06 kB (used) / 37.03 kB (capacity)
+

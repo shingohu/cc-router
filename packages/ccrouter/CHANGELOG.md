@@ -2,6 +2,9 @@
 
 ## 0.1.0 - Unreleased
 
+- Added `CCRouter.navigatorOf(context)` for reusable Host/Outlet-bound navigation
+  without retaining Context. Existing calls remain unchanged; stale Host/Runtime
+  generations fail explicitly and declared destination placement stays authoritative.
 - Added Managed-only `CCManagedRouterApp`, explicit `CCRouterApp.managed`,
   MultiHost/Shell/Outlet composition, context-scoped navigation and parent-stack
   reconstruction. Removed GoRouter Host integration; progressive adoption embeds

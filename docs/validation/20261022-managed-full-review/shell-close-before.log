@@ -1,4 +1,4 @@
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart
 00:00 +0: Managed: close retires retained Shell ownership exactly
 ══╡ EXCEPTION CAUGHT BY FOUNDATION LIBRARY ╞════════════════════════════════════════════════════════
 The following assertion was thrown while dispatching notifications for _CCManagedRouterDelegate:
@@ -59,7 +59,7 @@ When the exception was thrown, this was the stack:
 #44     WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:723:23)
 #47     TestAsyncUtils.guard (package:flutter_test/src/test_async_utils.dart:74:41)
 #48     WidgetTester.pumpAndSettle (package:flutter_test/src/widget_tester.dart:716:27)
-#49     main.<anonymous closure> (file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart:55:26)
+#49     main.<anonymous closure> (file://<home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart:55:26)
 <asynchronous suspension>
 #50     testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>

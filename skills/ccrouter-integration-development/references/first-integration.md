@@ -57,6 +57,21 @@ Owner 从自己的 component-author 入口导入 Contract 声明，使用
 `@CCRouteImplementation(DetailRouteContract)`。普通内部路由不需要这次 Contract 提升。
 详细声明、依赖与资源模式见[实现指导](implementation-patterns.md)及[能力选择](capability-decisions.md)。
 
+多 Host 或左右 Outlet 中，调用点需要指定导航区域。单次操作可使用
+`CCRouter.navigator.push(intent, context: context)`；重复操作可在目标 Navigator 内先获取：
+
+```dart
+final navigator = CCRouter.navigatorOf(context);
+final result = await navigator.push<String>(DetailRoute.intent(itemId: 7));
+```
+
+在 build、didChangeDependencies 或交互回调获取，不在 initState 获取。
+该对象绑定原 Host 注册轮次和 Outlet，不保存 Context，无须 dispose；显式路由 placement
+仍优先。组件换区域时重新获取，Host 注销或 Runtime 关闭后旧对象同步抛出
+`CCRouteCancelledError`（`code == 'host_detached'`）。页面退出本身不使对象失效，
+业务仍须管理页面任务取消。原有全局入口保持可用，但无 Context 的全局调用不会自动推断
+调用组件所在区域。完整生命周期与跨区域规则见[实现指导](implementation-patterns.md#typed-navigation)。
+
 ## 3. 从真实 Host 生成并装配
 
 先按工程约定执行 Pub。独立 Flutter Host 可以从自己的目录执行：

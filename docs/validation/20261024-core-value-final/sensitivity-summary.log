@@ -1,0 +1,11 @@
+Command: fvm dart tool/release_sensitivity_check.dart
+Exit code: 1
+Tracked-file findings: 45392
+Category: macOS absolute home path
+Affected tracked files: 147
+Findings in tracked files modified at the start of this regression: 0
+
+All findings have the same category. Values are not included here.
+This is a grouped summary of the complete scanner output, not its complete log.
+The scanner enumerates tracked files only; untracked files and Git history are
+outside this command's coverage. Existing historical evidence was not modified.

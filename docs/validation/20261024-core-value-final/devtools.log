@@ -1,0 +1,14 @@
+00:00 +0: loading <workspace>/packages/ccrouter_devtools/test/panel_test.dart
+00:00 +0: <workspace>/packages/ccrouter_devtools/test/snapshot_test.dart: snapshot copies collection boundaries and preserves read-only data
+00:00 +1: <workspace>/packages/ccrouter_devtools_protocol/test/protocol_test.dart: envelope round trips static catalog and runtime edges
+00:00 +2: <workspace>/packages/ccrouter_devtools_protocol/test/protocol_test.dart: envelope round trips static catalog and runtime edges
+00:00 +3: <workspace>/packages/ccrouter_devtools/test/snapshot_test.dart: runtime snapshot conversion keeps stable IDs and omits payloads
+00:00 +4: <workspace>/packages/ccrouter_devtools_protocol/test/protocol_test.dart: decoder rejects malformed required fields
+00:00 +5: <workspace>/packages/ccrouter_devtools/test/snapshot_test.dart: service extension can be cleared without exposing a mutable Runtime
+00:00 +6: <workspace>/packages/ccrouter_devtools_protocol/test/protocol_test.dart: decoder rejects unsupported protocol versions
+00:00 +7: <workspace>/packages/ccrouter_devtools/test/panel_test.dart: panel renders tabs and remains read-only for empty Runtime
+00:00 +8: <workspace>/packages/ccrouter_devtools/test/panel_test.dart: panel renders tabs and remains read-only for empty Runtime
+00:00 +9: <workspace>/packages/ccrouter_devtools/test/panel_test.dart: panel renders tabs and remains read-only for empty Runtime
+00:00 +10: <workspace>/packages/ccrouter_devtools/test/panel_test.dart: panel links static Catalog records to Runtime and source
+00:00 +11: <workspace>/packages/ccrouter_devtools/test/panel_test.dart: panel refreshes from a static test snapshot
+00:00 +12: All tests passed!

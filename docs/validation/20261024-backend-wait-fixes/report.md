@@ -1,7 +1,7 @@
 # 外部导航等待与所有权边界修复、扩大回归
 
 日期：2026-10-24。工作树：
-`/Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router`，
+`<home>/.codex/worktrees/managed-navigation-runtime/cc-router`，
 分支 `codex/managed-navigation-runtime`，HEAD
 `09cb21d78381bbdeab431cf6bca279f909827db1` 及此前未提交成果。
 本轮未提交、推送、删除或回退已有成果，未修改主工作树。

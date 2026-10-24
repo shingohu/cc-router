@@ -1,0 +1,37 @@
+[
+  {
+    "name": "profile_period",
+    "comment": "Time between profiler samples in microseconds. Minimum 50.",
+    "modified": true,
+    "_flagType": "Int",
+    "valueAsString": "1000"
+  },
+  {
+    "name": "profiler",
+    "comment": "Enable the profiler.",
+    "modified": true,
+    "_flagType": "Bool",
+    "valueAsString": "true"
+  },
+  {
+    "name": "profiler_native_memory",
+    "comment": "Enable native memory statistic collection.",
+    "modified": false,
+    "_flagType": "Bool",
+    "valueAsString": "false"
+  },
+  {
+    "name": "timeline_recorder",
+    "comment": "Select the timeline recorder used. Valid values: none, ring, endless, startup, systrace, file, callback, perfettofile",
+    "modified": false,
+    "_flagType": "String",
+    "valueAsString": "ring"
+  },
+  {
+    "name": "trace_profiler",
+    "comment": "Profiler trace",
+    "modified": false,
+    "_flagType": "Bool",
+    "valueAsString": "false"
+  }
+]

@@ -27,6 +27,7 @@ Package 集合、版本承诺和 Hosted 目标必须由仓库 Owner 明确决定
 | P0 | 干净消费者验证 | 2026-10-19 已通过独立本地源码快照的 Pub/生成/typed Route/释放闭环，见[证据](validation/consumer-adoption-20261019/README.md)；尚未验证发布归档/Hosted 和版本升级 | 从发布归档/Hosted 依赖创建最小 Flutter 工程并完成生成、运行和升级 smoke |
 | P1 | 安全响应入口 | 已有基础 `SECURITY.md`，尚未形成稳定版响应承诺 | 发布前确认私密报告入口、支持版本和响应边界 |
 | P1 | 长期质量趋势 | 首轮性能、RSS/Heap 和真机回归已做 | RC 再采样并保存结果；长期趋势不作为一次性发布任务冒充完成 |
+| P1 | 真机 Native 内存与长帧 | 2026-10-24 已补匹配引擎符号、两轮完整随机采样与纯 Flutter 字体复现，主要保留分配经过 Skia/FreeType，压力通知后未明显释放；原 1.16 秒长帧未复现，见[最新证据](validation/20261024-native-attribution/report.md) | 沿字体资源 Owner/缓存持有路径继续定位，验证修复或明确可回收缓存边界；完成长帧定位或形成有证据的适用边界 |
 
 首次执行 `fvm dart pub publish --dry-run` 确认缺少 `LICENSE`、Package README、CHANGELOG 和
 `homepage/repository`。本轮已补齐后三类的首发骨架与元数据；License 仍需 Owner 做法律选择，
@@ -72,7 +73,13 @@ fvm dart run tool/release_sensitivity_check.dart
 正文提到文件名、图片或远端同名文件不能满足索引覆盖。
 `skill_bundle_check.dart` 验证隔离的双 Skill 分发包引用与真实 CLI 帮助的一致性。
 `release_sensitivity_check.dart` 检查当前 tracked files 中的常见凭据和本机绝对路径，
-只报告位置和类别，不回显值。
+只报告位置和类别，不回显值。提交前加 `--include-untracked` 可检查新增且未忽略的文件。
+验收证据先运行 `node tool/sanitize_validation_evidence.mjs`；`--write` 会先将所有原件
+备份到仓库外，再归一化路径，不修改测试结论或 Git 历史。
+
+2026-10-24 当前验收路径门禁已闭环：保留上轮 147 个 tracked files、45,392 处命中的
+失败事实，将这批文件及 3 个新增验收文件机械归一化后，原 tracked 门禁通过。
+后续结果见[收口记录](validation/20261024-closure/report.md)。此项不替代历史凭据治理。
 
 这些脚本都不能替代 Git 历史 Secret Scanner。正式公开发布前还必须：
 

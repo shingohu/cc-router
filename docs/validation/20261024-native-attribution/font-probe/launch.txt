@@ -1,0 +1,7 @@
+Starting: Intent { cmp=dev.ccrouter.demo/.MainActivity (has extras) }
+Status: ok
+LaunchState: COLD
+Activity: dev.ccrouter.demo/.MainActivity
+TotalTime: 613
+WaitTime: 616
+Complete

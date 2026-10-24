@@ -1,0 +1,13 @@
+{
+  "serial": "UJN0221619023373",
+  "package": "dev.ccrouter.demo",
+  "commit": "7d9b51211ddae3e55349c64773ec7d4e2675e391",
+  "apkSha256": "c61c5f19fdbf985ef2dc0c246dd03234ec612b0806103dd1ae34e97d925dbe32",
+  "mode": "profile",
+  "seed": 20261024,
+  "durationMs": 1800000,
+  "sampleMs": 30000,
+  "throttleMs": 200,
+  "startedPreparationAt": "2026-10-24T04:28:21.071Z",
+  "vmFrames": "Flutter.Frame via Extension stream; no timeline recording"
+}

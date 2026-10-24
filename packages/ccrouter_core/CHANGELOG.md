@@ -2,6 +2,10 @@
 
 ## 0.1.0 - Unreleased
 
+- Added a read-only, weak Host-registration lease for framework-scoped navigation
+  clients; same-ID replacement cannot revive a retired registration.
+- Preserve a concrete call-site Host named `default` across focus changes and
+  asynchronous policy instead of confusing it with the declaration sentinel.
 - Added Runtime-owned Managed navigation identity, exact targeted close and
   explicit active-route revalidation with operation/partition commit fences.
 - Bound asynchronous navigation and external Pop/close waits to concrete Host

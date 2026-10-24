@@ -1,0 +1,11 @@
+00:00 +0: loading <workspace>/demo/modules/kv_storage/test/storage_client_test.dart
+00:00 +0: <workspace>/demo/modules/kv_storage/test/scoped_storage_test.dart: scoped facade resolves the latest account and environment
+00:00 +1: <workspace>/demo/modules/kv_storage/test/storage_client_test.dart: stores supported primitive values by namespace
+00:00 +2: <workspace>/demo/modules/payment/test/generated_service_proxy_test.dart: generated component Proxy invokes sync, async, getter, and Trace
+00:00 +3: <workspace>/demo/modules/payment/test/generated_service_proxy_test.dart: generated component Proxy invokes sync, async, getter, and Trace
+00:00 +4: <workspace>/demo/modules/payment/test/generated_service_proxy_test.dart: generated component Proxy invokes sync, async, getter, and Trace
+00:00 +5: <workspace>/demo/modules/payment/test/generated_service_proxy_test.dart: generated component Proxy invokes sync, async, getter, and Trace
+00:00 +6: <workspace>/demo/modules/payment/test/generated_service_proxy_test.dart: generated component Proxy invokes sync, async, getter, and Trace
+00:00 +7: <workspace>/demo/modules/payment/test/generated_service_proxy_test.dart: generated component Proxy invokes sync, async, getter, and Trace
+00:00 +8: <workspace>/demo/modules/navigation_lab/test/storage_service_proxy_test.dart: generated Service Proxy preserves namespace and caller boundary
+00:00 +9: All tests passed!

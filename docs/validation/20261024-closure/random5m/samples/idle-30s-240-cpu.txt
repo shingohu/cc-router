@@ -1,0 +1,6 @@
+Tasks: 1 total,   0 running,   1 sleeping,   0 stopped,   0 zombie
+  Mem:  7668884K total,  7539688K used,   129196K free,     8720K buffers
+ Swap:  6291452K total,  2167596K used,  4123856K free,  2507948K cached
+800%cpu  18%user   4%nice  39%sys 736%idle   0%iow   4%irq   0%sirq   0%host
+  PID USER         PR  NI VIRT  RES  SHR S[%CPU] %MEM     TIME+ ARGS
+22808 u0_a1642     10 -10  12G 341M 108M S  0.0   4.5   1:27.90 dev.ccrouter.demo

@@ -1,0 +1,24 @@
+{
+  "mode": "diagnostic",
+  "pid": "29732",
+  "isolateId": "isolates/1390570932008295",
+  "serial": "UJN0221619023373",
+  "pkg": "dev.ccrouter.demo",
+  "startedAt": "2026-10-24T08:56:21.510Z",
+  "apkSha256": "a3416242f0d745158b39d7f8e24d5404ebf33e298d04b3d7bd2397748a414851",
+  "profiler": true,
+  "timeline": [
+    "Dart",
+    "Embedder",
+    "GC"
+  ],
+  "snapshotPolling": true,
+  "devtoolsRegistered": true,
+  "allocationProfile": false,
+  "explicitGC": false,
+  "samplingIntervalBytes": 262144,
+  "sharedMemoryBytes": 16777216,
+  "seed": 20261024,
+  "throttleMs": 200,
+  "randomDurationMs": 300000
+}

@@ -1,0 +1,1 @@
+    mResumedActivity: ActivityRecord{47d657e u0 dev.ccrouter.demo/.MainActivity t7485}

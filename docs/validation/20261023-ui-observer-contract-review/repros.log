@@ -1,49 +1,49 @@
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart
-00:00 +0: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart: documented version range 1.2.3
-00:00 +1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart: documented version range =1.2.3
-00:00 +2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.navigation: removeOnly
-00:00 +3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.navigation: removeOnly
-00:00 +4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.navigation: removeOnly
-00:00 +5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.navigation: removeOnly
-00:00 +5 -1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.navigation: removeOnly
-00:00 +5 -1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart: documented version range >=1.2.3 [E]
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart
+00:00 +0: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart: documented version range 1.2.3
+00:00 +1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart: documented version range =1.2.3
+00:00 +2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.navigation: removeOnly
+00:00 +3: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.navigation: removeOnly
+00:00 +4: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.navigation: removeOnly
+00:00 +5: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.navigation: removeOnly
+00:00 +5 -1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.navigation: removeOnly
+00:00 +5 -1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart: documented version range >=1.2.3 [E]
   FormatException: Invalid Contract SemVer: >=1.2.3
   package:ccrouter_contracts/src/contract_compatibility.dart 52:7                         new CCSemVer.parse
   package:ccrouter_contracts/src/contract_compatibility.dart 178:28                       new CCContractVersionRange.parse
   packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart 20:44  main.<fn>
   
-00:00 +6 -1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
-00:00 +6 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
-00:00 +6 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
-00:00 +6 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart: documented version range >1.2.3 [E]
+00:00 +6 -1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
+00:00 +6 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
+00:00 +6 -3: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
+00:00 +6 -3: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart: documented version range >1.2.3 [E]
   FormatException: Invalid Contract SemVer: >1.2.3
   package:ccrouter_contracts/src/contract_compatibility.dart 52:7                         new CCSemVer.parse
   package:ccrouter_contracts/src/contract_compatibility.dart 178:28                       new CCContractVersionRange.parse
   packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart 20:44  main.<fn>
   
-00:00 +6 -4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
-00:00 +6 -4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart: documented version range <=1.2.3 [E]
+00:00 +6 -4: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
+00:00 +6 -4: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart: documented version range <=1.2.3 [E]
   FormatException: Invalid Contract SemVer: <=1.2.3
   package:ccrouter_contracts/src/contract_compatibility.dart 52:7                         new CCSemVer.parse
   package:ccrouter_contracts/src/contract_compatibility.dart 178:28                       new CCContractVersionRange.parse
   packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart 20:44  main.<fn>
   
-00:00 +6 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
-00:00 +6 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart: documented version range <1.2.3 [E]
+00:00 +6 -5: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
+00:00 +6 -5: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart: documented version range <1.2.3 [E]
   FormatException: Invalid Contract SemVer: <1.2.3
   package:ccrouter_contracts/src/contract_compatibility.dart 52:7                         new CCSemVer.parse
   package:ccrouter_contracts/src/contract_compatibility.dart 178:28                       new CCContractVersionRange.parse
   packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart 20:44  main.<fn>
   
-00:00 +6 -6: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
-00:00 +6 -6: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart: documented version range >=1.2.3	<2.0.0 [E]
+00:00 +6 -6: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
+00:00 +6 -6: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart: documented version range >=1.2.3	<2.0.0 [E]
   FormatException: Invalid Contract SemVer: >=1.2.3	<2.0.0
   package:ccrouter_contracts/src/contract_compatibility.dart 52:7                         new CCSemVer.parse
   package:ccrouter_contracts/src/contract_compatibility.dart 178:28                       new CCContractVersionRange.parse
   packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart 20:44  main.<fn>
   
-00:00 +6 -7: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
-00:00 +6 -7: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart: parsed SemVer retains immutable prerelease identifiers [E]
+00:00 +6 -7: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
+00:00 +6 -7: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart: parsed SemVer retains immutable prerelease identifiers [E]
   Expected: throws <Instance of 'UnsupportedError'>
     Actual: <Closure: () => void>
      Which: returned <null>
@@ -52,7 +52,7 @@
   package:flutter_test/src/widget_tester.dart 477:18                                     expect
   packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart 28:5  main.<fn>
   
-00:00 +6 -7: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.navigation: readdBeforeDrain [E]
+00:00 +6 -7: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.navigation: readdBeforeDrain [E]
   Expected: empty
     Actual: [
               Instance of 'CCNavigationLifecycleEvent',
@@ -64,10 +64,10 @@
   package:flutter_test/src/widget_tester.dart 477:18                                expect
   packages/ccrouter_test/test/review_repros/observer_registration/repro.dart 82:11  main.<fn>
   
-00:00 +6 -8: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
-00:00 +7 -8: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
-00:00 +7 -9: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
-00:00 +7 -9: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart: UI Host assembly accepts documented version range >=1.0.0 [E]
+00:00 +6 -8: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
+00:00 +7 -8: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
+00:00 +7 -9: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
+00:00 +7 -9: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart: UI Host assembly accepts documented version range >=1.0.0 [E]
   Expected: return normally
     Actual: <Closure: () => CCHostAssembly>
      Which: threw FormatException:<FormatException: Invalid Contract SemVer: >=1.0.0>
@@ -76,7 +76,7 @@
   package:flutter_test/src/widget_tester.dart 477:18                                     expect
   packages/ccrouter_test/test/review_repros/contract_version_boundaries/repro.dart 34:7  main.<fn>
   
-00:00 +7 -9: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.navigation: oldRemoverAgain [E]
+00:00 +7 -9: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.navigation: oldRemoverAgain [E]
   Expected: non-empty
     Actual: []
   Old cleanup must not remove new subscription
@@ -85,9 +85,9 @@
   package:flutter_test/src/widget_tester.dart 477:18                                expect
   packages/ccrouter_test/test/review_repros/observer_registration/repro.dart 73:11  main.<fn>
   
-00:00 +8 -9: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
-00:00 +8 -10: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
-00:00 +8 -10: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.entry: readdBeforeDrain [E]
+00:00 +8 -9: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
+00:00 +8 -10: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
+00:00 +8 -10: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.entry: readdBeforeDrain [E]
   Expected: empty
     Actual: [
               Instance of 'CCRouteEntryLifecycleEvent',
@@ -100,8 +100,8 @@
   package:flutter_test/src/widget_tester.dart 477:18                                expect
   packages/ccrouter_test/test/review_repros/observer_registration/repro.dart 82:11  main.<fn>
   
-00:00 +8 -11: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
-00:00 +8 -11: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.entry: oldRemoverAgain [E]
+00:00 +8 -11: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
+00:00 +8 -11: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.entry: oldRemoverAgain [E]
   Expected: non-empty
     Actual: []
   Old cleanup must not remove new subscription
@@ -110,9 +110,9 @@
   package:flutter_test/src/widget_tester.dart 477:18                                expect
   packages/ccrouter_test/test/review_repros/observer_registration/repro.dart 73:11  main.<fn>
   
-00:00 +9 -11: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
-00:00 +9 -12: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
-00:00 +9 -12: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.visibility: readdBeforeDrain [E]
+00:00 +9 -11: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
+00:00 +9 -12: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
+00:00 +9 -12: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.visibility: readdBeforeDrain [E]
   Expected: empty
     Actual: [Instance of 'CCRouteVisibilityEvent', Instance of 'CCRouteVisibilityEvent']
   Unsubscribed queued events must not revive
@@ -121,8 +121,8 @@
   package:flutter_test/src/widget_tester.dart 477:18                                expect
   packages/ccrouter_test/test/review_repros/observer_registration/repro.dart 82:11  main.<fn>
   
-00:00 +9 -13: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
-00:00 +9 -13: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.visibility: oldRemoverAgain [E]
+00:00 +9 -13: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
+00:00 +9 -13: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.visibility: oldRemoverAgain [E]
   Expected: non-empty
     Actual: []
   Old cleanup must not remove new subscription
@@ -131,9 +131,9 @@
   package:flutter_test/src/widget_tester.dart 477:18                                expect
   packages/ccrouter_test/test/review_repros/observer_registration/repro.dart 73:11  main.<fn>
   
-00:00 +10 -13: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
-00:00 +10 -14: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
-00:00 +10 -14: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.failure: readdBeforeDrain [E]
+00:00 +10 -13: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
+00:00 +10 -14: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
+00:00 +10 -14: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.failure: readdBeforeDrain [E]
   Expected: empty
     Actual: [Instance of 'CCNavigationFailureEvent']
   Unsubscribed queued events must not revive
@@ -142,8 +142,8 @@
   package:flutter_test/src/widget_tester.dart 477:18                                expect
   packages/ccrouter_test/test/review_repros/observer_registration/repro.dart 82:11  main.<fn>
   
-00:00 +10 -15: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
-00:00 +10 -15: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.failure: oldRemoverAgain [E]
+00:00 +10 -15: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=false
+00:00 +10 -15: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/observer_registration/repro.dart: observer Kind.failure: oldRemoverAgain [E]
   Expected: non-empty
     Actual: []
   Old cleanup must not remove new subscription
@@ -152,7 +152,7 @@
   package:flutter_test/src/widget_tester.dart 477:18                                expect
   packages/ccrouter_test/test/review_repros/observer_registration/repro.dart 73:11  main.<fn>
   
-00:00 +11 -15: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=true
+00:00 +11 -15: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=true
 ══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
 The following TestFailure was thrown running a test:
 Expected: {'propsRetained': false, 'callbackOwnerRetained': false, 'stateRetained': false}
@@ -160,7 +160,7 @@ Expected: {'propsRetained': false, 'callbackOwnerRetained': false, 'stateRetaine
    Which: at location ['propsRetained'] is <true> instead of <false>
 
 When the exception was thrown, this was the stack:
-#4      main.<anonymous closure> (file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart:123:7)
+#4      main.<anonymous closure> (file://<home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart:123:7)
 <asynchronous suspension>
 #5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
 <asynchronous suspension>
@@ -170,11 +170,11 @@ When the exception was thrown, this was the stack:
 (elided one frame from package:stack_trace)
 
 This was caught by the test expectation on the following line:
-  file:///Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart line 123
+  file://<home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart line 123
 The test description was:
   unmounted Fragment releases inputs: retain inert framework Action=true
 ════════════════════════════════════════════════════════════════════════════════════════════════════
-00:00 +11 -16: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=true [E]
+00:00 +11 -16: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/fragment_lifecycle/repro.dart: unmounted Fragment releases inputs: retain inert framework Action=true [E]
   Test failed. See exception logs above.
   The test description was: unmounted Fragment releases inputs: retain inert framework Action=true
   

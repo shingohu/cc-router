@@ -1,0 +1,204 @@
+00:00 +0: loading test/plugin_test.dart
+00:00 +0: test/plugin_test.dart: advertises a stable name and supported server boundary
+00:00 +1: test/plugin_test.dart: returns protocol Quick Fixes for one conflict diagnostic
+00:00 +2: test/plugin_test.dart: reports diagnostics from the latest unsaved overlay
+00:00 +3: test/plugin_test.dart: returns a protocol Quick Fix for one proven missing owner
+00:00 +4: loading test/analysis_server_integration_test.dart
+00:00 +4: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:12 +5: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:25 +6: test/analysis_server_integration_test.dart: real server publishes and clears invalid ccrouter.yaml
+00:36 +7: test/analysis_server_integration_test.dart: real LSP reports and clears UI alias diagnostics on editor overlay
+00:44 +8: test/analysis_server_integration_test.dart: real LSP accepts DTO Action after editor shape repair
+00:50 +9: test/analysis_server_integration_test.dart: real legacy ccrouter_host_component_owner_missing server bridges and clears current watch diagnostics
+00:56 +10: test/analysis_server_integration_test.dart: real LSP ccrouter_host_component_owner_missing server bridges and clears current watch diagnostics
+01:02 +11: test/analysis_server_integration_test.dart: real LSP ccrouter_ui_missing_implementation server bridges and clears current watch diagnostics
+01:08 +12: test/analysis_server_integration_test.dart: real legacy server follows unsaved Pub manifest overlays
+01:12 +13: test/analysis_server_integration_test.dart: real LSP server follows unsaved Pub manifest overlays
+01:17 +14: test/analysis_server_integration_test.dart: real legacy server publishes and clears stale Pub resolution hints
+01:22 +15: test/analysis_server_integration_test.dart: real LSP server publishes and clears stale Pub resolution hints
+01:27 +16: test/analysis_server_integration_test.dart: real server publishes an initial stale Pub hint for a Workspace member
+01:33 +17: test/analysis_server_integration_test.dart: real server polls structured diagnostics for a nested Workspace Host
+01:37 +18: test/analysis_server_integration_test.dart: real server clears foreign annotation diagnostics despite unrelated errors
+01:44 +19: test/analysis_server_integration_test.dart: real watcher refreshes consumers across workspace Contract packages
+01:54 +20: test/analysis_server_integration_test.dart: real LSP diagnostics and codeAction fix the open document
+02:00 +21: test/analysis_server_integration_test.dart: real legacy disk watcher refreshes all five generated capability kinds
+02:30 +22: test/analysis_server_integration_test.dart: real LSP disk watcher refreshes all five generated capability kinds
+02:58 +23: test/analysis_server_integration_test.dart: real server: unsaved overlays and service Quick Fix round trip
+03:06 +24: loading test/project_context_test.dart
+03:06 +24: test/project_context_test.dart: matches the shared Generator and Analyzer role matrix
+03:06 +25: test/project_context_test.dart: project context cache reparses only after role inputs change
+03:06 +26: test/project_context_test.dart: project context cache retains malformed configuration until change
+03:06 +27: test/project_context_test.dart: reports malformed and contradictory ccrouter configuration
+03:06 +28: loading test/generator_diagnostics_bridge_test.dart
+03:06 +28: test/generator_diagnostics_bridge_test.dart: accepts only the current failed watch identity
+03:06 +29: test/generator_diagnostics_bridge_test.dart: clears diagnostics published during initial source analysis
+03:06 +30: test/generator_diagnostics_bridge_test.dart: accepts a current failed one-shot snapshot without watch
+03:06 +31: test/generator_diagnostics_bridge_test.dart: invalidates one-shot diagnostics when resolution inputs change
+03:06 +32: test/generator_diagnostics_bridge_test.dart: successful one-shot clears a previously published failure
+03:06 +33: test/generator_diagnostics_bridge_test.dart: active successful watch suppresses an older failed one-shot
+03:06 +34: test/generator_diagnostics_bridge_test.dart: reports only new validated successful watch epochs
+03:06 +35: test/generator_diagnostics_bridge_test.dart: reports a successful one-shot published after the baseline
+03:06 +36: test/generator_diagnostics_bridge_test.dart: reports only saved manifest versus resolved graph drift
+03:06 +37: test/generator_diagnostics_bridge_test.dart: compares an unsaved manifest overlay with the resolved graph
+03:06 +38: test/generator_diagnostics_bridge_test.dart: uses role-specific stale resolution guidance without an active watch
+03:06 +39: test/generator_diagnostics_bridge_test.dart: treats role and Workspace reference files as bridge inputs
+03:06 +40: test/generator_diagnostics_bridge_test.dart: polls one shared resolution graph as a stable baseline
+03:06 +41: test/generator_diagnostics_bridge_test.dart: accepts watch identity through a symlinked Host path
+03:06 +42: test/generator_diagnostics_bridge_test.dart: kill switch disables snapshots and Pub resolution hints
+03:06 +43: loading test/demo_component_dependency_integration_test.dart
+03:06 +43: test/demo_component_dependency_integration_test.dart: reports missing component owners from the resolved Demo graph
+03:07 +44: loading test/semantic_analysis_test.dart
+03:07 +44: test/semantic_analysis_test.dart: canonical Contract placement diagnoses without rejecting factory values
+03:08 +45: test/semantic_analysis_test.dart: resolved foreign constructors and computed placement values defer
+03:09 +46: test/semantic_analysis_test.dart: prefixed and transitive lifecycle references retain framework identity
+03:09 +47: test/semantic_analysis_test.dart: foreign same-name lifecycle declarations are ignored
+03:10 +48: test/semantic_analysis_test.dart: foreign same-name annotations never produce framework diagnostics or fixes
+03:10 +49: test/semantic_analysis_test.dart: computed dependency values are deferred rather than guessed missing
+03:10 +50: test/semantic_analysis_test.dart: deferred imports cannot supply a disposable interface fix
+03:11 +51: test/semantic_analysis_test.dart: allocating into another instance does not prove this Service owns it
+03:11 +52: test/semantic_analysis_test.dart: real plugin session fixes and unsaved overlays use resolved semantics
+03:12 +53: test/semantic_analysis_test.dart: required async InitTask aliases still require a timeout
+03:12 +54: test/semantic_analysis_test.dart: fix preserves existing interfaces and comments
+03:12 +55: test/semantic_analysis_test.dart: two imports with the same name cannot supply an owner fix
+03:12 +56: test/semantic_analysis_test.dart: resolved handler accepts void
+03:13 +57: test/semantic_analysis_test.dart: resolved handler accepts async.Future<void>
+03:13 +58: test/semantic_analysis_test.dart: resolved handler accepts async.FutureOr<void>
+03:13 +59: test/semantic_analysis_test.dart: resolved handler accepts async.Future<void>?
+03:13 +60: test/semantic_analysis_test.dart: resolved handler accepts Completion
+03:14 +61: test/semantic_analysis_test.dart: resolved handler rejects int including a shadowed Future
+03:14 +62: test/semantic_analysis_test.dart: resolved handler rejects async.Future<int> including a shadowed Future
+03:14 +63: test/semantic_analysis_test.dart: resolved handler rejects BadCompletion including a shadowed Future
+03:15 +64: test/semantic_analysis_test.dart: resolved handler rejects dynamic including a shadowed Future
+03:15 +65: test/semantic_analysis_test.dart: resolved handler rejects Future<void> including a shadowed Future
+03:15 +66: test/semantic_analysis_test.dart: wrong prefixed owner is diagnosed and fixed with the right reference
+03:15 +67: test/semantic_analysis_test.dart: local const aliases preserve the exact imported owner identity
+03:16 +68: test/semantic_analysis_test.dart: local shadow cannot be inserted by a fix
+03:16 +69: test/semantic_analysis_test.dart: Service void dispose gets a fix which passes reanalysis
+03:16 +70: test/semantic_analysis_test.dart: Service Future<void> dispose gets a fix which passes reanalysis
+03:17 +71: test/semantic_analysis_test.dart: Service FutureOr<void> dispose gets a fix which passes reanalysis
+03:17 +72: test/semantic_analysis_test.dart: inherited disposer can be connected but inherited CCDisposable is already safe
+03:17 +73: test/semantic_analysis_test.dart: private final fresh resource warns without inventing cleanup
+03:18 +74: test/semantic_analysis_test.dart: borrowed, shared, factory, ordinary and incompatible Services are not auto-fixed
+03:18 +75: test/semantic_analysis_test.dart: hidden disposable import and same-name foreign interfaces get no fix
+03:18 +76: loading test/package_context_cache_test.dart
+03:18 +76: test/package_context_cache_test.dart: caches Package identity and invalidates on pubspec change
+03:18 +77: test/package_context_cache_test.dart: evicts least recently used source directories at the bound
+03:18 +78: test/package_context_cache_test.dart: invalidates Package context when project role inputs change
+03:18 +79: test/package_context_cache_test.dart: does not cache malformed or missing manifests
+03:18 +80: loading test/filesystem_identity_index_test.dart
+03:18 +80: test/filesystem_identity_index_test.dart: deduplicates shared paths without changing affected sources
+03:18 +81: test/filesystem_identity_index_test.dart: matches the per-registration full scan across filesystem churn
+03:18 +82: test/filesystem_identity_index_test.dart: event polling updates only exact paths before the fallback scan
+03:18 +83: test/filesystem_identity_index_test.dart: replacement and removal release unused path identities
+03:18 +84: test/filesystem_identity_index_test.dart: all deterministic shards equal one full scan
+03:18 +85: loading test/ui_analysis_test.dart
+03:19 +85: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+03:20 +86: test/ui_analysis_test.dart: UI alias class is diagnosed with framework identity
+03:20 +87: test/ui_analysis_test.dart: UI alias toString is diagnosed with framework identity
+03:21 +88: test/ui_analysis_test.dart: duplicate aliases and resolved contract aliases are distinguished
+03:21 +89: test/ui_analysis_test.dart: UI version ranges are checked without invoking generation
+03:22 +90: test/ui_analysis_test.dart: invalid DTO and enhanced Action types have explicit diagnostics
+03:22 +91: test/ui_analysis_test.dart: immutable DTO Action and nested enum/DTO fields are accepted
+03:22 +92: test/ui_analysis_test.dart: plain enum and multiple keyed instances need no extra dependency
+03:23 +93: test/ui_analysis_test.dart: foreign same-name UI annotations and constructors are ignored
+03:23 +94: test/ui_analysis_test.dart: partial and ambiguous source buffers do not guess UI types
+03:23 +95: test/ui_analysis_test.dart: components cannot import UI Host or Generated SPI; tests are exempt
+03:23 +96: test/ui_analysis_test.dart: Renderer signature compares exact contract types and ignores foreign inputs
+03:23 +97: test/ui_analysis_test.dart: metadata UI owner supports a safe imported-constant Quick Fix
+03:23 +98: test/ui_analysis_test.dart: supported range literals defer to the authoritative grammar
+03:24 +99: test/ui_analysis_test.dart: UI owner metadata removal and legacy records defer safely
+03:24 +100: test/ui_analysis_test.dart: UI Owner Quick Fix never guesses hidden constants or edits spreads
+03:24 +101: test/ui_analysis_test.dart: prefixed and transitive UI symbols preserve framework identity
+03:25 +102: test/ui_analysis_test.dart: UI SPI references through a public barrel use canonical identity
+03:25 +103: test/ui_analysis_test.dart: foreign component constructors never inherit UI dependency semantics
+03:25 +104: test/ui_analysis_test.dart: UI self-consumption cannot receive a cyclic Owner dependency fix
+03:26 +105: test/ui_analysis_test.dart: ordinary functions named CCComponent cannot receive UI fixes
+03:26 +106: test/ui_analysis_test.dart: ordinary functions named wrapComponent cannot receive UI fixes
+03:26 +107: test/ui_analysis_test.dart: UI dependency factories do not inherit constructor semantics
+03:26 +108: test/ui_analysis_test.dart: UI typedef constructors retain canonical identity
+03:27 +109: test/ui_analysis_test.dart: same-name UI contracts in different libraries retain both Owners
+03:27 +110: test/ui_analysis_test.dart: UI Owner fix round-trips with componentAlias
+03:27 +111: test/ui_analysis_test.dart: UI Owner fix round-trips with dependencyAlias
+03:28 +112: test/ui_analysis_test.dart: UI Owner fix round-trips with bothAliases
+03:28 +113: test/ui_analysis_test.dart: part UI Owner validates library identity package:owner_contracts/contract.dart
+03:28 +114: test/ui_analysis_test.dart: part UI Owner validates library identity null
+03:29 +115: test/ui_analysis_test.dart: part UI Owner validates library identity package:consumer/contract.dart
+03:29 +116: test/ui_analysis_test.dart: part UI Owner validates library identity package:owner_contracts/../contract.dart
+03:29 +117: test/ui_analysis_test.dart: part UI Owner validates library identity package:owner_contracts/contract.dart?invalid
+03:30 +118: test/ui_analysis_test.dart: part UI Owner validates library identity not a package URI
+03:30 +119: test/ui_analysis_test.dart: part UI Owner validates library identity 123
+03:30 +120: test/ui_analysis_test.dart: nested Renderer in function is rejected
+03:30 +121: test/ui_analysis_test.dart: nested Renderer in method is rejected
+03:31 +122: loading test/contract_owner_index_test.dart
+03:31 +122: test/contract_owner_index_test.dart: local shadowing cannot produce an imported owner Quick Fix
+03:31 +123: test/contract_owner_index_test.dart: reads exact Service and Command owners from resolved metadata
+03:31 +124: test/contract_owner_index_test.dart: proves component ID visibility through public exports and prefixes
+03:31 +125: test/contract_owner_index_test.dart: invalidates an owner index when its Contract source changes
+03:31 +126: test/contract_owner_index_test.dart: polls exact cached inputs when server filesystem events are absent
+03:31 +127: test/contract_owner_index_test.dart: does not borrow an ancestor Package graph for a standalone Package
+03:31 +128: test/contract_owner_index_test.dart: uses Pub workspace_ref instead of a nearer unrelated config
+03:31 +129: loading test/quick_fixes_test.dart
+03:31 +129: test/quick_fixes_test.dart: offers explicit alternatives for Route pattern conflicts
+03:31 +130: test/quick_fixes_test.dart: offers explicit alternatives for InitTask identity conflicts
+03:31 +131: test/quick_fixes_test.dart: declines a deletion that would consume a source comment
+03:31 +132: test/quick_fixes_test.dart: does not offer guesses for non-conflict diagnostics
+03:31 +133: test/quick_fixes_test.dart: adds a proven owner to an existing required dependency list
+03:31 +134: test/quick_fixes_test.dart: creates a required dependency list before the consuming field
+03:31 +135: test/quick_fixes_test.dart: offers one edit for all uniquely proven missing owners
+03:31 +136: test/quick_fixes_test.dart: declines owner edit when the public import hides the ID constant
+03:31 +137: loading test/source_analyzer_test.dart
+03:31 +137: test/source_analyzer_test.dart: shared Generator configuration: root defaults
+03:31 +138: test/source_analyzer_test.dart: shared Generator configuration: explicit root
+03:31 +139: test/source_analyzer_test.dart: shared Generator configuration: valid topology and ordered policies
+03:31 +140: test/source_analyzer_test.dart: shared Generator configuration: invalid host
+03:31 +141: test/source_analyzer_test.dart: shared Generator configuration: invalid outlet
+03:31 +142: test/source_analyzer_test.dart: shared Generator configuration: invalid shell
+03:31 +143: test/source_analyzer_test.dart: shared Generator configuration: invalid parent
+03:31 +144: test/source_analyzer_test.dart: shared Generator configuration: self parent
+03:31 +145: test/source_analyzer_test.dart: shared Generator configuration: duplicate interceptor
+03:31 +146: test/source_analyzer_test.dart: shared Generator configuration: duplicate guard
+03:31 +147: test/source_analyzer_test.dart: shared Generator configuration: invalid policy
+03:31 +148: test/source_analyzer_test.dart: component cannot explicitly import or re-export Host lifecycle
+03:31 +149: test/source_analyzer_test.dart: narrow Adapter SPI and unavailable roles do not trigger lifecycle errors
+03:31 +150: test/source_analyzer_test.dart: Host role and test sources may import lifecycle
+03:31 +151: test/source_analyzer_test.dart: unresolved foreign hidden and ambiguous annotations are ignored
+03:31 +152: test/source_analyzer_test.dart: unresolved exact prefixed framework imports still diagnose
+03:31 +153: test/source_analyzer_test.dart: does not reject prefixed Future or unresolved return aliases
+03:31 +154: test/source_analyzer_test.dart: rejects a foreign generated library import
+03:31 +155: test/source_analyzer_test.dart: checks every conditional import and export at its exact URI
+03:31 +156: test/source_analyzer_test.dart: own generated and public conditional barrels remain allowed
+03:31 +157: test/source_analyzer_test.dart: route placement and policy literals fail before generation
+03:31 +158: test/source_analyzer_test.dart: unknown route configuration expressions and constructors defer
+03:31 +159: test/source_analyzer_test.dart: warns when a route output is missing
+03:31 +160: test/source_analyzer_test.dart: reports exact generated outputs for bounded filesystem polling
+03:31 +161: test/source_analyzer_test.dart: does not warn after the route output exists
+03:31 +162: test/source_analyzer_test.dart: maps generated route output changes back to the authored source
+03:31 +163: test/source_analyzer_test.dart: ignores unrelated generated files for source refresh
+03:31 +164: test/source_analyzer_test.dart: ignores an incomplete editor buffer without throwing
+03:31 +165: test/source_analyzer_test.dart: does not flag generated implementation imports
+03:31 +166: test/source_analyzer_test.dart: reports required InitTask without Contract or timeout
+03:31 +167: test/source_analyzer_test.dart: accepts a bounded required InitTask Contract Handler
+03:31 +168: test/source_analyzer_test.dart: reports one missing required owner for Service and Command consumers
+03:31 +169: test/source_analyzer_test.dart: accepts the exact required owner dependency
+03:31 +170: test/source_analyzer_test.dart: accepts a local const alias of the required owner
+03:31 +171: test/source_analyzer_test.dart: accepts a reverse-ordered local owner alias chain
+03:31 +172: test/source_analyzer_test.dart: preserves conservative cycles and rejects known wrong owner aliases
+03:31 +173: test/source_analyzer_test.dart: does not let an optional dependency satisfy a Service consumer
+03:31 +174: test/source_analyzer_test.dart: declines dependency inference for a spread list
+03:31 +175: test/source_analyzer_test.dart: warns for missing Route Contract output
+03:31 +176: test/source_analyzer_test.dart: warns for missing Route implementation output
+03:31 +177: test/source_analyzer_test.dart: warns for missing Service output
+03:31 +178: test/source_analyzer_test.dart: warns for missing Service Contract output
+03:31 +179: test/source_analyzer_test.dart: warns for missing Command Handler output
+03:31 +180: test/source_analyzer_test.dart: warns for missing Event Subscription output
+03:31 +181: test/source_analyzer_test.dart: warns for missing InitTask output
+03:31 +182: test/source_analyzer_test.dart: accepts complete source-preserving capability outputs
+03:31 +183: test/source_analyzer_test.dart: does not invent direct output for metadata-only Contracts
+03:31 +184: test/source_analyzer_test.dart: maps every source-preserving generated kind back to source
+03:31 +185: test/source_analyzer_test.dart: reports non-public generic and method Handlers
+03:31 +186: test/source_analyzer_test.dart: reports mutually exclusive Route and InitTask arguments
+03:31 +187: test/source_analyzer_test.dart: reports missing InitTask identity after a complete annotation
+03:31 +188: test/source_analyzer_test.dart: reports invalid literal IDs aliases Gates and timeouts
+03:31 +189: test/source_analyzer_test.dart: reports Handler arity and defers unresolved imported return types
+03:31 +190: test/source_analyzer_test.dart: does not guess non-literal identifiers aliases or timeouts
+03:31 +191: All tests passed!

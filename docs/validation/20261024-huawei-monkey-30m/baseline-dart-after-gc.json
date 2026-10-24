@@ -1,0 +1,12 @@
+[
+  {
+    "id": "isolates/1651392783234883",
+    "name": "main",
+    "memoryUsage": {
+      "type": "MemoryUsage",
+      "heapUsage": 13188336,
+      "heapCapacity": 14213120,
+      "externalUsage": 3456
+    }
+  }
+]

@@ -1,0 +1,4 @@
+CCROUTER_TRACE_PID=29596
+[739.034] perfetto_cmd.cc:792     Connected to the Perfetto traced service, TTL: 480s
+[137.973] perfetto_cmd.cc:951     SIGINT/SIGTERM received: disabling tracing.
+[138.055] perfetto_cmd.cc:916     Wrote 1211602 bytes into /data/misc/perfetto-traces/ccrouter-native-diagnostic-1792832172764.perfetto-trace

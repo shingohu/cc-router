@@ -1,0 +1,20 @@
+00:00 +0: loading <workspace>/demo/modules/analytics_flutter/test/exposure_regression_test.dart
+00:00 +0: <workspace>/demo/modules/analytics_flutter/test/analytics_flutter_test.dart: exposure target emits once after the dwell threshold
+00:00 +1: <workspace>/demo/modules/analytics_flutter/test/exposure_regression_test.dart: a replaced ancestor position continues tracking the same target
+00:00 +2: <workspace>/demo/modules/analytics_flutter/test/exposure_regression_test.dart: a replaced ancestor position continues tracking the same target
+00:00 +3: <workspace>/demo/modules/analytics_flutter/test/analytics_flutter_test.dart: backgrounding cancels the current exposure dwell timer
+00:00 +4: <workspace>/demo/modules/analytics_flutter/test/exposure_regression_test.dart: blacklist rejection does not consume lifetime once
+00:00 +5: <workspace>/demo/modules/analytics_flutter/test/analytics_flutter_test.dart: scroll target emits bounded user session events
+00:00 +6: <workspace>/demo/modules/analytics_flutter/test/analytics_flutter_test.dart: scroll target emits bounded user session events
+00:00 +7: <workspace>/demo/modules/analytics_flutter/test/exposure_regression_test.dart: revocation resets dwell and accepted once is never replayed
+00:00 +8: <workspace>/demo/modules/analytics_flutter/test/exposure_regression_test.dart: revocation resets dwell and accepted once is never replayed
+00:00 +9: <workspace>/demo/modules/analytics_flutter/test/exposure_regression_test.dart: revocation resets dwell and accepted once is never replayed
+00:00 +10: <workspace>/demo/modules/analytics_flutter/test/analytics_flutter_test.dart: disabled Scope returns a no-op tracker without changing policy
+00:00 +11: <workspace>/demo/modules/analytics_flutter/test/exposure_regression_test.dart: filtered attempts do not consume once or poll every frame
+00:00 +12: <workspace>/demo/modules/analytics_flutter/test/analytics_flutter_test.dart: Scope lookup is absent outside a configured Scope
+00:00 +13: <workspace>/demo/modules/analytics_flutter/test/exposure_regression_test.dart: background rebuild, close and detach cancel pending dwell
+00:00 +14: <workspace>/demo/modules/analytics_flutter/test/exposure_regression_test.dart: moving a target detaches old positions and resets dwell
+00:00 +15: <workspace>/demo/modules/analytics_flutter/test/exposure_regression_test.dart: nested scroll positions respect both viewport clips
+00:00 +16: <workspace>/demo/modules/analytics_flutter/test/exposure_regression_test.dart: ancestor scrolling starts a clipped visibility episode
+00:00 +17: <workspace>/demo/modules/analytics_flutter/test/exposure_regression_test.dart: consent grant starts a fresh dwell without rebuilding the target
+00:00 +18: All tests passed!

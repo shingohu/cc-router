@@ -1,0 +1,16 @@
+{
+  "completed": true,
+  "pid": "26821",
+  "frames": 0,
+  "frameStats": [
+    {
+      "key": "build",
+      "count": 0
+    },
+    {
+      "key": "raster",
+      "count": 0
+    }
+  ],
+  "endedAt": "2026-10-24T08:55:16.829Z"
+}

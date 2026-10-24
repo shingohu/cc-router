@@ -51,9 +51,12 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
     CCCancellationToken? requestCancellation,
   }) => _withNavigationOwnership(() async {
     _ensureNavigationCanStart();
-    var navigationHostId = _resolveNavigationHostId(
-      placementOverride ?? const CCRoutePlacement.root(),
-    );
+    // A supplied call-site placement names a concrete Host. In particular,
+    // `default` may be that Host's real ID, not the route-declaration sentinel.
+    var navigationHostId =
+        placementOverride?.hostId ??
+        _resolveNavigationHostId(const CCRoutePlacement.root());
+    _navigationOperation!.defaultHostId = navigationHostId;
     placementOverride = _navigationPlacementForHost(
       placementOverride,
       navigationHostId,
@@ -89,6 +92,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
           prepared = currentPrepare();
           if (recoveryDepth == 0 && prepared.placement.hostId != 'default') {
             navigationHostId = prepared.placement.hostId;
+            _navigationOperation!.defaultHostId = navigationHostId;
             placementOverride = _navigationPlacementForHost(
               placementOverride,
               navigationHostId,

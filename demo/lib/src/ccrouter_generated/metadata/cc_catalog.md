@@ -812,8 +812,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.presentation.bottom_page`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/presentation_pages.dart:61:13` (`DemoBottomPage`)
-- Implementation: `package:demo_navigation_lab/src/presentation_pages.dart:61:13` (`DemoBottomPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/presentation_pages.dart:73:13` (`DemoBottomPage`)
+- Implementation: `package:demo_navigation_lab/src/presentation_pages.dart:73:13` (`DemoBottomPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/presentation_pages.route.g.dart` (`_DemoBottomPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/presentation_pages.route_binding.g.dart` (`ccrouterBuildDemoBottomPageRoute`)
@@ -830,8 +830,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.presentation.dialog`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/presentation_pages.dart:139:13` (`DemoDialogPage`)
-- Implementation: `package:demo_navigation_lab/src/presentation_pages.dart:139:13` (`DemoDialogPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/presentation_pages.dart:151:13` (`DemoDialogPage`)
+- Implementation: `package:demo_navigation_lab/src/presentation_pages.dart:151:13` (`DemoDialogPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/presentation_pages.route.g.dart` (`_DemoDialogPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/presentation_pages.route_binding.g.dart` (`ccrouterBuildDemoDialogPageRoute`)
@@ -857,8 +857,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.presentation.sheet`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/presentation_pages.dart:172:13` (`DemoBottomSheetPage`)
-- Implementation: `package:demo_navigation_lab/src/presentation_pages.dart:172:13` (`DemoBottomSheetPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/presentation_pages.dart:184:13` (`DemoBottomSheetPage`)
+- Implementation: `package:demo_navigation_lab/src/presentation_pages.dart:184:13` (`DemoBottomSheetPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/presentation_pages.route.g.dart` (`_DemoBottomSheetPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/presentation_pages.route_binding.g.dart` (`ccrouterBuildDemoBottomSheetPageRoute`)
@@ -866,8 +866,8 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 ### Route `demo_navigation_lab.presentation.transparent`
 
 - Declaring package: `demo_navigation_lab`
-- Contract/declaration: `package:demo_navigation_lab/src/presentation_pages.dart:82:13` (`DemoTransparentPage`)
-- Implementation: `package:demo_navigation_lab/src/presentation_pages.dart:82:13` (`DemoTransparentPage`)
+- Contract/declaration: `package:demo_navigation_lab/src/presentation_pages.dart:94:13` (`DemoTransparentPage`)
+- Implementation: `package:demo_navigation_lab/src/presentation_pages.dart:94:13` (`DemoTransparentPage`)
 - Generated artifacts:
   - `routeLibrary`: `package:demo_navigation_lab/src/ccrouter_generated/route/presentation_pages.route.g.dart` (`_DemoTransparentPageRoute`)
   - `routeBinding`: `package:demo_navigation_lab/src/ccrouter_generated/binding/presentation_pages.route_binding.g.dart` (`ccrouterBuildDemoTransparentPageRoute`)

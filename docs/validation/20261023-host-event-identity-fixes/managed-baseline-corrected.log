@@ -1,4 +1,4 @@
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_host_incarnation_regression_test.dart
 00:00 +0: same logical Host gets disjoint Managed backend operation identities
 00:00 +0 -1: same logical Host gets disjoint Managed backend operation identities [E]
   Expected: true

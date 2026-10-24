@@ -274,8 +274,9 @@ listeners, PopGuard and backend callbacks.
 `CCManagedMultiHostBackend.managed` aggregates independent Managed children from
 the initialized Catalog, validates declared Host identity and owns child cleanup.
 The Composition Root renders surfaces and handles active-Host fallback for
-context-free navigation. Pass the call-site BuildContext when exact Host/Outlet
-selection matters. Large-screen panes and tabs normally use Outlets of one Host;
+context-free navigation. Pass the call-site BuildContext or acquire
+`CCRouter.navigatorOf(context)` when exact Host/Outlet selection matters.
+Large-screen panes and tabs normally use Outlets of one Host;
 the aggregate is not a native Window lifecycle implementation.
 
 Mount each `navigatorFor(outlet)` at most once. Keep inactive branches mounted,
@@ -450,6 +451,30 @@ Use `replace` only when the current entry should no longer remain. Use `go` for 
 Use `context:` only when call-site Host/Outlet placement is required. Without
 Context, default placement resolves through the active Host while an explicit
 route Host/Outlet remains authoritative.
+
+For repeated local operations, resolve once inside the intended Navigator:
+
+```dart
+final navigator = CCRouter.navigatorOf(context);
+final result = await navigator.push<String>(
+  OrderDetailRoute.intent(orderId: 42),
+);
+```
+
+This returns `CCNavigator`, reusing existing navigation policy and typed results.
+It retains no BuildContext, Navigator or Runtime and installs no listeners; no
+dispose is needed. Resolve in build, didChangeDependencies or an interaction
+callback, not initState. Reacquire after moving to a different Host/Outlet.
+Focus changes and async delays cannot retarget the client. Explicit route
+placement remains authoritative. Host unregister or Runtime shutdown permanently
+invalidates it with a synchronous `CCRouteCancelledError('host_detached')`;
+same-ID replacement cannot revive it. Page/renderer unmount alone does not
+invalidate this registration-scoped client or cancel page-owned work.
+If a call also supplies Context, it must resolve to the same Host/Outlet;
+otherwise `CCNavigationOutletResolutionError` is thrown. Acquire another client
+for a different region. Exact close still follows its handle, even if an
+explicit destination was placed elsewhere; Pop does not follow the last push.
+The existing global facade and per-call Context APIs remain unchanged.
 
 Snapshot the operation's concrete default Host before awaiting policy. Initial
 explicit Host placement wins, while redirect/recovery/default targets keep that
@@ -690,6 +715,12 @@ GoRouter Backend limitation.
 Android 返回问题逐页加防抖或拦截系统返回。默认 Dialog 复用同一宿主判定并保留各自的 barrier
 默认值。没有 MaterialApp/CupertinoApp 祖先的自定义 Host 可用显式 CupertinoTheme 选择
 Cupertino 默认策略；已知 App 宿主始终优先于 Theme fallback。
+
+MaterialApp 内显式选择 Cupertino Route 时，转场不会替页面设置正文样式。
+`CupertinoPageScaffold` 的正文可用
+`DefaultTextStyle(style: CupertinoTheme.of(context).textTheme.textStyle, child: ...)`
+设置样式。需要 Cupertino 图标时在应用组件声明 `cupertino_icons`，不要修改框架全局主题
+来修复单个页面。回归应检查实际 RichText 字号/装饰和小屏溢出，而不只检查没有异常。
 
 <!-- verified-example: route-page -->
 ```dart

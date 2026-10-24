@@ -1,8 +1,8 @@
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/repro.dart
-00:00 +0: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/repro.dart: control: ordinary overlapping Gate calls share one drain
-00:00 +1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/repro.dart: synchronous Gate reentry runs each sibling once: appStarted
-00:00 +1 -1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/error_zone_repro.dart: shared readiness: same error Zone=true, initialization fails=false, late join=false
-00:00 +1 -1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/repro.dart: synchronous Gate reentry runs each sibling once: appStarted [E]
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/repro.dart
+00:00 +0: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/repro.dart: control: ordinary overlapping Gate calls share one drain
+00:00 +1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/repro.dart: synchronous Gate reentry runs each sibling once: appStarted
+00:00 +1 -1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/error_zone_repro.dart: shared readiness: same error Zone=true, initialization fails=false, late join=false
+00:00 +1 -1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/repro.dart: synchronous Gate reentry runs each sibling once: appStarted [E]
   Expected: <1>
     Actual: <2>
   
@@ -10,10 +10,10 @@
   package:flutter_test/src/widget_tester.dart 477:18                              expect
   packages/ccrouter_test/test/review_repros/init_task_reentrancy/repro.dart 67:9  main.<fn>
   
-00:00 +1 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/error_zone_repro.dart: shared readiness: same error Zone=true, initialization fails=false, late join=false
-00:00 +2 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/host_shutdown_repro.dart: public Host shutdown in another error Zone finishes cleanup
-00:00 +3 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/host_shutdown_repro.dart: public Host shutdown in another error Zone finishes cleanup
-00:00 +3 -2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/repro.dart: synchronous Gate reentry runs each sibling once: privacyGranted [E]
+00:00 +1 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/error_zone_repro.dart: shared readiness: same error Zone=true, initialization fails=false, late join=false
+00:00 +2 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/host_shutdown_repro.dart: public Host shutdown in another error Zone finishes cleanup
+00:00 +3 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/host_shutdown_repro.dart: public Host shutdown in another error Zone finishes cleanup
+00:00 +3 -2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/repro.dart: synchronous Gate reentry runs each sibling once: privacyGranted [E]
   Expected: <1>
     Actual: <2>
   
@@ -21,8 +21,8 @@
   package:flutter_test/src/widget_tester.dart 477:18                              expect
   packages/ccrouter_test/test/review_repros/init_task_reentrancy/repro.dart 67:9  main.<fn>
   
-00:00 +3 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/host_shutdown_repro.dart: public Host shutdown in another error Zone finishes cleanup
-00:00 +3 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/repro.dart: first drain waits for synchronously opened Gate work [E]
+00:00 +3 -3: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/host_shutdown_repro.dart: public Host shutdown in another error Zone finishes cleanup
+00:00 +3 -3: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/repro.dart: first drain waits for synchronously opened Gate work [E]
   Expected: false
     Actual: <true>
   
@@ -30,13 +30,13 @@
   package:flutter_test/src/widget_tester.dart 477:18                               expect
   packages/ccrouter_test/test/review_repros/init_task_reentrancy/repro.dart 105:5  main.<fn>
   
-00:00 +4 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/host_shutdown_repro.dart: public Host shutdown in another error Zone finishes cleanup
-00:00 +5 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/host_shutdown_repro.dart: public Host shutdown in another error Zone finishes cleanup
-00:00 +6 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/host_shutdown_repro.dart: public Host shutdown in another error Zone finishes cleanup
-00:00 +7 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/host_shutdown_repro.dart: public Host shutdown in another error Zone finishes cleanup
-00:00 +8 -3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/host_shutdown_repro.dart: public Host shutdown in another error Zone finishes cleanup
-00:00 +8 -4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/error_zone_repro.dart: shared readiness: same error Zone=false, initialization fails=true, late join=false
-00:00 +8 -4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/host_shutdown_repro.dart: public Host shutdown in another error Zone finishes cleanup [E]
+00:00 +4 -3: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/host_shutdown_repro.dart: public Host shutdown in another error Zone finishes cleanup
+00:00 +5 -3: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/host_shutdown_repro.dart: public Host shutdown in another error Zone finishes cleanup
+00:00 +6 -3: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/host_shutdown_repro.dart: public Host shutdown in another error Zone finishes cleanup
+00:00 +7 -3: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/host_shutdown_repro.dart: public Host shutdown in another error Zone finishes cleanup
+00:00 +8 -3: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/host_shutdown_repro.dart: public Host shutdown in another error Zone finishes cleanup
+00:00 +8 -4: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/error_zone_repro.dart: shared readiness: same error Zone=false, initialization fails=true, late join=false
+00:00 +8 -4: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/host_shutdown_repro.dart: public Host shutdown in another error Zone finishes cleanup [E]
   Expected: {
               'shutdownCompleted': true,
               'serviceDisposals': 1,
@@ -55,7 +55,7 @@
   package:flutter_test/src/widget_tester.dart 477:18                                            expect
   packages/ccrouter_test/test/review_repros/init_task_reentrancy/host_shutdown_repro.dart 88:5  main.<fn>
   
-00:00 +8 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/error_zone_repro.dart: shared readiness: same error Zone=false, initialization fails=true, late join=false [E]
+00:00 +8 -5: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/error_zone_repro.dart: shared readiness: same error Zone=false, initialization fails=true, late join=false [E]
   Expected: <Instance of 'CCServiceInitializationError'>
     Actual: <Instance of 'NoOutcome'>
      Which: is not an instance of 'CCServiceInitializationError'
@@ -65,9 +65,9 @@
   package:flutter_test/src/widget_tester.dart 477:18                                          expect
   packages/ccrouter_test/test/review_repros/init_task_reentrancy/error_zone_repro.dart 93:11  main.<fn>
   
-00:00 +8 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/error_zone_repro.dart: shared readiness: same error Zone=false, initialization fails=true, late join=true
-00:00 +9 -5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/error_zone_repro.dart: shutdown joins cancelled InitTask: same error Zone=false
-00:00 +9 -6: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/error_zone_repro.dart: shutdown joins cancelled InitTask: same error Zone=false [E]
+00:00 +8 -5: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/error_zone_repro.dart: shared readiness: same error Zone=false, initialization fails=true, late join=true
+00:00 +9 -5: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/error_zone_repro.dart: shutdown joins cancelled InitTask: same error Zone=false
+00:00 +9 -6: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/init_task_reentrancy/error_zone_repro.dart: shutdown joins cancelled InitTask: same error Zone=false [E]
   Expected: null
     Actual: <Instance of 'NoOutcome'>
   task=CCInvocationCancelledError, disposals=0, uncaught=[CCInvocationCancelledError]

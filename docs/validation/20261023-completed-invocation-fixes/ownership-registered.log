@@ -1,4 +1,4 @@
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/invocation_ownership_test.dart
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/invocation_ownership_test.dart
 00:00 +0: returned CCServiceScope.session nested=false optional=false CCServiceCreationPolicy.singleton cached=false fences keyed lookup
 00:00 +1: returned CCServiceScope.session nested=false optional=false CCServiceCreationPolicy.singleton cached=true fences keyed lookup
 00:00 +2: returned CCServiceScope.session nested=false optional=false CCServiceCreationPolicy.newInstance cached=false fences keyed lookup

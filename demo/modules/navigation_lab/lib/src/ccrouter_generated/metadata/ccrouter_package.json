@@ -5,7 +5,7 @@
     "name": "demo_navigation_lab",
     "version": "0.1.0"
   },
-  "contentFingerprint": "b314c8bd3c8218861640efb24ea52486beab391a492f7fe1cc8a9f47eba49fad",
+  "contentFingerprint": "3f756b23b060a107ece473f323e9982b3013a1c6e0efeeaba4f171e337171c92",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -2476,7 +2476,7 @@
             "kind": "page",
             "symbol": "DemoBottomPage",
             "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-            "line": 61,
+            "line": 73,
             "column": 13
           },
           "navigationSources": [
@@ -2554,7 +2554,7 @@
             "kind": "page",
             "symbol": "DemoTransparentPage",
             "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-            "line": 82,
+            "line": 94,
             "column": 13
           },
           "navigationSources": [
@@ -2632,7 +2632,7 @@
             "kind": "page",
             "symbol": "DemoDialogPage",
             "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-            "line": 139,
+            "line": 151,
             "column": 13
           },
           "navigationSources": [
@@ -2709,7 +2709,7 @@
             "kind": "page",
             "symbol": "DemoBottomSheetPage",
             "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-            "line": 172,
+            "line": 184,
             "column": 13
           },
           "navigationSources": [
@@ -4431,13 +4431,13 @@
         "contract": {
           "symbol": "DemoBottomPage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 61,
+          "line": 73,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoBottomPage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 61,
+          "line": 73,
           "column": 13
         },
         "generatedArtifacts": [
@@ -4491,13 +4491,13 @@
         "contract": {
           "symbol": "DemoDialogPage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 139,
+          "line": 151,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoDialogPage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 139,
+          "line": 151,
           "column": 13
         },
         "generatedArtifacts": [
@@ -4581,13 +4581,13 @@
         "contract": {
           "symbol": "DemoBottomSheetPage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 172,
+          "line": 184,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoBottomSheetPage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 172,
+          "line": 184,
           "column": 13
         },
         "generatedArtifacts": [
@@ -4611,13 +4611,13 @@
         "contract": {
           "symbol": "DemoTransparentPage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 82,
+          "line": 94,
           "column": 13
         },
         "implementation": {
           "symbol": "DemoTransparentPage",
           "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-          "line": 82,
+          "line": 94,
           "column": 13
         },
         "generatedArtifacts": [

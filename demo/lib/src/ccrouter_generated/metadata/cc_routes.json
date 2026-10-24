@@ -1046,7 +1046,7 @@
         "kind": "page",
         "symbol": "DemoBottomPage",
         "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-        "line": 61,
+        "line": 73,
         "column": 13
       },
       "navigationSources": [
@@ -1202,7 +1202,7 @@
         "kind": "page",
         "symbol": "DemoDialogPage",
         "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-        "line": 139,
+        "line": 151,
         "column": 13
       },
       "navigationSources": [
@@ -1435,7 +1435,7 @@
         "kind": "page",
         "symbol": "DemoBottomSheetPage",
         "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-        "line": 172,
+        "line": 184,
         "column": 13
       },
       "navigationSources": [
@@ -1514,7 +1514,7 @@
         "kind": "page",
         "symbol": "DemoTransparentPage",
         "packageUri": "package:demo_navigation_lab/src/presentation_pages.dart",
-        "line": 82,
+        "line": 94,
         "column": 13
       },
       "navigationSources": [

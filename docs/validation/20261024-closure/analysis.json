@@ -1,0 +1,710 @@
+{
+  "fixed": {
+    "summary": {
+      "completed": true,
+      "cycles": 240,
+      "pid": "18579",
+      "isolateId": "isolates/3493788281324667",
+      "build": {
+        "count": 13960,
+        "p50Ms": 1.822,
+        "p95Ms": 3.146,
+        "maxMs": 77.392,
+        "over100ms": 0
+      },
+      "raster": {
+        "count": 13960,
+        "p50Ms": 4.336,
+        "p95Ms": 7.226,
+        "maxMs": 28.7,
+        "over100ms": 0
+      },
+      "endedAt": "2026-10-24T08:15:01.174Z"
+    },
+    "samples": [
+      {
+        "phase": "baseline",
+        "cycle": 0,
+        "time": "2026-10-24T08:08:08.031Z",
+        "pid": "18579",
+        "isolateId": "isolates/3493788281324667",
+        "pssMiB": 148.0263671875,
+        "dartHeapAfterGCMiB": 12.619003295898438,
+        "nativePssMiB": 82.0908203125,
+        "nativeAllocatedMiB": 77.521484375,
+        "graphicsMiB": 1.984375,
+        "routeCount": 1,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "typed-detail",
+        "cycle": 20,
+        "time": "2026-10-24T08:08:41.836Z",
+        "pid": "18579",
+        "isolateId": "isolates/3493788281324667",
+        "pssMiB": 159.4130859375,
+        "dartHeapAfterGCMiB": 12.799224853515625,
+        "nativePssMiB": 83.833984375,
+        "nativeAllocatedMiB": 91.1591796875,
+        "graphicsMiB": 2.20703125,
+        "routeCount": 1,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "typed-detail",
+        "cycle": 40,
+        "time": "2026-10-24T08:09:09.792Z",
+        "pid": "18579",
+        "isolateId": "isolates/3493788281324667",
+        "pssMiB": 163.458984375,
+        "dartHeapAfterGCMiB": 12.867462158203125,
+        "nativePssMiB": 83.912109375,
+        "nativeAllocatedMiB": 91.033203125,
+        "graphicsMiB": 2.20703125,
+        "routeCount": 1,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "typed-detail",
+        "cycle": 60,
+        "time": "2026-10-24T08:09:37.785Z",
+        "pid": "18579",
+        "isolateId": "isolates/3493788281324667",
+        "pssMiB": 165.1591796875,
+        "dartHeapAfterGCMiB": 12.929656982421875,
+        "nativePssMiB": 83.966796875,
+        "nativeAllocatedMiB": 90.9658203125,
+        "graphicsMiB": 2.20703125,
+        "routeCount": 1,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "typed-detail",
+        "cycle": 80,
+        "time": "2026-10-24T08:10:05.866Z",
+        "pid": "18579",
+        "isolateId": "isolates/3493788281324667",
+        "pssMiB": 168.1826171875,
+        "dartHeapAfterGCMiB": 13.00408935546875,
+        "nativePssMiB": 82.814453125,
+        "nativeAllocatedMiB": 89.771484375,
+        "graphicsMiB": 2.20703125,
+        "routeCount": 1,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "typed-detail",
+        "cycle": 100,
+        "time": "2026-10-24T08:10:34.549Z",
+        "pid": "18579",
+        "isolateId": "isolates/3493788281324667",
+        "pssMiB": 170.728515625,
+        "dartHeapAfterGCMiB": 13.064178466796875,
+        "nativePssMiB": 82.982421875,
+        "nativeAllocatedMiB": 89.705078125,
+        "graphicsMiB": 2.20703125,
+        "routeCount": 1,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "typed-detail",
+        "cycle": 120,
+        "time": "2026-10-24T08:11:02.842Z",
+        "pid": "18579",
+        "isolateId": "isolates/3493788281324667",
+        "pssMiB": 172.65625,
+        "dartHeapAfterGCMiB": 13.1058349609375,
+        "nativePssMiB": 82.345703125,
+        "nativeAllocatedMiB": 89.0166015625,
+        "graphicsMiB": 2.20703125,
+        "routeCount": 1,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "cupertino",
+        "cycle": 20,
+        "time": "2026-10-24T08:11:36.698Z",
+        "pid": "18579",
+        "isolateId": "isolates/3493788281324667",
+        "pssMiB": 184.736328125,
+        "dartHeapAfterGCMiB": 13.381301879882812,
+        "nativePssMiB": 88.923828125,
+        "nativeAllocatedMiB": 94.88671875,
+        "graphicsMiB": 2.20703125,
+        "routeCount": 1,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "cupertino",
+        "cycle": 40,
+        "time": "2026-10-24T08:12:05.088Z",
+        "pid": "18579",
+        "isolateId": "isolates/3493788281324667",
+        "pssMiB": 185.943359375,
+        "dartHeapAfterGCMiB": 13.392013549804688,
+        "nativePssMiB": 87.486328125,
+        "nativeAllocatedMiB": 95.0224609375,
+        "graphicsMiB": 2.20703125,
+        "routeCount": 1,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "cupertino",
+        "cycle": 60,
+        "time": "2026-10-24T08:12:33.448Z",
+        "pid": "18579",
+        "isolateId": "isolates/3493788281324667",
+        "pssMiB": 183.6630859375,
+        "dartHeapAfterGCMiB": 13.401779174804688,
+        "nativePssMiB": 88.994140625,
+        "nativeAllocatedMiB": 95.1015625,
+        "graphicsMiB": 2.20703125,
+        "routeCount": 1,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "cupertino",
+        "cycle": 80,
+        "time": "2026-10-24T08:13:01.719Z",
+        "pid": "18579",
+        "isolateId": "isolates/3493788281324667",
+        "pssMiB": 185.5791015625,
+        "dartHeapAfterGCMiB": 13.413497924804688,
+        "nativePssMiB": 87.353515625,
+        "nativeAllocatedMiB": 95.3388671875,
+        "graphicsMiB": 2.20703125,
+        "routeCount": 1,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "cupertino",
+        "cycle": 100,
+        "time": "2026-10-24T08:13:30.169Z",
+        "pid": "18579",
+        "isolateId": "isolates/3493788281324667",
+        "pssMiB": 186.24609375,
+        "dartHeapAfterGCMiB": 13.423324584960938,
+        "nativePssMiB": 89.708984375,
+        "nativeAllocatedMiB": 95.369140625,
+        "graphicsMiB": 2.20703125,
+        "routeCount": 1,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "cupertino",
+        "cycle": 120,
+        "time": "2026-10-24T08:13:58.672Z",
+        "pid": "18579",
+        "isolateId": "isolates/3493788281324667",
+        "pssMiB": 192.169921875,
+        "dartHeapAfterGCMiB": 13.432968139648438,
+        "nativePssMiB": 92.728515625,
+        "nativeAllocatedMiB": 99.609375,
+        "graphicsMiB": 2.20703125,
+        "routeCount": 1,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "idle-30s",
+        "cycle": 240,
+        "time": "2026-10-24T08:14:29.727Z",
+        "pid": "18579",
+        "isolateId": "isolates/3493788281324667",
+        "pssMiB": 194.322265625,
+        "dartHeapAfterGCMiB": 13.432968139648438,
+        "nativePssMiB": 94.529296875,
+        "nativeAllocatedMiB": 103.7236328125,
+        "graphicsMiB": 2.20703125,
+        "routeCount": 1,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "idle-60s",
+        "cycle": 240,
+        "time": "2026-10-24T08:15:00.754Z",
+        "pid": "18579",
+        "isolateId": "isolates/3493788281324667",
+        "pssMiB": 199.0234375,
+        "dartHeapAfterGCMiB": 13.432968139648438,
+        "nativePssMiB": 97.669921875,
+        "nativeAllocatedMiB": 107.7294921875,
+        "graphicsMiB": 2.20703125,
+        "routeCount": 1,
+        "thermalStatus": 1
+      }
+    ]
+  },
+  "random": {
+    "summary": {
+      "completed": true,
+      "cycles": null,
+      "randomMode": true,
+      "pid": "22808",
+      "isolateId": "isolates/5400729252680251",
+      "build": {
+        "count": 7432,
+        "p50Ms": 1.645,
+        "p95Ms": 4.763,
+        "maxMs": 110.235,
+        "over100ms": 1
+      },
+      "raster": {
+        "count": 7432,
+        "p50Ms": 4.317,
+        "p95Ms": 8.347,
+        "maxMs": 29.527,
+        "over100ms": 0
+      },
+      "endedAt": "2026-10-24T08:24:43.756Z"
+    },
+    "samples": [
+      {
+        "phase": "baseline",
+        "cycle": 0,
+        "time": "2026-10-24T08:18:40.024Z",
+        "pid": "22808",
+        "isolateId": "isolates/5400729252680251",
+        "pssMiB": 131.2412109375,
+        "dartHeapAfterGCMiB": 12.618988037109375,
+        "nativePssMiB": 66.849609375,
+        "nativeAllocatedMiB": 76.77734375,
+        "graphicsMiB": 1.98828125,
+        "routeCount": 1,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "random",
+        "cycle": 30,
+        "time": "2026-10-24T08:19:11.149Z",
+        "pid": "22808",
+        "isolateId": "isolates/5400729252680251",
+        "pssMiB": 161.26953125,
+        "dartHeapAfterGCMiB": 13.03668212890625,
+        "nativePssMiB": 85.3759765625,
+        "nativeAllocatedMiB": 99.125,
+        "graphicsMiB": 2.84765625,
+        "routeCount": 1,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "random",
+        "cycle": 60,
+        "time": "2026-10-24T08:19:41.077Z",
+        "pid": "22808",
+        "isolateId": "isolates/5400729252680251",
+        "pssMiB": 184.78515625,
+        "dartHeapAfterGCMiB": 13.127197265625,
+        "nativePssMiB": 96.9453125,
+        "nativeAllocatedMiB": 109.076171875,
+        "graphicsMiB": 2.953125,
+        "routeCount": 1,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "random",
+        "cycle": 90,
+        "time": "2026-10-24T08:20:11.099Z",
+        "pid": "22808",
+        "isolateId": "isolates/5400729252680251",
+        "pssMiB": 183.6796875,
+        "dartHeapAfterGCMiB": 13.457244873046875,
+        "nativePssMiB": 104.5078125,
+        "nativeAllocatedMiB": 115.21484375,
+        "graphicsMiB": 2.953125,
+        "routeCount": 2,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "random",
+        "cycle": 120,
+        "time": "2026-10-24T08:20:41.154Z",
+        "pid": "22808",
+        "isolateId": "isolates/5400729252680251",
+        "pssMiB": 191.734375,
+        "dartHeapAfterGCMiB": 13.386032104492188,
+        "nativePssMiB": 110.40625,
+        "nativeAllocatedMiB": 123.0732421875,
+        "graphicsMiB": 2.953125,
+        "routeCount": 2,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "random",
+        "cycle": 150,
+        "time": "2026-10-24T08:21:11.021Z",
+        "pid": "22808",
+        "isolateId": "isolates/5400729252680251",
+        "pssMiB": 215.251953125,
+        "dartHeapAfterGCMiB": 13.706314086914062,
+        "nativePssMiB": 131.4765625,
+        "nativeAllocatedMiB": 144.708984375,
+        "graphicsMiB": 2.95703125,
+        "routeCount": 1,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "random",
+        "cycle": 180,
+        "time": "2026-10-24T08:21:41.114Z",
+        "pid": "22808",
+        "isolateId": "isolates/5400729252680251",
+        "pssMiB": 234.919921875,
+        "dartHeapAfterGCMiB": 14.49798583984375,
+        "nativePssMiB": 139.15234375,
+        "nativeAllocatedMiB": 152.0107421875,
+        "graphicsMiB": 2.95703125,
+        "routeCount": 1,
+        "thermalStatus": 1
+      },
+      {
+        "phase": "random",
+        "cycle": 210,
+        "time": "2026-10-24T08:22:11.102Z",
+        "pid": "22808",
+        "isolateId": "isolates/5400729252680251",
+        "pssMiB": 240.9580078125,
+        "dartHeapAfterGCMiB": 15.63909912109375,
+        "nativePssMiB": 142.7548828125,
+        "nativeAllocatedMiB": 154.0087890625,
+        "graphicsMiB": 2.9453125,
+        "routeCount": 1,
+        "thermalStatus": 2
+      },
+      {
+        "phase": "random",
+        "cycle": 240,
+        "time": "2026-10-24T08:22:41.153Z",
+        "pid": "22808",
+        "isolateId": "isolates/5400729252680251",
+        "pssMiB": 234.234375,
+        "dartHeapAfterGCMiB": 15.5848388671875,
+        "nativePssMiB": 145.1220703125,
+        "nativeAllocatedMiB": 157.9091796875,
+        "graphicsMiB": 2.953125,
+        "routeCount": 2,
+        "thermalStatus": 2
+      },
+      {
+        "phase": "random",
+        "cycle": 270,
+        "time": "2026-10-24T08:23:11.152Z",
+        "pid": "22808",
+        "isolateId": "isolates/5400729252680251",
+        "pssMiB": 254.458984375,
+        "dartHeapAfterGCMiB": 16.240966796875,
+        "nativePssMiB": 151.7353515625,
+        "nativeAllocatedMiB": 162.7861328125,
+        "graphicsMiB": 2.953125,
+        "routeCount": 2,
+        "thermalStatus": 2
+      },
+      {
+        "phase": "random",
+        "cycle": 300,
+        "time": "2026-10-24T08:23:41.149Z",
+        "pid": "22808",
+        "isolateId": "isolates/5400729252680251",
+        "pssMiB": 248.0380859375,
+        "dartHeapAfterGCMiB": 16.376541137695312,
+        "nativePssMiB": 153.8642578125,
+        "nativeAllocatedMiB": 166.9873046875,
+        "graphicsMiB": 2.95703125,
+        "routeCount": 2,
+        "thermalStatus": 2
+      },
+      {
+        "phase": "idle-30s",
+        "cycle": 240,
+        "time": "2026-10-24T08:24:12.228Z",
+        "pid": "22808",
+        "isolateId": "isolates/5400729252680251",
+        "pssMiB": 249.646484375,
+        "dartHeapAfterGCMiB": 16.376541137695312,
+        "nativePssMiB": 156.5556640625,
+        "nativeAllocatedMiB": 171.1572265625,
+        "graphicsMiB": 2.95703125,
+        "routeCount": 2,
+        "thermalStatus": 2
+      },
+      {
+        "phase": "idle-60s",
+        "cycle": 240,
+        "time": "2026-10-24T08:24:43.352Z",
+        "pid": "22808",
+        "isolateId": "isolates/5400729252680251",
+        "pssMiB": 251.162109375,
+        "dartHeapAfterGCMiB": 16.376541137695312,
+        "nativePssMiB": 156.626953125,
+        "nativeAllocatedMiB": 167.09375,
+        "graphicsMiB": 2.95703125,
+        "routeCount": 2,
+        "thermalStatus": 2
+      }
+    ]
+  },
+  "slowFrame": {
+    "number": 4692,
+    "sampleCount": 109,
+    "hotFunctions": [
+      {
+        "samples": 25,
+        "name": "_invokeFrameCallback",
+        "owner": "_MixinApplication149&BindingBase&GestureBinding&SchedulerBinding",
+        "uri": "dart:mixin_deduplication"
+      },
+      {
+        "samples": 22,
+        "name": "drawFrame",
+        "owner": "_MixinApplication154&BindingBase&GestureBinding&SchedulerBinding&ServicesBinding&PaintingBinding&SemanticsBinding&RendererBinding&WidgetsBinding",
+        "uri": "dart:mixin_deduplication"
+      },
+      {
+        "samples": 22,
+        "name": "_handlePersistentFrameCallback",
+        "owner": "_MixinApplication153&BindingBase&GestureBinding&SchedulerBinding&ServicesBinding&PaintingBinding&SemanticsBinding&RendererBinding",
+        "uri": "dart:mixin_deduplication"
+      },
+      {
+        "samples": 22,
+        "name": "handleDrawFrame",
+        "owner": "_MixinApplication149&BindingBase&GestureBinding&SchedulerBinding",
+        "uri": "dart:mixin_deduplication"
+      },
+      {
+        "samples": 22,
+        "name": "_handleDrawFrame",
+        "owner": "_MixinApplication149&BindingBase&GestureBinding&SchedulerBinding",
+        "uri": "dart:mixin_deduplication"
+      },
+      {
+        "samples": 22,
+        "name": "_invoke",
+        "owner": "dart.ui"
+      },
+      {
+        "samples": 21,
+        "name": "_drawFrame",
+        "owner": "PlatformDispatcher",
+        "uri": "dart:ui"
+      },
+      {
+        "samples": 21,
+        "name": "_drawFrame",
+        "owner": "dart.ui"
+      },
+      {
+        "samples": 15,
+        "name": "drawFrame",
+        "owner": "_MixinApplication153&BindingBase&GestureBinding&SchedulerBinding&ServicesBinding&PaintingBinding&SemanticsBinding&RendererBinding",
+        "uri": "dart:mixin_deduplication"
+      },
+      {
+        "samples": 13,
+        "name": "_attemptLayout",
+        "owner": "RenderViewport",
+        "uri": "package:flutter/src/rendering/viewport.dart"
+      },
+      {
+        "samples": 13,
+        "name": "performLayout",
+        "owner": "RenderViewport",
+        "uri": "package:flutter/src/rendering/viewport.dart"
+      },
+      {
+        "samples": 13,
+        "name": "layout",
+        "owner": "RenderObject",
+        "uri": "package:flutter/src/rendering/object.dart"
+      },
+      {
+        "samples": 13,
+        "name": "performLayout",
+        "owner": "_MixinApplication13&RenderBox&RenderObjectWithChildMixin&RenderProxyBoxMixin",
+        "uri": "dart:mixin_deduplication"
+      },
+      {
+        "samples": 13,
+        "name": "performLayout",
+        "owner": "RenderCustomPaint",
+        "uri": "package:flutter/src/rendering/custom_paint.dart"
+      },
+      {
+        "samples": 13,
+        "name": "performLayout",
+        "owner": "_RenderCustomClip",
+        "uri": "package:flutter/src/rendering/proxy_box.dart"
+      },
+      {
+        "samples": 12,
+        "name": "layoutChild",
+        "owner": "ChildLayoutHelper",
+        "uri": "package:flutter/src/rendering/layout_helper.dart"
+      },
+      {
+        "samples": 12,
+        "name": "_computeSizes",
+        "owner": "RenderFlex",
+        "uri": "package:flutter/src/rendering/flex.dart"
+      },
+      {
+        "samples": 12,
+        "name": "performLayout",
+        "owner": "RenderFlex",
+        "uri": "package:flutter/src/rendering/flex.dart"
+      },
+      {
+        "samples": 12,
+        "name": "layoutChild",
+        "owner": "MultiChildLayoutDelegate",
+        "uri": "package:flutter/src/rendering/custom_layout.dart"
+      },
+      {
+        "samples": 12,
+        "name": "performLayout",
+        "owner": "_ScaffoldLayout",
+        "uri": "package:flutter/src/material/scaffold.dart"
+      },
+      {
+        "samples": 12,
+        "name": "_callPerformLayout",
+        "owner": "MultiChildLayoutDelegate",
+        "uri": "package:flutter/src/rendering/custom_layout.dart"
+      },
+      {
+        "samples": 12,
+        "name": "performLayout",
+        "owner": "RenderCustomMultiChildLayoutBox",
+        "uri": "package:flutter/src/rendering/custom_layout.dart"
+      },
+      {
+        "samples": 12,
+        "name": "_layoutWithoutResize",
+        "owner": "RenderObject",
+        "uri": "package:flutter/src/rendering/object.dart"
+      },
+      {
+        "samples": 12,
+        "name": "flushLayout",
+        "owner": "PipelineOwner",
+        "uri": "package:flutter/src/rendering/object.dart"
+      },
+      {
+        "samples": 12,
+        "name": "insertAndLayoutChild",
+        "owner": "RenderSliverMultiBoxAdaptor",
+        "uri": "package:flutter/src/rendering/sliver_multi_box_adaptor.dart"
+      },
+      {
+        "samples": 12,
+        "name": "advance",
+        "owner": "performLayout"
+      },
+      {
+        "samples": 12,
+        "name": "performLayout",
+        "owner": "RenderSliverList",
+        "uri": "package:flutter/src/rendering/sliver_list.dart"
+      },
+      {
+        "samples": 12,
+        "name": "performLayout",
+        "owner": "RenderSliverEdgeInsetsPadding",
+        "uri": "package:flutter/src/rendering/sliver_padding.dart"
+      },
+      {
+        "samples": 12,
+        "name": "performLayout",
+        "owner": "RenderSliverPadding",
+        "uri": "package:flutter/src/rendering/sliver_padding.dart"
+      },
+      {
+        "samples": 12,
+        "name": "layoutChildSequence",
+        "owner": "RenderViewportBase",
+        "uri": "package:flutter/src/rendering/viewport.dart"
+      }
+    ],
+    "longestSpans": [
+      {
+        "name": "VsyncProcessCallback",
+        "ms": 111.864
+      },
+      {
+        "name": "Animator::BeginFrame",
+        "ms": 111.829
+      },
+      {
+        "name": "LAYOUT (root)",
+        "ms": 93.79
+      },
+      {
+        "name": "LAYOUT",
+        "ms": 93.777
+      },
+      {
+        "name": "GPURasterizer::Draw",
+        "ms": 17.936
+      },
+      {
+        "name": "Rasterizer::DoDraw",
+        "ms": 17.92
+      },
+      {
+        "name": "Rasterizer::DrawToSurfaces",
+        "ms": 17.865
+      },
+      {
+        "name": "SurfaceFrame::Submit",
+        "ms": 17.281
+      },
+      {
+        "name": "SurfaceFrame::Encode",
+        "ms": 15.474
+      },
+      {
+        "name": "CreateGlyphAtlas",
+        "ms": 14.275
+      },
+      {
+        "name": "UpdateAtlasBitmap",
+        "ms": 11.175
+      },
+      {
+        "name": "GPURasterizer::Draw",
+        "ms": 9.483
+      },
+      {
+        "name": "Rasterizer::DoDraw",
+        "ms": 9.471
+      },
+      {
+        "name": "Rasterizer::DrawToSurfaces",
+        "ms": 9.464
+      },
+      {
+        "name": "BUILD",
+        "ms": 8.853
+      },
+      {
+        "name": "NotifyIdle",
+        "ms": 7.491
+      },
+      {
+        "name": "PAINT (root)",
+        "ms": 6.817
+      },
+      {
+        "name": "PAINT",
+        "ms": 6.811
+      },
+      {
+        "name": "CollectNewGeneration",
+        "ms": 6.43
+      },
+      {
+        "name": "AcquireNextSurface",
+        "ms": 6.344
+      }
+    ]
+  }
+}

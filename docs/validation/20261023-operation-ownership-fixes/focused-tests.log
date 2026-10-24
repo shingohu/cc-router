@@ -1,4 +1,4 @@
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart
 00:00 +0: concurrent maybePop preserves actual result and unique receipt
 00:00 +1: independent Outlets preserve concurrent results
 00:00 +2: waiting maybePop cannot claim pop removal

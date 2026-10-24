@@ -1,0 +1,254 @@
+{
+  "recordedAt": "2026-10-24T05:00:50.693Z",
+  "start": {
+    "time": "2026-10-24T04:28:28.966Z",
+    "event": "timed_monkey_started",
+    "durationSeconds": 1800,
+    "initialPid": "24424",
+    "seed": 20261024,
+    "throttleMs": 200
+  },
+  "end": {
+    "time": "2026-10-24T04:58:29.017Z",
+    "event": "monkey_deadline",
+    "elapsedSeconds": 1800.015527417,
+    "remotePid": "24671"
+  },
+  "latest": {
+    "time": "2026-10-24T04:59:35.305Z",
+    "phase": "cooldown-60s-after-gc",
+    "sample": 62,
+    "elapsedSeconds": 1866,
+    "pid": "24424",
+    "totalPssKb": 143230,
+    "totalRssKb": 188832,
+    "dart": [
+      {
+        "id": "isolates/66394249621671",
+        "name": "main"
+      }
+    ],
+    "flutterFrames": 30803,
+    "foreground": "mResumedActivity: ActivityRecord{47d657e u0 dev.ccrouter.demo/.MainActivity t7485}",
+    "batteryTemperature": 40
+  },
+  "samples": 63,
+  "uniquePids": [
+    "24424"
+  ],
+  "isolateSegments": [
+    {
+      "id": "isolates/1651392783234883",
+      "firstHeapSampleSeconds": 87,
+      "lastHeapSampleSeconds": 623,
+      "heapMiB": {
+        "count": 18,
+        "min": 15.00714111328125,
+        "mean": 18.279972500271267,
+        "p50": 18.274520874023438,
+        "p90": 21.605926513671875,
+        "p95": 22.124313354492188,
+        "p99": 22.124313354492188,
+        "max": 22.124313354492188
+      },
+      "pssMiB": {
+        "count": 21,
+        "min": 138.95703125,
+        "mean": 159.4360584077381,
+        "p50": 148,
+        "p90": 178.3203125,
+        "p95": 179.3525390625,
+        "p99": 194.6806640625,
+        "max": 194.6806640625
+      }
+    },
+    {
+      "id": "isolates/2045751247764979",
+      "firstHeapSampleSeconds": 654,
+      "lastHeapSampleSeconds": 1789,
+      "heapMiB": {
+        "count": 37,
+        "min": 13.872833251953125,
+        "mean": 18.659703022724873,
+        "p50": 18.365280151367188,
+        "p90": 23.675384521484375,
+        "p95": 24.155685424804688,
+        "p99": 24.1859130859375,
+        "max": 24.1859130859375
+      },
+      "pssMiB": {
+        "count": 39,
+        "min": 142.822265625,
+        "mean": 262.5187550080128,
+        "p50": 278.1396484375,
+        "p90": 328.2646484375,
+        "p95": 338.8212890625,
+        "p99": 348.12890625,
+        "max": 348.12890625
+      }
+    }
+  ],
+  "environmentSegments": [
+    {
+      "label": "before-system-screen-recording-start",
+      "frameCount": 13893,
+      "buildMs": {
+        "count": 13893,
+        "min": 0.003,
+        "mean": 1.7207604549053421,
+        "p50": 1.077,
+        "p90": 2.626,
+        "p95": 3.532,
+        "p99": 14.382,
+        "max": 1162.584
+      },
+      "rasterMs": {
+        "count": 13893,
+        "min": 0.765,
+        "mean": 4.934263729935951,
+        "p50": 4.182,
+        "p90": 8.294,
+        "p95": 9.882,
+        "p99": 14.118,
+        "max": 77.58
+      },
+      "buildOrRasterOver16_667ms": 170,
+      "pssMiB": {
+        "count": 29,
+        "min": 138.95703125,
+        "mean": 160.03912984913794,
+        "p50": 150.2919921875,
+        "p90": 179.3525390625,
+        "p95": 194.6806640625,
+        "p99": 199.9375,
+        "max": 199.9375
+      }
+    },
+    {
+      "label": "after-system-screen-recording-start",
+      "frameCount": 16879,
+      "buildMs": {
+        "count": 16879,
+        "min": 0.114,
+        "mean": 1.7272891758990443,
+        "p50": 1.193,
+        "p90": 2.875,
+        "p95": 3.908,
+        "p99": 12.03,
+        "max": 88.94
+      },
+      "rasterMs": {
+        "count": 16879,
+        "min": 0.888,
+        "mean": 6.705140233426162,
+        "p50": 6.346,
+        "p90": 11.01,
+        "p95": 12.391,
+        "p99": 16.172,
+        "max": 55.124
+      },
+      "buildOrRasterOver16_667ms": 216,
+      "pssMiB": {
+        "count": 31,
+        "min": 200.759765625,
+        "mean": 288.55657762096774,
+        "p50": 301.5869140625,
+        "p90": 328.2646484375,
+        "p95": 338.8212890625,
+        "p99": 348.12890625,
+        "max": 348.12890625
+      }
+    }
+  ],
+  "pssMiB": {
+    "count": 60,
+    "min": 138.95703125,
+    "mean": 226.43981119791667,
+    "p50": 200.759765625,
+    "p90": 320.6025390625,
+    "p95": 328.2646484375,
+    "p99": 348.12890625,
+    "max": 348.12890625
+  },
+  "pssSlopeAfter5MinutesMiBPerMinute": 8.629656391402715,
+  "dartHeapMiB": {
+    "count": 55,
+    "min": 13.872833251953125,
+    "mean": 18.535427579012783,
+    "p50": 18.365280151367188,
+    "p90": 22.124313354492188,
+    "p95": 23.874526977539062,
+    "p99": 24.1859130859375,
+    "max": 24.1859130859375
+  },
+  "dartHeapSlopeAfter5MinutesMiBPerMinute": 0.18471039386318086,
+  "cpuOneSecondPercentOfOneCore": {
+    "count": 55,
+    "min": 0,
+    "mean": 17.09090909090909,
+    "p50": 11,
+    "p90": 42,
+    "p95": 60,
+    "p99": 66,
+    "max": 66
+  },
+  "batteryTemperatureC": {
+    "count": 60,
+    "min": 35,
+    "mean": 37.88333333333333,
+    "p50": 38,
+    "p90": 40,
+    "p95": 40,
+    "p99": 40,
+    "max": 40
+  },
+  "frames": {
+    "count": 30772,
+    "buildMs": {
+      "count": 30772,
+      "min": 0.003,
+      "mean": 1.7243415767580959,
+      "p50": 1.139,
+      "p90": 2.756,
+      "p95": 3.704,
+      "p99": 12.936,
+      "max": 1162.584
+    },
+    "rasterMs": {
+      "count": 30772,
+      "min": 0.765,
+      "mean": 5.905621604055605,
+      "p50": 5.118,
+      "p90": 10.138,
+      "p95": 11.711,
+      "p99": 15.663,
+      "max": 77.58
+    },
+    "totalSpanMs": {
+      "count": 30772,
+      "min": 1.899,
+      "mean": 8.88228282204603,
+      "p50": 8.148,
+      "p90": 13.577,
+      "p95": 15.751,
+      "p99": 25.917,
+      "max": 1175.083
+    },
+    "buildOrRasterOver16_667ms": 386,
+    "buildOrRasterOver33_333ms": 55
+  },
+  "monkeyLogEvents": {
+    "touch": 22019,
+    "key": 4260,
+    "switch": 414,
+    "throttle": 8442,
+    "periodicCounters": [
+      26500,
+      26600,
+      26600
+    ]
+  },
+  "crashOrANRLines": [],
+  "flutterErrorLines": [],
+  "recorderErrors": []
+}

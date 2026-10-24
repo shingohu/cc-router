@@ -1,4 +1,4 @@
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/reentrant_lifecycle_regression_test.dart
 00:00 +0: unsubscribe reentry cannot detach a freshly navigated replacement
 00:00 +0 -1: unsubscribe reentry cannot detach a freshly navigated replacement [E]
   Bad state: No element

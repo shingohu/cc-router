@@ -44,186 +44,186 @@ Downloading packages...
 Got dependencies!
 41 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart
-00:00 +0: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_layout_test.dart: Host layout metrics classify compact, medium, and expanded
-00:00 +1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_layout_test.dart: display features and route placement retain Host isolation
-00:00 +2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_layout_test.dart: adaptive Outlet policy maps one, two, and multiple panes
-00:00 +3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/demo_router_backend_test.dart: default Demo mounts the Managed convenience Host
-00:01 +4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
-00:01 +5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
-00:01 +6: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
-00:01 +7: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
-00:02 +8: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
-00:02 +9: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
-00:02 +10: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
-00:02 +11: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
-00:02 +12: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
-00:02 +13: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
-00:02 +14: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
-00:03 +15: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
-00:03 +16: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
-00:03 +17: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
-00:04 +18: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
-00:04 +19: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
-00:04 +20: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
-00:04 +21: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
-00:04 +22: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
-00:05 +23: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
-00:06 +24: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
-00:06 +25: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
-00:07 +26: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
-00:07 +27: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
-00:07 +28: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
-00:08 +29: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
-00:08 +30: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
-00:08 +31: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
-00:08 +32: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
-00:09 +33: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
-00:09 +34: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
-00:09 +35: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
-00:09 +36: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
-00:09 +37: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
-00:10 +38: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
-00:10 +39: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
-00:10 +40: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
-00:10 +41: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
-00:10 +42: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
-00:10 +43: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
-00:11 +44: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
-00:11 +45: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
-00:11 +46: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
-00:11 +47: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:11 +48: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:11 +49: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:11 +50: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:11 +51: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:11 +52: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:11 +53: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:11 +54: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:11 +55: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:12 +56: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:12 +57: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:12 +58: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:12 +59: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:12 +60: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:12 +61: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:12 +62: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:12 +63: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:13 +64: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:13 +65: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:13 +66: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
-00:13 +67: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/order/example/test/widget_test.dart: opens the generated Order Route and receives its result
-00:13 +68: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/order/example/test/widget_test.dart: opens the generated Order Route and receives its result
-00:13 +69: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/order/example/test/widget_test.dart: opens the generated Order Route and receives its result
-00:13 +70: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/order/example/test/widget_test.dart: opens the generated Order Route and receives its result
-00:14 +71: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:14 +72: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:14 +73: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:14 +74: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:14 +75: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:14 +76: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:14 +77: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:14 +78: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:14 +79: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:15 +80: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:15 +81: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:15 +82: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:15 +83: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:15 +84: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:15 +85: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:15 +86: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:15 +87: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:15 +88: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:16 +89: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:16 +90: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:16 +91: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:16 +92: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:16 +93: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:16 +94: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:16 +95: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:16 +96: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:16 +97: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:16 +98: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:16 +99: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:16 +100: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:16 +101: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:16 +102: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:16 +103: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:16 +104: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
-00:17 +105: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: openGo reconstructs the validated parent chain
-00:17 +106: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=false timing=during (variant: TargetPlatform.android)
-00:17 +107: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: root overlay pop must restore Shell back target
-00:17 +108: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=false timing=transient (variant: TargetPlatform.android)
-00:17 +109: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: retained branch URL must follow selected branch
-00:17 +110: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
-00:17 +111: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
-00:17 +112: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
-00:17 +113: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
-00:17 +114: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
-00:17 +115: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
-00:17 +116: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
-00:17 +117: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
-00:17 +118: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
-00:17 +119: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
-00:18 +120: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
-00:18 +121: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
-00:18 +122: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: a replaced ancestor position continues tracking the same target
-00:18 +123: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: a replaced ancestor position continues tracking the same target
-00:18 +124: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: a replaced ancestor position continues tracking the same target
-00:18 +125: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: a replaced ancestor position continues tracking the same target
-00:18 +126: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: a replaced ancestor position continues tracking the same target
-00:18 +127: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: a replaced ancestor position continues tracking the same target
-00:18 +128: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: a replaced ancestor position continues tracking the same target
-00:18 +129: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: a replaced ancestor position continues tracking the same target
-00:18 +130: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +131: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +132: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +133: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +134: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +135: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +136: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +137: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +138: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +139: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +140: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +141: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +142: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +143: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +144: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +145: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +146: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +147: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +148: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +149: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +150: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +151: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +152: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +153: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +154: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +155: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +156: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
-00:18 +157: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:18 +158: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:18 +159: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:18 +160: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:18 +161: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:18 +162: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:18 +163: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:18 +164: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:18 +165: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:18 +166: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:18 +167: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:18 +168: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:18 +169: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:18 +170: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:18 +171: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:18 +172: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:18 +173: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:18 +174: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:19 +175: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:19 +176: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
-00:21 +177: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: cancelled iOS swipe preserves Entry identity (variant: TargetPlatform.iOS)
-00:21 +178: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: shutdown retires mounted Shell and foreign popup safely
-00:21 +179: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: shutdown during a Shell edge swipe does not double remove (variant: TargetPlatform.iOS)
-00:21 +180: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: close covered Shell seed must keep context child
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart
+00:00 +0: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_layout_test.dart: Host layout metrics classify compact, medium, and expanded
+00:00 +1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_layout_test.dart: display features and route placement retain Host isolation
+00:00 +2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_layout_test.dart: adaptive Outlet policy maps one, two, and multiple panes
+00:00 +3: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/demo_router_backend_test.dart: default Demo mounts the Managed convenience Host
+00:01 +4: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:01 +5: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:01 +6: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:01 +7: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:02 +8: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:02 +9: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:02 +10: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:02 +11: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_demo_feature_matrix_test.dart: native Managed Backend resolves Regex aliases and rejects private ingress
+00:02 +12: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
+00:02 +13: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
+00:02 +14: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
+00:03 +15: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
+00:03 +16: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
+00:03 +17: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:04 +18: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:04 +19: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:04 +20: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:04 +21: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:04 +22: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:05 +23: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:06 +24: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:06 +25: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:07 +26: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:07 +27: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:07 +28: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:08 +29: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:08 +30: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:08 +31: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:08 +32: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:09 +33: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:09 +34: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:09 +35: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:09 +36: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:09 +37: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:10 +38: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:10 +39: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:10 +40: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:10 +41: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:10 +42: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:10 +43: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:11 +44: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:11 +45: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:11 +46: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:11 +47: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:11 +48: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:11 +49: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:11 +50: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:11 +51: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:11 +52: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:11 +53: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:11 +54: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:11 +55: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:12 +56: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:12 +57: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:12 +58: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:12 +59: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:12 +60: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:12 +61: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:12 +62: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:12 +63: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:13 +64: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:13 +65: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:13 +66: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:13 +67: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/order/example/test/widget_test.dart: opens the generated Order Route and receives its result
+00:13 +68: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/order/example/test/widget_test.dart: opens the generated Order Route and receives its result
+00:13 +69: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/order/example/test/widget_test.dart: opens the generated Order Route and receives its result
+00:13 +70: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/order/example/test/widget_test.dart: opens the generated Order Route and receives its result
+00:14 +71: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:14 +72: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:14 +73: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:14 +74: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:14 +75: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:14 +76: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:14 +77: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:14 +78: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:14 +79: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:15 +80: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:15 +81: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:15 +82: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:15 +83: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:15 +84: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:15 +85: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:15 +86: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:15 +87: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:15 +88: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:16 +89: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:16 +90: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:16 +91: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:16 +92: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:16 +93: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:16 +94: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:16 +95: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:16 +96: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:16 +97: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:16 +98: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:16 +99: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:16 +100: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:16 +101: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:16 +102: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:16 +103: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:16 +104: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:17 +105: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: openGo reconstructs the validated parent chain
+00:17 +106: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=false timing=during (variant: TargetPlatform.android)
+00:17 +107: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: root overlay pop must restore Shell back target
+00:17 +108: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=false timing=transient (variant: TargetPlatform.android)
+00:17 +109: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: retained branch URL must follow selected branch
+00:17 +110: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
+00:17 +111: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
+00:17 +112: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
+00:17 +113: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
+00:17 +114: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
+00:17 +115: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
+00:17 +116: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
+00:17 +117: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
+00:17 +118: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
+00:17 +119: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
+00:18 +120: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
+00:18 +121: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
+00:18 +122: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: a replaced ancestor position continues tracking the same target
+00:18 +123: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: a replaced ancestor position continues tracking the same target
+00:18 +124: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: a replaced ancestor position continues tracking the same target
+00:18 +125: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: a replaced ancestor position continues tracking the same target
+00:18 +126: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: a replaced ancestor position continues tracking the same target
+00:18 +127: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: a replaced ancestor position continues tracking the same target
+00:18 +128: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: a replaced ancestor position continues tracking the same target
+00:18 +129: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: a replaced ancestor position continues tracking the same target
+00:18 +130: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +131: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +132: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +133: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +134: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +135: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +136: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +137: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +138: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +139: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +140: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +141: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +142: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +143: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +144: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +145: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +146: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +147: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +148: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +149: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +150: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +151: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +152: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +153: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +154: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +155: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +156: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:18 +157: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:18 +158: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:18 +159: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:18 +160: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:18 +161: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:18 +162: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:18 +163: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:18 +164: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:18 +165: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:18 +166: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:18 +167: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:18 +168: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:18 +169: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:18 +170: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:18 +171: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:18 +172: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:18 +173: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:18 +174: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:19 +175: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:19 +176: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:21 +177: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: cancelled iOS swipe preserves Entry identity (variant: TargetPlatform.iOS)
+00:21 +178: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: shutdown retires mounted Shell and foreign popup safely
+00:21 +179: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: shutdown during a Shell edge swipe does not double remove (variant: TargetPlatform.iOS)
+00:21 +180: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/test/managed_parity_regression_test.dart: Managed: close covered Shell seed must keep context child
 00:21 +181: All tests passed!

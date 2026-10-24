@@ -7,6 +7,7 @@ import 'package:ccrouter_demo/main.dart';
 import 'package:ccrouter_demo/platform_deep_link_bridge.dart';
 import 'package:demo_navigation_lab/demo_navigation_lab.dart';
 import 'package:demo_navigation_lab/demo_navigation_lab_host.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -40,6 +41,33 @@ Future<void> _initializeDemoHost(WidgetTester tester) async {
 
 void main() {
   tearDown(CCRouterHost.shutdown);
+
+  testWidgets('explicit Cupertino page has readable body in Material Host', (
+    tester,
+  ) async {
+    addTearDown(() => tester.view.resetPhysicalSize());
+    addTearDown(() => tester.view.resetDevicePixelRatio());
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(320, 568);
+    await _mount(tester, _DemoBackend.managed);
+    final opened = CCRouter.navigator.open(
+      Uri.parse('/lab/presentation/cupertino'),
+    );
+    await tester.pumpAndSettle();
+    final body = find.text('显式 Cupertino 页面与返回手势语义');
+    final context = tester.element(body);
+    final expectedStyle = CupertinoTheme.of(context).textTheme.textStyle;
+    final richText = tester.widget<RichText>(
+      find.descendant(of: body, matching: find.byType(RichText)),
+    );
+    expect(richText.text.style?.fontSize, expectedStyle.fontSize);
+    expect(richText.text.style?.decoration, isNot(TextDecoration.underline));
+    expect(tester.takeException(), isNull);
+    await CCRouter.navigator.maybePop();
+    await tester.pumpAndSettle();
+    await opened;
+    expect(find.text('CCRouter Lab'), findsOneWidget);
+  });
 
   for (final backend in _DemoBackend.values) {
     testWidgets(

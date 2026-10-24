@@ -1,11 +1,11 @@
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/payment/test/generated_service_proxy_test.dart
-00:00 +0: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/kv_storage/test/scoped_storage_test.dart: scoped facade resolves the latest account and environment
-00:00 +1: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/kv_storage/test/scoped_storage_test.dart: current user scope fails when the context is a guest
-00:00 +2: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/payment/test/generated_service_proxy_test.dart: generated component Proxy invokes sync, async, getter, and Trace
-00:00 +3: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/kv_storage/test/storage_client_test.dart: stores supported primitive values by namespace
-00:00 +4: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/order/example/test/widget_test.dart: opens the generated Order Route and receives its result
-00:00 +5: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/order/example/test/widget_test.dart: opens the generated Order Route and receives its result
-00:00 +6: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/order/example/test/widget_test.dart: opens the generated Order Route and receives its result
-00:00 +7: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/order/example/test/widget_test.dart: opens the generated Order Route and receives its result
-00:00 +8: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/order/example/test/widget_test.dart: opens the generated Order Route and receives its result
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/payment/test/generated_service_proxy_test.dart
+00:00 +0: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/kv_storage/test/scoped_storage_test.dart: scoped facade resolves the latest account and environment
+00:00 +1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/kv_storage/test/scoped_storage_test.dart: current user scope fails when the context is a guest
+00:00 +2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/payment/test/generated_service_proxy_test.dart: generated component Proxy invokes sync, async, getter, and Trace
+00:00 +3: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/kv_storage/test/storage_client_test.dart: stores supported primitive values by namespace
+00:00 +4: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/order/example/test/widget_test.dart: opens the generated Order Route and receives its result
+00:00 +5: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/order/example/test/widget_test.dart: opens the generated Order Route and receives its result
+00:00 +6: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/order/example/test/widget_test.dart: opens the generated Order Route and receives its result
+00:00 +7: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/order/example/test/widget_test.dart: opens the generated Order Route and receives its result
+00:00 +8: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/demo/modules/order/example/test/widget_test.dart: opens the generated Order Route and receives its result
 00:00 +9: All tests passed!

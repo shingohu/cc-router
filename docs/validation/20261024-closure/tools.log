@@ -1,0 +1,54 @@
+00:00 +0: loading tool/test/documentation_check_test.dart
+00:00 +0: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +1: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +2: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +3: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +4: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +5: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +6: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +7: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +8: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +9: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +10: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +11: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +12: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +13: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +14: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +15: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +16: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +17: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +18: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +19: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +20: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +21: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +22: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +23: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +24: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +25: tool/test/release_sensitivity_check_test.dart: pre-stage mode checks untracked evidence without printing values
+00:00 +26: tool/test/release_sensitivity_check_test.dart: pre-stage mode checks untracked evidence without printing values
+00:00 +27: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:00 +28: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:01 +29: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:01 +30: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:01 +31: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:01 +32: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:02 +33: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:02 +34: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:02 +35: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:03 +36: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:04 +37: tool/test/documentation_check_test.dart: code and comments do not provide index navigation
+00:04 +38: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:05 +39: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:05 +40: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:05 +41: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:06 +42: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:06 +43: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:07 +44: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:07 +45: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:07 +46: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:08 +47: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:08 +48: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:09 +49: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:09 +50: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:09 +51: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:17 +52: All tests passed!

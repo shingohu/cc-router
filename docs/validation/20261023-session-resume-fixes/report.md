@@ -1,7 +1,7 @@
 # Session 解析准入与跨 Zone Resume 修复
 
 2026-10-23；分支 `codex/managed-navigation-runtime`；工作树
-`/Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router`。
+`<home>/.codex/worktrees/managed-navigation-runtime/cc-router`。
 
 已修复 [上一轮审查](../20261023-session-resume-review/report.md) 的两项缺陷。
 外部 API 签名保持不变，没有新增公开类型、业务参数、运行开关或依赖。

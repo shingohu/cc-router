@@ -25,11 +25,18 @@
 
 ## Navigation
 
-- Does every managed navigation call use `CCRouter.navigator`?
+- Does every managed navigation call use `CCRouter.navigator` or the scoped
+  `CCNavigator` returned by `CCRouter.navigatorOf(context)`?
 - Does every statically known destination use a generated typed Intent?
 - Are dynamic internal URIs and external untrusted URIs using different entry points?
 - Is `BuildContext` passed when call-site Host/Outlet resolution is needed,
   without retaining it beyond the owning Widget lifetime?
+- For scoped navigators, verify async calls across focus/active-Host changes,
+  explicit destination placement, conflicting per-call Context rejection, all
+  navigation methods and typed results. Same-ID Host replacement and Runtime
+  restart must reject old clients before mutation. Retaining a client must not
+  retain Context/Navigator/Runtime; page unmount is not Host unregister. Reacquire
+  when a component changes Host/Outlet; exact close remains handle-based.
 - Are `push`, `replace`, `go`, and `reset` used according to their real stack semantics?
 - Is the Pop result type correct and tested?
 - Cross queued delivery with remove/re-add of the same listener, old remover

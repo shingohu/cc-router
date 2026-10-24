@@ -1,0 +1,21 @@
+{
+  "completed": true,
+  "pid": "29732",
+  "isolateId": "isolates/1390570932008295",
+  "frames": 7883,
+  "frameStats": [
+    {
+      "key": "build",
+      "count": 7883,
+      "p95Ms": 4.327,
+      "maxMs": 87.079
+    },
+    {
+      "key": "raster",
+      "count": 7883,
+      "p95Ms": 8.021,
+      "maxMs": 28.329
+    }
+  ],
+  "endedAt": "2026-10-24T09:02:53.006Z"
+}

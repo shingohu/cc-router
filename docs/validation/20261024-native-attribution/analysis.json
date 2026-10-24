@@ -1,0 +1,1403 @@
+{
+  "note": "Independent same-APK arms, not a causal percentage comparison. Native malloc sampling excludes direct mmap/GPU and other processes.",
+  "arms": [
+    {
+      "mode": "baseline",
+      "config": {
+        "mode": "baseline",
+        "pid": "26821",
+        "serial": "UJN0221619023373",
+        "pkg": "dev.ccrouter.demo",
+        "startedAt": "2026-10-24T08:48:45.496Z",
+        "apkSha256": "a3416242f0d745158b39d7f8e24d5404ebf33e298d04b3d7bd2397748a414851",
+        "profiler": false,
+        "timeline": [],
+        "snapshotPolling": false,
+        "devtoolsRegistered": true,
+        "allocationProfile": false,
+        "explicitGC": false,
+        "samplingIntervalBytes": 262144,
+        "sharedMemoryBytes": 16777216,
+        "seed": 20261024,
+        "throttleMs": 200,
+        "randomDurationMs": 300000
+      },
+      "summary": {
+        "completed": true,
+        "pid": "26821",
+        "frames": 0,
+        "frameStats": [
+          {
+            "key": "build",
+            "count": 0
+          },
+          {
+            "key": "raster",
+            "count": 0
+          }
+        ],
+        "endedAt": "2026-10-24T08:55:16.829Z"
+      },
+      "points": [
+        {
+          "time": "2026-10-24T08:48:46.388Z",
+          "phase": "baseline",
+          "seconds": 0,
+          "pid": "26821",
+          "activity": "7bfa0c0",
+          "totalPssKb": 99219,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483079612,
+          "nativePssKb": 30848,
+          "nativeHeapSizeKb": 46760,
+          "nativeAllocatedKb": 40597,
+          "nativeFreeKb": 6162
+        },
+        {
+          "time": "2026-10-24T08:49:07.262Z",
+          "phase": "baseline",
+          "seconds": 20,
+          "pid": "26821",
+          "activity": "7bfa0c0",
+          "totalPssKb": 99350,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483100499,
+          "nativePssKb": 30848,
+          "nativeHeapSizeKb": 46760,
+          "nativeAllocatedKb": 39279,
+          "nativeFreeKb": 7480
+        },
+        {
+          "time": "2026-10-24T08:49:38.075Z",
+          "phase": "random",
+          "seconds": 30,
+          "pid": "26821",
+          "activity": "7bfa0c0",
+          "totalPssKb": 131632,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483131358,
+          "nativePssKb": 52060,
+          "nativeHeapSizeKb": 65420,
+          "nativeAllocatedKb": 62797,
+          "nativeFreeKb": 2623
+        },
+        {
+          "time": "2026-10-24T08:50:08.079Z",
+          "phase": "random",
+          "seconds": 60,
+          "pid": "26821",
+          "activity": "7bfa0c0",
+          "totalPssKb": 147184,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483161364,
+          "nativePssKb": 60036,
+          "nativeHeapSizeKb": 74112,
+          "nativeAllocatedKb": 70136,
+          "nativeFreeKb": 3975
+        },
+        {
+          "time": "2026-10-24T08:50:38.045Z",
+          "phase": "random",
+          "seconds": 90,
+          "pid": "26821",
+          "activity": "7bfa0c0",
+          "totalPssKb": 163674,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483191383,
+          "nativePssKb": 73034,
+          "nativeHeapSizeKb": 87868,
+          "nativeAllocatedKb": 83545,
+          "nativeFreeKb": 4322
+        },
+        {
+          "time": "2026-10-24T08:51:08.082Z",
+          "phase": "random",
+          "seconds": 120,
+          "pid": "26821",
+          "activity": "7bfa0c0",
+          "totalPssKb": 177212,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483221361,
+          "nativePssKb": 81601,
+          "nativeHeapSizeKb": 96544,
+          "nativeAllocatedKb": 92373,
+          "nativeFreeKb": 4170
+        },
+        {
+          "time": "2026-10-24T08:51:38.129Z",
+          "phase": "random",
+          "seconds": 150,
+          "pid": "26821",
+          "activity": "7bfa0c0",
+          "totalPssKb": 245389,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483251371,
+          "nativePssKb": 105888,
+          "nativeHeapSizeKb": 124084,
+          "nativeAllocatedKb": 117259,
+          "nativeFreeKb": 6825
+        },
+        {
+          "time": "2026-10-24T08:52:08.086Z",
+          "phase": "random",
+          "seconds": 180,
+          "pid": "26821",
+          "activity": "7bfa0c0",
+          "totalPssKb": 270823,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483281357,
+          "nativePssKb": 122359,
+          "nativeHeapSizeKb": 141716,
+          "nativeAllocatedKb": 135407,
+          "nativeFreeKb": 6308
+        },
+        {
+          "time": "2026-10-24T08:52:38.139Z",
+          "phase": "random",
+          "seconds": 210,
+          "pid": "26821",
+          "activity": "7bfa0c0",
+          "totalPssKb": 271933,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483311368,
+          "nativePssKb": 122585,
+          "nativeHeapSizeKb": 141956,
+          "nativeAllocatedKb": 135053,
+          "nativeFreeKb": 6902
+        },
+        {
+          "time": "2026-10-24T08:53:08.128Z",
+          "phase": "random",
+          "seconds": 240,
+          "pid": "26821",
+          "activity": "7bfa0c0",
+          "totalPssKb": 271959,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483341371,
+          "nativePssKb": 131273,
+          "nativeHeapSizeKb": 151164,
+          "nativeAllocatedKb": 143513,
+          "nativeFreeKb": 7650
+        },
+        {
+          "time": "2026-10-24T08:53:38.148Z",
+          "phase": "random",
+          "seconds": 270,
+          "pid": "26821",
+          "activity": "7bfa0c0",
+          "totalPssKb": 258021,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483371375,
+          "nativePssKb": 131642,
+          "nativeHeapSizeKb": 151832,
+          "nativeAllocatedKb": 144712,
+          "nativeFreeKb": 7119
+        },
+        {
+          "time": "2026-10-24T08:54:08.229Z",
+          "phase": "random",
+          "seconds": 300,
+          "pid": "26821",
+          "activity": "7bfa0c0",
+          "totalPssKb": 262147,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483401463,
+          "nativePssKb": 136150,
+          "nativeHeapSizeKb": 156632,
+          "nativeAllocatedKb": 149134,
+          "nativeFreeKb": 7497
+        },
+        {
+          "time": "2026-10-24T08:54:14.495Z",
+          "phase": "home",
+          "seconds": 0,
+          "pid": "26821",
+          "activity": "7bfa0c0",
+          "totalPssKb": 255744,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483407803,
+          "nativePssKb": 136262,
+          "nativeHeapSizeKb": 157004,
+          "nativeAllocatedKb": 149079,
+          "nativeFreeKb": 7924
+        },
+        {
+          "time": "2026-10-24T08:54:45.307Z",
+          "phase": "idle",
+          "seconds": 30,
+          "pid": "26821",
+          "activity": "7bfa0c0",
+          "totalPssKb": 255996,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483438603,
+          "nativePssKb": 136262,
+          "nativeHeapSizeKb": 157004,
+          "nativeAllocatedKb": 149075,
+          "nativeFreeKb": 7928
+        },
+        {
+          "time": "2026-10-24T08:55:16.208Z",
+          "phase": "idle",
+          "seconds": 60,
+          "pid": "26821",
+          "activity": "7bfa0c0",
+          "totalPssKb": 256329,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483469411,
+          "nativePssKb": 136262,
+          "nativeHeapSizeKb": 157004,
+          "nativeAllocatedKb": 149163,
+          "nativeFreeKb": 7840
+        }
+      ],
+      "monkey": {
+        "lastPeriodicEvent": 4800,
+        "injectedSummary": null,
+        "failureLines": []
+      },
+      "exceptionLines": [],
+      "webviewFirstLoad": "10-24 16:51:18.888 26821 26821 I WebViewFactory: Loading com.huawei.webview version 114.0.5.302 (code 21705)",
+      "nativeCoverage": {
+        "firstDumpTs": 483075722688013,
+        "lastDumpTs": 483469502687953,
+        "firstWorkloadSampleTs": 483131358000000,
+        "lastIdleSampleTs": 483469411000000,
+        "hasReportedDataLossOrError": false
+      },
+      "topMappingGrowth": [
+        {
+          "name": "[anon:libc_malloc]",
+          "beforePssKb": 30848,
+          "afterPssKb": 136262,
+          "deltaPssKb": 105414
+        },
+        {
+          "name": "/data/app/~~n8l7owqHprr7h4txhwFzuQ==/com.huawei.webview-N8dpynIQ62UlkvHAvz0Ieg==/base.apk",
+          "beforePssKb": 0,
+          "afterPssKb": 18046,
+          "deltaPssKb": 18046
+        },
+        {
+          "name": "[anon:partition_alloc]",
+          "beforePssKb": 0,
+          "afterPssKb": 7668,
+          "deltaPssKb": 7668
+        },
+        {
+          "name": "<anonymous>",
+          "beforePssKb": 16084,
+          "afterPssKb": 20832,
+          "deltaPssKb": 4748
+        },
+        {
+          "name": "[anon:dart-timeline]",
+          "beforePssKb": 136,
+          "afterPssKb": 3604,
+          "deltaPssKb": 3468
+        },
+        {
+          "name": "/data/app/~~n8l7owqHprr7h4txhwFzuQ==/com.huawei.webview-N8dpynIQ62UlkvHAvz0Ieg==/oat/arm64/base.odex",
+          "beforePssKb": 0,
+          "afterPssKb": 2875,
+          "deltaPssKb": 2875
+        },
+        {
+          "name": "/memfd:jit-cache (deleted)",
+          "beforePssKb": 156,
+          "afterPssKb": 2404,
+          "deltaPssKb": 2248
+        },
+        {
+          "name": "/data/app/~~nmU1O1vfOVqtSAosR-agZw==/dev.ccrouter.demo-bF9CKMK_EUdjWIJ8jutDWQ==/base.apk",
+          "beforePssKb": 10298,
+          "afterPssKb": 12230,
+          "deltaPssKb": 1932
+        },
+        {
+          "name": "/data/app/~~n8l7owqHprr7h4txhwFzuQ==/com.huawei.webview-N8dpynIQ62UlkvHAvz0Ieg==/oat/arm64/base.vdex",
+          "beforePssKb": 0,
+          "afterPssKb": 1023,
+          "deltaPssKb": 1023
+        },
+        {
+          "name": "/system/fonts/HarmonyOS_Sans_SC.ttf",
+          "beforePssKb": 596,
+          "afterPssKb": 1578,
+          "deltaPssKb": 982
+        },
+        {
+          "name": "/data/misc/shared_relro/libwebviewchromium64.relro",
+          "beforePssKb": 0,
+          "afterPssKb": 963,
+          "deltaPssKb": 963
+        },
+        {
+          "name": "/vendor/lib64/egl/libGLES_mali.so",
+          "beforePssKb": 2392,
+          "afterPssKb": 3206,
+          "deltaPssKb": 814
+        },
+        {
+          "name": "[anon:dalvik-main space (region space)]",
+          "beforePssKb": 1576,
+          "afterPssKb": 1988,
+          "deltaPssKb": 412
+        },
+        {
+          "name": "[anon:dalvik-LinearAlloc]",
+          "beforePssKb": 3086,
+          "afterPssKb": 3476,
+          "deltaPssKb": 390
+        },
+        {
+          "name": "[anon:.bss]",
+          "beforePssKb": 458,
+          "afterPssKb": 791,
+          "deltaPssKb": 333
+        },
+        {
+          "name": "/system/framework/framework.jar",
+          "beforePssKb": 668,
+          "afterPssKb": 959,
+          "deltaPssKb": 291
+        },
+        {
+          "name": "[anon:dalvik-/system/framework/boot-framework.art]",
+          "beforePssKb": 4688,
+          "afterPssKb": 4878,
+          "deltaPssKb": 190
+        },
+        {
+          "name": "/apex/com.android.art/javalib/core-oj.jar",
+          "beforePssKb": 177,
+          "afterPssKb": 364,
+          "deltaPssKb": 187
+        },
+        {
+          "name": "[anon:dalvik-zygote space]",
+          "beforePssKb": 784,
+          "afterPssKb": 967,
+          "deltaPssKb": 183
+        },
+        {
+          "name": "[anon:dalvik-non moving space]",
+          "beforePssKb": 40,
+          "afterPssKb": 204,
+          "deltaPssKb": 164
+        }
+      ]
+    },
+    {
+      "mode": "diagnostic",
+      "config": {
+        "mode": "diagnostic",
+        "pid": "29732",
+        "isolateId": "isolates/1390570932008295",
+        "serial": "UJN0221619023373",
+        "pkg": "dev.ccrouter.demo",
+        "startedAt": "2026-10-24T08:56:21.510Z",
+        "apkSha256": "a3416242f0d745158b39d7f8e24d5404ebf33e298d04b3d7bd2397748a414851",
+        "profiler": true,
+        "timeline": [
+          "Dart",
+          "Embedder",
+          "GC"
+        ],
+        "snapshotPolling": true,
+        "devtoolsRegistered": true,
+        "allocationProfile": false,
+        "explicitGC": false,
+        "samplingIntervalBytes": 262144,
+        "sharedMemoryBytes": 16777216,
+        "seed": 20261024,
+        "throttleMs": 200,
+        "randomDurationMs": 300000
+      },
+      "summary": {
+        "completed": true,
+        "pid": "29732",
+        "isolateId": "isolates/1390570932008295",
+        "frames": 7883,
+        "frameStats": [
+          {
+            "key": "build",
+            "count": 7883,
+            "p95Ms": 4.327,
+            "maxMs": 87.079
+          },
+          {
+            "key": "raster",
+            "count": 7883,
+            "p95Ms": 8.021,
+            "maxMs": 28.329
+          }
+        ],
+        "endedAt": "2026-10-24T09:02:53.006Z"
+      },
+      "points": [
+        {
+          "time": "2026-10-24T08:56:22.481Z",
+          "phase": "baseline",
+          "seconds": 0,
+          "pid": "29732",
+          "activity": "d0700c8",
+          "totalPssKb": 98548,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483535620,
+          "nativePssKb": 30845,
+          "nativeHeapSizeKb": 46556,
+          "nativeAllocatedKb": 40514,
+          "nativeFreeKb": 6041,
+          "routes": [
+            {
+              "id": "1792832175711215-3328956386-entry-1",
+              "routeId": "demo_navigation_lab.home"
+            }
+          ],
+          "vmMemory": [
+            {
+              "id": "isolates/1390570932008295",
+              "name": "main",
+              "type": "MemoryUsage",
+              "heapUsage": 14266848,
+              "heapCapacity": 16252928,
+              "externalUsage": 3904
+            },
+            {
+              "id": "isolates/225578654585643",
+              "name": "vm-service",
+              "type": "MemoryUsage",
+              "heapUsage": 2241648,
+              "heapCapacity": 3145728,
+              "externalUsage": 35008
+            }
+          ]
+        },
+        {
+          "time": "2026-10-24T08:56:43.193Z",
+          "phase": "baseline",
+          "seconds": 20,
+          "pid": "29732",
+          "activity": "d0700c8",
+          "totalPssKb": 99255,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483556565,
+          "nativePssKb": 30906,
+          "nativeHeapSizeKb": 46556,
+          "nativeAllocatedKb": 40015,
+          "nativeFreeKb": 6540,
+          "routes": [
+            {
+              "id": "1792832175711215-3328956386-entry-1",
+              "routeId": "demo_navigation_lab.home"
+            }
+          ],
+          "vmMemory": [
+            {
+              "id": "isolates/1390570932008295",
+              "name": "main",
+              "type": "MemoryUsage",
+              "heapUsage": 14554096,
+              "heapCapacity": 16777216,
+              "externalUsage": 3904
+            },
+            {
+              "id": "isolates/225578654585643",
+              "name": "vm-service",
+              "type": "MemoryUsage",
+              "heapUsage": 2393760,
+              "heapCapacity": 3145728,
+              "externalUsage": 36928
+            }
+          ]
+        },
+        {
+          "time": "2026-10-24T08:57:14.161Z",
+          "phase": "random",
+          "seconds": 30,
+          "pid": "29732",
+          "activity": "d0700c8",
+          "totalPssKb": 129142,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483587303,
+          "nativePssKb": 47859,
+          "nativeHeapSizeKb": 61352,
+          "nativeAllocatedKb": 58910,
+          "nativeFreeKb": 2441,
+          "routes": [
+            {
+              "id": "1792832175711215-3328956386-entry-1",
+              "routeId": "demo_navigation_lab.home"
+            }
+          ],
+          "vmMemory": [
+            {
+              "id": "isolates/1390570932008295",
+              "name": "main",
+              "type": "MemoryUsage",
+              "heapUsage": 16308528,
+              "heapCapacity": 17883136,
+              "externalUsage": 8320
+            },
+            {
+              "id": "isolates/225578654585643",
+              "name": "vm-service",
+              "type": "MemoryUsage",
+              "heapUsage": 3210992,
+              "heapCapacity": 4194304,
+              "externalUsage": 1760
+            }
+          ]
+        },
+        {
+          "time": "2026-10-24T08:57:44.084Z",
+          "phase": "random",
+          "seconds": 60,
+          "pid": "29732",
+          "activity": "d0700c8",
+          "totalPssKb": 158642,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483617301,
+          "nativePssKb": 62868,
+          "nativeHeapSizeKb": 77440,
+          "nativeAllocatedKb": 73692,
+          "nativeFreeKb": 3747,
+          "routes": [
+            {
+              "id": "1792832175711215-3328956386-entry-1",
+              "routeId": "demo_navigation_lab.home"
+            }
+          ],
+          "vmMemory": [
+            {
+              "id": "isolates/1390570932008295",
+              "name": "main",
+              "type": "MemoryUsage",
+              "heapUsage": 17932608,
+              "heapCapacity": 18931712,
+              "externalUsage": 14720
+            },
+            {
+              "id": "isolates/225578654585643",
+              "name": "vm-service",
+              "type": "MemoryUsage",
+              "heapUsage": 2392528,
+              "heapCapacity": 4194304,
+              "externalUsage": 1760
+            }
+          ]
+        },
+        {
+          "time": "2026-10-24T08:58:14.085Z",
+          "phase": "random",
+          "seconds": 90,
+          "pid": "29732",
+          "activity": "d0700c8",
+          "totalPssKb": 152012,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483647306,
+          "nativePssKb": 66188,
+          "nativeHeapSizeKb": 80504,
+          "nativeAllocatedKb": 75913,
+          "nativeFreeKb": 4590,
+          "routes": [
+            {
+              "id": "1792832175711215-3328956386-entry-1",
+              "routeId": "demo_navigation_lab.home"
+            },
+            {
+              "id": "1792832175711215-3328956386-entry-11",
+              "routeId": "demo_navigation_lab.proceed"
+            }
+          ],
+          "vmMemory": [
+            {
+              "id": "isolates/1390570932008295",
+              "name": "main",
+              "type": "MemoryUsage",
+              "heapUsage": 15703312,
+              "heapCapacity": 17358848,
+              "externalUsage": 8384
+            },
+            {
+              "id": "isolates/225578654585643",
+              "name": "vm-service",
+              "type": "MemoryUsage",
+              "heapUsage": 3297024,
+              "heapCapacity": 4718592,
+              "externalUsage": 1760
+            }
+          ]
+        },
+        {
+          "time": "2026-10-24T08:58:44.134Z",
+          "phase": "random",
+          "seconds": 120,
+          "pid": "29732",
+          "activity": "d0700c8",
+          "totalPssKb": 160001,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483677280,
+          "nativePssKb": 71723,
+          "nativeHeapSizeKb": 86432,
+          "nativeAllocatedKb": 82119,
+          "nativeFreeKb": 4312,
+          "routes": [
+            {
+              "id": "1792832175711215-3328956386-entry-1",
+              "routeId": "demo_navigation_lab.home"
+            },
+            {
+              "id": "1792832175711215-3328956386-entry-17",
+              "routeId": "demo_navigation_lab.redirect.target"
+            }
+          ],
+          "vmMemory": [
+            {
+              "id": "isolates/1390570932008295",
+              "name": "main",
+              "type": "MemoryUsage",
+              "heapUsage": 15859888,
+              "heapCapacity": 18407424,
+              "externalUsage": 7616
+            },
+            {
+              "id": "isolates/225578654585643",
+              "name": "vm-service",
+              "type": "MemoryUsage",
+              "heapUsage": 4144800,
+              "heapCapacity": 5242880,
+              "externalUsage": 1760
+            }
+          ]
+        },
+        {
+          "time": "2026-10-24T08:59:14.248Z",
+          "phase": "random",
+          "seconds": 150,
+          "pid": "29732",
+          "activity": "d0700c8",
+          "totalPssKb": 247566,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483707318,
+          "nativePssKb": 101709,
+          "nativeHeapSizeKb": 120876,
+          "nativeAllocatedKb": 115424,
+          "nativeFreeKb": 5451,
+          "routes": [
+            {
+              "id": "1792832175711215-3328956386-entry-20",
+              "routeId": "demo_navigation_lab.home"
+            }
+          ],
+          "vmMemory": [
+            {
+              "id": "isolates/1390570932008295",
+              "name": "main",
+              "type": "MemoryUsage",
+              "heapUsage": 14513888,
+              "heapCapacity": 17358848,
+              "externalUsage": 5056
+            },
+            {
+              "id": "isolates/225578654585643",
+              "name": "vm-service",
+              "type": "MemoryUsage",
+              "heapUsage": 4206752,
+              "heapCapacity": 5242880,
+              "externalUsage": 1760
+            }
+          ]
+        },
+        {
+          "time": "2026-10-24T08:59:44.204Z",
+          "phase": "random",
+          "seconds": 180,
+          "pid": "29732",
+          "activity": "d0700c8",
+          "totalPssKb": 242702,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483737302,
+          "nativePssKb": 106141,
+          "nativeHeapSizeKb": 125884,
+          "nativeAllocatedKb": 120596,
+          "nativeFreeKb": 5287,
+          "routes": [
+            {
+              "id": "1792832175711215-3328956386-entry-20",
+              "routeId": "demo_navigation_lab.home"
+            }
+          ],
+          "vmMemory": [
+            {
+              "id": "isolates/1390570932008295",
+              "name": "main",
+              "type": "MemoryUsage",
+              "heapUsage": 15792000,
+              "heapCapacity": 17883136,
+              "externalUsage": 9408
+            },
+            {
+              "id": "isolates/225578654585643",
+              "name": "vm-service",
+              "type": "MemoryUsage",
+              "heapUsage": 2342624,
+              "heapCapacity": 4194304,
+              "externalUsage": 1760
+            }
+          ]
+        },
+        {
+          "time": "2026-10-24T09:00:14.087Z",
+          "phase": "random",
+          "seconds": 210,
+          "pid": "29732",
+          "activity": "d0700c8",
+          "totalPssKb": 253581,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483767284,
+          "nativePssKb": 112999,
+          "nativeHeapSizeKb": 132976,
+          "nativeAllocatedKb": 127338,
+          "nativeFreeKb": 5637,
+          "routes": [
+            {
+              "id": "1792832175711215-3328956386-entry-20",
+              "routeId": "demo_navigation_lab.home"
+            },
+            {
+              "id": "1792832175711215-3328956386-entry-23",
+              "routeId": "demo_navigation_lab.ui_fragments"
+            }
+          ],
+          "vmMemory": [
+            {
+              "id": "isolates/1390570932008295",
+              "name": "main",
+              "type": "MemoryUsage",
+              "heapUsage": 17705008,
+              "heapCapacity": 19980288,
+              "externalUsage": 16256
+            },
+            {
+              "id": "isolates/225578654585643",
+              "name": "vm-service",
+              "type": "MemoryUsage",
+              "heapUsage": 4179888,
+              "heapCapacity": 5242880,
+              "externalUsage": 1760
+            }
+          ]
+        },
+        {
+          "time": "2026-10-24T09:00:44.220Z",
+          "phase": "random",
+          "seconds": 240,
+          "pid": "29732",
+          "activity": "d0700c8",
+          "totalPssKb": 257509,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483797291,
+          "nativePssKb": 113023,
+          "nativeHeapSizeKb": 132868,
+          "nativeAllocatedKb": 126601,
+          "nativeFreeKb": 6266,
+          "routes": [
+            {
+              "id": "1792832175711215-3328956386-entry-20",
+              "routeId": "demo_navigation_lab.home"
+            },
+            {
+              "id": "1792832175711215-3328956386-entry-23",
+              "routeId": "demo_navigation_lab.ui_fragments"
+            }
+          ],
+          "vmMemory": [
+            {
+              "id": "isolates/1390570932008295",
+              "name": "main",
+              "type": "MemoryUsage",
+              "heapUsage": 15651920,
+              "heapCapacity": 18931712,
+              "externalUsage": 10144
+            },
+            {
+              "id": "isolates/225578654585643",
+              "name": "vm-service",
+              "type": "MemoryUsage",
+              "heapUsage": 3973872,
+              "heapCapacity": 5242880,
+              "externalUsage": 1760
+            }
+          ]
+        },
+        {
+          "time": "2026-10-24T09:01:14.140Z",
+          "phase": "random",
+          "seconds": 270,
+          "pid": "29732",
+          "activity": "d0700c8",
+          "totalPssKb": 257031,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483827289,
+          "nativePssKb": 113835,
+          "nativeHeapSizeKb": 134072,
+          "nativeAllocatedKb": 127784,
+          "nativeFreeKb": 6287,
+          "routes": [
+            {
+              "id": "1792832175711215-3328956386-entry-20",
+              "routeId": "demo_navigation_lab.home"
+            },
+            {
+              "id": "1792832175711215-3328956386-entry-24",
+              "routeId": "demo_navigation_lab.ui_fragments"
+            }
+          ],
+          "vmMemory": [
+            {
+              "id": "isolates/1390570932008295",
+              "name": "main",
+              "type": "MemoryUsage",
+              "heapUsage": 16011328,
+              "heapCapacity": 18407424,
+              "externalUsage": 13728
+            },
+            {
+              "id": "isolates/225578654585643",
+              "name": "vm-service",
+              "type": "MemoryUsage",
+              "heapUsage": 3774368,
+              "heapCapacity": 5242880,
+              "externalUsage": 1760
+            }
+          ]
+        },
+        {
+          "time": "2026-10-24T09:01:44.320Z",
+          "phase": "random",
+          "seconds": 300,
+          "pid": "29732",
+          "activity": "d0700c8",
+          "totalPssKb": 254705,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483857375,
+          "nativePssKb": 114987,
+          "nativeHeapSizeKb": 135476,
+          "nativeAllocatedKb": 128528,
+          "nativeFreeKb": 6947,
+          "routes": [
+            {
+              "id": "1792832175711215-3328956386-entry-20",
+              "routeId": "demo_navigation_lab.home"
+            },
+            {
+              "id": "1792832175711215-3328956386-entry-29",
+              "routeId": "demo_navigation_lab.presentation.bottom_page"
+            }
+          ],
+          "vmMemory": [
+            {
+              "id": "isolates/1390570932008295",
+              "name": "main",
+              "type": "MemoryUsage",
+              "heapUsage": 16965280,
+              "heapCapacity": 18407424,
+              "externalUsage": 9152
+            },
+            {
+              "id": "isolates/225578654585643",
+              "name": "vm-service",
+              "type": "MemoryUsage",
+              "heapUsage": 2382384,
+              "heapCapacity": 4194304,
+              "externalUsage": 1760
+            }
+          ]
+        },
+        {
+          "time": "2026-10-24T09:01:50.397Z",
+          "phase": "home",
+          "seconds": 0,
+          "pid": "29732",
+          "activity": "d0700c8",
+          "totalPssKb": 242956,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483863651,
+          "nativePssKb": 115395,
+          "nativeHeapSizeKb": 140328,
+          "nativeAllocatedKb": 127095,
+          "nativeFreeKb": 13232,
+          "routes": [
+            {
+              "id": "1792832175711215-3328956386-entry-20",
+              "routeId": "demo_navigation_lab.home"
+            }
+          ],
+          "vmMemory": [
+            {
+              "id": "isolates/1390570932008295",
+              "name": "main",
+              "type": "MemoryUsage",
+              "heapUsage": 16542320,
+              "heapCapacity": 17883136,
+              "externalUsage": 13280
+            },
+            {
+              "id": "isolates/225578654585643",
+              "name": "vm-service",
+              "type": "MemoryUsage",
+              "heapUsage": 2698272,
+              "heapCapacity": 4194304,
+              "externalUsage": 3680
+            }
+          ]
+        },
+        {
+          "time": "2026-10-24T09:02:21.343Z",
+          "phase": "idle",
+          "seconds": 30,
+          "pid": "29732",
+          "activity": "d0700c8",
+          "totalPssKb": 244141,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483894510,
+          "nativePssKb": 115863,
+          "nativeHeapSizeKb": 140360,
+          "nativeAllocatedKb": 127415,
+          "nativeFreeKb": 12944,
+          "routes": [
+            {
+              "id": "1792832175711215-3328956386-entry-20",
+              "routeId": "demo_navigation_lab.home"
+            }
+          ],
+          "vmMemory": [
+            {
+              "id": "isolates/1390570932008295",
+              "name": "main",
+              "type": "MemoryUsage",
+              "heapUsage": 16947184,
+              "heapCapacity": 18407424,
+              "externalUsage": 13280
+            },
+            {
+              "id": "isolates/225578654585643",
+              "name": "vm-service",
+              "type": "MemoryUsage",
+              "heapUsage": 2905120,
+              "heapCapacity": 4194304,
+              "externalUsage": 5600
+            }
+          ]
+        },
+        {
+          "time": "2026-10-24T09:02:52.358Z",
+          "phase": "idle",
+          "seconds": 60,
+          "pid": "29732",
+          "activity": "d0700c8",
+          "totalPssKb": 245316,
+          "thermalStatus": 1,
+          "deviceBoottimeMs": 483925455,
+          "nativePssKb": 116123,
+          "nativeHeapSizeKb": 140360,
+          "nativeAllocatedKb": 127534,
+          "nativeFreeKb": 12825,
+          "routes": [
+            {
+              "id": "1792832175711215-3328956386-entry-20",
+              "routeId": "demo_navigation_lab.home"
+            }
+          ],
+          "vmMemory": [
+            {
+              "id": "isolates/1390570932008295",
+              "name": "main",
+              "type": "MemoryUsage",
+              "heapUsage": 17352048,
+              "heapCapacity": 18931712,
+              "externalUsage": 13280
+            },
+            {
+              "id": "isolates/225578654585643",
+              "name": "vm-service",
+              "type": "MemoryUsage",
+              "heapUsage": 3112048,
+              "heapCapacity": 4194304,
+              "externalUsage": 7520
+            }
+          ]
+        }
+      ],
+      "monkey": {
+        "lastPeriodicEvent": 4800,
+        "injectedSummary": null,
+        "failureLines": []
+      },
+      "exceptionLines": [],
+      "webviewFirstLoad": "10-24 16:58:54.804 29732 29732 I WebViewFactory: Loading com.huawei.webview version 114.0.5.302 (code 21705)",
+      "nativeCoverage": {
+        "firstDumpTs": 483536470201485,
+        "lastDumpTs": 483926346201425,
+        "firstWorkloadSampleTs": 483587303000000,
+        "lastIdleSampleTs": 483925455000000,
+        "hasReportedDataLossOrError": false
+      },
+      "topMappingGrowth": [
+        {
+          "name": "[anon:libc_malloc]",
+          "beforePssKb": 30626,
+          "afterPssKb": 116123,
+          "deltaPssKb": 85497
+        },
+        {
+          "name": "/data/app/~~n8l7owqHprr7h4txhwFzuQ==/com.huawei.webview-N8dpynIQ62UlkvHAvz0Ieg==/base.apk",
+          "beforePssKb": 0,
+          "afterPssKb": 17454,
+          "deltaPssKb": 17454
+        },
+        {
+          "name": "[anon:dart-profiler]",
+          "beforePssKb": 84,
+          "afterPssKb": 12640,
+          "deltaPssKb": 12556
+        },
+        {
+          "name": "[anon:partition_alloc]",
+          "beforePssKb": 0,
+          "afterPssKb": 6544,
+          "deltaPssKb": 6544
+        },
+        {
+          "name": "<anonymous>",
+          "beforePssKb": 16596,
+          "afterPssKb": 20708,
+          "deltaPssKb": 4112
+        },
+        {
+          "name": "[anon:dart-timeline]",
+          "beforePssKb": 136,
+          "afterPssKb": 3604,
+          "deltaPssKb": 3468
+        },
+        {
+          "name": "/data/app/~~n8l7owqHprr7h4txhwFzuQ==/com.huawei.webview-N8dpynIQ62UlkvHAvz0Ieg==/oat/arm64/base.odex",
+          "beforePssKb": 0,
+          "afterPssKb": 2871,
+          "deltaPssKb": 2871
+        },
+        {
+          "name": "/memfd:jit-cache (deleted)",
+          "beforePssKb": 172,
+          "afterPssKb": 2468,
+          "deltaPssKb": 2296
+        },
+        {
+          "name": "/data/app/~~nmU1O1vfOVqtSAosR-agZw==/dev.ccrouter.demo-bF9CKMK_EUdjWIJ8jutDWQ==/base.apk",
+          "beforePssKb": 10488,
+          "afterPssKb": 11706,
+          "deltaPssKb": 1218
+        },
+        {
+          "name": "/data/app/~~n8l7owqHprr7h4txhwFzuQ==/com.huawei.webview-N8dpynIQ62UlkvHAvz0Ieg==/oat/arm64/base.vdex",
+          "beforePssKb": 0,
+          "afterPssKb": 1027,
+          "deltaPssKb": 1027
+        },
+        {
+          "name": "/data/misc/shared_relro/libwebviewchromium64.relro",
+          "beforePssKb": 0,
+          "afterPssKb": 947,
+          "deltaPssKb": 947
+        },
+        {
+          "name": "/memfd:heapprofd_ringbuf (deleted)",
+          "beforePssKb": 7338,
+          "afterPssKb": 8194,
+          "deltaPssKb": 856
+        },
+        {
+          "name": "/system/fonts/HarmonyOS_Sans_SC.ttf",
+          "beforePssKb": 573,
+          "afterPssKb": 1371,
+          "deltaPssKb": 798
+        },
+        {
+          "name": "/vendor/lib64/egl/libGLES_mali.so",
+          "beforePssKb": 2394,
+          "afterPssKb": 2854,
+          "deltaPssKb": 460
+        },
+        {
+          "name": "[anon:dalvik-main space (region space)]",
+          "beforePssKb": 1560,
+          "afterPssKb": 1964,
+          "deltaPssKb": 404
+        },
+        {
+          "name": "[anon:dalvik-LinearAlloc]",
+          "beforePssKb": 3083,
+          "afterPssKb": 3442,
+          "deltaPssKb": 359
+        },
+        {
+          "name": "[anon:.bss]",
+          "beforePssKb": 458,
+          "afterPssKb": 791,
+          "deltaPssKb": 333
+        },
+        {
+          "name": "/system/framework/framework.jar",
+          "beforePssKb": 654,
+          "afterPssKb": 981,
+          "deltaPssKb": 327
+        },
+        {
+          "name": "[anon:dalvik-zygote space]",
+          "beforePssKb": 772,
+          "afterPssKb": 966,
+          "deltaPssKb": 194
+        },
+        {
+          "name": "[anon:dalvik-/system/framework/boot-framework.art]",
+          "beforePssKb": 4682,
+          "afterPssKb": 4875,
+          "deltaPssKb": 193
+        }
+      ]
+    }
+  ],
+  "fontProbe": {
+    "config": {
+      "serial": "UJN0221619023373",
+      "pkg": "dev.ccrouter.demo",
+      "pid": "32533",
+      "probeApkSha256": "f43f9506046d4580f959fe970be62ec41373f9b6d92627a39c249938caa20194",
+      "restoreApkSha256": "a3416242f0d745158b39d7f8e24d5404ebf33e298d04b3d7bd2397748a414851",
+      "entrypoint": "demo/tool/native_font_probe.dart",
+      "ccrouterInitialized": false,
+      "vmClientConnected": false,
+      "profilerRequested": false,
+      "stylesPerRound": 72,
+      "rounds": 3,
+      "stylePeriodMs": 400,
+      "samplingIntervalBytes": 262144,
+      "startedAt": "2026-10-24T09:03:42.562Z"
+    },
+    "points": [
+      {
+        "time": "2026-10-24T09:03:47.962Z",
+        "event": "sample",
+        "phase": "at-5s",
+        "pid": "32533",
+        "totalPssKb": 90286,
+        "deviceBoottimeMs": 483981596,
+        "nativePssKb": 31041,
+        "nativeAllocatedKb": 30843,
+        "nativeFreeKb": 8916
+      },
+      {
+        "time": "2026-10-24T09:03:54.917Z",
+        "event": "sample",
+        "phase": "at-12s",
+        "pid": "32533",
+        "totalPssKb": 90460,
+        "deviceBoottimeMs": 483988595,
+        "nativePssKb": 31049,
+        "nativeAllocatedKb": 30290,
+        "nativeFreeKb": 9469
+      },
+      {
+        "time": "2026-10-24T09:04:18.006Z",
+        "event": "sample",
+        "phase": "at-35s",
+        "pid": "32533",
+        "totalPssKb": 139383,
+        "deviceBoottimeMs": 484011595,
+        "nativePssKb": 73521,
+        "nativeAllocatedKb": 81938,
+        "nativeFreeKb": 3269
+      },
+      {
+        "time": "2026-10-24T09:04:47.964Z",
+        "event": "sample",
+        "phase": "at-65s",
+        "pid": "32533",
+        "totalPssKb": 184116,
+        "deviceBoottimeMs": 484041589,
+        "nativePssKb": 118081,
+        "nativeAllocatedKb": 128739,
+        "nativeFreeKb": 4736
+      },
+      {
+        "time": "2026-10-24T09:05:22.992Z",
+        "event": "sample",
+        "phase": "at-100s",
+        "pid": "32533",
+        "totalPssKb": 229849,
+        "deviceBoottimeMs": 484076600,
+        "nativePssKb": 163081,
+        "nativeAllocatedKb": 174067,
+        "nativeFreeKb": 40360
+      },
+      {
+        "time": "2026-10-24T09:05:57.952Z",
+        "event": "sample",
+        "phase": "at-135s",
+        "pid": "32533",
+        "totalPssKb": 229357,
+        "deviceBoottimeMs": 484111592,
+        "nativePssKb": 163417,
+        "nativeAllocatedKb": 174533,
+        "nativeFreeKb": 40086
+      },
+      {
+        "time": "2026-10-24T09:06:27.971Z",
+        "event": "sample",
+        "phase": "at-165s",
+        "pid": "32533",
+        "totalPssKb": 229675,
+        "deviceBoottimeMs": 484141598,
+        "nativePssKb": 163443,
+        "nativeAllocatedKb": 174534,
+        "nativeFreeKb": 40151
+      },
+      {
+        "time": "2026-10-24T09:06:28.437Z",
+        "event": "sample",
+        "phase": "before-trim",
+        "pid": "32533",
+        "totalPssKb": 229937,
+        "deviceBoottimeMs": 484142072,
+        "nativePssKb": 163443,
+        "nativeAllocatedKb": 174437,
+        "nativeFreeKb": 40206
+      },
+      {
+        "time": "2026-10-24T09:06:48.949Z",
+        "event": "sample",
+        "phase": "after-trim-20s",
+        "pid": "32533",
+        "totalPssKb": 230111,
+        "deviceBoottimeMs": 484162609,
+        "nativePssKb": 163471,
+        "nativeAllocatedKb": 174515,
+        "nativeFreeKb": 40128
+      }
+    ],
+    "health": [],
+    "hasReportedDataLossOrError": false,
+    "dumps": [
+      {
+        "ts": 483977916424854,
+        "time": "2026-10-24T09:03:43.773Z",
+        "seconds": 0,
+        "bytes": 10821800,
+        "fontBytes": 0
+      },
+      {
+        "ts": 483993428424852,
+        "time": "2026-10-24T09:03:59.285Z",
+        "seconds": 15.511999998,
+        "bytes": 17637544,
+        "fontBytes": 5767168
+      },
+      {
+        "ts": 484003404424850,
+        "time": "2026-10-24T09:04:09.261Z",
+        "seconds": 25.487999996,
+        "bytes": 33104040,
+        "fontBytes": 20185088
+      },
+      {
+        "ts": 484013408424849,
+        "time": "2026-10-24T09:04:19.265Z",
+        "seconds": 35.491999995,
+        "bytes": 64299176,
+        "fontBytes": 51380224
+      },
+      {
+        "ts": 484023388424847,
+        "time": "2026-10-24T09:04:29.245Z",
+        "seconds": 45.471999993,
+        "bytes": 72687784,
+        "fontBytes": 58458112
+      },
+      {
+        "ts": 484033796424846,
+        "time": "2026-10-24T09:04:39.653Z",
+        "seconds": 55.879999992,
+        "bytes": 78192808,
+        "fontBytes": 64225280
+      },
+      {
+        "ts": 484043416424844,
+        "time": "2026-10-24T09:04:49.273Z",
+        "seconds": 65.49999999,
+        "bytes": 101261480,
+        "fontBytes": 87293952
+      },
+      {
+        "ts": 484053408424843,
+        "time": "2026-10-24T09:04:59.265Z",
+        "seconds": 75.491999989,
+        "bytes": 108601512,
+        "fontBytes": 94896128
+      },
+      {
+        "ts": 484063404424841,
+        "time": "2026-10-24T09:05:09.261Z",
+        "seconds": 85.487999987,
+        "bytes": 113582248,
+        "fontBytes": 99614720
+      },
+      {
+        "ts": 484073420424840,
+        "time": "2026-10-24T09:05:19.277Z",
+        "seconds": 95.503999986,
+        "bytes": 142155944,
+        "fontBytes": 128188416
+      },
+      {
+        "ts": 484077804424839,
+        "time": "2026-10-24T09:05:23.661Z",
+        "seconds": 99.887999985,
+        "bytes": 145039528,
+        "fontBytes": 129761280
+      },
+      {
+        "ts": 484111724424834,
+        "time": "2026-10-24T09:05:57.581Z",
+        "seconds": 133.80799998,
+        "bytes": 144515240,
+        "fontBytes": 129761280
+      },
+      {
+        "ts": 484141684424829,
+        "time": "2026-10-24T09:06:27.541Z",
+        "seconds": 163.767999975,
+        "bytes": 144253096,
+        "fontBytes": 129761280
+      },
+      {
+        "ts": 484162696424826,
+        "time": "2026-10-24T09:06:48.553Z",
+        "seconds": 184.779999972,
+        "bytes": 144253096,
+        "fontBytes": 129761280
+      }
+    ],
+    "phaseLog": [
+      "10-24 17:03:57.230 32533 32533 I flutter : FONT_PROBE start finite 72-style set, three rounds",
+      "10-24 17:03:57.632 32533 32533 I flutter : FONT_PROBE round 1",
+      "10-24 17:04:26.432 32533 32533 I flutter : FONT_PROBE round 2",
+      "10-24 17:04:55.232 32533 32533 I flutter : FONT_PROBE round 3",
+      "10-24 17:05:23.632 32533 32533 I flutter : FONT_PROBE completed; idle with final style"
+    ],
+    "firstDumpTs": 483977916424854,
+    "lastDumpTs": 484162696424826,
+    "exceptionLines": [],
+    "restored": true
+  }
+}

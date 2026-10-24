@@ -1,7 +1,7 @@
 # Pop 等待生命周期与初始栈身份审查
 
 日期：2026-10-24。工作树：
-`/Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router`，
+`<home>/.codex/worktrees/managed-navigation-runtime/cc-router`，
 分支 `codex/managed-navigation-runtime`，基于 HEAD
 `09cb21d78381bbdeab431cf6bca279f909827db1` 及此前未提交成果。
 

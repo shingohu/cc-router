@@ -947,6 +947,20 @@ void main() {
       await CCRouter.navigator.close(handles['home-detail']!);
       await tester.pumpAndSettle();
       final homeContext = tester.element(find.text('shell-home'));
+      final scoped = CCRouter.navigatorOf(homeContext);
+      final scopedResult = scoped.push<String>(
+        const _Intent('outlet.detail', 'scoped-child'),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('shell-scoped-child'), findsOneWidget);
+      expect(
+        CCRouter.activeRouteEntries.last.placement.navigatorOutlet,
+        _shellHome,
+      );
+      scoped.pop(result: 'scoped-done');
+      await tester.pumpAndSettle();
+      expect(await scopedResult, 'scoped-done');
+      expect(resources['scoped-child']!.disposeCount, 1);
       final childResult = CCRouter.navigator.push<String>(
         const _Intent('outlet.detail', 'context-child'),
         context: homeContext,

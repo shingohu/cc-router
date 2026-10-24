@@ -67,16 +67,14 @@ final class _DemoDetailPageState extends State<DemoDetailPage>
   }
 
   void _complete() {
-    if (CCRouter.navigator.canPop(context: context)) {
-      CCRouter.navigator.pop(
-        result: 'detail:${widget.id}:confirmed',
-        context: context,
-      );
+    final navigator = CCRouter.navigatorOf(context);
+    if (navigator.canPop()) {
+      navigator.pop(result: 'detail:${widget.id}:confirmed');
       return;
     }
     observeDemoOperation(
       'Detail 返回首页',
-      CCRouter.navigator.go(DemoNavigationLabRoutes.home(), context: context),
+      navigator.go(DemoNavigationLabRoutes.home()),
     );
   }
 
@@ -94,7 +92,7 @@ final class _DemoDetailPageState extends State<DemoDetailPage>
               style: Theme.of(context).textTheme.displaySmall,
             ),
             const SizedBox(height: 12),
-            const Text('参数由生成 Codec 解码，页面不读取 GoRouterState。'),
+            const Text('参数由生成 Codec 解码，并通过类型安全的构造参数传入页面。'),
             const SizedBox(height: 16),
             Wrap(
               spacing: 8,

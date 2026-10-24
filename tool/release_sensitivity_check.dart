@@ -33,7 +33,14 @@ final _rules = <_Rule>[
   ),
 ];
 
-void main() {
+void main(List<String> args) {
+  if (args.any((arg) => arg != '--include-untracked') || args.length > 1) {
+    stderr.writeln(
+      'Usage: dart tool/release_sensitivity_check.dart [--include-untracked]',
+    );
+    exitCode = 2;
+    return;
+  }
   final rootResult = Process.runSync('git', ['rev-parse', '--show-toplevel']);
   if (rootResult.exitCode != 0) {
     stderr.writeln('Run this check from inside a Git repository.');
@@ -43,7 +50,15 @@ void main() {
   final root = Directory('${rootResult.stdout}'.trim());
   final trackedResult = Process.runSync(
     'git',
-    ['ls-files', '-z'],
+    [
+      'ls-files',
+      '--cached',
+      if (args.contains('--include-untracked')) ...[
+        '--others',
+        '--exclude-standard',
+      ],
+      '-z',
+    ],
     workingDirectory: root.path,
     stdoutEncoding: const SystemEncoding(),
   );
@@ -56,7 +71,8 @@ void main() {
   final findings = <String>[];
   final paths = '${trackedResult.stdout}'
       .split('\u0000')
-      .where((path) => path.isNotEmpty);
+      .where((path) => path.isNotEmpty)
+      .toSet();
   for (final path in paths) {
     if (path == 'tool/release_sensitivity_check.dart') continue;
     final file = File('${root.path}${Platform.pathSeparator}$path');

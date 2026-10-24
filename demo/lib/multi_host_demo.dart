@@ -527,6 +527,7 @@ final class _AdaptiveDetailPane extends StatelessWidget {
     color: Theme.of(context).colorScheme.surfaceContainerLow,
     child: LayoutBuilder(
       builder: (context, constraints) {
+        final navigator = CCRouter.navigatorOf(context);
         final padding = constraints.maxWidth < 320 ? 12.0 : 24.0;
         return SingleChildScrollView(
           padding: EdgeInsets.all(padding),
@@ -562,10 +563,9 @@ final class _AdaptiveDetailPane extends StatelessWidget {
                   const SizedBox(height: 16),
                   FilledButton(
                     onPressed: () => unawaited(
-                      CCRouter.navigator
+                      navigator
                           .push(
                             demoStackIntent(level: item, returnsResult: true),
-                            context: context,
                           )
                           .then<void>(
                             (result) => demoNavigationLabStore.record(

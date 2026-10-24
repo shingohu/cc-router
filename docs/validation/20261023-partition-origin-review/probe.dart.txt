@@ -5,9 +5,9 @@ import 'package:ccrouter/ccrouter_host.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import '/Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart'
+import '<home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart'
     as fixture;
-import '/Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart'
+import '<home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_operation_ownership_regression_test.dart'
     as links;
 
 Future<CCManagedMultiHostBackend> mountMulti(

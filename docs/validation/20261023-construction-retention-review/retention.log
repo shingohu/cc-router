@@ -1,4 +1,4 @@
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/runtime_round_trip/construction_retention.dart
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/runtime_round_trip/construction_retention.dart
 00:00 +0: ended Runtime is collectable with pending callback fromInvocation=false
 00:00 +1: ended Runtime is collectable with pending callback fromInvocation=true
 00:00 +1 -1: ended Runtime is collectable with pending callback fromInvocation=true [E]

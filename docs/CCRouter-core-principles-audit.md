@@ -8,6 +8,23 @@
 下文 Telemetry Context、Restoration Listener/Source 等条目是历史实现；当前身份快照与校验
 归应用观察桥，框架仍校验稳定的导航 Source 标识。布局由应用决定，再通过 Host SPI 同步可见 Outlet。
 
+## 2026-10-24 核心价值收口回归
+
+当前原生 Managed 与绑定导航入口的 13 条核心价值逐项判断、源码身份、实际命令和原始
+结果统一见[本轮回归报告](validation/20261024-core-value-final/report.md)。本轮分别运行
+框架、Generator/CLI、独立 Plugin、Demo/独立 Example、工具、DevTools、应用侧示例和
+有界压力检查；历史 GoRouter 结论和真机认证不自动延续。
+
+行为验证与发布就绪分开判定：当前 tracked files 的敏感信息检查发现历史验收文件仍含
+本机路径，门禁未通过；华为真机报告中的 Demo 样式、文案、Native/Graphics 内存增长和
+长帧待办也不由源码测试关闭。后续按报告建议顺序处理，不把自动化通过写成全平台无缺陷。
+
+后续执行情况见[遗留项收口](validation/20261024-closure/report.md)：Demo 问题和当前验收材料
+路径门禁已修复；真机受控复测与原始 Monkey 分开记录，以上保留当轮事实。
+后续[Native 分配归因](validation/20261024-native-attribution/report.md)已补齐匹配符号与
+完整采样，并在不初始化 CCRouter 的纯 Flutter 字体样例复现主要增长；底层持有/淘汰
+路径和原长帧仍未关闭，不能据此宣称框架所有资源均无泄漏。
+
 ## 2026-10-20 审查项修复
 
 下节保留 `672d057` 的修复前审查快照及首次验证结果；R01–R03 已在本次工作区修复，

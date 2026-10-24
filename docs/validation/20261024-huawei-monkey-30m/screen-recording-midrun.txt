@@ -1,0 +1,23 @@
+MEDIA PROJECTION MANAGER (dumpsys media_projection)
+Media Projection: 
+(com.huawei.screenrecorder, uid=0): TYPE_SCREEN_CAPTURE
+ACTIVITY MANAGER SERVICES (dumpsys activity services)
+  User 0 active services:
+  * ServiceRecord{2f5b3f1 u0 com.huawei.screenrecorder/.ScreenRecordService}
+    intent={act=com.huawei.screenrecorder.Start cmp=com.huawei.screenrecorder/.ScreenRecordService}
+    packageName=com.huawei.screenrecorder
+    processName=com.huawei.screenrecorder
+    permission=com.huawei.screenrecorder.permission.SCREENRECORDER_SERVICE_PERMISSION
+    baseDir=/system/priv-app/HwScreenRecorder/HwScreenRecorder.apk
+    dataDir=/data/user/0/com.huawei.screenrecorder
+    app=ProcessRecord{18080 31171:com.huawei.screenrecorder/u0a37}
+    allowWhileInUsePermissionInFgs=true
+    recentCallingPackage=com.android.systemui
+    recentCallingUid=10054
+    allowStartForeground=10
+    startForegroundCount=1
+    infoAllowStartForeground=[callingPackage: com.android.systemui; callingUid: 10054; uidState: PER ; intent: Intent { act=com.huawei.screenrecorder.Start cmp=com.huawei.screenrecorder/.ScreenRecordService }; code:PROC_STATE_PERSISTENT; tempAllowListReason:<null>; targetSdkVersion:29; callerTargetSdkVersion:-1; startForegroundCount:0; bindFromPackage:null]
+    isForeground=true foregroundId=55 foregroundNoti=Notification(channel=notification_channel_sound_screenrecorder_app shortcut=null contentView=null vibrate=null sound=null defaults=0x0 flags=0x6a color=0x00000000 groupKey=ranker_group55 actions=3 vis=PRIVATE)
+    createTime=-1m38s379ms startingBgTimeout=--
+    lastActivity=-1m38s317ms restartTime=-1m38s317ms createdFromFg=true
+    startRequested=true delayedStop=false stopIfKilled=true callStart=true lastStartId=1

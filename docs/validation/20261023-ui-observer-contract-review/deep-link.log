@@ -1,4 +1,4 @@
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/deep_link_input_boundaries_test.dart
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/deep_link_input_boundaries_test.dart
 00:00 +0: external CCNavigationOrigin.externalPlatform decodes Path exactly once: A
 00:00 +1: external CCNavigationOrigin.externalPlatform decodes Path exactly once: a%2Fb
 00:00 +2: external CCNavigationOrigin.externalPlatform decodes Path exactly once: a%252Fb

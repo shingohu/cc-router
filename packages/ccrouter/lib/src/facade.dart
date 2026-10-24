@@ -250,6 +250,30 @@ abstract final class CCRouter {
   /// fail with [CCRouterNotInitializedError].
   static CCNavigator get navigator => _navigator;
 
+  /// Binds navigation to the nearest registered Host/Outlet once.
+  ///
+  /// Use this in multi-pane or multi-Host UI to avoid passing [context] to each
+  /// operation. Resolve from a descendant of the intended Navigator, in build,
+  /// didChangeDependencies or an interaction callback, not initState. The client
+  /// retains no Context, Navigator or Runtime and needs no disposal. Focus changes
+  /// and asynchronous delays do not retarget it. Host detach or Runtime shutdown
+  /// permanently invalidates it with `CCRouteCancelledError('host_detached')`.
+  /// It is bound to the navigation registration, not the capturing page lifetime.
+  /// Explicit destination placement still wins, as with `context:` calls.
+  /// A per-call Context must resolve to the same Host/Outlet; to navigate from a
+  /// different region, acquire its own client. Exact close still uses its handle.
+  static CCNavigator navigatorOf(BuildContext context) {
+    final placement = _resolveContextPlacement(context)!;
+    final runtime = _runtime;
+    return _CCNavigator(
+      binding: _CCNavigationBinding(
+        placement: placement,
+        runtimeIdentity: _runtimeResolver.activeIdentity!,
+        lifetime: runtime.captureNavigationHostLifetime(placement.hostId),
+      ),
+    );
+  }
+
   /// Snapshot of navigation requests paused by an external policy.
   ///
   /// Authentication, consent, onboarding, and device-unlock hosts may inspect

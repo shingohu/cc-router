@@ -1,0 +1,16 @@
+{
+  "serial": "UJN0221619023373",
+  "pkg": "dev.ccrouter.demo",
+  "pid": "32533",
+  "probeApkSha256": "f43f9506046d4580f959fe970be62ec41373f9b6d92627a39c249938caa20194",
+  "restoreApkSha256": "a3416242f0d745158b39d7f8e24d5404ebf33e298d04b3d7bd2397748a414851",
+  "entrypoint": "demo/tool/native_font_probe.dart",
+  "ccrouterInitialized": false,
+  "vmClientConnected": false,
+  "profilerRequested": false,
+  "stylesPerRound": 72,
+  "rounds": 3,
+  "stylePeriodMs": 400,
+  "samplingIntervalBytes": 262144,
+  "startedAt": "2026-10-24T09:03:42.562Z"
+}

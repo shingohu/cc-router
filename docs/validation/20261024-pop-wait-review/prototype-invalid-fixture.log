@@ -44,7 +44,7 @@ Downloading packages...
 Got dependencies!
 41 packages have newer versions incompatible with dependency constraints.
 Try `flutter pub outdated` for more information.
-00:00 +0: loading /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/review_repros/pop_wait_lifecycle/repro.dart
 00:00 +0: legacy dispose pending=false error=false
 00:00 +0 -1: legacy dispose pending=false error=false [E]
   Expected: false
