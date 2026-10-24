@@ -1,0 +1,35 @@
+CCRouter Analyzer status
+  host: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo
+  state: healthy
+  plugin: ccrouter_demo_analyzer_plugin
+  bootstrap: /Users/shingo/.codex/worktrees/managed-navigation-runtime/cc-router/demo/tools/ccrouter_analyzer_plugin_host/tools/analyzer_plugin
+  source: git
+  version: 0.1.0
+  ref: c066213027573f7c6dfe4900680d8c6ffb2df83f
+  analyzer: 8.4.0
+  analyzer_plugin: 0.13.10
+  source pin: current (manifest/lock/resolved-ref identity only)
+  cache artifact: unchecked (run analyzer doctor)
+  Analysis Server live state: unverified
+  detail: Analyzer bootstrap is statically consistent; loadability is unchecked until `ccrouter analyzer doctor` passes.
+warning: Analyzer doctor found a stale legacy Analysis Server plugin cache (advisory only):
+  /Users/shingo/.dartServer/.plugin_manager/203765bd7e7f9b4754d29fb89269b996
+Related process candidates (advisory; command matching does not prove cache ownership):
+  PID 99819 | PPID 10492 | elapsed 14:22:29 | command: /Users/shingo/develop/SDK/flutter_3.47/bin/cache/dart-sdk/bin/dart language-server --client-id=Android-Studio --client-version=AI-262.9437.185 --protocol=analyzer --suppress-analytics
+The private .plugin_manager cache is not an authoritative cross-SDK gate. Manual recovery only; doctor will not kill processes, move files, or delete IDE state:
+  1. Save editor work and stop the Dart Analysis Server from the IDE (or close the IDE window that owns this Host).
+  2. Wait for the relevant process candidates above to exit; do not kill a PID unless you have independently confirmed its ownership.
+  3. Move the whole cache entry manually:
+       source: /Users/shingo/.dartServer/.plugin_manager/203765bd7e7f9b4754d29fb89269b996
+       backup: /Users/shingo/.dartServer/ccrouter-plugin-cache-backup/203765bd7e7f9b4754d29fb89269b996
+     If the backup destination exists, choose a new sibling name. Do not move only the analyzer_plugin child or clear unrelated caches.
+  4. Restart the Dart Analysis Server, rerun doctor, then verify a real IDE diagnostic or Quick Fix.
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source pin: current (manifest/lock/resolved-ref identity)
+  cache artifact: stale (manual rebuild pending)
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)

@@ -8,6 +8,8 @@
 
 [2026-10-24 Managed 工具链接入修复](20261024-managed-tooling/report.md)记录 Generator 脚手架、
 隔离 Analyzer、真实 LSP 和独立消费者验证；与下方 Runtime 回归的范围分别计数。
+后续[两阶段推送与 Demo Plugin pin 验证](20261024-managed-tooling/pin-release.md)记录远端来源、
+bootstrap 加载验证及现有 IDE 缓存边界。
 
 [2026-10-24 外部导航等待与所有权修复](20261024-backend-wait-fixes/report.md)是本次收口时
 最近一轮源码回归记录，包含修复前失败、修复内容与原始日志：

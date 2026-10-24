@@ -110,3 +110,6 @@ Demo bootstrap 当前仍固定远端完整 SHA
 本地真实 Server 测试不是 Demo IDE 已加载新版的证明。按 AGENTS 的两阶段流程，先提交、推送
 Plugin，再单独更新 Demo bootstrap SHA/lock，执行 pin-check/doctor、重启 Analysis Server
 并验证实际 IDE 诊断。该外部发布步骤不包含在本轮本地修复中。
+
+后续用户授权提交推送后的执行结果，见[两阶段发布补充](pin-release.md)。上述本地阶段的
+旧 pin 与未发布状态保留为当时记录，当前 pin 仍以 Demo manifest/lockfile 为准。

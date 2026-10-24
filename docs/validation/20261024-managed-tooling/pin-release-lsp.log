@@ -1,0 +1,7 @@
+Fresh official JIT Language Server; actual Demo root and committed remote bootstrap; temporary cache.
+{"revision":1,"codes":["ccrouter_route_placement_invalid","ccrouter_route_parent_self","ccrouter_route_policy_duplicate"]}
+PASS: all three new route diagnostics observed from Demo bootstrap.
+{"revision":2,"codes":["ccrouter_route_placement_invalid","ccrouter_route_parent_self","ccrouter_route_policy_duplicate"]}
+{"revision":3,"codes":[]}
+PASS: unsaved repair clears all three diagnostics.
+PASS: original overlay restored; Demo source unchanged on disk.

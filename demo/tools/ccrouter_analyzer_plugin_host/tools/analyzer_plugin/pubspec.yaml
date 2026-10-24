@@ -14,4 +14,4 @@ dependencies:
       path: packages/ccrouter_analyzer_plugin
       # Keep the Demo bootstrap reproducible. Update deliberately after the
       # plugin package has passed its isolated smoke tests.
-      ref: 51c5b3892928337e7c7728fa9dd6845ac2f93b2e
+      ref: c066213027573f7c6dfe4900680d8c6ffb2df83f
