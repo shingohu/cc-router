@@ -167,9 +167,9 @@ abstract final class CCRouter {
 
   /// Snapshot of currently retained managed Route Entries in stack order.
   ///
-  /// Each snapshot exposes an exact [CCRouteEntrySnapshot.handle] for targeted
-  /// removal. The snapshots do not expose Route Scopes, Widgets, or backend
-  /// Navigator objects.
+  /// Observations contain no close handles, Route Scopes, Widgets or backend
+  /// Navigator objects. Capture exact close identity from the owning Page
+  /// through [routeEntryHandleOf], never from a diagnostic stack position.
   static List<CCRouteEntrySnapshot> get activeRouteEntries =>
       _runtime.activeRouteEntries;
 
@@ -377,6 +377,21 @@ abstract final class CCRouter {
   /// to an active Entry in this Runtime return null, including removed pages.
   /// Foreign Routes and local Outlet bases do not create their own binding.
   static CCRouteEntryHandle? routeEntryHandleOf(BuildContext context) {
+    final binding = _validatedRouteServiceBinding(context);
+    if (binding == null) return null;
+    return _runtimeResolver.activeOrNull!.routeEntryHandleForNavigation(
+      binding.navigationId,
+    );
+  }
+
+  /// Accepts a Page binding only in the Runtime generation that admitted it.
+  ///
+  /// Old mounted pages and foreign payloads cannot resolve current resources
+  /// through a reused Navigation ID. This checks generation only: the Runtime
+  /// separately admits active Entries and backend-owned outgoing render Scopes.
+  static _CCRouteServiceBinding? _validatedRouteServiceBinding(
+    BuildContext context,
+  ) {
     final binding = context
         .getInheritedWidgetOfExactType<_CCRouteServiceBinding>();
     final runtime = _runtimeResolver.activeOrNull;
@@ -387,10 +402,7 @@ abstract final class CCRouter {
         !identical(binding.runtimeIdentity, _runtimeResolver.activeIdentity)) {
       return null;
     }
-    for (final entry in runtime.activeRouteEntries) {
-      if (entry.navigationId == binding.navigationId) return entry.handle;
-    }
-    return null;
+    return binding;
   }
 
   /// Resolves a Route-scoped Service owned by the managed Page at [context].
@@ -407,12 +419,13 @@ abstract final class CCRouter {
   /// A backend-confirmed outgoing render lifetime keeps this exact Scope usable
   /// until exit completes, even though its Entry is no longer active. Exact
   /// close, empty anchors and Runtime shutdown do not extend that lifetime.
+  /// Bindings from another or retired Runtime cannot resolve this Runtime's
+  /// resources even when their Navigation IDs match.
   static T routeService<T extends Object>(
     BuildContext context, {
     CCServiceKey<T>? key,
   }) {
-    final binding = context
-        .getInheritedWidgetOfExactType<_CCRouteServiceBinding>();
+    final binding = _validatedRouteServiceBinding(context);
     if (binding == null) {
       throw const CCServiceScopeUnavailableError(CCServiceScope.route);
     }
@@ -433,8 +446,7 @@ abstract final class CCRouter {
     BuildContext context, {
     CCServiceKey<T>? key,
   }) {
-    final binding = context
-        .getInheritedWidgetOfExactType<_CCRouteServiceBinding>();
+    final binding = _validatedRouteServiceBinding(context);
     if (binding == null) {
       throw const CCServiceScopeUnavailableError(CCServiceScope.route);
     }
@@ -455,8 +467,7 @@ abstract final class CCRouter {
     Duration? timeout,
     CCCancellationToken? cancellation,
   }) {
-    final binding = context
-        .getInheritedWidgetOfExactType<_CCRouteServiceBinding>();
+    final binding = _validatedRouteServiceBinding(context);
     if (binding == null) {
       throw const CCServiceScopeUnavailableError(CCServiceScope.route);
     }
@@ -478,8 +489,7 @@ abstract final class CCRouter {
     Duration? timeout,
     CCCancellationToken? cancellation,
   }) {
-    final binding = context
-        .getInheritedWidgetOfExactType<_CCRouteServiceBinding>();
+    final binding = _validatedRouteServiceBinding(context);
     if (binding == null) {
       throw const CCServiceScopeUnavailableError(CCServiceScope.route);
     }

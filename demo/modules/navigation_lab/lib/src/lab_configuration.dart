@@ -381,7 +381,8 @@ final class DemoRouteRevalidationPolicy implements CCRouteRevalidationPolicy {
 
   @override
   CCRouteRevalidationDecision evaluate(CCRouteRevalidationContext context) {
-    if (context.entry.handle == demoNavigationLabStore.revalidationTarget) {
+    if (context.entry.routeEntryId ==
+        demoNavigationLabStore.revalidationTarget?.routeEntryId) {
       return switch (demoNavigationLabStore.revalidationAction) {
         DemoRevalidationAction.keep => const CCRouteRevalidationKeep(),
         DemoRevalidationAction.close => const CCRouteRevalidationClose(),

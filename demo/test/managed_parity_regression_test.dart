@@ -52,7 +52,7 @@ void main() {
           );
           await tester.pumpAndSettle();
           final handles = CCRouter.activeRouteEntries
-              .map((entry) => entry.handle)
+              .map((entry) => entry.routeEntryId)
               .toList();
           final outcome = await CCRouter.navigator.maybePopOutcome(
             context: rootContext,
@@ -60,7 +60,7 @@ void main() {
           await tester.pumpAndSettle();
           expect(outcome.guardDeniedCode, 'demo_unsaved_form');
           expect(
-            CCRouter.activeRouteEntries.map((entry) => entry.handle),
+            CCRouter.activeRouteEntries.map((entry) => entry.routeEntryId),
             handles,
           );
           expect(find.text('PopGuard'), findsOneWidget);
@@ -91,7 +91,7 @@ void main() {
             expect(find.text('Workspace Home'), findsOneWidget);
             expect(
               CCRouter.activeRouteEntries.any(
-                (entry) => entry.handle == original,
+                (entry) => entry.routeEntryId == original.routeEntryId,
               ),
               isTrue,
             );
@@ -388,7 +388,7 @@ void main() {
         for (var cycle = 0; cycle < 8; cycle++) {
           await CCRouter.navigator.open(Uri.parse('/lab/stack/101'));
           await tester.pumpAndSettle();
-          final first = CCRouter.activeRouteEntries.last.handle;
+          final first = CCRouter.activeRouteEntries.last.routeEntryId;
           await CCRouter.navigator.open(Uri.parse('/lab/stack/202'));
           await tester.pumpAndSettle();
           final before = CCRouter.activeRouteEntries.length;
@@ -403,7 +403,7 @@ void main() {
           );
           await tester.pumpAndSettle();
           expect(CCRouter.activeRouteEntries, hasLength(before - 1));
-          expect(CCRouter.activeRouteEntries.last.handle, same(first));
+          expect(CCRouter.activeRouteEntries.last.routeEntryId, same(first));
           expect(find.text('栈操作 · Level 101'), findsOneWidget);
           await CCRouter.navigator.maybePop();
           await tester.pumpAndSettle();
@@ -420,7 +420,7 @@ void main() {
         await CCRouter.navigator.open(Uri.parse('/lab/stack/101'));
         await tester.pumpAndSettle();
         final before = CCRouter.activeRouteEntries
-            .map((entry) => entry.handle)
+            .map((entry) => entry.routeEntryId)
             .toList();
         final gesture = await tester.startGesture(const Offset(1, 300));
         await gesture.moveBy(const Offset(100, 0));
@@ -430,7 +430,7 @@ void main() {
         await gesture.up();
         await tester.pumpAndSettle();
         expect(
-          CCRouter.activeRouteEntries.map((entry) => entry.handle),
+          CCRouter.activeRouteEntries.map((entry) => entry.routeEntryId),
           before,
         );
         expect(find.text('栈操作 · Level 101'), findsOneWidget);
@@ -491,11 +491,9 @@ void main() {
         await mount(tester);
         await CCRouter.navigator.go(demoWorkspaceHomeIntent());
         await tester.pumpAndSettle();
-        final handle = CCRouter.activeRouteEntries
-            .singleWhere(
-              (entry) => entry.routeId == 'demo_navigation_lab.workspace.home',
-            )
-            .handle!;
+        final handle = CCRouter.routeEntryHandleOf(
+          tester.element(find.text('Workspace Home')),
+        )!;
         final context = tester.element(find.text('Workspace Home'));
         await CCRouter.navigator.open(
           Uri.parse('/lab/stack/101'),

@@ -64,7 +64,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(await original, 'exact:1');
       expect(
-        CCRouter.activeRouteEntries.any((entry) => entry.handle == handle),
+        CCRouter.activeRouteEntries.any(
+          (entry) => entry.routeEntryId == handle.routeEntryId,
+        ),
         isFalse,
       );
       expect(CCRouter.activeRouteEntries.last.routeEntryId, covering);
@@ -90,16 +92,16 @@ void main() {
         demoStackIntent(level: 11, returnsResult: true),
       );
       await tester.pumpAndSettle();
-      final handle = CCRouter.activeRouteEntries.last.handle;
+      final handle = CCRouter.activeRouteEntries.last.routeEntryId;
       await tap(tester, 'Revalidation · $action');
       switch (action) {
         case 'keep':
-          expect(CCRouter.activeRouteEntries.last.handle, handle);
+          expect(CCRouter.activeRouteEntries.last.routeEntryId, handle);
           CCRouter.navigator.pop();
           await tester.pumpAndSettle();
         case 'replace':
           expect(find.text('栈操作 · Level 900'), findsOneWidget);
-          expect(CCRouter.activeRouteEntries.last.handle, isNot(handle));
+          expect(CCRouter.activeRouteEntries.last.routeEntryId, isNot(handle));
         case 'close':
           expect(find.text('CCRouter Lab'), findsOneWidget);
         case 'reset':

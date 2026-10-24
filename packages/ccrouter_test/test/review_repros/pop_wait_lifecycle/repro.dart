@@ -135,7 +135,11 @@ startAndEnd(
       .run(
         () => track(
           mode == 'close'
-              ? runtime.closeRoute(runtime.activeRouteEntries.single.handle!)
+              ? runtime.closeRoute(
+                  runtime.routeEntryHandleForNavigation(
+                    runtime.activeRouteEntries.single.navigationId,
+                  )!,
+                )
               : runtime.maybePopOutcomeRoute<void>(
                   placementOverride: mode == 'scoped'
                       ? const CCRoutePlacement(hostId: 'right')

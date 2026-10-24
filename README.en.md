@@ -535,6 +535,12 @@ only that result and starts Scope disposal once; covering pages and foreign
 Popups remain alive. Async Service disposal may still be pending. This is an
 explicit business exit, independent of system back and local confirmation UI.
 
+`CCRouter.activeRouteEntries` and lifecycle/visibility snapshots are diagnostic
+observations and expose no close handles. Capture identity from the owning
+Page Context. All four Route Service lookups validate its Runtime generation;
+old pages or foreign payloads cannot access current resources through reused
+Navigation IDs. Valid outgoing render Scopes retain their documented lifetime.
+
 Native Managed supports imperative and declarative entries, retained branches
 and exact Shell removal. Covering foreign popups survive even when the selected
 Entry is the last page; only that Entry's result and Scope end. Custom Adapters

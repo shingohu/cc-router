@@ -1,0 +1,59 @@
+00:00 +0: loading tool/test/documentation_check_test.dart
+00:00 +0: tool/test/documentation_check_test.dart: rejects a broken link in an untracked nested document
+00:00 +1: tool/test/documentation_check_test.dart: checks a new staged document against its current bytes
+00:00 +2: tool/test/documentation_check_test.dart: excludes ignored untracked Markdown
+00:00 +3: tool/test/documentation_check_test.dart: does not count deleted tracked documents as checked
+00:01 +4: tool/test/documentation_check_test.dart: a filename mention does not satisfy index coverage
+00:01 +5: tool/test/documentation_check_test.dart: a remote link does not satisfy local index coverage
+00:01 +6: tool/test/documentation_check_test.dart: resolves index links by target, including encoded names
+00:02 +7: tool/test/documentation_check_test.dart: does not require ignored untracked documents in indexes
+00:02 +8: tool/test/documentation_check_test.dart: code and comments do not provide index navigation
+00:03 +9: tool/test/documentation_check_test.dart: does not validate illustrative links in code or comments
+00:04 +10: tool/test/documentation_check_test.dart: keeps real links after code fences and code-formatted labels
+00:04 +11: tool/test/documentation_check_test.dart: reports only the rendered broken target after code examples
+00:04 +12: tool/test/documentation_check_test.dart: unmatched backticks cannot hide links in later blocks
+00:05 +13: tool/test/documentation_check_test.dart: validates reference links
+00:05 +14: tool/test/documentation_check_test.dart: validates angle paths with parentheses
+00:05 +15: tool/test/documentation_check_test.dart: validates nested link labels
+00:05 +16: tool/test/documentation_check_test.dart: validates escaped backticks
+00:06 +17: tool/test/documentation_check_test.dart: ignores indented code
+00:06 +18: tool/test/documentation_check_test.dart: ignores escaped link syntax
+00:06 +19: tool/test/documentation_check_test.dart: reference links provide real index navigation
+00:06 +20: tool/test/documentation_check_test.dart: resolves balanced paths, encoded names, query and fragment
+00:07 +21: tool/test/documentation_check_test.dart: image targets do not substitute for index navigation
+00:07 +22: loading tool/test/release_sensitivity_check_test.dart
+00:07 +22: tool/test/release_sensitivity_check_test.dart: pre-stage mode checks untracked evidence without printing values
+00:07 +23: loading tool/test/markdown_links_test.dart
+00:08 +23: tool/test/markdown_links_test.dart: local destination guide.md?plain=1#heading resolves without double decoding
+00:08 +24: tool/test/markdown_links_test.dart: local destination guide%20(v2)%23中文.md resolves without double decoding
+00:08 +25: tool/test/markdown_links_test.dart: local destination literal%2520name.md resolves without double decoding
+00:08 +26: tool/test/markdown_links_test.dart: local destination %252e%252e/guide.md resolves without double decoding
+00:08 +27: tool/test/markdown_links_test.dart: local destination %2e%2e/%2e%2e/outside.md resolves without double decoding
+00:08 +28: tool/test/markdown_links_test.dart: local destination a+b.md resolves without double decoding
+00:08 +29: tool/test/markdown_links_test.dart: external and fragment-only links do not become local paths
+00:08 +30: tool/test/markdown_links_test.dart: unused definitions do not create rendered links
+00:08 +31: tool/test/markdown_links_test.dart: rendered links and images retain distinct index semantics
+00:08 +32: loading tool/test/quality_workflow_test.dart
+00:08 +32: tool/test/quality_workflow_test.dart: workflow-level environment uses only workflow-available values
+00:08 +33: loading tool/test/skill_bundle_check_test.dart
+00:08 +33: tool/test/skill_bundle_check_test.dart: consumer copy resolves required links without repository docs
+00:08 +34: tool/test/skill_bundle_check_test.dart: installing just the integration Skill is rejected
+00:08 +35: tool/test/skill_bundle_check_test.dart: repository-relative references fail even if target exists outside
+00:08 +36: tool/test/skill_bundle_check_test.dart: missing local references fail and optional remote links pass
+00:08 +37: tool/test/skill_bundle_check_test.dart: links between bundled Skills are valid
+00:08 +38: tool/test/skill_bundle_check_test.dart: reference-style links cannot hide a missing bundled resource
+00:08 +39: tool/test/skill_bundle_check_test.dart: Markdown examples do not become required bundle resources
+00:08 +40: tool/test/skill_bundle_check_test.dart: local paths with parentheses and URL suffixes resolve in the bundle
+00:08 +41: tool/test/skill_bundle_check_test.dart: encoded traversal cannot escape the isolated bundle
+00:08 +42: tool/test/skill_bundle_check_test.dart: protocol-relative links stay external and remote file URIs fail cleanly
+00:08 +43: tool/test/skill_bundle_check_test.dart: a symlinked Skill root is rejected before reading or copying
+00:08 +44: tool/test/skill_bundle_check_test.dart: CLI examples cannot invent commands or command-specific flags
+00:08 +45: tool/test/skill_bundle_check_test.dart: CLI matrix cannot omit an executable command
+00:08 +46: tool/test/skill_bundle_check_test.dart: documented CLI matrix matches current executable help
+00:11 +47: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:21 +48: loading tool/test/performance_compare_test.dart
+00:21 +48: tool/test/performance_compare_test.dart: reports relative regressions as non-blocking advisories
+00:22 +49: tool/test/performance_compare_test.dart: accepts a result at the relative budget boundary
+00:22 +50: tool/test/performance_compare_test.dart: rejects reports from different execution environments
+00:22 +51: tool/test/performance_compare_test.dart: rejects duplicate benchmark identities
+00:22 +52: All tests passed!

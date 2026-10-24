@@ -98,7 +98,9 @@ Future<(WeakReference<Payload>, Resource)> openAndClose(
     );
   }
   expect(
-    (await runtime.closeRoute(entry.handle!)).status,
+    (await runtime.closeRoute(
+      runtime.routeEntryHandleForNavigation(entry.navigationId)!,
+    )).status,
     CCRouteCloseStatus.closed,
   );
   await Future<void>.delayed(Duration.zero);

@@ -235,7 +235,9 @@ void main() {
       } else {
         fixture.ignore(result);
         expect(
-          CCRouter.activeRouteEntries.any((e) => identical(e.handle, handle)),
+          CCRouter.activeRouteEntries.any(
+            (e) => e.routeEntryId == handle.routeEntryId,
+          ),
           isTrue,
         );
       }

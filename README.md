@@ -788,6 +788,11 @@ if (handle != null) {
 重复、伪造和跨 Runtime 的句柄不能关闭同路由的新实例。句柄不持有 Context、Route、Scope
 或参数；关闭只完成目标结果并启动一次 Scope 释放，不等待异步 Service disposal。
 
+`CCRouter.activeRouteEntries`、生命周期及可见性快照仅供诊断，不携带关闭句柄。
+句柄从所属页面的 `BuildContext` 捕获，不按 routeId、快照索引或当前栈位置选择目标。
+Route Service 的四个查询入口同样校验页面的 Runtime generation，旧页面或外来 payload
+即使复用 `navigationId` 也不能读取当前 Runtime 的资源；有效的退出动画 Scope 不受影响。
+
 原生 Managed 支持 push/replace、声明式 go/reset、保留分支与 Shell 中的精确关闭。
 关闭最后一个页面时，覆盖它的 foreign Popup 仍保持存活，目标结果和 Scope 只结束一次。
 自定义 Adapter 可选择实现 Host-only `CCNavigationTargetedCloseAdapter`。

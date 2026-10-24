@@ -227,14 +227,14 @@ void main() {
         harness.backend.adapter.requests.every((r) => r.parentStack.isEmpty),
         isTrue,
       );
-      final parent = CCRouter.activeRouteEntries
-          .singleWhere((e) => e.routeId == 'tree.parent')
-          .handle!;
-      final leaf = CCRouter.activeRouteEntries.last.handle;
+      final leaf = CCRouter.activeRouteEntries.last.routeEntryId;
       // Reveal and construct the parent's Route Service before covering it again.
       await CCRouter.navigator.maybePop();
       await tester.pumpAndSettle();
       final parentResource = harness.resources['tree.parent']!;
+      final parent = CCRouter.routeEntryHandleOf(
+        tester.element(find.text('tree.parent')),
+      )!;
       final result = CCRouter.navigator.push(_child());
       String? returnedResult;
       unawaited(
@@ -244,7 +244,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final coveredLeaf = CCRouter.activeRouteEntries.last.handle;
+      final coveredLeaf = CCRouter.activeRouteEntries.last.routeEntryId;
       expect(coveredLeaf, isNot(same(leaf)));
       expect(
         (await CCRouter.navigator.close(parent)).status,
@@ -252,7 +252,7 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(parentResource.disposed, 1);
-      expect(CCRouter.activeRouteEntries.last.handle, same(coveredLeaf));
+      expect(CCRouter.activeRouteEntries.last.routeEntryId, same(coveredLeaf));
       expect(find.text('tree.child'), findsOneWidget);
       CCRouter.navigator.pop(result: 'done');
       await tester.pumpAndSettle();
@@ -266,13 +266,13 @@ void main() {
       tester,
     ) async {
       final harness = await _mount(tester);
-      final before = CCRouter.activeRouteEntries.single.handle;
+      final before = CCRouter.activeRouteEntries.single.routeEntryId;
       await expectLater(
         CCRouter.navigator.go(_Intent(routeId, path: {'id': '42'})),
         throwsA(isA<CCRouteParameterError>()),
       );
       await tester.pumpAndSettle();
-      expect(CCRouter.activeRouteEntries.single.handle, same(before));
+      expect(CCRouter.activeRouteEntries.single.routeEntryId, same(before));
       expect(harness.backend.adapter.requests.single.routeId, 'tree.root');
       expect(harness.resources['tree.root']!.disposed, 0);
     });
@@ -292,13 +292,13 @@ void main() {
         }),
       );
       seen.clear();
-      final before = CCRouter.activeRouteEntries.single.handle;
+      final before = CCRouter.activeRouteEntries.single.routeEntryId;
       await expectLater(
         CCRouter.navigator.reset(_child()),
         throwsA(isA<CCRouteCancelledError>()),
       );
       expect(seen, ['tree.group', 'tree.parent']);
-      expect(CCRouter.activeRouteEntries.single.handle, same(before));
+      expect(CCRouter.activeRouteEntries.single.routeEntryId, same(before));
       expect(harness.backend.adapter.requests.single.routeId, 'tree.root');
     },
   );
@@ -339,7 +339,7 @@ void main() {
     'MultiHost reconstructs only the selected child and preserves its sibling',
     (tester) async {
       final harness = await _mount(tester, multipleHosts: true);
-      final primary = CCRouter.activeRouteEntries.single.handle;
+      final primary = CCRouter.activeRouteEntries.single.routeEntryId;
       harness.multiHost!.adapter.activateHost('secondary');
       await CCRouter.navigator.go(_child());
       await tester.pumpAndSettle();
@@ -352,7 +352,7 @@ void main() {
             .map((r) => r.routeId),
         ['tree.group', 'tree.parent', 'tree.child'],
       );
-      expect(CCRouter.activeRouteEntries.first.handle, same(primary));
+      expect(CCRouter.activeRouteEntries.first.routeEntryId, same(primary));
       expect(
         CCRouter.activeRouteEntries
             .skip(1)

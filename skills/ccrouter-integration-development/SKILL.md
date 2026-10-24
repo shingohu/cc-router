@@ -491,6 +491,8 @@ the Service Contract.
   `CCRouter.navigator.close(handle, result: ...)`. Never select a route by ID,
   snapshot index, or the currently visible page when the work finishes. Handles
   retain no Context/Route/payload and expire with their exact Runtime entry.
+  Active Entry, lifecycle and visibility snapshots are diagnostic observations
+  only; they never expose an actionable close handle.
 - Check `CCRouteCloseOutcome.status`: `closed`, `notFound`, `unsupported`, or
   `guardDenied`. Close runs the target's managed PopGuards and validates its
   original result type before mutation. It is an explicit business exit; do not
@@ -570,6 +572,9 @@ the Service Contract.
 - Use `CCNavigationAspect` only for observation and sanitized telemetry. It must not change navigation decisions or synchronously re-enter navigation.
 - Use `CCPageLifecycleMixin` or `CCPageLifecycleListener` for PageShow/PageHide and application foreground/background observation. Use Flutter `initState/dispose` for Widget lifetime.
 - Use Route Service for page-instance resources that must survive PageHide and be disposed only after the exact managed RouteEntry is removed.
+  Every sync/async and optional lookup validates the owning Runtime generation;
+  foreign payloads and old mounted pages cannot borrow current resources by
+  reusing a Navigation ID. This does not shorten valid outgoing render Scopes.
   Managed startup pages also receive an Entry/Scope. Foreign Routes and a local
   `CCManagedOutlet.baseBuilder` surface do not create their own Managed Scope.
   Native Managed ordinary exit removes the active Entry and completes its result

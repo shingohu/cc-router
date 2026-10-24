@@ -293,6 +293,9 @@
 - Trigger Runtime shutdown inside a root synchronous factory: reject delivery
   while retaining exactly-once resource cleanup and the original shutdown error.
 - Does Route Service resolve from an exact managed page Context?
+  Test all four lookups against foreign payloads and retired Runtime bindings,
+  including reused Navigation IDs. Diagnostic snapshots must expose no close
+  handle; low-level identity lookup stays outside the business barrel.
 - Does a Managed startup page receive the same Entry/Scope binding as later
   routes, while foreign Routes and local Outlet base surfaces create no Scope?
 - Are PageShow/PageHide not mistaken for Widget lifetime or physical visibility?

@@ -16,6 +16,11 @@ Runtime 为每个 entry 分配独立句柄，按对象身份匹配。公开构�
 过期/已关闭/旧 Runtime 句柄均不能代替原实例。句柄仅携带 sanitized ID，不持有 Runtime、
 Context、Route、参数或结果。Host 不得将其序列化为可恢复导航能力。
 
+`activeRouteEntries`、生命周期和可见性快照只保留诊断身份，不携带可执行关闭的句柄。
+底层按 Navigation ID 读取句柄的桥接仅用于 Host/Core，不从业务 barrel 导出。
+四个 Route Service 查询与句柄捕获共享 Runtime generation 校验；外来 payload 和旧页面
+不能借复用的 Navigation ID 访问新 Runtime，合法的退出动画 Scope 仍由原 Entry 管理。
+
 业务从 `CCRouter.routeEntryHandleOf(context)` 在页面建立时捕获；Host payload 和页面 binding
 携带无 Runtime 引用的 generation token，shutdown 或旧 Context/同 navigationId 跨代重用
 均返回 null；resolver 用弱 key 关联 token。它不依赖 inherited

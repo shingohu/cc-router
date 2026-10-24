@@ -52,8 +52,8 @@ void main() {
         CCRouter.activeRouteEntries
             .where((e) => e.routeId == 'demo_navigation_lab.stack')
             .single
-            .handle,
-        same(handle),
+            .routeEntryId,
+        handle.routeEntryId,
       );
       final stale = CCRouter.activeBackendEntries
           .where(

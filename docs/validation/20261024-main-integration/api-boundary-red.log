@@ -1,0 +1,39 @@
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart
+00:00 +0: business barrel hides the complete Adapter SPI snapshot
+00:00 +0 -1: business barrel hides the complete Adapter SPI snapshot [E]
+  Expected: true
+    Actual: <false>
+  
+  package:matcher                                          expect
+  packages/ccrouter_test/test/api_surface_test.dart 134:5  main.<fn>
+  
+00:00 +0 -1: Dart rejects lifecycle and assembly from the business surface
+00:00 +0 -2: Dart rejects lifecycle and assembly from the business surface [E]
+  Expected: contains 'handle'
+    Actual: 'ERROR|COMPILE_TIME_ERROR|UNDEFINED_METHOD|<home>/.codex/worktrees/managed-navigation-runtime/cc-router/.dart_tool/host-api-boundary-vcqnbR/probe.dart|7|12|10|The method \'initialize\' isn\'t defined for the type \'CCRouter\'.\n'
+              'ERROR|COMPILE_TIME_ERROR|UNDEFINED_METHOD|<home>/.codex/worktrees/managed-navigation-runtime/cc-router/.dart_tool/host-api-boundary-vcqnbR/probe.dart|8|12|8|The method \'shutdown\' isn\'t defined for the type \'CCRouter\'.\n'
+              'ERROR|COMPILE_TIME_ERROR|UNDEFINED_METHOD|<home>/.codex/worktrees/managed-navigation-runtime/cc-router/.dart_tool/host-api-boundary-vcqnbR/probe.dart|9|12|12|The method \'runInitTasks\' isn\'t defined for the type \'CCRouter\'.\n'
+              'ERROR|COMPILE_TIME_ERROR|UNDEFINED_IDENTIFIER|<home>/.codex/worktrees/managed-navigation-runtime/cc-router/.dart_tool/host-api-boundary-vcqnbR/probe.dart|10|9|12|Undefined name \'CCRouterHost\'.\n'
+              'ERROR|COMPILE_TIME_ERROR|UNDEFINED_IDENTIFIER|<home>/.codex/worktrees/managed-navigation-runtime/cc-router/.dart_tool/host-api-boundary-vcqnbR/probe.dart|11|9|14|Undefined name \'CCHostAssembly\'.\n'
+              'ERROR|COMPILE_TIME_ERROR|UNDEFINED_IDENTIFIER|<home>/.codex/worktrees/managed-navigation-runtime/cc-router/.dart_tool/host-api-boundary-vcqnbR/probe.dart|12|9|30|Undefined name \'CCFlutterPredictiveBackHandler\'.\n'
+              'ERROR|COMPILE_TIME_ERROR|UNDEFINED_IDENTIFIER|<home>/.codex/worktrees/managed-navigation-runtime/cc-router/.dart_tool/host-api-boundary-vcqnbR/probe.dart|13|9|27|Undefined name \'CCPredictiveBackCoordinator\'.\n'
+              'ERROR|COMPILE_TIME_ERROR|UNDEFINED_IDENTIFIER|<home>/.codex/worktrees/managed-navigation-runtime/cc-router/.dart_tool/host-api-boundary-vcqnbR/probe.dart|14|9|20|Undefined name \'CCNavigationDispatch\'.\n'
+              'ERROR|COMPILE_TIME_ERROR|UNDEFINED_IDENTIFIER|<home>/.codex/worktrees/managed-navigation-runtime/cc-router/.dart_tool/host-api-boundary-vcqnbR/probe.dart|15|9|27|Undefined name \'CCNavigationDispatchAdapter\'.\n'
+              'ERROR|COMPILE_TIME_ERROR|UNDEFINED_IDENTIFIER|<home>/.codex/worktrees/managed-navigation-runtime/cc-router/.dart_tool/host-api-boundary-vcqnbR/probe.dart|16|9|30|Undefined name \'CCNavigationParentStackAdapter\'.\n'
+              'ERROR|COMPILE_TIME_ERROR|UNDEFINED_IDENTIFIER|<home>/.codex/worktrees/managed-navigation-runtime/cc-router/.dart_tool/host-api-boundary-vcqnbR/probe.dart|17|9|33|Undefined name \'CCNavigationScopedPopTargetSource\'.\n'
+              'ERROR|COMPILE_TIME_ERROR|UNDEFINED_IDENTIFIER|<home>/.codex/worktrees/managed-navigation-runtime/cc-router/.dart_tool/host-api-boundary-vcqnbR/probe.dart|18|9|24|Undefined name \'CCNavigationHostLifetime\'.\n'
+              'ERROR|COMPILE_TIME_ERROR|UNDEFINED_PREFIXED_NAME|<home>/.codex/worktrees/managed-navigation-runtime/cc-router/.dart_tool/host-api-boundary-vcqnbR/probe.dart|19|19|28|The name \'CCNavigationTelemetryContext\' is being referenced through the prefix \'contracts\', but it isn\'t defined in any of the libraries imported using that prefix.\n'
+              'ERROR|COMPILE_TIME_ERROR|UNDEFINED_PREFIXED_NAME|<home>/.codex/worktrees/managed-navigation-runtime/cc-router/.dart_tool/host-api-boundary-vcqnbR/probe.dart|20|19|35|The name \'CCRouteRestorationOpportunitySource\' is being referenced through the prefix \'contracts\', but it isn\'t defined in any of the libraries imported using that prefix.\n'
+              'ERROR|COMPILE_TIME_ERROR|UNDEFINED_PREFIXED_NAME|<home>/.codex/worktrees/managed-navigation-runtime/cc-router/.dart_tool/host-api-boundary-vcqnbR/probe.dart|21|19|22|The name \'CCAdaptiveLayoutPolicy\' is being referenced through the prefix \'contracts\', but it isn\'t defined in any of the libraries imported using that prefix.\n'
+              'INFO|LINT|DEPEND_ON_REFERENCED_PACKAGES|<home>/.codex/worktrees/managed-navigation-runtime/cc-router/.dart_tool/host-api-boundary-vcqnbR/probe.dart|1|8|32|The imported package \'ccrouter\' isn\'t a dependency of the importing package.\n'
+              'INFO|LINT|DEPEND_ON_REFERENCED_PACKAGES|<home>/.codex/worktrees/managed-navigation-runtime/cc-router/.dart_tool/host-api-boundary-vcqnbR/probe.dart|2|8|52|The imported package \'ccrouter_contracts\' isn\'t a dependency of the importing package.\n'
+              '\n'
+              ''
+     Which: does not contain 'handle'
+  
+  package:matcher                                           expect
+  packages/ccrouter_test/test/api_surface_test.dart 227:11  main.<fn>
+  
+00:00 +0 -2: test Runtime binding has a dedicated entry point
+00:00 +1 -2: Host barrel restores the Adapter SPI snapshot
+00:00 +2 -2: Some tests failed.

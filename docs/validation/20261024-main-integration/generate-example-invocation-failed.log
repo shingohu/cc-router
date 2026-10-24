@@ -1,0 +1,4 @@
+Because webview_flutter 4.14.1 requires the Flutter SDK and no versions of webview_flutter match >4.14.1 <5.0.0, webview_flutter ^4.14.1 is forbidden.
+So, because demo_web depends on webview_flutter ^4.14.1, version solving failed.
+
+Flutter users should use `flutter pub` instead of `dart pub`.

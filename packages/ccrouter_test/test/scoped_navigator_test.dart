@@ -465,7 +465,9 @@ void main() {
     final fresh = h.clients['$_secondary/$_right']!;
     final result = fresh.push(const _Intent('fresh'));
     await tester.pumpAndSettle();
-    final handle = CCRouter.activeRouteEntries.last.handle!;
+    final handle = CCRouter.routeEntryHandleOf(
+      h.pageContexts['fresh']!.target!,
+    )!;
     expect(() => stale.close(handle), throwsA(_retired));
     expect(CCRouter.activeRouteEntries.last.hostId, _secondary);
     fresh.pop(result: 'fresh-done');

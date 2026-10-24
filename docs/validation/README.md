@@ -6,6 +6,10 @@
 
 ## 最新源码自动化证据
 
+[2026-10-24 main 与 Managed 分支整合](20261024-main-integration/report.md)：保留历史与
+`0.1.0` 标签，吸收 Route Service generation 隔离和快照只读边界；保留 Managed 导航与
+退出 Scope 生命周期。包含 RED、首次命令失败、最终自动化与未覆盖范围。
+
 [2026-10-24 诊断与 DevTools 修复](20261024-diagnostics/report.md)：失败 Host/Outlet 与恢复链归属、
 取消告警、历史完整性、Sink 健康、非导航刷新及 optional 协议兼容；包含检查失败和复核边界。
 

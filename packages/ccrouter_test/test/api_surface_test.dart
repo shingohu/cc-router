@@ -131,6 +131,13 @@ void main() {
       ).hasMatch(businessBarrel),
       isTrue,
     );
+    expect(
+      RegExp(
+        "export 'package:ccrouter_core/ccrouter_core.dart'[\\s\\S]*?"
+        'hide[\\s\\S]*?CCRouterRuntimeRouteEntries[\\s\\S]*?;',
+      ).hasMatch(businessBarrel),
+      isTrue,
+    );
   });
 
   test(
@@ -171,6 +178,9 @@ void main() {
         probe.writeAsStringSync("""
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter_contracts/ccrouter_contracts.dart' as contracts;
+void inspectEntry(CCRouteEntrySnapshot entry) {
+  print(entry.handle);
+}
 void probe() {
   CCRouter.initialize();
   CCRouter.shutdown();
@@ -209,6 +219,7 @@ void probe() {
           'CCNavigationParentStackAdapter',
           'CCNavigationScopedPopTargetSource',
           'CCNavigationHostLifetime',
+          'handle',
           'CCNavigationTelemetryContext',
           'CCRouteRestorationOpportunitySource',
           'CCAdaptiveLayoutPolicy',

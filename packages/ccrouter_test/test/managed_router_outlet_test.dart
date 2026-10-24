@@ -430,8 +430,8 @@ void main() {
       expect(
         CCRouter.activeRouteEntries
             .take(before.length)
-            .map((entry) => entry.handle),
-        before.map((entry) => entry.handle),
+            .map((entry) => entry.routeEntryId),
+        before.map((entry) => entry.routeEntryId),
       );
       expect(resources['$primary-right'], same(rightResource));
       CCRouter.navigator.pop(
@@ -922,7 +922,8 @@ void main() {
             .skip(eventCount)
             .where(
               (event) =>
-                  event.entry.handle == handles['home-detail'] &&
+                  event.entry.routeEntryId ==
+                      handles['home-detail']?.routeEntryId &&
                   event.phase == CCRouteVisibilityPhase.didHide,
             ),
         isEmpty,

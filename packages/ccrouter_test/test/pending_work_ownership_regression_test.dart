@@ -95,7 +95,9 @@ _endScope(
     );
     await started.future;
     expect(
-      (await runtime.closeRoute(entry.handle!)).status,
+      (await runtime.closeRoute(
+        runtime.routeEntryHandleForNavigation(entry.navigationId)!,
+      )).status,
       CCRouteCloseStatus.closed,
     );
   }
@@ -199,7 +201,9 @@ void main() {
               await runtime.closeSession();
             case CCServiceScope.route:
               await runtime.closeRoute(
-                runtime.activeRouteEntries.single.handle!,
+                runtime.routeEntryHandleForNavigation(
+                  runtime.activeRouteEntries.single.navigationId,
+                )!,
               );
           }
           for (final outcome in outcomes) {

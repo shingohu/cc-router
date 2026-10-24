@@ -8,6 +8,11 @@ published.
 
 ## Unreleased
 
+- Preserved Runtime-generation isolation for all four Route Service lookups
+  while integrating main into Managed. Diagnostic Entry/lifecycle/visibility
+  snapshots no longer expose close handles; capture them from the owning Page.
+  The low-level identity bridge stays outside the business API.
+
 - Align component example scaffolds with native Managed assembly and startup;
   include standalone Portable preparation and build prerequisites. Extend optional
   Analyzer feedback to conditional generated imports and literal route placement/

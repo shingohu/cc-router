@@ -1,0 +1,65 @@
+00:00 +0: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_test.dart
+00:00 +0: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_test.dart: last declarative close retains foreign popup: nested=false root=true
+00:00 +1: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_test.dart: last declarative close retains foreign popup: nested=true root=false
+00:00 +2: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_test.dart: last declarative close retains foreign popup: nested=true root=true
+00:00 +3: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_test.dart: handle lookup from mounted old context returns null after shutdown and restart
+00:00 +4: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_test.dart: foreign Runtime payload cannot capture handle or resolve Route Services
+00:00 +5: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_test.dart: covered exact entry stays removed after subsequent push and pop
+00:00 +6: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_test.dart: foreign Popup remains mounted when its managed page is closed
+00:00 +7: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_test.dart: foreign Page with reused key/settings is not targeted: false
+00:00 +8: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_test.dart: foreign Page with reused key/settings is not targeted: true
+00:00 +9: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_test.dart: foreign same-location push before managed observer keeps exact identity
+00:00 +10: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_test.dart: duplicate same-location instances keep selected typed result and Scope
+00:00 +11: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_test.dart: exact nested Shell Outlet close preserves its covering entry and Shell
+00:00 +12: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_test.dart: replacement instance closes its own typed result
+00:00 +13: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_test.dart: push-mode dynamic open closes only its own retained Scope
+00:00 +14: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_test.dart: declarative close removes its exact Scope while preserving foreign Popup
+00:00 +15: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_test.dart: denied close preserves configuration, Popup, result and Scope
+00:00 +16: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_core_test.dart
+00:00 +16: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_core_test.dart: duplicate route instances close only selected result and Scope once
+00:00 +17: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_core_test.dart: guard-triggered Runtime invalidation never reaches the adapter
+00:00 +18: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_core_test.dart: multi-Host optional capability delegates to the owning inactive child
+00:00 +19: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_core_test.dart: wrong result is rejected before backend or Scope mutation
+00:00 +20: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_core_test.dart: guards receive covered target identity and denial preserves both entries
+00:00 +21: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_core_test.dart: route-local guard denial is target-specific
+00:00 +22: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_core_test.dart: forged and prior Runtime handles never target same-route current entry
+00:00 +23: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_core_test.dart: legacy adapter is source compatible and explicitly unsupported without Pop fallback
+00:00 +24: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_core_test.dart: a targeted-close failure after backend mutation still converges Runtime cleanup
+00:00 +25: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/targeted_close_core_test.dart: closing inactive Host and Outlet preserves the active partition
+00:00 +26: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart
+00:01 +26: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: business barrel hides the complete Adapter SPI snapshot
+00:01 +27: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Dart rejects lifecycle and assembly from the business surface
+00:02 +28: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: test Runtime binding has a dedicated entry point
+00:02 +29: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/api_surface_test.dart: Host barrel restores the Adapter SPI snapshot
+00:02 +30: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/route_service_test.dart
+00:02 +30: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/route_service_test.dart: Managed page resolves and disposes its exact Route Service
+00:02 +31: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart
+00:02 +31: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: canonical parent plan owns independent Scopes and exact identities
+00:03 +32: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: unreconstructible tree.missing leaves the existing stack intact
+00:03 +33: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: unreconstructible tree.editor leaves the existing stack intact
+00:03 +34: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: ancestor policy cancels atomically before leaf policy or allocation
+00:03 +35: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: browser route information rebuilds the complete parent hierarchy
+00:03 +36: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: MultiHost reconstructs only the selected child and preserves its sibling
+00:03 +37: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: scoped foreign ownership is independent of the active Host
+00:03 +38: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: ancestor redirect discards the old plan and resolves a new target
+00:03 +39: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: deferred ancestor resumes the leaf with one freshly validated chain
+00:03 +40: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: shutdown fences a late ancestor policy before Backend mutation
+00:03 +41: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: platform startup stays external across ancestor interception
+00:03 +42: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: Host can explicitly override a non-root platform startup URI
+00:03 +43: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/managed_parent_stack_test.dart: default platform startup cannot bypass the Host ingress deny policy
+00:03 +44: loading <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scoped_navigator_test.dart
+00:03 +44: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scoped_navigator_test.dart: a real Host named default stays bound while another is active
+00:03 +45: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scoped_navigator_test.dart: bound push/pop ignores focus: host.primary/pane.left
+00:03 +46: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scoped_navigator_test.dart: bound push/pop ignores focus: host.primary/pane.right
+00:03 +47: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scoped_navigator_test.dart: bound push/pop ignores focus: host.secondary/pane.left
+00:03 +48: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scoped_navigator_test.dart: bound push/pop ignores focus: host.secondary/pane.right
+00:04 +49: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scoped_navigator_test.dart: all bound operations share placement and typed results
+00:04 +50: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scoped_navigator_test.dart: bound target survives async policy and resume: defer=false
+00:04 +51: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scoped_navigator_test.dart: bound target survives async policy and resume: defer=true
+00:04 +52: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scoped_navigator_test.dart: bound Back respects root popup, LocalHistory and PopGuard
+00:04 +53: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scoped_navigator_test.dart: explicit destination wins; conflicting Context is rejected
+00:04 +54: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scoped_navigator_test.dart: same-ID replacement permanently retires every old operation
+00:04 +55: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scoped_navigator_test.dart: retained client does not retain removed page Context
+00:04 +56: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scoped_navigator_test.dart: retained client releases ended Runtime, Adapter and Navigator
+00:04 +57: <home>/.codex/worktrees/managed-navigation-runtime/cc-router/packages/ccrouter_test/test/scoped_navigator_test.dart: navigatorOf rejects a Context outside the registered Navigator
+00:04 +58: All tests passed!

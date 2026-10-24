@@ -272,7 +272,9 @@ _endScopedCaller(CCRouterRuntime runtime, CCServiceScope scope) async {
   } else {
     expect(
       (await runtime.closeRoute(
-        runtime.activeRouteEntries.single.handle!,
+        runtime.routeEntryHandleForNavigation(
+          runtime.activeRouteEntries.single.navigationId,
+        )!,
       )).status,
       CCRouteCloseStatus.closed,
     );

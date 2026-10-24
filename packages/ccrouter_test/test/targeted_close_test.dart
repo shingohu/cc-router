@@ -161,6 +161,20 @@ final class _DenyClose implements CCPopGuard {
 Iterable<CCRouteEntrySnapshot> get _detailEntries => CCRouter.activeRouteEntries
     .where((entry) => entry.routeId == 'close.detail');
 
+Future<void> _expectUnavailableServices(BuildContext context) async {
+  for (final lookup in <FutureOr<Object?> Function()>[
+    () => CCRouter.routeService<_Resource>(context),
+    () => CCRouter.routeServiceOrNull<_Resource>(context),
+    () => CCRouter.routeServiceAsync<_Resource>(context),
+    () => CCRouter.routeServiceOrNullAsync<_Resource>(context),
+  ]) {
+    await expectLater(
+      Future<Object?>.sync(lookup),
+      throwsA(isA<CCServiceScopeUnavailableError>()),
+    );
+  }
+}
+
 void main() {
   for (final nested in [false, true]) {
     for (final rootPopup in nested ? [false, true] : [true]) {
@@ -219,10 +233,12 @@ void main() {
       await CCRouterHost.shutdown();
       expect(context.mounted, isTrue);
       expect(CCRouter.routeEntryHandleOf(context), isNull);
+      await _expectUnavailableServices(context);
       CCRouterHost.initialize(
         hostAssembly: CCHostAssembly.fromComponents(components: const []),
       );
       expect(CCRouter.routeEntryHandleOf(context), isNull);
+      await _expectUnavailableServices(context);
       expect(
         (await CCRouter.navigator.close(old)).status,
         CCRouteCloseStatus.notFound,
@@ -231,7 +247,7 @@ void main() {
   );
 
   testWidgets(
-    'foreign Runtime payload with reused navigationId cannot capture current handle',
+    'foreign Runtime payload cannot capture handle or resolve Route Services',
     (tester) async {
       final h = await _mount(tester);
       final a = h.push('A');
@@ -255,6 +271,9 @@ void main() {
         ),
       );
       CCRouteEntryHandle? captured;
+      final serviceErrors = <Object>[];
+      final serviceProbeDone = Completer<void>();
+      var probed = false;
       final popup = showDialog<void>(
         context: h.contexts['A']!,
         builder: (_) => CCRouterHostBinding.bindRouteEntry(
@@ -262,14 +281,46 @@ void main() {
           child: Builder(
             builder: (context) {
               captured = CCRouter.routeEntryHandleOf(context);
+              if (!probed) {
+                probed = true;
+                try {
+                  CCRouter.routeService<_Resource>(context);
+                } catch (error) {
+                  serviceErrors.add(error);
+                }
+                try {
+                  CCRouter.routeServiceOrNull<_Resource>(context);
+                } catch (error) {
+                  serviceErrors.add(error);
+                }
+                unawaited(() async {
+                  try {
+                    await CCRouter.routeServiceAsync<_Resource>(context);
+                  } catch (error) {
+                    serviceErrors.add(error);
+                  }
+                  try {
+                    await CCRouter.routeServiceOrNullAsync<_Resource>(context);
+                  } catch (error) {
+                    serviceErrors.add(error);
+                  }
+                  serviceProbeDone.complete();
+                }());
+              }
               return const AlertDialog(content: Text('foreign-runtime-popup'));
             },
           ),
         ),
       );
       await tester.pumpAndSettle();
+      await serviceProbeDone.future;
       expect(captured, isNull);
-      expect(_detailEntries.single.handle, same(entry.handle));
+      expect(serviceErrors, hasLength(4));
+      expect(
+        serviceErrors,
+        everyElement(isA<CCServiceScopeUnavailableError>()),
+      );
+      expect(_detailEntries.single.routeEntryId, entry.routeEntryId);
       Navigator.of(tester.element(find.text('foreign-runtime-popup'))).pop();
       await popup;
       await tester.pumpAndSettle();
@@ -458,7 +509,7 @@ void main() {
         CCRouter.navigator.close(bHandle, result: 42),
         throwsA(isA<CCRouteResultTypeError>()),
       );
-      expect(_detailEntries.single.handle, same(bHandle));
+      expect(_detailEntries.single.routeEntryId, bHandle.routeEntryId);
       expect(
         (await CCRouter.navigator.close(bHandle, result: 'second')).status,
         CCRouteCloseStatus.closed,
@@ -606,7 +657,7 @@ void main() {
       h.backend.routerConfig.routerDelegate.currentConfiguration!.uri,
       configuration,
     );
-    expect(_detailEntries.single.handle, same(target));
+    expect(_detailEntries.single.routeEntryId, target.routeEntryId);
     expect(completed, isFalse);
     expect(find.text('denied-popup'), findsOneWidget);
     expect(h.resources['A']!.disposals, 0);

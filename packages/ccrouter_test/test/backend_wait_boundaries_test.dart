@@ -28,7 +28,11 @@ CCRouterRuntime runtimeFor(CCNavigationAdapter adapter) {
 }
 
 Future<Object?> invoke(CCRouterRuntime runtime, String mode) => mode == 'close'
-    ? runtime.closeRoute(runtime.activeRouteEntries.single.handle!)
+    ? runtime.closeRoute(
+        runtime.routeEntryHandleForNavigation(
+          runtime.activeRouteEntries.single.navigationId,
+        )!,
+      )
     : mode == 'boolean'
     ? runtime.maybePopRoute<void>()
     : runtime.maybePopOutcomeRoute<void>(
@@ -59,7 +63,11 @@ Future<(WeakReference<Object>, WeakReference<Object>)> replaceWhileClosing(
   final caller = Object();
   await runtime.goRoute(routes.Intent(original));
   final closing = runZoned(
-    () => runtime.closeRoute(runtime.activeRouteEntries.single.handle!),
+    () => runtime.closeRoute(
+      runtime.routeEntryHandleForNavigation(
+        runtime.activeRouteEntries.single.navigationId,
+      )!,
+    ),
     zoneValues: {callerKey: caller},
   );
   await runtime.goRoute(routes.Intent(routes.Payload()));

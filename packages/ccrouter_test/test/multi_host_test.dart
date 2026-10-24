@@ -579,7 +579,7 @@ void main() {
           const _Intent<Object?>('shared.detail', _Arguments('before')),
         );
         aggregate.activateHost(primary.hostId);
-        final before = runtime.activeRouteEntries.single.handle;
+        final before = runtime.activeRouteEntries.single.routeEntryId;
         final report = await runtime.revalidateActiveRoutes(
           reason: 'permission_changed',
         );
@@ -589,7 +589,7 @@ void main() {
         );
         expect(secondary.navigations, 1);
         expect(primary.requests, isEmpty);
-        expect(runtime.activeRouteEntries.single.handle, same(before));
+        expect(runtime.activeRouteEntries.single.routeEntryId, same(before));
         expect(aggregate.activeHostId, primary.hostId);
       },
     );

@@ -193,7 +193,9 @@ void main() {
               runtime.openSession(accountId: 'new');
             case CCServiceScope.route:
               await runtime.closeRoute(
-                runtime.activeRouteEntries.single.handle!,
+                runtime.routeEntryHandleForNavigation(
+                  runtime.activeRouteEntries.single.navigationId,
+                )!,
               );
               await Future<void>.delayed(Duration.zero);
               await runtime.goRoute(fixture.Intent(fixture.Payload()));

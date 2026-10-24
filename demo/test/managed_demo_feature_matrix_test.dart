@@ -85,7 +85,7 @@ void main() {
         await opened;
         expect(find.text('CCRouter Lab'), findsOneWidget);
         final before = CCRouter.activeRouteEntries
-            .map((entry) => entry.handle)
+            .map((entry) => entry.routeEntryId)
             .toList();
         await tester.tap(find.text('导航'));
         await tester.pumpAndSettle();
@@ -97,7 +97,7 @@ void main() {
         await tester.tap(find.text('拒绝未公开的外部链接'));
         await tester.pumpAndSettle();
         expect(
-          CCRouter.activeRouteEntries.map((entry) => entry.handle),
+          CCRouter.activeRouteEntries.map((entry) => entry.routeEntryId),
           before,
         );
         expect(find.text('CCRouter Lab'), findsOneWidget);

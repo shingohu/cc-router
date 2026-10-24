@@ -288,8 +288,8 @@ void main() {
     expect(CCRouter.activeRouteEntries, hasLength(1));
     expect(CCRouter.activeRouteEntries.single.routeId, 'managed.home');
     expect(
-      harness.handle('home'),
-      same(CCRouter.activeRouteEntries.single.handle),
+      harness.handle('home').routeEntryId,
+      CCRouter.activeRouteEntries.single.routeEntryId,
     );
     expect(
       CCRouter.activeBackendEntries.single.owner,

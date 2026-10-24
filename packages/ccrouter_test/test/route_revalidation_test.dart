@@ -317,7 +317,7 @@ void main() {
       );
       addTearDown(runtime.dispose);
       await _open(runtime, 'test.home');
-      final before = runtime.activeRouteEntries.single.handle;
+      final before = runtime.activeRouteEntries.single.routeEntryId;
       await expectLater(
         runtime.revalidateActiveRoutes(reason: 'permission_changed'),
         throwsA(
@@ -328,7 +328,7 @@ void main() {
           ),
         ),
       );
-      expect(runtime.activeRouteEntries.single.handle, same(before));
+      expect(runtime.activeRouteEntries.single.routeEntryId, same(before));
       expect(adapter.delegate.stack.single.routeId, 'test.home');
     },
   );
@@ -344,7 +344,7 @@ void main() {
       );
       addTearDown(runtime.dispose);
       await _open(runtime, 'test.home');
-      final before = runtime.activeRouteEntries.single.handle;
+      final before = runtime.activeRouteEntries.single.routeEntryId;
       final report = await runtime.revalidateActiveRoutes(
         reason: 'permission_changed',
       );
@@ -353,7 +353,7 @@ void main() {
         CCRouteRevalidationOutcome.unsupported,
       );
       expect(adapter.replaceCalls, 0);
-      expect(runtime.activeRouteEntries.single.handle, same(before));
+      expect(runtime.activeRouteEntries.single.routeEntryId, same(before));
       expect(adapter.delegate.stack.single.routeId, 'test.home');
     },
   );
@@ -370,13 +370,13 @@ void main() {
       );
       addTearDown(runtime.dispose);
       await _open(runtime, 'test.home');
-      final before = runtime.activeRouteEntries.single.handle;
+      final before = runtime.activeRouteEntries.single.routeEntryId;
       await expectLater(
         runtime.revalidateActiveRoutes(reason: 'permission_changed'),
         throwsA(isA<CCNavigationAdapterError>()),
       );
       expect(adapter.replaceCalls, 1);
-      expect(runtime.activeRouteEntries.single.handle, same(before));
+      expect(runtime.activeRouteEntries.single.routeEntryId, same(before));
       expect(adapter.delegate.stack.single.routeId, 'test.home');
     },
   );
@@ -538,7 +538,7 @@ void main() {
         _Policy((_) => CCRouteRevalidationReplace(_Intent(target))),
       );
       await _open(runtime, 'test.home');
-      final before = runtime.activeRouteEntries.single.handle;
+      final before = runtime.activeRouteEntries.single.routeEntryId;
 
       final report = await runtime.revalidateActiveRoutes(
         reason: 'permission_changed',
@@ -549,7 +549,7 @@ void main() {
         report.entries.single.outcome,
         CCRouteRevalidationOutcome.unsupported,
       );
-      expect(runtime.activeRouteEntries.single.handle, same(before));
+      expect(runtime.activeRouteEntries.single.routeEntryId, same(before));
       await runtime.dispose();
     }
   });
@@ -586,7 +586,7 @@ void main() {
 
       for (final runtime in scenarios) {
         await _open(runtime, 'test.home');
-        final before = runtime.activeRouteEntries.single.handle;
+        final before = runtime.activeRouteEntries.single.routeEntryId;
 
         final report = await runtime.revalidateActiveRoutes(
           reason: 'permission_changed',
@@ -597,7 +597,7 @@ void main() {
           report.entries.single.outcome,
           CCRouteRevalidationOutcome.unsupported,
         );
-        expect(runtime.activeRouteEntries.single.handle, same(before));
+        expect(runtime.activeRouteEntries.single.routeEntryId, same(before));
         await runtime.dispose();
       }
     },
@@ -633,7 +633,7 @@ void main() {
       const _Intent('test.replacement'),
     );
     await Future<void>.delayed(Duration.zero);
-    final businessEntry = runtime.activeRouteEntries.single.handle;
+    final businessEntry = runtime.activeRouteEntries.single.routeEntryId;
 
     final report = await runtime
         .revalidateActiveRoutes(reason: 'permission_changed')
@@ -642,7 +642,7 @@ void main() {
     expect(await businessReplace, isNull);
     expect(report.entries.single.outcome, CCRouteRevalidationOutcome.replaced);
     expect(
-      runtime.activeRouteEntries.single.handle,
+      runtime.activeRouteEntries.single.routeEntryId,
       isNot(same(businessEntry)),
     );
   });
@@ -735,7 +735,9 @@ void main() {
       );
       addTearDown(runtime.dispose);
       await _open(runtime, 'test.home');
-      final handle = runtime.activeRouteEntries.single.handle;
+      final handle = runtime.routeEntryHandleForNavigation(
+        runtime.activeRouteEntries.single.navigationId,
+      );
 
       final revalidation = runtime.revalidateActiveRoutes(
         reason: 'session_closed',
@@ -762,7 +764,7 @@ void main() {
     );
     addTearDown(runtime.dispose);
     await _open(runtime, 'test.home');
-    final before = runtime.activeRouteEntries.single.handle;
+    final before = runtime.activeRouteEntries.single.routeEntryId;
 
     final report = await runtime.revalidateActiveRoutes(
       reason: 'session_closed',
@@ -773,7 +775,7 @@ void main() {
       report.entries.single.outcome,
       CCRouteRevalidationOutcome.unsupported,
     );
-    expect(runtime.activeRouteEntries.single.handle, same(before));
+    expect(runtime.activeRouteEntries.single.routeEntryId, same(before));
   });
 
   test('failed reset still suppresses lower-priority Host decisions', () async {
@@ -857,7 +859,7 @@ void main() {
       final runtime = _runtime(_Policy((_) => throw StateError('secret')));
       addTearDown(runtime.dispose);
       await _open(runtime, 'test.home');
-      final before = runtime.activeRouteEntries.single.handle;
+      final before = runtime.activeRouteEntries.single.routeEntryId;
 
       await expectLater(
         runtime.revalidateActiveRoutes(reason: 'authentication_changed'),
@@ -876,7 +878,7 @@ void main() {
               ),
         ),
       );
-      expect(runtime.activeRouteEntries.single.handle, same(before));
+      expect(runtime.activeRouteEntries.single.routeEntryId, same(before));
     },
   );
 
@@ -939,7 +941,7 @@ void main() {
       );
       addTearDown(runtime.dispose);
       await _open(runtime, 'test.protected');
-      final before = runtime.activeRouteEntries.single.handle;
+      final before = runtime.activeRouteEntries.single.routeEntryId;
 
       await expectLater(
         runtime.revalidateActiveRoutes(reason: 'permission_changed'),
@@ -952,7 +954,7 @@ void main() {
         ),
       );
 
-      expect(runtime.activeRouteEntries.single.handle, same(before));
+      expect(runtime.activeRouteEntries.single.routeEntryId, same(before));
     },
   );
 

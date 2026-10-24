@@ -62,6 +62,10 @@ never retry unsupported with Pop or same-route lookup. Managed startup pages
 also own handles. A null capture means no valid binding to an active Entry in
 the current Runtime, not permission to guess from the active stack. Foreign
 Routes and local Outlet bases do not create their own Managed identity.
+Active Entry, lifecycle and visibility snapshots never expose close handles.
+All four Route Service APIs also validate Runtime generation before resolving
+the exact Entry, including outgoing render Scopes. Test a foreign payload with
+a reused Navigation ID and a mounted old Page after Runtime replacement.
 The target's global/local managed guards run, a wrong result fails before
 mutation, closed results complete once, and its Scope starts disposal once.
 

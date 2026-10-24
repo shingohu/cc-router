@@ -107,6 +107,11 @@ CCRouterRuntime _runtime({
   return runtime;
 }
 
+CCRouteEntryHandle _handle(
+  CCRouterRuntime runtime,
+  CCRouteEntrySnapshot entry,
+) => runtime.routeEntryHandleForNavigation(entry.navigationId)!;
+
 void main() {
   test(
     'duplicate route instances close only selected result and Scope once',
@@ -141,8 +146,8 @@ void main() {
         navigationId: b.navigationId,
       );
       final outcomes = await Future.wait([
-        runtime.closeRoute(a.handle!, result: 'A'),
-        runtime.closeRoute(a.handle!, result: 'again'),
+        runtime.closeRoute(_handle(runtime, a), result: 'A'),
+        runtime.closeRoute(_handle(runtime, a), result: 'again'),
       ]);
       expect(outcomes.map((o) => o.status), [
         CCRouteCloseStatus.closed,
@@ -153,10 +158,10 @@ void main() {
       expect(bCompleted, isFalse);
       expect(resourceA.disposeCount, 1);
       expect(resourceB.disposeCount, 0);
-      expect(runtime.activeRouteEntries.single.handle, same(b.handle));
+      expect(runtime.activeRouteEntries.single.routeEntryId, b.routeEntryId);
       expect(adapter.stack.single.navigationId, b.navigationId);
       expect(
-        (await runtime.closeRoute(b.handle!, result: 'B')).status,
+        (await runtime.closeRoute(_handle(runtime, b), result: 'B')).status,
         CCRouteCloseStatus.closed,
       );
       expect(await second, 'B');
@@ -186,7 +191,7 @@ void main() {
       unawaited(pending.catchError((_) => null));
       await Future<void>.delayed(Duration.zero);
       final outcome = await runtime.closeRoute(
-        runtime.activeRouteEntries.single.handle!,
+        _handle(runtime, runtime.activeRouteEntries.single),
       );
       expect(outcome.status, CCRouteCloseStatus.notFound);
       await shutdown;
@@ -212,14 +217,14 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       final b = runtime.activeRouteEntries.last;
       expect(
-        (await runtime.closeRoute(a.handle!, result: 'left')).status,
+        (await runtime.closeRoute(_handle(runtime, a), result: 'left')).status,
         CCRouteCloseStatus.closed,
       );
       expect(await first, 'left');
       expect(left.stack, isEmpty);
       expect(right.stack.single.navigationId, b.navigationId);
       expect(adapter.activeHostId, 'right');
-      await runtime.closeRoute(b.handle!);
+      await runtime.closeRoute(_handle(runtime, b));
       await second;
     },
   );
@@ -229,7 +234,7 @@ void main() {
     final runtime = _runtime(adapter: adapter);
     final pending = runtime.pushRoute(_intent('1'));
     await Future<void>.delayed(Duration.zero);
-    final handle = runtime.activeRouteEntries.single.handle!;
+    final handle = _handle(runtime, runtime.activeRouteEntries.single);
     await expectLater(
       runtime.closeRoute(handle, result: 42),
       throwsA(isA<CCRouteResultTypeError>()),
@@ -263,14 +268,16 @@ void main() {
       final a = runtime.activeRouteEntries.single;
       final second = runtime.pushRoute(_intent('2'));
       await Future<void>.delayed(Duration.zero);
-      final outcome = await runtime.closeRoute(a.handle!);
+      final outcome = await runtime.closeRoute(_handle(runtime, a));
       expect(outcome.status, CCRouteCloseStatus.guardDenied);
       expect(outcome.guardDeniedCode, 'covered');
       expect(runtime.activeRouteEntries, hasLength(2));
       expect(calls, ['global:orders.detail:business']);
-      await runtime.closeRoute(runtime.activeRouteEntries.last.handle!);
+      await runtime.closeRoute(
+        _handle(runtime, runtime.activeRouteEntries.last),
+      );
       await second;
-      await runtime.closeRoute(a.handle!);
+      await runtime.closeRoute(_handle(runtime, a));
       await first;
     },
   );
@@ -294,7 +301,7 @@ void main() {
     unawaited(pending.catchError((_) => null));
     await Future<void>.delayed(Duration.zero);
     final outcome = await runtime.closeRoute(
-      runtime.activeRouteEntries.single.handle!,
+      _handle(runtime, runtime.activeRouteEntries.single),
     );
     expect(outcome.status, CCRouteCloseStatus.guardDenied);
     expect(outcome.guardDeniedCode, 'dirty');
@@ -307,13 +314,13 @@ void main() {
       final old = _runtime();
       final p1 = old.pushRoute(_intent('1'));
       await Future<void>.delayed(Duration.zero);
-      final handle = old.activeRouteEntries.single.handle!;
+      final handle = _handle(old, old.activeRouteEntries.single);
       await old.closeRoute(handle);
       await p1;
       final current = _runtime();
       final p2 = current.pushRoute(_intent('1'));
       await Future<void>.delayed(Duration.zero);
-      final currentHandle = current.activeRouteEntries.single.handle!;
+      final currentHandle = _handle(current, current.activeRouteEntries.single);
       expect(
         (await current.closeRoute(handle)).status,
         CCRouteCloseStatus.notFound,
@@ -340,7 +347,7 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       expect(
         (await runtime.closeRoute(
-          runtime.activeRouteEntries.single.handle!,
+          _handle(runtime, runtime.activeRouteEntries.single),
         )).status,
         CCRouteCloseStatus.unsupported,
       );
@@ -355,7 +362,7 @@ void main() {
       final runtime = _runtime(adapter: adapter);
       final pending = runtime.pushRoute(_intent('1'));
       await Future<void>.delayed(Duration.zero);
-      final handle = runtime.activeRouteEntries.single.handle!;
+      final handle = _handle(runtime, runtime.activeRouteEntries.single);
 
       await expectLater(
         runtime.closeRoute(handle, result: 'committed'),
@@ -404,13 +411,13 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       final b = runtime.activeRouteEntries.last;
       expect(
-        (await runtime.closeRoute(a.handle!, result: 'left')).status,
+        (await runtime.closeRoute(_handle(runtime, a), result: 'left')).status,
         CCRouteCloseStatus.closed,
       );
       expect(await left, 'left');
       expect(adapter.stack.single.hostId, 'right');
-      expect(runtime.activeRouteEntries.single.handle, same(b.handle));
-      await runtime.closeRoute(b.handle!);
+      expect(runtime.activeRouteEntries.single.routeEntryId, b.routeEntryId);
+      await runtime.closeRoute(_handle(runtime, b));
       await right;
     },
   );
