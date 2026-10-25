@@ -1,5 +1,6 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
+import 'package:ccrouter_test/ccrouter_ui_test.dart';
 import 'package:ccrouter_demo/ccrouter_demo.dart';
 import 'package:ccrouter_demo/main.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,97 @@ Future<void> _settle(WidgetTester tester) async {
 
 void main() {
   tearDown(CCRouterHost.shutdown);
+
+  testWidgets('extended generated Assembly retains UI lifecycle and routes', (
+    tester,
+  ) async {
+    final generated = ccrouterGeneratedHostAssembly;
+    final assembly = CCHostAssembly.extend(
+      generated,
+      additionalComponents: const [
+        CCComponentManifest(
+          id: 'test_extra',
+          version: '1.0.0',
+          registrar: _ExtraRegistrar(),
+        ),
+      ],
+      routeCatalog: CCFlutterRouteCatalog(
+        generated.routeCatalog.destinations.reversed,
+      ),
+    );
+    for (var cycle = 0; cycle < 2; cycle++) {
+      final host = CCUIFragmentTestHost(hostAssembly: assembly);
+      addTearDown(host.dispose);
+      await host.run(() async {
+        expect(
+          CCRouter.registeredComponents.map((c) => c.id),
+          contains('test_extra'),
+        );
+        await tester.pumpWidget(
+          const CCRouterDemoApp(
+            initialLocation: '/ui-fragments',
+            listenForPlatformLinks: false,
+          ),
+        );
+        await _settle(tester);
+        expect(find.text('订单摘要 · 1'), findsOneWidget);
+        await tester.tap(find.text('选择').first);
+        await tester.pump();
+        expect(find.text('A 收到订单 1 的选择'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      }, unmount: () => tester.pumpWidget(const SizedBox()));
+      expect(CCRouter.isInitialized, isFalse);
+    }
+    expect(assembly.packages, same(generated.packages));
+    expect(assembly.contractBundle, same(generated.contractBundle));
+  });
+
+  testWidgets(
+    'retained business callbacks recheck activity, pending data and disposal',
+    (tester) async {
+      final host = CCUIFragmentTestHost(
+        hostAssembly: ccrouterGeneratedHostAssembly,
+      );
+      addTearDown(host.dispose);
+      await host.run(() async {
+        var selections = 0;
+        Widget tree(String category, {bool active = true}) =>
+            createRecommendationPairFixture(
+              category: category,
+              active: active,
+              onFirstAction: (_) => selections++,
+              onSecondAction: (_) {},
+            );
+        await tester.pumpWidget(tree('精选'));
+        await _settle(tester);
+        final oldSelect = tester
+            .widget<TextButton>(find.widgetWithText(TextButton, '选择').first)
+            .onPressed!;
+        await tester.pumpWidget(tree('新品'));
+        oldSelect(); // A new request has cleared the old selection.
+        expect(selections, 0);
+        await _settle(tester);
+        await tester.pumpWidget(tree('新品', active: false));
+        oldSelect();
+        expect(selections, 0);
+        await tester.pumpWidget(tree('error'));
+        await _settle(tester);
+        final oldRetry = tester
+            .widget<TextButton>(find.widgetWithText(TextButton, '重试'))
+            .onPressed!;
+        await tester.pumpWidget(tree('error', active: false));
+        oldRetry(); // Must not mutate B's state before the guarded Action sink.
+        await tester.pump();
+        expect(find.text('暂时无法加载'), findsOneWidget);
+        await tester.pumpWidget(const SizedBox());
+        oldRetry();
+        oldSelect();
+        await tester.pump(const Duration(seconds: 1));
+        expect(selections, 0);
+        expect(tester.takeException(), isNull);
+      }, unmount: () => tester.pumpWidget(const SizedBox()));
+    },
+  );
 
   testWidgets(
     'real generated Host renders B UI in A with isolated State and KeepAlive',
@@ -144,4 +236,10 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+}
+
+final class _ExtraRegistrar implements CCComponentRegistrar {
+  const _ExtraRegistrar();
+  @override
+  void register(CCRegistry registry) {}
 }

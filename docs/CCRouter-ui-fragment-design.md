@@ -191,6 +191,11 @@ Core 只负责通用 binding 的 attach、初始化失败回滚和 shutdown deta
 `ccrouter_ui -> ccrouter` 单向依赖；业务 `CCRegistry` 权限不变。
 Host 仍只把最终的一个 Assembly 交给 `CCRouterHost.initialize`。
 
+Host 测试适配现有 Assembly 使用 `CCHostAssembly.extend`：只追加手写组件或修改路由目录，
+保留 Package 来源、Contract、tooling 和全部 lifecycle bindings，并重新校验组件图及
+Catalog 版本来源。禁止替换已有组件身份；新增生成能力需重新生成。`fromComponents`
+是全新手写装配，不用于复制生成 Assembly。绑定共享原装配计划，两个 Host 必须顺序使用。
+
 ### 4.3 装配不变量
 
 - 契约 identity 由 Owner component ID 与 contract ID 确定，实例 Key 不参与契约身份。
@@ -223,6 +228,11 @@ B 的异步请求必须使用请求 revision/token，防止旧 Props 的结果�
 可以保留状态和已有缓存。是否取消已开始的数据请求由 B 按业务明确处理。
 隐藏不会触发 dispose，恢复 active 不应无条件重建所有状态。
 `deactivate` 可能只是 GlobalKey 移动，不作为终止生命周期。
+
+Action guard 只保护转发边界，不能撤销 `onAction` 前发生的埋点、局部导航或状态修改。
+B 保存的旧回调必须在执行时读取当前 `mounted/active` 和数据；不能把旧 `input.active`
+快照当作实时许可。Demo 的重试/选择回调和请求 revision 展示此边界，并回归隐藏、请求中
+及卸载后调用旧回调。异步工作和业务资源的取消权仍属于 B。
 
 ### 5.3 Owner 与清理路径
 
@@ -281,6 +291,9 @@ B 的业务加载错误由 B 展示 retry/empty/error UI；A 决定是否隐藏�
 没有逐帧日志或业务 payload。Renderer 同步 factory 抛错沿用 Flutter
 build 错误报告；其后代的异步/布局/事件错误仍由各自错误路径处理。
 不承诺一个通用 ErrorBoundary 可以捕获整棵 Flutter 子树的所有错误。
+
+`runtimeUnavailable` 保留稳定错误码，并提示完整生成 Assembly、`extend` 和 UI 测试入口；
+不把所有 catalog 不可用情况误判为缺失绑定，也不要求无 UI 的 Host 安装 UI。
 
 诊断只记录 component/contract identity、版本、generation 和错误码，不记录 Props、
 Action payload、账号、Context、Widget 或 callback。只在绑定、mount/结束摘要及失败
@@ -365,6 +378,19 @@ DTO 字段仅接受受限 Pure Dart scalar、普通 enum 和嵌套 DTO，继续�
 
 
 ## 验证与扩展边界
+
+`ccrouter_test/ccrouter_ui_test.dart` 提供测试专用 `CCUIFragmentTestHost`。在 `testWidgets`
+内调用单次 `run`，复用完整生成 Assembly、真实 Renderer 和 Action 撤销；结束时先等待
+调用方卸载 UI，再等待默认 Host shutdown。初始化、body、卸载或 shutdown 失败均继续
+清理并保留最早错误与堆栈。占用中的默认 Host、Zone overlay 和重叠运行直接拒绝，不接管
+已有或后来替换的 Host。普通 `CCRouterTestHost` 的 Zone overlay 仍不切换 UI catalog。
+此入口不增加业务 API、Fragment Scope 或多 Runtime UI 隔离能力。
+`run` 前须注册 `addTearDown(host.dispose)`，覆盖测试框架超时但 body Future 未结束的情况。
+`dispose` 不等待 body，正常结束、并发调用与 teardown 只执行一次卸载和关闭；已完成结果
+以数据保存，后续调用在各自 Zone 中返回，不依赖已结束的 fake scheduler。旧 body 晚到
+不会重复清理或关闭替换 Host；初始化期间重入清理会等待初始化退出，并跳过 body。
+每个调用者处理自己的清理 Future，卸载回调不得等待自身清理且须能结束；任意业务 Future
+的取消仍由业务负责。
 
 [独立首次接入技术验证](validation/ui-fragment-adoption-20261020/README.md)保留 enum/DTO 两条路径的复现源码、日志和条件化成本；它不等于未参与实现者的可用性研究。历史实施验收、易用性审查及 Action 增量记录统一保留在[归档索引](archive/20261024-consolidation/README.md)。
 

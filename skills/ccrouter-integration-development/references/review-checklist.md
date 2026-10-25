@@ -213,6 +213,12 @@
 - For optional UI Fragments, were required Owner edges, stable Keys, Props races,
   latest callback dispatch, inactive Tabs, Session reset and final unmount tested?
   Keep Renderer/Host SPI out of A and do not create a fake Route or new Scope.
+  Adapt generated assemblies with `CCHostAssembly.extend` to retain optional
+  lifecycle bindings. Use the explicit UI test helper for real default Hosts;
+  ordinary Runtime Zone overlays do not switch the catalog. Retained business
+  callbacks must recheck current activity before any side effects.
+  Register `addTearDown(host.dispose)` before UI helper `run` to cover pending
+  body timeouts; disposal must unmount/close once and never close a replacement.
 - Does Service use the narrowest valid Scope?
 - Is `@CCService` limited to the supported zero-argument construction model, with complex registration kept in `@CCComponentContribution`?
 - Does a promoted Service contract explicitly declare `componentId`, export only its interface from the business barrel, and is each simple `@CCService` implementation bound through exactly one direct Contract?

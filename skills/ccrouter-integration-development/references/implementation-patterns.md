@@ -1870,3 +1870,28 @@ State verification.
 Packages with no generated capability have no `ccrouter_generated` directory.
 Removing the final declaration removes empty managed directories while
 preserving unknown or handwritten files.
+
+### Sharing build_runner with other generators
+
+FlutterGen and other Builders may share one build_runner graph with CCRouter,
+including at a Pub Workspace resolution root. Narrow `--build-filter` runs or
+changed Builder options can change the outputs build_runner keeps on disk; a
+successful resource-only run does not establish CCRouter output freshness.
+The exact behavior depends on the Builder versions/configuration. Do not report
+it as a UI runtime defect without a minimal generation reproduction.
+
+For resource migrations, stop any watch sharing that resolution root, run the
+resource generator, then `ccrouter generate <actual-host>`, analysis and tests.
+Finish with `ccrouter generate <actual-host> --no-cache --check` while watches
+are stopped. Use the project's FVM `dart run ccrouter_generator:ccrouter` prefix
+when no `ccrouter` executable is installed. Repeat for independent Hosts; the
+Workspace aggregator is not a substitute. Never run two Builders against the
+same graph concurrently or hand-edit missing generated Dart files.
+
+If a narrow external build removed managed CCRouter outputs, inspect its logs
+and filter/options changes, then restore them with ordinary Host generation
+before running the read-only check. A `--check` command detects stale/missing
+outputs and restores the state it found; it is not a repair command. Do not
+delete the build cache as the first recovery step. CCRouter's own artifact
+protection does not wrap independently launched third-party commands. No
+combined FlutterGen/CCRouter command is currently provided.

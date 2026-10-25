@@ -4,6 +4,12 @@
 
 # CCRouter
 
+Integration defects, missing capabilities and documentation gaps can be reported
+in [GitHub Issues](https://github.com/shingohu/cc-router/issues). Search existing
+reports first and include exact versions, expected/actual behavior, a minimal
+reproduction and sanitized diagnostics. See the
+[feedback guide](skills/ccrouter-integration-development/references/production-scenarios.md#reporting-integration-feedback).
+
 [简体中文](README.md) | [English](README.en.md) · [Icon design](docs/brand/ccrouter-icon-v1/README.md)
 
 CCRouter is a component runtime and type-safe routing framework for large Flutter applications. It unifies component assembly, route contracts, navigation policies, lifecycles, cross-component capability calls, and diagnostics around a stable Core Contract, using native Flutter RouterDelegate + Navigator.pages with backend-neutral Host SPI.
@@ -88,6 +94,14 @@ restrictions on Widget, BuildContext, callbacks, or Streams. Flutter Key/State
 owns instance identity, updates, and disposal; `active` is Host permission,
 not automatic exposure detection. Runtime shutdown invalidates old Actions;
 after reinitialization the Host must explicitly remount the UI subtree.
+
+Use `CCHostAssembly.extend` when appending handwritten test components or
+adjusting a generated Assembly's route Catalog. It preserves Package provenance,
+Contracts, tooling and UI lifecycle bindings, and rejects existing component ID
+replacement. New generated capabilities require regeneration. `fromComponents`
+creates fresh handwritten inputs; it is not an Assembly copy operation.
+`active` guards Action forwarding only: retained business callbacks must read
+current State activity before side effects and fence asynchronous results.
 
 Use an ordinary Flutter package for presentation-only reuse and Route for a
 complete routed page. See the [UI Fragment design](docs/CCRouter-ui-fragment-design.md).
@@ -1526,6 +1540,20 @@ See [`packages/ccrouter_generator/README.md`](packages/ccrouter_generator/README
 ## Testing
 
 Integrator testing capabilities are centralized in `ccrouter_test`; production code must not access private Runtime constructors. Tests should cover at least Route Intents, Interceptors, PopGuard, Scope disposal, Command cancellation/timeouts, Event failure isolation, InitTask DAGs, and mixed Host/Outlet navigation.
+
+For real Fragment Widget tests, import `CCUIFragmentTestHost` from
+`package:ccrouter_test/ccrouter_ui_test.dart` and call its single-use
+`run(body, unmount: ...)` inside `testWidgets`. It awaits caller-provided UI
+unmount and owned default Host shutdown, preserving the earliest error/stack.
+Occupied default Hosts, overlapping runs and Zone overlays are rejected without
+disposal. Ordinary `CCRouterTestHost` overlays do not switch the UI catalog.
+See the [UI testing guide](skills/ccrouter-integration-development/references/ui-fragments.md#testing-with-the-real-host).
+Register `addTearDown(host.dispose)` before `run`: test timeouts do not cancel
+pending Dart Futures. Independent idempotent disposal closes the owned Host
+without awaiting the body, and normal/teardown callers share one cleanup.
+Late callers replay its outcome in their own Zone; late body completion cannot
+repeat unmount or close a replacement Host. Handle every disposal Future,
+including already-asserted cleanup failures in teardown. Unmount must complete.
 
 Concurrent, synchronously reentrant and later `CCRouterTestHost.dispose()` callers join the same cleanup and receive the original error and stack in their own error Zone. Handle every returned Future. If a test asserts cleanup failure directly, its later teardown must explicitly assert that failure too. A disposable must not await its own Host's teardown, which would wait on itself.
 

@@ -13,6 +13,11 @@ CCRouter 是一个面向 Flutter 大型应用的组件化运行时与类型安�
 第一次接入或验证真实业务时，先阅读[首次接入指南](skills/ccrouter-integration-development/references/first-integration.md)，
 完成一个 typed Route 的生成、调用、失败与释放闭环，再按需要查阅下文的高级能力和工具维护规则。
 
+接入中发现框架缺陷、能力不足或文档问题，可以到
+[GitHub Issues](https://github.com/shingohu/cc-router/issues) 反馈。
+请先搜索已有记录，附上版本、预期与实际行为、最小复现及脱敏诊断；已确认缺陷和能力建议
+分别说明。详细模板见[接入反馈指引](skills/ccrouter-integration-development/references/production-scenarios.md#reporting-integration-feedback)。
+
 当前版本为 `0.1.0`，适合在本仓库 Workspace、Demo 和受控业务试点中验证。所有 Package 目前均为 `publish_to: none`，尚未发布到 pub.dev 或私有 Hosted；接入外部工程前需要先完成正式发布，或使用受控 Git 依赖。不要把本仓库的 Workspace 依赖写法直接复制到另一个仓库。
 
 当前仓库**尚未达到正式发布条件**。License、历史凭据治理、Package 发布集合、Package 级
@@ -95,6 +100,13 @@ Runtime 关闭立即使旧 Action 失效；重新初始化后 Host 必须显式�
 实例卸载或 capability identity 更新会撤销旧 Action，并解除其对消费方回调的引用；
 仅保留失效 Action 不会继续保留 Fragment State/Props。B 仍须取消自己拥有的异步工作，
 并释放自己保存的 render input、Props、controller 和 subscription。
+`active` 只保护 Action 转发，无法撤销调用 `onAction` 前的业务副作用；旧点击回调应在执行时
+读取当前 State 的 `mounted/active`，异步结果还须校验 Props/Session 请求版本。
+
+Host 测试追加组件或修改路由目录时，使用 `CCHostAssembly.extend(generated, ...)` 保留
+原来的 Package 来源、Contract、tooling 与 UI 生命周期绑定。该入口只追加组件，不支持替换
+已有身份；新增生成能力仍需重新生成。`fromComponents` 用于全新手写装配，不是复制入口。
+`runtimeUnavailable` 会提示检查完整 Assembly 和测试接线。
 
 普通无业务 UI 仍用公共 Flutter Package；完整路由页面使用 Route。详见
 [UI Fragment 设计与实施](docs/CCRouter-ui-fragment-design.md)。Demo 首页“展示”中的
@@ -1750,6 +1762,11 @@ Host 在 `CCRouterHost.initialize` 后调用 `CCRouterHost.runInitTasks(gate: ..
 
 ## 生成器
 
+FlutterGen 等工具与 CCRouter 共用 build_runner 图时，资源窄过滤生成成功不代表 CCRouter
+产物仍完整。资源迁移后先执行正式 Host `generate` 恢复/更新，再分析、测试及
+`--no-cache --check`；操作期间停止同图 watch，避免并发写入。适用条件及恢复步骤见
+[共用生成图指引](skills/ccrouter-integration-development/references/implementation-patterns.md#sharing-build_runner-with-other-generators)。
+
 常用命令：
 
 ```bash
@@ -2291,6 +2308,17 @@ Package Graph 变化后的正确性优先调度和团队构建加速方案见
 ## 测试
 
 框架使用者的测试能力统一放在 `ccrouter_test`，生产代码不要访问 Runtime 私有构造器。测试至少覆盖 Route Intent、Interceptor、PopGuard、Scope 销毁、Command 取消/超时、Event 失败隔离、InitTask DAG 和 Host/Outlet 混合导航。
+
+Fragment Widget 测试可从 `package:ccrouter_test/ccrouter_ui_test.dart` 导入
+`CCUIFragmentTestHost`，在 `testWidgets` 内调用单次 `run(body, unmount: ...)`。
+它复用完整生成 Assembly 和真实 Renderer，先等待卸载，再等待默认 Host shutdown；body、
+卸载或关闭失败时继续清理，保留最早错误与堆栈。已有默认 Host、Zone overlay 或重叠运行会
+被拒绝；普通 `CCRouterTestHost` 的 Zone overlay 仍不切换 UI catalog。
+完整用例见 [UI 测试指引](skills/ccrouter-integration-development/references/ui-fragments.md#testing-with-the-real-host)。
+调用前注册 `addTearDown(host.dispose)`：测试超时不会取消 Dart Future，独立的幂等清理
+可以在 body 尚未结束时释放 Host。正常结束与 teardown 共用同一次清理，后续调用在自己的
+Zone 中返回相同结果；旧 body 完成后不会重复卸载或关闭替换 Host。每次清理 Future 均须
+处理，已断言清理错误的测试也需在 teardown 处理该错误；卸载回调须能自行结束。
 
 `CCRouterTestHost.dispose()` 的并发、同步重入和后续调用都等待同一次清理，并在各调用者的 error Zone 中交付原始失败与堆栈。每个调用者都应处理自己返回的 Future；若测试已主动验证清理失败，后续 teardown 也应显式验证该失败。资源的 `dispose` 不得等待所属 Host 的清理，否则会等待自身。
 

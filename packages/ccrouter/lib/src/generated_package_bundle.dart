@@ -206,6 +206,40 @@ final class CCGeneratedPackageBundle {
 /// Contract, route, and tooling inputs cannot be mixed across generations. The
 /// assembly owns none of the referenced runtime objects.
 final class CCHostAssembly {
+  /// Extends complete Host inputs without dropping optional capability wiring.
+  ///
+  /// Host composition and integration tests may append handwritten components
+  /// or replace the Flutter [routeCatalog]. Existing component identities cannot
+  /// be removed or replaced: duplicate IDs and invalid dependency graphs fail
+  /// with [CCHostAssemblyError]. New generated Contracts or UI contributions
+  /// require regeneration, not handwritten manifests through this factory.
+  ///
+  /// Package provenance, Contract data, tooling and lifecycle bindings are
+  /// preserved. Appended manifests do not invent Package bundle provenance.
+  /// Catalog component versions are normalized against the extended graph.
+  /// Bindings are shared plans, not cloned resources; initialize derived and
+  /// original assemblies sequentially, awaiting shutdown between generations.
+  factory CCHostAssembly.extend(
+    CCHostAssembly assembly, {
+    Iterable<CCComponentManifest> additionalComponents = const [],
+    CCFlutterRouteCatalog? routeCatalog,
+  }) {
+    final extended = CCHostAssembly.fromComponents(
+      components: [...assembly.componentManifests, ...additionalComponents],
+      contractBundle: assembly.contractBundle,
+      routeCatalog: routeCatalog ?? assembly.routeCatalog,
+      hostToolIntegrations: assembly.hostToolIntegrations,
+    );
+    return CCHostAssembly._(
+      packages: assembly.packages,
+      componentManifests: extended.componentManifests,
+      routeCatalog: extended.routeCatalog,
+      contractBundle: assembly.contractBundle,
+      hostToolIntegrations: assembly.hostToolIntegrations,
+      lifecycleBindings: assembly.lifecycleBindings,
+    );
+  }
+
   /// Adds prevalidated optional capability bindings without splitting inputs.
   ///
   /// Optional adapters use this Host SPI to wrap an existing atomic assembly.
@@ -256,6 +290,8 @@ final class CCHostAssembly {
   /// returned. [contractBundle] is checked with the same compatibility rules
   /// used for generated Package bundles. [routeCatalog] remains backend-neutral
   /// and is normalized with the installed component versions.
+  /// This creates fresh inputs with no optional lifecycle bindings or Package
+  /// provenance. Use [CCHostAssembly.extend] to adapt an existing assembly.
   factory CCHostAssembly.fromComponents({
     required Iterable<CCComponentManifest> components,
     CCContractBundleDescriptor? contractBundle,

@@ -290,6 +290,35 @@ Do not add duplicate dependencies just to render a second card. UI-specific
 DevTools views remain unavailable; the only UI Quick Fix
 is the proven missing required Owner edge described above.
 
+## Adapting a Host Assembly
+
+Pass `ccrouterGeneratedHostAssembly` directly for normal startup. When a Host
+test needs an extra handwritten component or a changed route Catalog, use:
+
+```dart
+final assembly = CCHostAssembly.extend(
+  ccrouterGeneratedHostAssembly,
+  additionalComponents: [testComponentManifest],
+  routeCatalog: adjustedRouteCatalog, // Omit to keep the existing destinations.
+);
+```
+
+This Host-only path preserves the original Package provenance, Contract Bundle,
+Host Tool Integrations and lifecycle bindings, including the UI catalog plan.
+It revalidates and orders the extended component graph and normalizes Catalog
+component versions. Existing component IDs cannot be replaced or removed;
+duplicate IDs and missing dependencies remain errors. Appended handwritten
+components do not create Package bundles. New generated Contracts, Renderers
+or consumer edges require regeneration. Bindings are shared plans: shut down
+one Host before initializing another derived from the same Assembly.
+
+`CCHostAssembly.fromComponents` builds fresh handwritten inputs. Reconstructing
+a generated Assembly field by field loses its lifecycle bindings and Package
+provenance. A Host can initialize successfully while a later Fragment build
+fails with `runtimeUnavailable` because UI is optional. That error now points
+to complete Assembly wiring, `extend`, and the explicit UI test helper; it does
+not infer that every unavailable catalog was caused by a missing binding.
+
 ## Lifecycle and failures
 
 - Keep a stable Key for the same instance; change the Key to reset it. List
@@ -299,6 +328,9 @@ is the proven missing required Owner edge described above.
 - Pass `active` explicitly for hidden Tabs/Offstage/KeepAlive. False suppresses
   Actions; B pauses polling/animations itself. It is not pixel visibility or
   authorization, and hiding does not dispose State.
+  The guard runs only when forwarding `onAction`. Analytics or local navigation
+  performed before it still happens unless B checks current State first.
+  `input.active` is a build snapshot; retaining that old value is insufficient.
 - Flutter `dispose` releases owned controllers, timers and subscriptions.
   Unmount or capability identity changes also revoke the framework Action sink
   and clear its consumer callback reference. Retaining only an old sink does not
@@ -321,10 +353,93 @@ Host may inspect `CCUIHostAssembly.diagnostics`: at most 128 sanitized lifecycle
 and ignored-action summaries, no Props, payloads, Context or callbacks. It is
 local troubleshooting, not an audit log or pixel exposure tracking.
 
-Test real generation, required edges, type rejection, multi-instance identity,
-callback updates, hidden Tab recovery, request races, Session reset, shutdown
-and disposal. UI tests currently use the real default Host lifecycle; do not
-assume the optional catalog follows `CCRouterTestHost` Zone overlays.
+### Retained callbacks and asynchronous results
+
+The Demo's `order_fragment_renderers.dart` shows a complete Renderer-owned State:
+it cancels its fake request Timer, invalidates request revisions on Props/activity
+changes, and disposes its controller. Its business callbacks read current State
+when invoked, even if Flutter has already replaced the button callback:
+
+```dart
+void select() {
+  if (!mounted || !widget.active) return;
+  final result = currentResult;
+  if (result == null) return;
+  // Put application analytics/local navigation here, after current checks.
+  widget.onAction(result.selectedId);
+}
+```
+
+For async work, capture a revision and relevant Props/Session identity before
+starting; on completion verify `mounted`, current activity and that revision
+before changing State or performing side effects. Increment the revision when
+activity, Props or Session changes, and on disposal; cancel work when its API
+supports it. This prevents a response started before hiding from being accepted
+after a hide/show cycle. Disabling the button only on rebuild cannot revoke
+previously captured business closures. The framework still independently guards
+the Action sink after hiding, identity change, unmount and shutdown.
+
+## Testing with the real Host
+
+Use `ccrouter_test` only as a dev/test dependency. The explicit UI entry is:
+
+```dart
+import 'package:ccrouter_test/ccrouter_ui_test.dart';
+
+testWidgets('generated Fragment lifecycle', (tester) async {
+  final host = CCUIFragmentTestHost(
+    hostAssembly: ccrouterGeneratedHostAssembly,
+  );
+  addTearDown(host.dispose);
+  await host.run(
+    () async {
+      // Application-owned fixture calls A's real generated UI Client.
+      await tester.pumpWidget(createConsumerFixture());
+      await tester.pump(const Duration(milliseconds: 200));
+      // Assert real rendering, actions, State and relevant failure paths.
+    },
+    unmount: () => tester.pumpWidget(const SizedBox()),
+  );
+});
+```
+
+Create/run the Host inside `testWidgets` to share its fake scheduler, and drive
+Timer-based loading explicitly. The helper starts the complete Assembly, awaits
+the body, then awaits caller-supplied UI unmount and Host shutdown. It does not
+mock Renderer lookup, Contract checks or Action revocation. Each helper runs
+once; create another for the next generation. Await all body work.
+
+Always register `addTearDown(host.dispose)` before `run`. A test-framework
+timeout does not cancel a pending Dart Future, so `run`'s `finally` alone cannot
+release a Host whose body never finishes. `dispose` independently unmounts and
+shuts down the owned Host without waiting for that body. Normal completion,
+concurrent calls and teardown join one cleanup. Late callers replay the stored
+outcome in their own Zone without waiting on an ended fake scheduler. A later
+body completion cannot unmount again or close a replacement Host. Disposing
+before `run` prevents startup; reentrant disposal during startup waits for it
+to unwind and skips the body. The caller's unmount must itself complete.
+
+Cleanup continues through body and unmount failures and returns the earliest
+initialization/body/unmount/shutdown error with its original stack. Initialization
+rollback completes before the returned Future settles. An initialization failure
+never calls the caller's unmount callback. Existing default Hosts and TestHost
+Zone overlays are rejected without disposal; overlapping default Hosts cannot
+run concurrently. If the body explicitly replaces its Host, the helper will
+not close the replacement. It adds no Runtime or UI instances to global caches.
+Each `dispose` caller must handle the returned Future. If cleanup failure was
+already asserted by the test, the registered teardown must handle that same
+failure too. `run` preserves a body failure over cleanup errors; `dispose`
+reports the cleanup outcome. Never await it from its own unmount or an owned
+disposable, and keep application cancellation of unfinished body work explicit.
+
+Test real generation, missing/incompatible Renderer, Props/callback updates,
+multi-instance stable Keys, hidden Tab recovery, request races, Session reset,
+unmount, shutdown and late Actions between tests. Use the component-local
+fixture pattern in the Demo: it consumes its own generated Client, and Host
+tests supply the real generated Assembly. Ordinary `CCRouterTestHost` remains
+appropriate for isolated Runtime/Facade tests; its Zone overlay does not switch
+the optional UI catalog. See [generation guidance](implementation-patterns.md#sharing-build_runner-with-other-generators)
+when FlutterGen or another Builder uses the same build graph.
 
 ## Adoption status and completion checks
 

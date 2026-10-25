@@ -2,6 +2,9 @@
 
 ## 0.1.0 - Unreleased
 
+- Add Host-only `CCHostAssembly.extend` for additive components and route Catalog
+  adaptation while preserving generated provenance and optional bindings.
+
 - Add `CCRouter.runtimeHealth` for immutable navigation ownership/queue counters;
   distinguish captured Host lifetimes and concurrency gates from registrations
   and all unfinished requests. Keep the normal Host path on `CCManagedRouterApp`.

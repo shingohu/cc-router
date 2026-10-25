@@ -254,7 +254,10 @@ void main() {
     (tester) async {
       CCRouterHost.initialize(hostAssembly: _base());
       await tester.pumpWidget(_fragment());
-      expect(tester.takeException(), _code('runtimeUnavailable'));
+      final error = tester.takeException();
+      expect(error, _code('runtimeUnavailable'));
+      expect(error.toString(), contains('CCHostAssembly.extend'));
+      expect(error.toString(), contains('CCUIFragmentTestHost'));
       expect(CCRouter.isInitialized, isTrue);
       await tester.pumpWidget(const SizedBox());
     },

@@ -49,6 +49,40 @@ The framework's expanded governance rationale is optional background:
 [production adoption workflow](https://github.com/shingohu/cc-router/blob/main/docs/CCRouter-production-adoption-workflow.md).
 This local procedure is sufficient when the remote document is unavailable.
 
+## Reporting integration feedback
+
+Adopters may submit CCRouter defects, missing capabilities, confusing diagnostics
+and documentation gaps to [GitHub Issues](https://github.com/shingohu/cc-router/issues).
+Search for an existing report first; add evidence there when the cause and
+scenario match. A documented limitation is valid feedback when a real production
+scenario demonstrates its cost, but label it as a capability request rather
+than a confirmed Runtime bug. Uncertain causes can be reported as observations.
+
+Use a small standalone example or public fixture instead of the production app.
+Include only what helps reproduce and assess the behavior:
+
+- Expected behavior, actual behavior and concrete integration impact.
+- Exact CCRouter package versions or source commit; Flutter/Dart/OS versions
+  when relevant, and the Host/Workspace topology.
+- Minimal authored declarations, generated entry used, commands and steps;
+  sanitized error codes and logs, plus a failing test when practical.
+- Relevant Owner, lifecycle and cleanup boundaries; what was already verified,
+  the current workaround and remaining uncertainty.
+- For capability requests, the real use case, existing alternatives and why
+  they are insufficient. A framework API design is optional.
+
+Distinguish Pub resolution, Builder generation, Host validation and application
+execution failures. Do not call a source test a device validation or infer a
+memory leak without an ownership/retention path. Remove credentials, account IDs,
+private business source and payloads; keep only sanitized capability identities.
+
+An agent may prepare the title and body during an authorized assessment/fix.
+Sending a new Issue or comment requires the user's authorization to publish;
+permission to assess or fix code alone is not permission to post externally.
+If publication tools or authentication are unavailable, deliver the prepared
+report and tracker link. Keep unresolved requests open rather than claiming an
+application workaround fixes the framework.
+
 ## Exact close after asynchronous completion
 
 A managed A covered by B must close its own instance when its work completes;

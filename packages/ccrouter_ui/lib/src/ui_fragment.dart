@@ -13,9 +13,17 @@ final class CCUIFragmentError implements Exception {
   /// Declared contract identifier; no runtime business payload.
   final String contractId;
 
-  /// Reports only the safe failure code and declared capability identity.
+  /// Reports safe identity plus setup guidance when the default UI is unavailable.
   @override
-  String toString() => 'CCUIFragmentError($code, $contractId)';
+  String toString() {
+    final summary = 'CCUIFragmentError($code, $contractId)';
+    if (code != 'runtimeUnavailable') return summary;
+    return '$summary: No usable default UI catalog. Initialize with the complete '
+        'generated Host Assembly; use CCHostAssembly.extend when adapting it. '
+        'Await shutdown before another Host. CCRouterTestHost Zone overlays do '
+        'not install a UI catalog; use CCUIFragmentTestHost from '
+        'package:ccrouter_test/ccrouter_ui_test.dart for Fragment tests.';
+  }
 }
 
 /// Payload-free local UI diagnostic; contains only generated identity and code.
@@ -52,9 +60,14 @@ final class CCUIFragmentRenderInput<P extends Object, A extends Object> {
   final P props;
 
   /// Instance-local action sink guarded by mount, activity and generation.
+  ///
+  /// This guards forwarding only. A retained business callback must recheck
+  /// current activity before analytics, navigation or other side effects.
   final ValueChanged<A> onAction;
 
   /// Host activity permission, not pixel visibility or a security decision.
+  ///
+  /// This is one build snapshot, not a live activity getter for old closures.
   final bool active;
 }
 

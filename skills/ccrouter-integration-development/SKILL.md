@@ -118,6 +118,16 @@ capability, or conditionally deferred work. Do not import internal APIs or
 weaken lifecycle, type, failure, or diagnostic semantics to make the feature
 appear supported.
 
+When integration exposes a CCRouter defect, missing capability or documentation
+gap, adopters may report it in the
+[upstream issue tracker](https://github.com/shingohu/cc-router/issues).
+Search existing reports and follow the evidence and minimal-reproduction recipe
+in [Reporting integration feedback](references/production-scenarios.md#reporting-integration-feedback).
+Keep confirmed failures separate from capability proposals; an unsupported
+scenario can still justify useful feedback. Prepare a report when requested;
+publish it only with the user's authorization. Do not include private business
+code, credentials, account data or unsanitized logs.
+
 UI Fragment editor diagnostics cover aliases, repeated dependencies, definitely
 invalid range tokens, enum/DTO Action, exact Renderer signatures and UI SPI
 boundaries. Metadata-proven UI Owners share the conservative required-edge fix;
@@ -217,6 +227,20 @@ For UI Fragments, unmount/identity changes revoke Action forwarding and release
 consumer callback references; Renderer-owned work and retained Props remain the
 Renderer's responsibility. Contract ranges accept single comparators and all
 whitespace separators, and parsed SemVer prerelease identifiers are immutable.
+Adapt an existing Host Assembly with `CCHostAssembly.extend`, which preserves
+optional bindings while appending components or adjusting the route Catalog.
+For real Fragment Widget tests, use `CCUIFragmentTestHost` from the explicit
+`package:ccrouter_test/ccrouter_ui_test.dart` entry. Its single-use `run` owns the
+default Host, awaits caller-provided UI unmount and shutdown, and rejects occupied
+Hosts or Zone overlays. It cannot run overlapping default Hosts. See the UI
+reference for examples and error precedence. A retained business callback must
+read current State activity before side effects; `input.active` is a snapshot.
+Register `addTearDown(host.dispose)` before `run`: framework timeouts do not
+cancel pending Dart Futures. Independent idempotent disposal releases the owned
+Host without awaiting the body; concurrent/late callers share the cleanup
+outcome in their own Zone. It never repeats unmount or closes a replacement.
+Handle every disposal Future, including an already-asserted cleanup error in
+teardown. The unmount callback must complete and must not await its own disposal.
 
 ## Non-Negotiable Boundaries
 
@@ -371,7 +395,10 @@ whitespace separators, and parsed SemVer prerelease identifiers are immutable.
   `ccrouterGeneratedHostAssembly`. A handwritten Host or focused Facade test
   uses `CCHostAssembly.fromComponents`, while ordinary Runtime tests prefer
   `CCRouterTestHost`. Do not split one generated assembly into separately passed
-  manifests, Catalog, Contract, or tooling values.
+  manifests, Catalog, Contract, or tooling values. Use `CCHostAssembly.extend`
+  for additive test components or a replacement route Catalog; existing component
+  identities, generated Contracts, optional bindings and Package provenance stay
+  intact. New generated capabilities require regeneration.
 - Await every `CCRouterTestHost.dispose()` result: concurrent, synchronous
   reentrant and late callers join one cleanup and receive its original failure
   and stack in their own error Zone. A later teardown must explicitly handle an

@@ -4,6 +4,84 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'extends an assembly without losing optional bindings or provenance',
+    () {
+      final binding = _LifecycleBinding();
+      final tool = _HostToolIntegration('tool');
+      final original = CCHostAssembly.withLifecycleBindings(
+        CCHostAssembly.fromPackageBundles(
+          [bundle('orders', componentId: 'orders')],
+          hostToolIntegrations: [tool],
+        ),
+        [binding],
+      );
+      final extended = CCHostAssembly.extend(
+        original,
+        additionalComponents: const [
+          CCComponentManifest(
+            id: 'extra',
+            version: '1.0.0',
+            dependencies: ['orders'],
+            registrar: _Registrar(),
+          ),
+        ],
+        routeCatalog: const CCFlutterRouteCatalog.empty(),
+      );
+
+      expect(extended.packages, same(original.packages));
+      expect(extended.contractBundle, same(original.contractBundle));
+      expect(
+        extended.hostToolIntegrations,
+        same(original.hostToolIntegrations),
+      );
+      expect(extended.lifecycleBindings, same(original.lifecycleBindings));
+      expect(extended.componentManifests.map((value) => value.id), [
+        'orders',
+        'extra',
+      ]);
+      expect(original.componentManifests, hasLength(1));
+      expect(extended.routeCatalog.componentVersions, {
+        'orders': '1.0.0',
+        'extra': '1.0.0',
+      });
+      expect(
+        () => CCHostAssembly.withLifecycleBindings(extended, [binding]),
+        throwsStateError,
+      );
+      expect(() => extended.componentManifests.clear(), throwsUnsupportedError);
+    },
+  );
+
+  test('extension rejects component replacement and missing dependencies', () {
+    final original = CCHostAssembly.fromPackageBundles([
+      bundle('orders', componentId: 'orders'),
+    ]);
+    for (final (id, dependencies, code) in [
+      ('orders', <String>[], CCHostAssemblyErrorCode.duplicateComponent),
+      (
+        'extra',
+        ['missing'],
+        CCHostAssemblyErrorCode.missingComponentDependency,
+      ),
+    ]) {
+      expect(
+        () => CCHostAssembly.extend(
+          original,
+          additionalComponents: [
+            CCComponentManifest(
+              id: id,
+              version: '1.0.0',
+              dependencies: dependencies,
+              registrar: const _Registrar(),
+            ),
+          ],
+        ),
+        throwsA(isA<CCHostAssemblyError>().having((e) => e.type, 'type', code)),
+      );
+    }
+  });
+
   test('resolves transitive bundles and deduplicates a diamond dependency', () {
     final shared = bundle('shared', componentId: 'shared_component');
     final left = bundle('left', dependencies: [shared]);
@@ -273,4 +351,13 @@ final class _HostToolIntegration implements CCHostToolIntegration {
 
   @override
   void onRuntimeStopping() {}
+}
+
+final class _LifecycleBinding implements CCHostLifecycleBinding {
+  @override
+  String get id => 'test.binding';
+  @override
+  void attach() {}
+  @override
+  void detach() {}
 }

@@ -18,6 +18,11 @@ import 'package:ccrouter/ccrouter.dart';
 
 The application Composition Root imports `ccrouter_host.dart` for
 `CCRouterHost.initialize`, `shutdown`, `runInitTasks`, and `CCHostAssembly`.
+
+Use `CCHostAssembly.extend` to append handwritten test components or adjust an
+existing Assembly's route Catalog while preserving Contracts, Package provenance,
+tooling and optional lifecycle bindings. Existing component identities cannot
+be replaced; new generated capabilities still require regeneration.
 These lifecycle entry points are absent from the business `CCRouter` facade;
 feature components must not initialize or shut down the Runtime. Unmounting a
 navigation Host does not shut down the shared Runtime.

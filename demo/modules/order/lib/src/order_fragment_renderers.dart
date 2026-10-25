@@ -92,6 +92,22 @@ final class _OwnedCardState extends State<_OwnedCard> {
     });
   }
 
+  // Read current State when a previously captured callback executes. Disabling
+  // a button on the next build cannot revoke an earlier business callback.
+  void _retry() {
+    if (!mounted || !widget.active) return;
+    setState(() => _failed = false);
+    _load();
+  }
+
+  void _select() {
+    if (!mounted || !widget.active) return;
+    final result = _result;
+    if (result == null) return;
+    // Any analytics or local navigation must also happen after the checks.
+    widget.onAction(result.$1);
+  }
+
   @override
   void dispose() {
     _revision++;
@@ -112,14 +128,7 @@ final class _OwnedCardState extends State<_OwnedCard> {
           if (_failed) ...[
             const Text('暂时无法加载'),
             TextButton(
-              onPressed: !widget.active
-                  ? null
-                  : () {
-                      setState(() {
-                        _failed = false;
-                      });
-                      _load();
-                    },
+              onPressed: widget.active ? _retry : null,
               child: const Text('重试'),
             ),
           ] else
@@ -129,9 +138,7 @@ final class _OwnedCardState extends State<_OwnedCard> {
             decoration: const InputDecoration(labelText: '实例备注（切换 Tab 保留）'),
           ),
           TextButton(
-            onPressed: widget.active && _result != null
-                ? () => widget.onAction(_result!.$1)
-                : null,
+            onPressed: widget.active && _result != null ? _select : null,
             child: const Text('选择'),
           ),
         ],
