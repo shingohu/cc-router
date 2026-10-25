@@ -723,7 +723,7 @@ Separate internal dynamic addresses from untrusted external input:
 await CCRouter.navigator.open(Uri.parse('/orders/42'));
 
 // Universal Link / App Link / custom scheme
-await CCDeepLinkIngress.fromPlatform(uri);
+final receipt = await CCDeepLinkIngress.fromPlatform(uri);
 
 // Notification
 await CCDeepLinkIngress.fromNotification(uri);
@@ -731,6 +731,36 @@ await CCDeepLinkIngress.fromNotification(uri);
 // QR code
 await CCDeepLinkIngress.fromQrCode(uri);
 ```
+
+All three external ingress methods directly return an immutable
+`CCDeepLinkAcceptanceReceipt`; existing `await` calls may ignore the value.
+Hosts can associate their business IDs with `navigationId` and `routeEntryId`
+without matching the latest Entry. Single-flight followers have distinct
+invocation `navigationId` values but share the producer's `entryNavigationId`
+and Entry. `routeId` identifies the actual redirect/recovery destination.
+The backend-acceptance boundary is unchanged: defer waits for resume and
+rejection/cancellation throws. Acceptance does not guarantee visibility,
+business success, continued Entry existence, or close authority. Hosts own
+business-ID mapping, cleanup, and bounded buffering of observations arriving
+before the receipt. Ordinary navigation results and Adapter SPI are unchanged.
+
+The return-type upgrade requires migration of legacy `catchError` handlers
+that consume errors by returning void/null. A `Future<void>` variable or
+forwarding function annotation does not convert the underlying receipt Future;
+such handlers can throw a new `ArgumentError` on rejection or cancellation.
+When the caller does not need the receipt, convert before handling errors:
+
+```dart
+await CCDeepLinkIngress.fromPlatform(uri)
+    .then<void>((_) {})
+    .catchError((Object error, StackTrace stackTrace) {
+      // Handle the ingress error in the Host.
+    });
+```
+
+Ordinary `await` and `async/await` with `try/catch` need no conversion. Callers
+that need the receipt should handle failure with `try/catch`; a failed ingress
+has no acceptance receipt to return.
 
 External URIs must pass both:
 

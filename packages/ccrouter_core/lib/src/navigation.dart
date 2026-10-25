@@ -251,6 +251,51 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     CCNavigationSource? source,
     CCRoutePlacement? placementOverride,
     CCCancellationToken? requestCancellation,
+  }) => _openRoute(
+    uri,
+    origin: origin,
+    mode: mode,
+    source: source,
+    placementOverride: placementOverride,
+    requestCancellation: requestCancellation,
+  );
+
+  /// Host ingress bridge returning the actual accepted destination identities.
+  ///
+  /// This supplements the ordinary Open result without changing Adapter SPI or
+  /// typed navigation results. Only external origins are accepted. Deferred
+  /// calls wait for resume; cancellation and failure preserve the original
+  /// error. Single-flight followers keep their own invocation ID and reference
+  /// the producer's Entry. No active-stack lookup is performed after acceptance.
+  Future<CCDeepLinkAcceptanceReceipt> openRouteWithReceipt(
+    Uri uri, {
+    required CCNavigationOrigin origin,
+    CCDeepLinkOpenMode mode = CCDeepLinkOpenMode.push,
+    CCNavigationSource? source,
+  }) async {
+    if (origin == CCNavigationOrigin.internal) {
+      throw ArgumentError.value(origin, 'origin', 'Expected external ingress.');
+    }
+    final acceptance = _NavigationAcceptanceCapture();
+    await _openRoute(
+      uri,
+      origin: origin,
+      mode: mode,
+      source: source,
+      acceptance: acceptance,
+    );
+    return acceptance.receipt!;
+  }
+
+  /// Shared Open pipeline; optional ingress capture never replaces its result.
+  Future<void> _openRoute(
+    Uri uri, {
+    required CCNavigationOrigin origin,
+    required CCDeepLinkOpenMode mode,
+    required CCNavigationSource? source,
+    CCRoutePlacement? placementOverride,
+    CCCancellationToken? requestCancellation,
+    _NavigationAcceptanceCapture? acceptance,
   }) async {
     _ensureInitialized();
     await _executeNavigationWithFailurePolicy(
@@ -261,6 +306,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       routeIdHint: null,
       placementOverride: placementOverride,
       requestCancellation: requestCancellation,
+      acceptance: acceptance,
       prepare: () => _routeRegistry.prepareUri(
         uri,
         origin,
@@ -502,6 +548,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     required Future<Object?> Function(CCNavigationRequest request) action,
     void Function(_RouteEntryRecord entry)? commitEntry,
     void Function(_RouteEntryRecord entry)? onEntryCommitted,
+    _NavigationAcceptanceCapture? acceptance,
     void Function(Object? result)? validateResult,
     bool coordinateConcurrency = true,
     CCCancellationToken? requestCancellation,
@@ -564,13 +611,17 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
             navigationId: navigationId,
           );
           _emitAspectFound(request);
-          return _observeSharedNavigation(request, existing);
+          return _observeSharedNavigation(
+            request,
+            existing,
+            acceptance: acceptance,
+          );
         }
     }
     final shared =
         navigationConcurrencyPolicy == CCNavigationConcurrencyPolicy.allow
         ? null
-        : _SharedResult<Object?>();
+        : _NavigationFlight();
     if (shared != null) {
       _inFlightNavigation[key] = shared;
       _diagnosticRevision++;
@@ -585,7 +636,15 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       placementOverride: placementOverride,
       action: action,
       commitEntry: commitEntry,
-      onEntryCommitted: onEntryCommitted,
+      onEntryCommitted:
+          shared != null &&
+              operation == CCNavigationOperation.open &&
+              origin != CCNavigationOrigin.internal
+          ? (entry) {
+              shared.recordEntry(entry);
+              onEntryCommitted?.call(entry);
+            }
+          : onEntryCommitted,
       validateResult: validateResult,
       onAttempt: onAttempt,
       onInterceptorRedirect: onInterceptorRedirect,
@@ -608,7 +667,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       // Register in the producer's Zone and retire admission before either the
       // original caller or shared waiters can immediately attempt another call.
       unawaited(pending.then<void>((_) => clear(), onError: (_, _) => clear()));
-      shared.follow(pending);
+      shared.result.follow(pending);
     }
     return pending;
   }
@@ -644,11 +703,13 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   /// while preserving the original error object and stack trace for callers.
   Future<Object?> _observeSharedNavigation(
     CCNavigationRequest request,
-    _SharedResult<Object?> shared,
-  ) async {
+    _NavigationFlight shared, {
+    _NavigationAcceptanceCapture? acceptance,
+  }) async {
     _emitNavigationEvent(request, CCNavigationLifecyclePhase.requested);
     try {
-      final result = await shared.wait();
+      final result = await shared.result.wait();
+      if (acceptance != null) acceptance.record(shared.acceptance!);
       _emitAspectAfter(request, outcome: CCNavigationAspectOutcome.succeeded);
       _emitNavigationEvent(request, CCNavigationLifecyclePhase.completed);
       return result;

@@ -1,3 +1,42 @@
+/// Immutable identity returned after an external navigation is accepted.
+///
+/// Hosts may associate application-owned sharing or notification IDs with this
+/// receipt without inspecting the latest Route Entry. It records historical
+/// acceptance, not page visibility, business completion, or continued Entry
+/// existence. It contains no URI, business payload, Scope, or close handle.
+final class CCDeepLinkAcceptanceReceipt {
+  /// Creates identity data for an accepted ingress invocation and destination.
+  ///
+  /// Constructing this value grants no Runtime or Route Entry authority.
+  const CCDeepLinkAcceptanceReceipt({
+    required this.navigationId,
+    required this.entryNavigationId,
+    required this.routeEntryId,
+    required this.routeId,
+  });
+
+  /// Runtime-issued identity of this ingress invocation, including a follower.
+  ///
+  /// Use this ID to correlate the invocation's navigation lifecycle events.
+  final String navigationId;
+
+  /// Navigation that created the accepted Entry.
+  ///
+  /// Under single-flight sharing this is the producer's ID and may differ from
+  /// [navigationId]. Use it to correlate destination Entry lifecycle events.
+  final String entryNavigationId;
+
+  /// Exact accepted destination Entry, shared by single-flight followers.
+  ///
+  /// The Entry may already have left the active stack when this receipt is read.
+  final String routeEntryId;
+
+  /// Actual destination contract after interceptor redirects or failure recovery.
+  ///
+  /// Acceptance of a fallback does not prove that the original target opened.
+  final String routeId;
+}
+
 /// One exact external URI authority accepted by the application Host.
 ///
 /// Use a rule for Universal Links, App Links, or custom-scheme links that the

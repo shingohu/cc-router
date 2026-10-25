@@ -46,6 +46,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
     void Function(CCNavigationRequest request)? validateRequest,
     void Function(_RouteEntryRecord entry)? commitEntry,
     void Function(_RouteEntryRecord entry)? onEntryCommitted,
+    _NavigationAcceptanceCapture? acceptance,
     void Function(Object? result)? validateResult,
     bool coordinateConcurrency = true,
     CCCancellationToken? requestCancellation,
@@ -63,6 +64,13 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
     );
     final effectiveSource = _validatedNavigationSource(source);
     final navigationId = '$_runtimeId-navigation-${++_navigationSequence}';
+    acceptance?.navigationId = navigationId;
+    final observeCommit = acceptance == null
+        ? onEntryCommitted
+        : (_RouteEntryRecord entry) {
+            acceptance.recordEntry(entry);
+            onEntryCommitted?.call(entry);
+          };
     _beginNavigationObservation(navigationId);
     var recoveryDepth = 0;
     var currentOperation = operation;
@@ -119,7 +127,8 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
                 placementOverride: placementOverride,
                 action: currentAction,
                 commitEntry: currentCommitEntry,
-                onEntryCommitted: onEntryCommitted,
+                onEntryCommitted: observeCommit,
+                acceptance: acceptance,
                 validateResult: currentValidateResult,
                 coordinateConcurrency: coordinateConcurrency,
                 requestCancellation: requestCancellation,
@@ -142,7 +151,7 @@ extension CCRouterRuntimeNavigationFailure on CCRouterRuntime {
                 placementOverride: placementOverride,
                 action: currentAction,
                 commitEntry: currentCommitEntry,
-                onEntryCommitted: onEntryCommitted,
+                onEntryCommitted: observeCommit,
                 validateResult: currentValidateResult,
                 requestCancellation: requestCancellation,
                 onAttempt: (routeId, placement) {

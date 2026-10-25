@@ -1066,7 +1066,7 @@ CupertinoTheme 不代表 Cupertino 宿主，不应导致 Android 页面额外挂
 await CCRouter.navigator.open(Uri.parse('/orders/42'));
 
 // Universal Link / App Link / custom scheme
-await CCDeepLinkIngress.fromPlatform(uri);
+final receipt = await CCDeepLinkIngress.fromPlatform(uri);
 
 // 通知
 await CCDeepLinkIngress.fromNotification(uri);
@@ -1074,6 +1074,33 @@ await CCDeepLinkIngress.fromNotification(uri);
 // 二维码
 await CCDeepLinkIngress.fromQrCode(uri);
 ```
+
+三个外部入口直接返回只读 `CCDeepLinkAcceptanceReceipt`，原有忽略返回值的 `await`
+调用可以继续使用。Host 可将分享、通知业务 ID 与 `receipt.navigationId` / `routeEntryId`
+关联，不必匹配最新 Entry；业务 ID、映射保存与清理由 Host 拥有，不进入框架诊断。
+`navigationId` 对应本次调用的导航事件，`entryNavigationId` 对应实际创建目标 Entry 的导航；
+singleFlight 跟随调用有自己的前者，共享后者和 `routeEntryId`。`routeId` 是 redirect 或
+Failure Policy recovery 后实际接受的目标，接受 fallback 不表示原始业务目标成功。
+receipt 在原有 Backend acceptance 边界返回，defer 等待 resume，拒绝、取消仍抛错；
+它不代表页面可见、业务完成或 Entry 仍存活，也不提供关闭权限。观察事件可能先于 receipt
+到达，需要关联时由 Host 有界暂存并在映射完成后归并。普通 `CCNavigator` 的返回值与
+Adapter 接口不变。
+
+返回类型升级有一项错误处理迁移要求：旧的 `catchError` 若通过返回 void/null 消化错误，
+需要先显式转换为真正的 `Future<void>`。仅将变量或转发函数声明为 `Future<void>` 不会
+转换底层 Future；在拒绝或取消时，旧处理器可能新增抛出 `ArgumentError`。
+无需 receipt 的错误处理链可改为：
+
+```dart
+await CCDeepLinkIngress.fromPlatform(uri)
+    .then<void>((_) {})
+    .catchError((Object error, StackTrace stackTrace) {
+      // Host 在这里处理入口错误。
+    });
+```
+
+使用普通 `await` 或 `async/await + try/catch` 的调用无需这项转换。需要 receipt 的调用
+应使用 `try/catch` 处理失败；错误时没有可返回的 acceptance receipt。
 
 外部 URI 必须同时通过：
 

@@ -8,6 +8,16 @@ published.
 
 ## Unreleased
 
+- Upgraded all three `CCDeepLinkIngress` methods to return an immutable
+  `CCDeepLinkAcceptanceReceipt` with invocation and actual destination Entry
+  identities, including single-flight producer identity and redirected/recovered
+  Route ID. Existing `await`/`try/catch` callers may ignore the value. Legacy
+  `catchError` handlers returning void/null require an explicit
+  `.then<void>((_) {})` conversion before the handler; a `Future<void>` variable
+  or forwarding return annotation alone is insufficient. Backend acceptance,
+  underlying navigation failures/cancellation, ordinary navigation results and
+  Adapter SPI are preserved.
+
 - Preserved Runtime-generation isolation for all four Route Service lookups
   while integrating main into Managed. Diagnostic Entry/lifecycle/visibility
   snapshots no longer expose close handles; capture them from the owning Page.

@@ -792,10 +792,54 @@ waiting without requiring an application's unfinished `willPop` to return.
 ```dart
 await CCRouter.navigator.open(Uri.parse(location));
 
-await CCDeepLinkIngress.fromPlatform(uri);
+final receipt = await CCDeepLinkIngress.fromPlatform(uri);
 await CCDeepLinkIngress.fromNotification(uri);
 await CCDeepLinkIngress.fromQrCode(uri);
 ```
+
+Each ingress directly returns an immutable `CCDeepLinkAcceptanceReceipt`;
+existing calls that ignore the return value may keep their `await`. The Host
+can associate its sharing/notification business ID with `navigationId` and
+`routeEntryId` without inspecting the newest Entry. The receipt contains only
+identity strings, never a URI, payload, Scope, or close handle. Keep business
+IDs, mapping retention and cleanup outside framework diagnostics.
+
+Audit error handling as part of this return-type upgrade. Legacy `catchError`
+handlers that consume failures with a void/null return cannot be attached to
+the receipt Future unchanged. Even a variable declared `Future<void>`, or an
+arrow forwarding function with that return annotation, preserves the actual
+receipt Future type: the handler runs on rejection/cancellation, then Dart
+throws a new `ArgumentError` because its result is not a receipt. If the caller
+does not need the receipt, create a real void Future before the handler:
+
+```dart
+await CCDeepLinkIngress.fromPlatform(uri)
+    .then<void>((_) {})
+    .catchError((Object error, StackTrace stackTrace) {
+      // The Host handles the original ingress error here.
+    });
+```
+
+Ordinary `await` and `async/await + try/catch` need no conversion. Use
+`try/catch` when the caller needs the receipt; rejection/cancellation does not
+produce an acceptance receipt. Apply the same migration to Notification and QR
+ingress. The Demo platform bridge and navigation lab already use `try/catch`.
+
+`navigationId` belongs to this invocation and correlates its navigation events.
+`entryNavigationId` belongs to the navigation that created the actual Entry.
+Single-flight followers retain distinct invocation IDs but share the producer's
+Entry ID and Entry navigation ID. `routeId` names the actual accepted target
+after redirects or failure recovery; a successful fallback is not success of
+the original business target. Do not attach original-target conversion semantics
+to a fallback's later visibility.
+
+The existing backend-acceptance boundary is unchanged: defer waits for resume,
+and rejection/cancellation throws instead of returning a receipt. Acceptance
+does not guarantee visibility, business completion, or that the Entry still
+exists when the caller resumes. Capture does not depend on retained snapshots.
+Observers can run before the receipt arrives; use bounded Host-owned buffering
+if earlier observations need correlation. Ordinary `CCNavigator` result channels
+and custom Adapter implementations require no changes.
 
 Configure exact Host allowlist entries and explicitly enable external ingress on the destination. Keep push as the default external open mode unless declarative Shell reconstruction requires `go`.
 

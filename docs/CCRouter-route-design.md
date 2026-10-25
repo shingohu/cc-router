@@ -127,6 +127,19 @@ Managed Go/Reset/Open-Go、启动和浏览器位置变化，按 `parentRouteId` 
 
 外部入口只能进入显式允许 Deep Link 的目标；结构父页不因此变成公开入口，其策略仍收到原始 external origin。URI 的绝对/相对形式不决定信任。Host 负责平台、通知或扫码 ingress 与 allowlist；`CCNavigationSource` 只是脱敏归因，不能绕过 policy。
 
+三个 `CCDeepLinkIngress` 入口返回只读 `CCDeepLinkAcceptanceReceipt`，在原有 Backend
+acceptance Future 成功后返回本次调用及最终 Entry 的身份，不查询最新栈。`navigationId`
+属于调用方，`entryNavigationId` 属于实际 Entry producer；singleFlight 跟随者保持独立调用
+身份并共享 Entry。`routeId` 表示 redirect／failure recovery 后的实际目标。defer 等待 resume，
+拒绝、取消仍抛错；acceptance 不承诺页面可见、业务成功或 Entry 仍存活。receipt 不持有
+Scope、业务参数或关闭权限，Host 自行拥有业务 ID 映射和清理。普通导航结果通道、并发策略
+和 Adapter SPI 保持不变。
+
+返回类型升级仅保证忽略返回值的普通 `await` 和 `async/await + try/catch` 用法无需转换。
+旧 `catchError` 若以 void/null 返回来消化失败，必须先用 `.then<void>((_) {})` 转换
+（不需要 receipt 时）；声明 `Future<void>` 变量或转发函数并不改变 Future 的运行时泛型，
+拒绝或取消时可能新增抛出 `ArgumentError`。需要 receipt 的调用应使用 `try/catch`。
+
 动态 `open` 的 push/go 是栈行为，与 origin 独立。运行中的通知或扫码通常 push，保留原 Tab 返回；需要重建层级时选 Go。每个 Host 的新平台/浏览器位置取消旧 ingress，包括新 URI 已等于当前位置；迟到结果/错误被消费，不影响其他 Host 或普通业务 push。
 
 ## 7. 策略、并发与回退

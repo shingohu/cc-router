@@ -79,13 +79,16 @@ final class _DemoPlatformDeepLinkBridgeState
         'host=${uri.host.isEmpty ? '-' : uri.host}',
       );
       try {
-        await CCDeepLinkIngress.fromPlatform(
+        final receipt = await CCDeepLinkIngress.fromPlatform(
           ingressUri,
           source: CCNavigationSource.deepLink(
             mappedWebUri == null ? 'platform.app_link' : 'platform.web_link',
           ),
         );
-        demoNavigationLabStore.record('Platform Deep Link dispatch complete');
+        demoNavigationLabStore.record(
+          'Platform Deep Link dispatch complete · route=${receipt.routeId} · '
+          'navigation=${receipt.navigationId} · entry=${receipt.routeEntryId}',
+        );
       } on Object catch (error) {
         demoNavigationLabStore.record(
           'Platform Deep Link rejected · ${error.runtimeType}',

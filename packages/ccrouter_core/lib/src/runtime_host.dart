@@ -421,8 +421,8 @@ final class CCRouterRuntime {
   _navigationCapabilityFallbacks = Queue();
 
   /// Cross-Zone completion data for requests that have not yet terminated.
-  final Map<_NavigationConcurrencyKey, _SharedResult<Object?>>
-  _inFlightNavigation = {};
+  final Map<_NavigationConcurrencyKey, _NavigationFlight> _inFlightNavigation =
+      {};
 
   /// Live logical Host registrations; detach replaces their token identity.
   final Map<String, CCCancellationToken> _navigationHostRegistrations = {};

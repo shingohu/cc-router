@@ -29,6 +29,18 @@ await CCDeepLinkIngress.fromPlatform(
 白名单、Route Deep Link Policy、参数 Codec 或拦截器。Demo 的平台桥保持默认 `push`，用于
 验证固定首页不会被外部链接清除。
 
+三个入口直接返回只读 acceptance receipt。Demo 平台桥记录本次 receipt 的实际 Route、
+Navigation 和 Entry ID，不通过最新栈猜测目标。Host 如需关联分享业务 ID，可保存
+`receipt.navigationId` / `routeEntryId` 的映射；singleFlight 跟随者拥有独立的
+`navigationId`，但共享 producer 的 `entryNavigationId` 和 Entry。redirect／fallback 后
+`routeId` 为最终目标。receipt 只表示接收成功，不保证可见或业务成功；defer 等待 resume，
+拒绝与取消仍抛错。映射清理及先到观察事件的有界暂存由 Host 负责。
+
+Demo 平台桥与导航实验室通过 `async/await + try/catch` 处理入口错误，无需迁移。
+升级其它 Host 时，若旧 `catchError` 以 void/null 返回来消化错误，应先接
+`.then<void>((_) {})` 转换；只声明 `Future<void>` 变量或转发函数不会转换底层 Future，
+拒绝、取消时仍可能新增抛出 `ArgumentError`。需要 receipt 时使用 `try/catch`。
+
 跨 Shell 或分支并不自动要求 `go`。原生 Managed 的 cross-Shell `push` 保留原 Shell 的分支栈
 与 Widget State，可在目标退出后返回；Host Tab 选择本身仍是分支激活策略，不自动新增 Push
 历史。需要保留访问前历史时用 `push`，需要用链接重建当前 Host location 时用 `go`，不要再
@@ -60,7 +72,7 @@ open 'ccrouter://lab/detail/88?title=macOS%20External%20Deep%20Link&tags=termina
 ```text
 Platform Deep Link received · scheme=ccrouter · host=lab
 Aspect ... · demo_navigation_lab.detail · source=platform.app_link
-Platform Deep Link dispatch complete
+Platform Deep Link dispatch complete · route=demo_navigation_lab.detail · navigation=... · entry=...
 ```
 
 RouteEntry 的 origin 应为 `externalPlatform`。完整 URI 和 Query 值不会写入平台接入日志。

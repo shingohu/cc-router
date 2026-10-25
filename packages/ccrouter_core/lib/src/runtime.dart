@@ -13,6 +13,7 @@ part 'initialization.dart';
 part 'invocation_ownership.dart';
 part 'memory_navigation_adapter.dart';
 part 'navigation.dart';
+part 'navigation_acceptance.dart';
 part 'navigation_aspect.dart';
 part 'navigation_backend.dart';
 part 'navigation_backend_wait.dart';
