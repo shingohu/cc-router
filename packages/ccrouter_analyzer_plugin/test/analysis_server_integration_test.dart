@@ -20,6 +20,75 @@ bool _has(List<Map<String, dynamic>> errors, String code) =>
 
 void main() {
   test(
+    'real LSP refreshes sealed Action diagnostics after an unsaved part repair',
+    () async {
+      const file = 'lib/src/union.dart';
+      const part = 'lib/src/union_variants.dart';
+      const source = '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:ccrouter_contracts/ccrouter_ui_contracts.dart';
+part 'union_variants.dart';
+final class Props { const Props(); }
+sealed class Action { const Action(); }
+@CCUIFragmentContract<Props, Action>(componentId: CCComponentId('orders'), id: 'panel', version: '1.0.0')
+abstract final class Marker {}
+''';
+      const variants = '''
+part of 'union.dart';
+class Settings extends Action { const Settings(); }
+final class Selected extends Action { const Selected(this.target); final Target target; }
+sealed class Target { const Target(this.id); final String id; }
+final class User extends Target { const User(super.id); }
+final class Score extends Target { const Score(super.id); }
+''';
+      final server = await AnalysisServerSession.start({
+        file: source,
+        part: variants,
+      }, lsp: true);
+      addTearDown(server.close);
+      for (final (path, text) in [(file, source), (part, variants)]) {
+        server.notify('textDocument/didOpen', {
+          'textDocument': {
+            'uri': Uri.file(server.path(path)).toString(),
+            'languageId': 'dart',
+            'version': 1,
+            'text': text,
+          },
+        });
+      }
+      const code = 'ccrouter_ui_action_invalid';
+      await server.waitFor(file, (errors) => _has(errors, code));
+      final revision = server.revisions[server.path(file)]!;
+      server.notify('textDocument/didChange', {
+        'textDocument': {
+          'uri': Uri.file(server.path(part)).toString(),
+          'version': 2,
+        },
+        'contentChanges': [
+          {
+            'text': variants.replaceFirst(
+              'class Settings',
+              'final class Settings',
+            ),
+          },
+        ],
+      });
+      await server.waitFor(
+        file,
+        (errors) => !_has(errors, code),
+        after: revision,
+      );
+      expect(
+        File(server.path(part)).readAsStringSync(),
+        variants,
+        reason:
+            'The defining-library refresh must use the unsaved part overlay.',
+      );
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test(
     'real LSP clears route placement and policy errors on unsaved repair',
     () async {
       const file = 'lib/src/routes.dart';

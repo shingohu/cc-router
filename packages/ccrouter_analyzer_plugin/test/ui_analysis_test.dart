@@ -68,6 +68,83 @@ CCUIFragmentDependency<Summary>(alias: 'card', versionRange: 'latest')
       contains('ccrouter_ui_version_range_invalid'),
     );
   });
+  const union = '''
+sealed class Target { const Target(this.id); final String id; }
+final class UserTarget extends Target { const UserTarget(super.id); }
+final class ScoreTarget extends Target { const ScoreTarget(super.id); }
+sealed class Action { const Action(); }
+final class SettingsRequested extends Action { const SettingsRequested(); }
+final class TargetSelected extends Action { const TargetSelected(this.target); final Target target; }
+''';
+  test(
+    'legacy deep DTO defers at the IDE budget without false rejection',
+    () async {
+      final nodes = List.generate(
+        40,
+        (i) =>
+            'final class Node$i { const Node$i(this.next); final ${i == 39 ? 'String' : 'Node${i + 1}'} next; }',
+      ).join('\n');
+      final result = await fixture.resolve(
+        '$_imports${_contract.replaceFirst('enum Action { select }', 'final class Action { const Action(this.next); final Node0 next; }')}\n$nodes',
+      );
+      expect(result.diagnostics, isEmpty);
+      expect(
+        fixture.codes(result),
+        isNot(contains('ccrouter_ui_action_invalid')),
+      );
+    },
+  );
+  test('sealed Action and nested const super data are accepted', () async {
+    final result = await fixture.resolve(
+      '$_imports${_contract.replaceFirst('enum Action { select }', union)}',
+    );
+    expect(result.diagnostics, isEmpty);
+    expect(
+      fixture.codes(result),
+      isNot(contains('ccrouter_ui_action_invalid')),
+    );
+  });
+  test(
+    'sealed variants in parts are checked through the defining library',
+    () async {
+      fixture.write(
+        'lib/variants.dart',
+        "part of 'probe.dart'; final class Selected extends Action { const Selected(); }",
+      );
+      final result = await fixture.resolve(
+        '$_imports\npart "variants.dart";\n${_contract.replaceFirst('enum Action { select }', 'sealed class Action { const Action(); }')}',
+      );
+      expect(result.diagnostics, isEmpty);
+      expect(
+        fixture.codes(result),
+        isNot(contains('ccrouter_ui_action_invalid')),
+      );
+    },
+  );
+  for (final invalid in [
+    '$union final class Grandchild extends SettingsRequested { const Grandchild(); }',
+    '$union final class Impostor implements Action { const Impostor(); }',
+    '$union final class _Private extends Action { const _Private(); }',
+    '$union final class Generic<T> extends Action { const Generic(); }',
+    union.replaceFirst('final Target target;', 'final Action target;'),
+    union.replaceFirst('final Target target;', 'final Future<String> target;'),
+    union.replaceFirst(
+      'final Target target;',
+      'final Target target; void run() {}',
+    ),
+    union.replaceFirst(
+      'final class SettingsRequested',
+      'class SettingsRequested',
+    ),
+  ]) {
+    test('sealed invalid model is diagnosed: $invalid', () async {
+      final result = await fixture.resolve(
+        '$_imports${_contract.replaceFirst('enum Action { select }', invalid)}',
+      );
+      expect(fixture.codes(result), contains('ccrouter_ui_action_invalid'));
+    });
+  }
+
   test(
     'invalid DTO and enhanced Action types have explicit diagnostics',
     () async {
@@ -276,6 +353,17 @@ const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
     metadata['schemaVersion'] = 4;
     metadata['metadata'][0]['uiSchemaVersion'] = 2;
     metadata['metadata'][0]['uiContracts'][0]['uiSchemaVersion'] = 2;
+    File(metadataPath).writeAsStringSync(jsonEncode(metadata));
+    cache.invalidate(metadataPath);
+    expect(
+      fixture
+          .issues(result, owners: cache.resolve(fixture.file))
+          .map((d) => d.code),
+      contains('ccrouter_component_owner_dependency_missing'),
+    );
+    metadata['schemaVersion'] = 5;
+    metadata['metadata'][0]['uiSchemaVersion'] = 3;
+    metadata['metadata'][0]['uiContracts'][0]['uiSchemaVersion'] = 3;
     File(metadataPath).writeAsStringSync(jsonEncode(metadata));
     cache.invalidate(metadataPath);
     expect(

@@ -88,8 +88,8 @@ abstract final class CCRouterUIFragmentAnalysis {
           add(
             annotation,
             'action_invalid',
-            'UI Action requires a public plain enum or immutable final DTO.',
-            'Use const generative constructors and public final stored scalar, plain enum or DTO fields; collections, behavior and sealed unions are unsupported. Regenerate with a UI schema 2 compatible Generator for DTO Actions.',
+            'UI Action requires a public plain enum, immutable DTO or restricted sealed union.',
+            'Use const data constructors, public final fields and final direct leaves in the sealed root library. Collections, behavior and open inheritance are unsupported. Union Actions require a UI schema 3 compatible Generator.',
           );
         }
       } else if (name == 'CCUIFragmentRenderer') {
@@ -243,6 +243,7 @@ abstract final class CCRouterUIFragmentAnalysis {
   static bool _invalidAction(
     DartType type, [
     Set<InterfaceElement>? ancestors,
+    ClassElement? parent,
   ]) {
     if (_unknown(type)) return false;
     if (type is! InterfaceType || type.typeArguments.isNotEmpty) return true;
@@ -264,14 +265,17 @@ abstract final class CCRouterUIFragmentAnalysis {
           element.constructors.any((f) => !f.isSynthetic);
     }
     if (element is! ClassElement ||
-        !element.isFinal ||
+        (!element.isFinal && !element.isSealed) ||
+        (parent != null && (element.isAbstract || element.isSealed)) ||
         const [
           'package:ccrouter/',
           'package:ccrouter_core/',
           'package:ccrouter_contracts/',
           'package:ccrouter_ui/',
         ].any(uri.startsWith) ||
-        element.supertype?.element.name != 'Object' ||
+        (parent == null
+            ? element.supertype?.isDartCoreObject != true
+            : element.supertype?.element != parent) ||
         element.mixins.isNotEmpty ||
         element.interfaces.isNotEmpty ||
         element.methods.isNotEmpty ||
@@ -281,7 +285,34 @@ abstract final class CCRouterUIFragmentAnalysis {
         element.constructors.any((c) => !c.isConst || c.isFactory))
       return true;
     final stack = ancestors ?? <InterfaceElement>{};
+    // Bound editor work without rejecting previously supported deep DTOs.
+    // The Generator remains authoritative beyond this conservative IDE limit.
+    if (stack.length >= 32) return false;
     if (!stack.add(element)) return true;
+    if (element.isSealed) {
+      final variants = _directSubtypes(element);
+      if (variants.isEmpty ||
+          variants.any(
+            (variant) =>
+                variant is! ClassElement ||
+                !variant.isFinal ||
+                variant.isAbstract ||
+                variant.supertype?.element != element ||
+                _directSubtypes(variant).isNotEmpty ||
+                _invalidAction(variant.thisType, stack, element),
+          ))
+        return true;
+    }
+    if (parent != null &&
+        element.fields.any(
+          (field) =>
+              !field.isStatic &&
+              parent.fields.any(
+                (base) => !base.isStatic && base.name == field.name,
+              ),
+        )) {
+      return true;
+    }
     for (final field in element.fields.where((f) => !f.isStatic)) {
       if (!field.isFinal || field.isPrivate || field.isSynthetic) return true;
       final fieldType = field.type;
@@ -301,6 +332,18 @@ abstract final class CCRouterUIFragmentAnalysis {
     stack.remove(element);
     return false;
   }
+
+  /// Enumerates semantic subtype edges across the root library and all parts.
+  static List<InterfaceElement> _directSubtypes(ClassElement root) =>
+      [...root.library.classes, ...root.library.enums, ...root.library.mixins]
+          .where(
+            (candidate) =>
+                candidate != root &&
+                (candidate.supertype?.element == root ||
+                    candidate.interfaces.any((type) => type.element == root) ||
+                    candidate.mixins.any((type) => type.element == root)),
+          )
+          .toList();
 
   /// Unknown semantic evidence is deferred while an editor buffer is incomplete.
   static bool _unknown(DartType type) =>

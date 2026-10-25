@@ -582,7 +582,8 @@ final class CCRouterContractOwnerIndexCache {
         for (final value in metadataDocuments.whereType<Map>()) {
           final metadata = value.cast<String, Object?>();
           if ((metadata['uiSchemaVersion'] == 1 ||
-                  metadata['uiSchemaVersion'] == 2) &&
+                  metadata['uiSchemaVersion'] == 2 ||
+                  metadata['uiSchemaVersion'] == 3) &&
               metadata['uiContracts'] is List) {
             for (final ui
                 in (metadata['uiContracts'] as List).whereType<Map>()) {
