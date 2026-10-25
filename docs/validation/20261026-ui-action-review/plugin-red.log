@@ -1,0 +1,19 @@
+00:00 +0: loading test/ui_analysis_test.dart
+00:00 +0: review DTO subtype cannot add unmodeled behavior
+00:01 +0 -1: review DTO subtype cannot add unmodeled behavior [E]
+  Expected: contains 'ccrouter_ui_action_invalid'
+    Actual: []
+     Which: does not contain 'ccrouter_ui_action_invalid'
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 77:5  main.<fn>
+
+00:01 +0 -1: review same-name Object model is valid Dart but invalid UI data
+00:02 +1 -1: review editor checks bound work for repeated DTO graphs
+00:03 +2 -1: Some tests failed.
+
+Failing tests:
+  test/ui_analysis_test.dart: review DTO subtype cannot add unmodeled behavior
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

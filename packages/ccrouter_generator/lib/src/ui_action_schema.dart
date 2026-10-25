@@ -8,27 +8,42 @@ part of 'ui_fragment_generator.dart';
 /// initializers. Field recursion, not the superclass relation, defines cycles.
 final class _ActionSchema {
   /// Uses the Builder resolver so inspected part syntax participates in rebuilds.
-  _ActionSchema(this._step);
+  _ActionSchema(this._step, this._subtypeIndex);
 
   /// Resolver ownership stays with the Builder invocation.
   final BuildStep _step;
+
+  /// Shared immutable edge facts for Props, Action and nested DTO validation.
+  final _DataSubtypeIndex _subtypeIndex;
+
+  /// Constants have a separate generous work bound to preserve schema sizing.
+  final _constantBudget = _LegacySchemaBudget(
+    label: 'UI DTO Action constant schema',
+  );
 
   /// Bounds total schema expansion, including repeated nested occurrences.
   int _nodes = 0;
 
   /// Selects the new path only when the reachable field graph contains a union.
-  bool containsUnion(DartType type, [Set<Element>? seen]) {
-    if (type is! InterfaceType || type.element is! ClassElement) return false;
-    final element = type.element as ClassElement;
-    // SDK scalar declarations such as num are sealed too. Only authored
-    // package data can opt into schema 3; legacy scalar DTOs keep schema 2.
-    if (element.library.uri.scheme != 'package') return false;
-    if (element.isSealed) return true;
-    final visited = seen ?? <Element>{};
-    if (!visited.add(element)) return false;
-    return element.fields
-        .where((field) => !field.isStatic)
-        .any((field) => containsUnion(field.type, visited));
+  bool containsUnion(DartType type) {
+    final pending = <DartType>[type];
+    final visited = <Element>{};
+    while (pending.isNotEmpty) {
+      final current = pending.removeLast();
+      if (current is! InterfaceType || current.element is! ClassElement)
+        continue;
+      final element = current.element as ClassElement;
+      // SDK sealed scalars do not opt legacy DTOs into schema 3.
+      if (element.library.uri.scheme != 'package' || !visited.add(element))
+        continue;
+      if (element.isSealed) return true;
+      pending.addAll(
+        element.fields
+            .where((field) => !field.isStatic)
+            .map((field) => field.type),
+      );
+    }
+    return false;
   }
 
   /// Produces deterministic data schemas, rejecting unsupported graphs early.
@@ -47,7 +62,7 @@ final class _ActionSchema {
     final element = type.element;
     if (element is! ClassElement ||
         element.library.uri.toString() == 'dart:core') {
-      return _schema(type, stack, origin);
+      return _schema(type, stack, origin, subtypeIndex: _subtypeIndex);
     }
     _validateData(element);
     if (!stack.add(element)) {
@@ -82,6 +97,12 @@ final class _ActionSchema {
           element,
         );
       }
+      if (_subtypes(element).isNotEmpty) {
+        _fail(
+          'UI DTO Action data must be terminal; same-library subtypes are unsupported.',
+          element,
+        );
+      }
       return await _data(type, stack);
     } finally {
       stack.remove(element);
@@ -89,27 +110,8 @@ final class _ActionSchema {
   }
 
   /// Finds all direct subtype edges, including forbidden implements/mixin edges.
-  List<InterfaceElement> _subtypes(ClassElement root) {
-    final library = root.library;
-    final values =
-        <InterfaceElement>[
-              ...library.classes,
-              ...library.enums,
-              ...library.mixins,
-            ]
-            .where(
-              (candidate) =>
-                  candidate != root &&
-                  (candidate.supertype?.element == root ||
-                      candidate.interfaces.any(
-                        (type) => type.element == root,
-                      ) ||
-                      candidate.mixins.any((type) => type.element == root)),
-            )
-            .toList();
-    values.sort((a, b) => a.displayName.compareTo(b.displayName));
-    return values;
-  }
+  List<InterfaceElement> _subtypes(ClassElement root) =>
+      _subtypeIndex.subtypes(root);
 
   /// Enforces actual leaves; Dart's final modifier alone allows same-library heirs.
   Future<Object> _variant(
@@ -318,7 +320,8 @@ final class _ActionSchema {
   }
 
   /// Includes concrete variant identity and inherited fields in constant defaults.
-  Object? _constant(DartObject? value, Element origin) {
+  Object? _constant(DartObject? value, Element origin, [int depth = 0]) {
+    _constantBudget.visit(depth, origin);
     if (value == null || !value.hasKnownValue)
       _fail('UI DTO Action union default could not be evaluated.', origin);
     final type = value.type;
@@ -333,7 +336,7 @@ final class _ActionSchema {
           final fieldValue = ConstantReader(value).read(field.displayName);
           fields[field.displayName] = fieldValue.isNull
               ? null
-              : _constant(fieldValue.objectValue, origin);
+              : _constant(fieldValue.objectValue, origin, depth + 1);
         }
         current = current.superclass;
       }

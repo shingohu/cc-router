@@ -285,7 +285,7 @@ B 的业务加载错误由 B 展示 retry/empty/error UI；A 决定是否隐藏�
 | 缺失或重复实现 | `missingImplementation` / `duplicateImplementation` | Host 聚合与初始化 |
 | Owner/消费依赖错误 | `ownerMismatch` / `dependencyMissing` | 生成、Workspace 校验与初始化 |
 | 版本或 shape 不兼容 | `versionOutOfRange` / `fingerprintChanged` | 生成、聚合与初始化 |
-| 生成物过期或 Renderer 签名非法 | `staleGeneratedOutput` / `rendererSignatureMismatch` | 生成与检查 |
+| 生成物过期或 Renderer 签名非法 | `staleGeneratedOutput` / `rendererSignatureMismatch` | 生成、检查与运行时校验 |
 | 未绑定、已关闭或旧实例调用 | `runtimeUnavailable` / `runtimeGenerationMismatch` | mount、更新与 Action 分发 |
 
 错误码属于独立 UI 诊断 family；Host 可读至多 128 条生命周期与 ignored Action 摘要，
@@ -391,6 +391,20 @@ metadata 和 Portable State 正确失效。示例见 Demo `order.panel` 和
 - catalog、诊断、Trace 不保存 payload、selectedId、Context 或 callback。热路径直接传递
   类型化值，无 JSON 编解码；跨进程、持久化及 Deep Link 不在范围内。
 
+
+### 扩大审查后的边界收紧
+
+DTO（包括 Props 和嵌套 DTO）不能有同库/part 的子类或实现，否则 final 字段的 getter
+仍可能被覆盖，实际数据会绕过纯数据校验。直接 Object 继承按 SDK 元素身份判断。
+原有合法模型指纹保持不变，默认值中的普通字符串不被当成公共类型引用。
+旧 DTO 展开与有效常量共用 16,384 节点 / 256 层工作保护；union 类型图保持 512 节点 /
+32 层，常量单独使用 16,384 / 256 保护。过大的旧图会新增明确诊断，属于可观察的复杂度
+限制；不是更改正常 DTO 的 wire schema。IDE 超预算仅退让，不放宽最终 Generator 校验。
+
+Package Index 编码/读取和 Host 校验拒绝不一致、未知及非整数 UI 版本，避免错标版本
+绕过升级门禁。Runtime attach 对齐 Generator 的精确 Contract 版本快照要求。
+同一 capability 更换 schema/version/range 时，在 rebuild 校验前撤销旧 Action，错误恢复
+只创建新 sink，不复活旧回调。见后续扩展审查的 RED/GREEN 证据。
 
 ## 验证与扩展边界
 

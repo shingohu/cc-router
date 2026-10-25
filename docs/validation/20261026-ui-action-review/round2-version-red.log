@@ -1,0 +1,30 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review source and index version tags must be integers
+00:00 +0 -1: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review source and index version tags must be integers [E]
+  Expected: throws <Instance of 'CCPackageWorkspaceException'>
+    Actual: <Instance of 'Future<CCPackageIndex>'>
+     Which: emitted <Instance of 'CCPackageIndex'>
+
+  packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart 53:5  main.<fn>
+
+00:00 +0 -1: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index writer rejects inconsistent UI versions (2, 3)
+00:00 +1 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: review UI workspace rejects fractional version tag representations
+00:00 +2 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: review UI workspace rejects fractional version tag representations
+00:00 +3 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: review UI workspace rejects fractional version tag representations
+00:00 +4 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: review UI workspace rejects fractional version tag representations
+00:00 +5 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: review UI workspace rejects fractional version tag representations
+00:00 +6 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: review UI workspace rejects fractional version tag representations
+00:00 +7 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: review UI workspace rejects fractional version tag representations
+00:00 +8 -1: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: review UI workspace rejects fractional version tag representations
+00:00 +8 -2: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: review UI workspace rejects fractional version tag representations [E]
+  Expected: contains contains 'unsupported UI schema'
+    Actual: []
+     Which: does not contain contains 'unsupported UI schema'
+
+  package:matcher                                                             expect
+  packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart 89:5  main.<fn>
+
+00:00 +8 -2: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

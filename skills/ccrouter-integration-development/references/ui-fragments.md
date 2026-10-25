@@ -176,10 +176,14 @@ Same-owner usage points to the ordinary local Widget.
 The public contracts Package imports
 `package:ccrouter_contracts/ccrouter_ui_contracts.dart` and exports the marker,
 Props, Action and canonical `CCComponentId` through its authored public barrel.
-Declare a public non-generic marker with
+Each marker has exactly one framework Contract annotation; duplicate declarations
+are rejected rather than selecting the first. Declare a public non-generic marker with
 `@CCUIFragmentContract<Props, Action>(componentId: owner, id: ..., version: ...)`.
 Props and DTO Actions are final classes with only const generative constructors, public final
-stored fields, no inheritance/mixins/interfaces or declared methods. Fields may
+stored fields, no inheritance/mixins/interfaces or declared methods. DTOs must
+also have no same-library/part subclasses or implementations: these can override
+getters or add mutable data outside the declared schema. Object is proven by SDK
+identity, not by its name. Fields may
 contain scalar values, ordinary enums and nested DTOs, with supported nullable
 fields. Generic collections, dynamic/Object, Flutter types, Future/Stream,
 functions and enhanced enums are unsupported. Action unions use the separate
@@ -196,6 +200,11 @@ constructors are rejected; move defaults to `this.field = value` or the field
 declaration. Breaking behavior or shape needs SemVer review; fingerprints include
 effective parameter defaults, effective field initializers and enum values, not
 just type names. Equivalent constant expressions produce the same fingerprint.
+Strings in defaults remain data even if a field named type contains a package URI;
+public exports come from declared schema nodes. Legacy Props/DTO work is bounded
+at 16,384 expanded schema/constant visits and 256 levels. Oversized graphs fail
+with a source diagnostic instead of exponential allocation; ordinary existing
+models retain their exact fingerprints and output versions.
 
 The consuming `CCComponent` imports `ccrouter_ui.dart` and declares:
 
@@ -270,7 +279,8 @@ Implicit unnamed const super construction, base field initializers and optional
 parameter defaults are supported. Explicit initializer lists (including explicit
 `super(...)` calls and asserts), redirects, factories and executable members are
 rejected. The data graph must be acyclic and fit within 32 data levels and 512
-expanded schema nodes, counting field/parameter schemas and variants.
+expanded schema nodes, counting field/parameter schemas and variants. Constant
+serialization has a separate 16,384-visit/256-level work bound.
 
 Fingerprints include the sorted complete variant set, inherited field schemas,
 constructor/forwarding/default semantics and concrete types of constant defaults.
@@ -283,13 +293,17 @@ their original fingerprints and output versions. SDK scalar modifiers (including
 sealed num) never opt a DTO into the union schema. Migrating enum/DTO to a union,
 adding/removing union variants, or breaking nested payload shape needs a major
 Contract version, an updated consumer range and regeneration of A/B/Host.
-Exact Host fingerprints are still required even when SemVer ranges match.
+Exact Host fingerprints and Contract version snapshots are still required even
+when SemVer ranges match. Document and record UI versions must agree and be
+integers; malformed or downgraded metadata is rejected by both index reads and writes.
 Distributed Packages must regenerate Portable State; modifying a part or a
 variant invalidates the published proof. Older tools reject Index 5.
 
 The sink remains synchronous and instance-local. It does not serialize Actions,
 return a navigation Future or own account cleanup/session work. Use the existing
-active, unmount, capability identity and Runtime generation rules. The Plugin
+active, unmount, capability identity and Runtime generation rules. Changing a generated
+schema/version/range snapshot revokes old sinks before rebuild validation; fixing
+the snapshot creates a new sink and never revives the revoked callback. The Plugin
 checks proven union/data violations; complete constructor syntax, defaults,
 export proofs and the final schema remain Generator-owned.
 
@@ -297,6 +311,7 @@ export proofs and the final schema remain Generator-owned.
 
 The Owner implementation directly depends on `ccrouter_ui` and declares a public
 synchronous top-level function annotated `@CCUIFragmentRenderer(Contract)`.
+Each function has exactly one Renderer annotation; duplicate bindings are rejected.
 It accepts exactly one `CCUIFragmentRenderInput<Props, Action>` and returns
 `Widget`. Return an ordinary Widget; do not allocate controllers, subscribe,
 perform I/O or navigate in this factory. Stateful resources belong in State.

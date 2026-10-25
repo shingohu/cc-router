@@ -1,0 +1,29 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review source and index version tags must be integers
+00:00 +1: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index writer rejects inconsistent UI versions (2, 3)
+00:00 +2: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index reader rejects inconsistent UI versions (2, 3)
+00:00 +3: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index writer rejects inconsistent UI versions (3, 2)
+00:00 +4: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index reader rejects inconsistent UI versions (3, 2)
+00:00 +5: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index writer rejects inconsistent UI versions (3, 99)
+00:00 +6: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index reader rejects inconsistent UI versions (3, 99)
+00:00 +7: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index writer rejects inconsistent UI versions (99, 99)
+00:00 +8: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index reader rejects inconsistent UI versions (99, 99)
+00:00 +9: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: union schema 3 validates mixed documents and rejects stale snapshots
+00:00 +10: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: review UI workspace rejects fractional version tag representations
+00:00 +11: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: valid UI workspace emits no diagnostics
+00:00 +12: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator >=1.0.0
+00:00 +13: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator <=1.0.0
+00:00 +14: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator <2.0.0
+00:00 +15: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator >=1.0.0	<2.0.0
+00:00 +16: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator >=1.0.0
+<2.0.0
+00:00 +17: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI contract_duplicate has an authored location and correction
+00:00 +18: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI owner_mismatch has an authored location and correction
+00:00 +19: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI implementation_duplicate has an authored location and correction
+00:00 +20: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI dependency_missing has an authored location and correction
+00:00 +21: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI stale_generated_output has an authored location and correction
+00:00 +22: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI missing_implementation has an authored location and correction
+00:00 +23: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI fingerprint_changed has an authored location and correction
+00:00 +24: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI version_out_of_range has an authored location and correction
+00:00 +25: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: invalid portable source positions never become IDE diagnostics
+00:00 +26: All tests passed!

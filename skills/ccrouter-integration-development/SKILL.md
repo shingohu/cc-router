@@ -168,6 +168,15 @@ supported. Props stay DTO-only. Export every variant/nested type. Migrating to
 a union, adding/removing variants or breaking payload shape requires major
 Contract SemVer and regeneration of A/B/Host. Preserve enum/DTO controls and
 verify part-only changes, Portable State, Host fingerprints and stale tooling.
+DTOs (including Props) must have no same-library subclasses/implementations.
+Legacy DTO expansion has a 16,384-node/256-level work bound; union type graphs
+retain 512 nodes/32 levels and constants have a 16,384-node/256-level bound.
+Oversized IDE graphs defer after bounded work. UI document/record/index versions
+must agree and be integers. A marker has exactly one UI Contract annotation, and a Renderer function has
+exactly one Renderer annotation; neither silently selects the first binding.
+Resolved UI Owner facts defer if the current annotation is missing/ambiguous or
+its Owner disagrees with metadata. Host version snapshots match exactly; schema/version/
+range changes revoke retained Actions before a stale Widget build can fail.
 Treat the local enum/DTO technical workflow as verified, with API freeze, first
 use by uninvolved developers, distribution/upgrades, real platform coverage and
 long-term memory/performance still pending. See the UI reference's adoption

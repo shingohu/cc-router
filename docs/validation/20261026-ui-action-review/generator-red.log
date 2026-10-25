@@ -1,0 +1,79 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/ui_action_union_test.dart
+00:00 +0: review default type text stays data in schema 2
+00:06 +0 -1: review default type text stays data in schema 2 [E]
+  Expected: not contains 'Phantom'
+    Actual: MappedListIterable<dynamic, dynamic>:[
+              'Action',
+              'Detail',
+              'Phantom',
+              'Props',
+              'Summary'
+            ]
+
+  package:matcher                                                        expect
+  packages/ccrouter_test/generator_test/ui_action_union_test.dart 105:7  main.<fn>
+
+00:06 +0 -1: review default type text stays data in schema 3
+00:08 +0 -2: review default type text stays data in schema 3 [E]
+  Expected: not contains 'Phantom'
+    Actual: MappedListIterable<dynamic, dynamic>:[
+              'Action',
+              'Detail',
+              'Phantom',
+              'Props',
+              'Selected',
+              'Summary'
+            ]
+
+  package:matcher                                                        expect
+  packages/ccrouter_test/generator_test/ui_action_union_test.dart 105:7  main.<fn>
+
+00:08 +0 -2: review same-name Object cannot bypass direct superclass identity
+00:10 +0 -3: review same-name Object cannot bypass direct superclass identity [E]
+  Expected: empty
+    Actual: '{"schemaVersion":5,"componentDeclarations":[],"package":"ccrouter_test","source":"lib/src/ui_probe.dart","uiSchemaVersion":2,"uiLibrary":"lib/src/ccrouter_generated/ui/ui_probe.ui.g.dart","uiContracts":[{"uiSchemaVersion":2,"declaration":{"symbol":"Summary","packageUri":"package:ccrouter_test/src/ui_probe.dart","libraryUri":"package:ccrouter_test/src/ui_probe.dart","line":13,"column":22},"componentId":"orders","id":"orders.summary","version":"1.0.0","shapeFingerprint":"d84d928fd2b6583b782f10f8af1dd1b7f5f86fb071fe7b37c1d5d607a8d6354a","publicTypes":[{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Action"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Props"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Summary"}]}],"uiRenderers":[],"uiRequirements":[]}\n'
+              ''
+
+  package:matcher                                                        expect
+  packages/ccrouter_test/generator_test/ui_action_union_test.dart 113:5  main.<fn>
+
+00:10 +0 -3: review nested DTO rejects unmodeled subtypes in schema 2
+00:11 +0 -4: review nested DTO rejects unmodeled subtypes in schema 2 [E]
+  Expected: empty
+    Actual: '{"schemaVersion":5,"componentDeclarations":[],"package":"ccrouter_test","source":"lib/src/ui_probe.dart","uiSchemaVersion":2,"uiLibrary":"lib/src/ccrouter_generated/ui/ui_probe.ui.g.dart","uiContracts":[{"uiSchemaVersion":2,"declaration":{"symbol":"Summary","packageUri":"package:ccrouter_test/src/ui_probe.dart","libraryUri":"package:ccrouter_test/src/ui_probe.dart","line":17,"column":22},"componentId":"orders","id":"orders.summary","version":"1.0.0","shapeFingerprint":"cffceac89e73bf37ae7e723bd08c444a5907aedeaa356bc6cc4d3f3115b1cc36","publicTypes":[{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Action"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Detail"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Props"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Summary"}]}],"uiRenderers":[],"uiRequirements":[]}\n'
+              ''
+
+  package:matcher                                                        expect
+  packages/ccrouter_test/generator_test/ui_action_union_test.dart 129:7  main.<fn>
+
+00:11 +0 -4: review nested DTO rejects unmodeled subtypes in schema 3
+00:13 +0 -5: review nested DTO rejects unmodeled subtypes in schema 3 [E]
+  Expected: empty
+    Actual: '{"schemaVersion":5,"componentDeclarations":[],"package":"ccrouter_test","source":"lib/src/ui_probe.dart","uiSchemaVersion":3,"uiLibrary":"lib/src/ccrouter_generated/ui/ui_probe.ui.g.dart","uiContracts":[{"uiSchemaVersion":3,"declaration":{"symbol":"Summary","packageUri":"package:ccrouter_test/src/ui_probe.dart","libraryUri":"package:ccrouter_test/src/ui_probe.dart","line":19,"column":22},"componentId":"orders","id":"orders.summary","version":"1.0.0","shapeFingerprint":"c95e2795dcd16f7935f649ab0ff7d80e07e40f14a225603bbce5a20d019cb5d5","publicTypes":[{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Action"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Detail"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Props"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Selected"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Summary"}]}],"uiRenderers":[],"uiRequirements":[]}\n'
+              ''
+
+  package:matcher                                                        expect
+  packages/ccrouter_test/generator_test/ui_action_union_test.dart 129:7  main.<fn>
+
+00:13 +0 -5: review Props reject same-library subtypes
+00:14 +0 -6: review Props reject same-library subtypes [E]
+  Expected: empty
+    Actual: '{"schemaVersion":5,"componentDeclarations":[],"package":"ccrouter_test","source":"lib/src/ui_probe.dart","uiSchemaVersion":1,"uiLibrary":"lib/src/ccrouter_generated/ui/ui_probe.ui.g.dart","uiContracts":[{"declaration":{"symbol":"Summary","packageUri":"package:ccrouter_test/src/ui_probe.dart","libraryUri":"package:ccrouter_test/src/ui_probe.dart","line":11,"column":22},"componentId":"orders","id":"orders.summary","version":"1.0.0","shapeFingerprint":"00ada274a3626f31de2b44ebd56e4818ede659e4fdc961fb69a146fb2bf88dca","publicTypes":[{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Action"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Props"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Summary"}]}],"uiRenderers":[],"uiRequirements":[]}\n'
+              ''
+
+  package:matcher                                                        expect
+  packages/ccrouter_test/generator_test/ui_action_union_test.dart 140:5  main.<fn>
+
+00:14 +0 -6: review excessive legacy DAG fails with a bounded diagnostic
+00:16 +0 -7: review excessive legacy DAG fails with a bounded diagnostic [E]
+  Expected: empty
+    Actual: '{"schemaVersion":5,"componentDeclarations":[],"package":"ccrouter_test","source":"lib/src/ui_probe.dart","uiSchemaVersion":2,"uiLibrary":"lib/src/ccrouter_generated/ui/ui_probe.ui.g.dart","uiContracts":[{"uiSchemaVersion":2,"declaration":{"symbol":"Summary","packageUri":"package:ccrouter_test/src/ui_probe.dart","libraryUri":"package:ccrouter_test/src/ui_probe.dart","line":18,"column":22},"componentId":"orders","id":"orders.summary","version":"1.0.0","shapeFingerprint":"df00e30492308cc4bfa825994dc589eea80478d307bcf6c8e33e5ef51c736e6e","publicTypes":[{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Action"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Node0"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Node1"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Node2"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Node3"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Node4"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Node5"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Node6"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Props"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Summary"}]}],"uiRenderers":[],"uiRequirements":[]}\n'
+              ''
+
+  package:matcher                                                        expect
+  packages/ccrouter_test/generator_test/ui_action_union_test.dart 149:5  main.<fn>
+
+00:16 +0 -7: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

@@ -76,14 +76,16 @@ List<CCWorkspaceDiagnostic> validateUIFragmentWorkspaceDiagnostics(
       return required is int && required > version ? required : version;
     });
     if ((document.containsKey('uiSchemaVersion') &&
-            document['uiSchemaVersion'] != requiredSchema) ||
+            (document['uiSchemaVersion'] is! int ||
+                document['uiSchemaVersion'] != requiredSchema)) ||
         (!document.containsKey('uiSchemaVersion') && requiredSchema > 1) ||
         records.any(
           (r) =>
               r.containsKey('uiSchemaVersion') &&
-              r['uiSchemaVersion'] != 1 &&
-              r['uiSchemaVersion'] != 2 &&
-              r['uiSchemaVersion'] != 3,
+              (r['uiSchemaVersion'] is! int ||
+                  r['uiSchemaVersion'] != 1 &&
+                      r['uiSchemaVersion'] != 2 &&
+                      r['uiSchemaVersion'] != 3),
         )) {
       report(
         'stale_generated_output',

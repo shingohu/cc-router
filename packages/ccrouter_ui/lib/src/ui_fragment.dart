@@ -90,7 +90,7 @@ final class CCUIFragmentDescriptor {
   /// Contract SemVer, distinct from component version.
   final String version;
 
-  /// Generated SHA-256 shape including fields and enum members.
+  /// Generated SHA-256 shape including fields, enum members and union variants.
   final String fingerprint;
 
   /// Internal composite identity; keys do not contain Props.
@@ -165,7 +165,8 @@ abstract final class CCUIHostAssembly {
   ///
   /// Call only from generated Host assembly or a focused handwritten test.
   /// Registration is static. Duplicate implementations, missing owners and
-  /// incompatible required edges fail before Runtime initialization.
+  /// incompatible required edges fail before Runtime initialization. Contract
+  /// version snapshots match exactly; an allowed range does not validate stale glue.
   static CCHostAssembly attach(
     CCHostAssembly assembly, {
     required Iterable<CCUIFragmentContribution> contributions,
@@ -208,6 +209,9 @@ abstract final class CCUIHostAssembly {
       }
       if (expected.fingerprint != actual.fingerprint) {
         throw CCUIFragmentError('fingerprintChanged', expected.id);
+      }
+      if (expected.version != actual.version) {
+        throw CCUIFragmentError('staleGeneratedOutput', expected.id);
       }
       final edge = '${requirement.consumer}/${expected.identity}';
       final previous = edges[edge];
@@ -379,13 +383,18 @@ final class _FragmentState<P extends Object, A extends Object>
   /// Current revocable identity, shared only by callbacks for this capability.
   _FragmentActionSink<A>? _actions;
 
-  /// Revokes earlier callbacks if a reused element changes capability identity.
+  /// Revokes callbacks before validating changed capability or schema snapshots.
   @override
   void didUpdateWidget(CCUIGeneratedFragment<P, A> oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.requirement.consumer != widget.requirement.consumer ||
         oldWidget.requirement.contract.identity !=
-            widget.requirement.contract.identity) {
+            widget.requirement.contract.identity ||
+        oldWidget.requirement.contract.version !=
+            widget.requirement.contract.version ||
+        oldWidget.requirement.contract.fingerprint !=
+            widget.requirement.contract.fingerprint ||
+        oldWidget.requirement.versionRange != widget.requirement.versionRange) {
       _actions?.revoke();
       _actions = null;
     } else {

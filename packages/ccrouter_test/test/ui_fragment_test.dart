@@ -219,6 +219,95 @@ void main() {
     _actions.clear();
   });
   tearDown(CCRouterHost.shutdown);
+  test(
+    'review Host rejects a stale Contract version even inside the range',
+    () {
+      const newer = CCUIFragmentDescriptor(
+        owner: 'orders',
+        id: 'orders.summary',
+        version: '1.0.1',
+        fingerprint: _fingerprint,
+      );
+      expect(
+        () => _assembly(
+          contributions: [
+            const CCUIRenderer<_Props, _Action>(
+              contract: newer,
+              renderer: _renderer,
+            ),
+          ],
+        ),
+        throwsA(_code('staleGeneratedOutput')),
+      );
+      expect(CCRouter.isInitialized, isFalse);
+    },
+  );
+  for (final (kind, stale) in <(String, CCUIFragmentRequirement)>[
+    (
+      'shape',
+      const CCUIFragmentRequirement(
+        consumer: 'account',
+        contract: CCUIFragmentDescriptor(
+          owner: 'orders',
+          id: 'orders.summary',
+          version: '1.0.0',
+          fingerprint:
+              'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+        ),
+        versionRange: '^1.0.0',
+      ),
+    ),
+    (
+      'version',
+      const CCUIFragmentRequirement(
+        consumer: 'account',
+        contract: CCUIFragmentDescriptor(
+          owner: 'orders',
+          id: 'orders.summary',
+          version: '1.0.1',
+          fingerprint: _fingerprint,
+        ),
+        versionRange: '^1.0.0',
+      ),
+    ),
+    (
+      'range',
+      const CCUIFragmentRequirement(
+        consumer: 'account',
+        contract: _contract,
+        versionRange: '>=1.0.0',
+      ),
+    ),
+  ]) {
+    testWidgets(
+      'review stale $kind updates permanently revoke retained Actions',
+      (tester) async {
+        CCRouterHost.initialize(hostAssembly: _assembly());
+        var first = 0;
+        var latest = 0;
+        await tester.pumpWidget(_fragment(onAction: (_) => first++));
+        final oldAction = _actions.last;
+        await tester.pumpWidget(
+          _fragment(requirement: stale, onAction: (_) => latest++),
+        );
+        expect(tester.takeException(), _code('staleGeneratedOutput'));
+        oldAction();
+        expect(first, 0);
+        expect(latest, 0);
+        await tester.pumpWidget(_fragment(onAction: (_) => latest++));
+        oldAction();
+        expect(
+          latest,
+          0,
+          reason: 'Restoring valid metadata must not revive the revoked sink.',
+        );
+        _actions.last();
+        expect(latest, 1);
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
+  }
+
   testWidgets(
     'sealed payloads preserve instances, callbacks and all revocation fences',
     (tester) async {

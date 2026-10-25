@@ -1,0 +1,93 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/ui_action_union_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/ui_action_union_test.dart: review default type text stays data in schema 2
+00:06 +1: packages/ccrouter_test/generator_test/ui_action_union_test.dart: review default type text stays data in schema 3
+00:08 +2: packages/ccrouter_test/generator_test/ui_action_union_test.dart: review same-name Object cannot bypass direct superclass identity
+00:10 +3: packages/ccrouter_test/generator_test/ui_action_union_test.dart: review nested DTO rejects unmodeled subtypes in schema 2
+00:11 +4: packages/ccrouter_test/generator_test/ui_action_union_test.dart: review nested DTO rejects unmodeled subtypes in schema 3
+00:13 +5: packages/ccrouter_test/generator_test/ui_action_union_test.dart: review Props reject same-library subtypes
+00:14 +6: packages/ccrouter_test/generator_test/ui_action_union_test.dart: review DTO subclasses in parts cannot bypass the closed schema
+00:16 +7: packages/ccrouter_test/generator_test/ui_action_union_test.dart: review excessive legacy DAG fails with a bounded diagnostic
+00:17 +8: packages/ccrouter_test/generator_test/ui_action_union_test.dart: legacy enum fingerprint stays byte compatible
+00:19 +9: packages/ccrouter_test/generator_test/ui_action_union_test.dart: legacy DTO fingerprint stays byte compatible
+00:20 +10: packages/ccrouter_test/generator_test/ui_action_union_test.dart: sealed root and nested inherited targets use UI schema 3
+00:22 +11: packages/ccrouter_test/generator_test/ui_action_union_test.dart: DTO Action can contain a union without opening Props
+00:25 +12: packages/ccrouter_test/generator_test/ui_action_union_test.dart: generated Renderer and Client preserve the exact Action type
+00:26 +13: packages/ccrouter_test/generator_test/ui_action_union_test.dart: part variants are discovered with defining-library identity
+00:29 +14: packages/ccrouter_test/generator_test/ui_action_union_test.dart: nested unions imported from another Package retain all public types
+00:31 +15: packages/ccrouter_test/generator_test/ui_action_union_test.dart: variant order is inert but variant, inherited data and default changes alter shape
+00:43 +16: packages/ccrouter_test/generator_test/ui_action_union_test.dart: implicit super defaults and inherited nullable values are fingerprinted
+00:46 +17: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects empty union
+00:48 +18: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects open leaf
+00:49 +19: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects abstract leaf
+00:51 +20: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects nested inheritance
+00:53 +21: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects implements edge
+00:54 +22: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects private leaf
+00:56 +23: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects generic leaf
+00:57 +24: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects mutable
+00:59 +25: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects non-const
+01:01 +26: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects resource
+01:02 +27: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects behavior
+01:04 +28: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects field cycle
+01:05 +29: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects field override
+01:07 +30: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects explicit super initializer
+01:09 +31: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects assert initializer
+01:10 +32: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects redirect
+01:12 +33: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects factory
+01:14 +34: packages/ccrouter_test/generator_test/ui_action_union_test.dart: legacy deep DTO generation remains outside the union depth limit
+01:15 +35: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union width is bounded to 512 expanded schema nodes
+01:17 +36: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union data graph expansion is bounded
+01:19 +37: loading packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart
+01:19 +37: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review source and index version tags must be integers
+01:19 +38: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index writer rejects inconsistent UI versions (2, 3)
+01:19 +39: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index reader rejects inconsistent UI versions (2, 3)
+01:19 +40: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index writer rejects inconsistent UI versions (3, 2)
+01:19 +41: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index reader rejects inconsistent UI versions (3, 2)
+01:19 +42: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index writer rejects inconsistent UI versions (3, 99)
+01:19 +43: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index reader rejects inconsistent UI versions (3, 99)
+01:19 +44: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index writer rejects inconsistent UI versions (99, 99)
+01:19 +45: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index reader rejects inconsistent UI versions (99, 99)
+01:19 +46: loading packages/ccrouter_test/generator_test/package_workspace_test.dart
+01:19 +46: packages/ccrouter_test/generator_test/package_workspace_test.dart: discovers only the Host runtime dependency closure
+01:19 +47: packages/ccrouter_test/generator_test/package_workspace_test.dart: requested Package write scope keeps Workspace dependencies read-only
+01:19 +48: packages/ccrouter_test/generator_test/package_workspace_test.dart: Portable State requires an explicit package declaration
+01:19 +49: packages/ccrouter_test/generator_test/package_workspace_test.dart: requires resolved Package graph instead of scanning the repository
+01:19 +50: packages/ccrouter_test/generator_test/package_workspace_test.dart: rejects corrupted and incompatible Package indexes
+01:19 +51: packages/ccrouter_test/generator_test/package_workspace_test.dart: DTO Action index uses schema 4 and cannot be relabeled as legacy UI
+01:19 +52: packages/ccrouter_test/generator_test/package_workspace_test.dart: union Action index uses schema 5 and cannot be relabeled as legacy UI
+01:19 +53: packages/ccrouter_test/generator_test/package_workspace_test.dart: non-framework CCRouter dependencies require a published index
+01:19 +54: packages/ccrouter_test/generator_test/package_workspace_test.dart: optional UI runtime does not require component Portable State
+01:19 +55: packages/ccrouter_test/generator_test/package_workspace_test.dart: Package index fingerprint is canonical and detects metadata changes
+01:19 +56: packages/ccrouter_test/generator_test/package_workspace_test.dart: capability catalog merges route contract and implementation sources
+01:19 +57: packages/ccrouter_test/generator_test/package_workspace_test.dart: capability catalog retains schema-v2 file-only locations
+01:19 +58: packages/ccrouter_test/generator_test/package_workspace_test.dart: legacy route implementation does not invent a contract location
+01:19 +59: packages/ccrouter_test/generator_test/package_workspace_test.dart: metadata cache detects add change rename and delete by exact bytes
+01:19 +60: packages/ccrouter_test/generator_test/package_workspace_test.dart: metadata cache tracks Service metadata add change rename and delete
+01:19 +61: loading packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart
+01:19 +61: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: union schema 3 validates mixed documents and rejects stale snapshots
+01:19 +62: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: review UI workspace rejects fractional version tag representations
+01:19 +63: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: valid UI workspace emits no diagnostics
+01:19 +64: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator >=1.0.0
+01:19 +65: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator <=1.0.0
+01:19 +66: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator <2.0.0
+01:19 +67: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator >=1.0.0	<2.0.0
+01:19 +68: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator >=1.0.0
+<2.0.0
+01:19 +69: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI contract_duplicate has an authored location and correction
+01:19 +70: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI owner_mismatch has an authored location and correction
+01:19 +71: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI implementation_duplicate has an authored location and correction
+01:19 +72: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI dependency_missing has an authored location and correction
+01:19 +73: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI stale_generated_output has an authored location and correction
+01:19 +74: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI missing_implementation has an authored location and correction
+01:19 +75: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI fingerprint_changed has an authored location and correction
+01:19 +76: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI version_out_of_range has an authored location and correction
+01:19 +77: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: invalid portable source positions never become IDE diagnostics
+01:19 +78: loading packages/ccrouter_test/generator_test/ui_fragment_tooling_test.dart
+01:19 +78: packages/ccrouter_test/generator_test/ui_fragment_tooling_test.dart: preview has no writes and CLI execution rejects duplicate targets
+01:21 +79: packages/ccrouter_test/generator_test/ui_fragment_tooling_test.dart: all targets are checked before any source is written
+01:21 +80: packages/ccrouter_test/generator_test/ui_fragment_tooling_test.dart: execution cannot overwrite a target created after preview
+01:21 +81: packages/ccrouter_test/generator_test/ui_fragment_tooling_test.dart: invalid names, traversal, unknown owners and linked parents are rejected
+01:21 +82: packages/ccrouter_test/generator_test/ui_fragment_tooling_test.dart: scaffold and printed Consumer steps pass the real UI Builders
+01:26 +83: packages/ccrouter_test/generator_test/ui_fragment_tooling_test.dart: UI import proofs honor hide, conditional exports and repeated show
+01:26 +84: packages/ccrouter_test/generator_test/ui_fragment_tooling_test.dart: UI public exports normalize trailing slash and dot Package roots
+01:26 +85: packages/ccrouter_test/generator_test/ui_fragment_tooling_test.dart: UI proof deferral preserves existing Service public-library facts
+01:26 +86: All tests passed!

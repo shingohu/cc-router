@@ -1,0 +1,20 @@
+00:00 +0: loading <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_test/test/ui_fragment_test.dart
+00:00 +0: review Host rejects a stale Contract version even inside the range
+00:00 +1: review stale shape updates permanently revoke retained Actions
+00:00 +2: review stale version updates permanently revoke retained Actions
+00:00 +3: review stale range updates permanently revoke retained Actions
+00:00 +4: sealed payloads preserve instances, callbacks and all revocation fences
+00:00 +5: optional binding failure rolls back in reverse order and blocks reentry
+00:00 +6: failing detach still releases other bindings and existing App Services
+00:00 +7: unbound UI fails explicitly without changing ordinary Host startup
+00:00 +8: Action failures propagate and ignored Action diagnostics remain bounded
+00:00 +9: required catalog fails closed for missing, duplicate and undeclared edges
+00:00 +10: version and public schema are enforced independently of Core kinds
+00:00 +11: initialization failure rolls back the optional binding for a later Host
+00:00 +12: Props/callback update keeps State, Key change disposes it
+00:00 +13: two instances remain independent and inactive KeepAlive suppresses actions
+00:00 +14: GlobalKey reparenting does not terminate State
+00:00 +15: shutdown invalidates late Actions; reinitialize requires explicit remount
+00:00 +16: DTO payload uses latest instance callback and is invalid after unmount or shutdown
+00:00 +17: forged Client edge and generic signature fail before rendering
+00:00 +18: All tests passed!

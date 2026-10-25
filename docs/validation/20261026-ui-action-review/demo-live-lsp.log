@@ -1,0 +1,3 @@
+PASS: actual Demo root and remote bootstrap reject the synthetic open Action leaf.
+PASS: unsaved repair accepts sealed/nested/super-field data in the actual Demo session.
+PASS: original overlay restored; Demo source unchanged. Fresh official JIT Server used a temporary cache.

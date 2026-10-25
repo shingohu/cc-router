@@ -1,0 +1,4 @@
+Resolved Git Plugin: file://<home>/.pub-cache/git/cc-router-f0bd3c2af3c3f6282f503e7182a41779beeb19f5/packages/ccrouter_analyzer_plugin
+Pinned Plugin rejected the open leaf in the defining-library diagnostic.
+Pinned Plugin accepted sealed/nested/super-field data after an unsaved part repair.
+Fresh isolated Analysis Server passed; existing IDE caches were not changed.

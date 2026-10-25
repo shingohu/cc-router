@@ -1,0 +1,3 @@
+00:00 +0: loading test/analysis_server_integration_test.dart
+00:00 +0: review real LSP refreshes terminal DTO facts after part-only edits
+00:05 +1: All tests passed!

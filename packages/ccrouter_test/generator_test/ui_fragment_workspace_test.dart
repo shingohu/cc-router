@@ -83,6 +83,23 @@ void main() {
       );
     },
   );
+  test(
+    'review UI workspace rejects fractional version tag representations',
+    () {
+      final docs = documents();
+      docs.first['uiSchemaVersion'] = 1.0;
+      expect(
+        validateUIFragmentWorkspace(docs, host: true),
+        contains(contains('unsupported UI schema')),
+      );
+      docs.first['uiSchemaVersion'] = 1;
+      (docs.first['uiContracts'] as List).single['uiSchemaVersion'] = 1.0;
+      expect(
+        validateUIFragmentWorkspace(docs, host: true),
+        contains(contains('unsupported UI schema')),
+      );
+    },
+  );
   test('valid UI workspace emits no diagnostics', () {
     expect(
       validateUIFragmentWorkspaceDiagnostics(documents(), host: true),

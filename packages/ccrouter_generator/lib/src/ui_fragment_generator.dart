@@ -13,6 +13,7 @@ import 'contract_fingerprint.dart';
 import 'generated_client_naming.dart';
 
 part 'ui_action_schema.dart';
+part 'ui_schema_support.dart';
 
 /// Creates the opt-in UI source or metadata builder; old libraries emit nothing.
 Builder createUIFragmentBuilder({required bool metadata}) =>
@@ -48,11 +49,17 @@ final class _Contract {
 
   /// Validates the marker and reads its generic annotation schema.
   Future<void> _read(InterfaceElement marker, BuildStep step) async {
-    final annotation = _checker(
+    final annotations = _checker(
       'CCUIFragmentContract',
-    ).firstAnnotationOfExact(marker, throwOnUnresolved: false);
-    if (annotation == null ||
-        marker is! ClassElement ||
+    ).annotationsOfExact(marker, throwOnUnresolved: false).toList();
+    if (annotations.length != 1) {
+      _fail(
+        'UI contract requires exactly one CCUIFragmentContract annotation.',
+        marker,
+      );
+    }
+    final annotation = annotations.single;
+    if (marker is! ClassElement ||
         marker.typeParameters.isNotEmpty ||
         marker.isPrivate) {
       _fail('UI contract must be a public non-generic marker class.', marker);
@@ -95,17 +102,18 @@ final class _Contract {
         marker,
       );
     }
-    final actionReader = _ActionSchema(step);
+    final subtypes = _DataSubtypeIndex();
+    final actionReader = _ActionSchema(step, subtypes);
     final hasUnion = actionReader.containsUnion(action);
     schemaVersion = hasUnion ? 3 : (actionElement is EnumElement ? 1 : 2);
     final actionShape = hasUnion
         ? await actionReader.read(action, <Element>{}, marker)
-        : _schema(action, <Element>{}, marker);
+        : _schema(action, <Element>{}, marker, subtypeIndex: subtypes);
     final shape = {
       'schemaVersion': schemaVersion,
       'owner': owner,
       'id': id,
-      'props': _schema(props, <Element>{}, marker),
+      'props': _schema(props, <Element>{}, marker, subtypeIndex: subtypes),
       'action': actionShape,
     };
     fingerprint = contractShapeFingerprint(shape);
@@ -118,8 +126,12 @@ final class _Contract {
             name.contains('#')) {
           publicTypes.add(name);
         }
-        for (final nested in value.values) {
-          collect(nested);
+        for (final entry in value.entries) {
+          // Raw default data can itself contain a field named type and a
+          // package-like string. Only declared schema nodes prove types.
+          if (entry.key != 'default' && entry.key != 'initializer') {
+            collect(entry.value);
+          }
         }
       } else if (value is List) {
         for (final nested in value) {
@@ -189,7 +201,16 @@ final class _Contract {
 }
 
 /// Computes the shared closed DTO schema; collections and unions are unsupported.
-Object _schema(DartType type, Set<Element> stack, Element origin) {
+Object _schema(
+  DartType type,
+  Set<Element> stack,
+  Element origin, {
+  _DataSubtypeIndex? subtypeIndex,
+  _LegacySchemaBudget? budget,
+}) {
+  final subtypes = subtypeIndex ?? _DataSubtypeIndex();
+  final work = budget ?? _LegacySchemaBudget();
+  work.visit(stack.length, origin);
   if (type is! InterfaceType ||
       type.element.isPrivate ||
       type.typeArguments.isNotEmpty) {
@@ -248,7 +269,7 @@ Object _schema(DartType type, Set<Element> stack, Element origin) {
         'package:ccrouter_contracts/',
         'package:ccrouter_ui/',
       ].any(uri.startsWith) ||
-      element.supertype?.element.displayName != 'Object' ||
+      element.supertype?.isDartCoreObject != true ||
       element.interfaces.isNotEmpty ||
       element.mixins.isNotEmpty ||
       element.methods.isNotEmpty ||
@@ -258,6 +279,12 @@ Object _schema(DartType type, Set<Element> stack, Element origin) {
     _fail(
       'UI DTOs must be final, acyclic Pure Dart data classes without inheritance.',
       origin,
+    );
+  }
+  if (subtypes.subtypes(element).isNotEmpty) {
+    _fail(
+      'UI DTOs must be terminal data classes; same-library subclasses and implementations are unsupported.',
+      element,
     );
   }
   if (element.constructors.isEmpty ||
@@ -278,11 +305,18 @@ Object _schema(DartType type, Set<Element> stack, Element origin) {
           }
           return {
             'name': field.displayName,
-            'schema': _schema(field.type, stack, field),
+            'schema': _schema(
+              field.type,
+              stack,
+              field,
+              subtypeIndex: subtypes,
+              budget: work,
+            ),
             if (field.hasInitializer)
               'initializer': _constantShape(
                 field.computeConstantValue(),
                 field,
+                budget: work,
               ),
           };
         })(),
@@ -301,9 +335,16 @@ Object _schema(DartType type, Set<Element> stack, Element origin) {
                     ? _constantShape(
                         parameter.computeConstantValue(),
                         parameter,
+                        budget: work,
                       )
                     : null,
-                'schema': _schema(parameter.type, stack, parameter),
+                'schema': _schema(
+                  parameter.type,
+                  stack,
+                  parameter,
+                  subtypeIndex: subtypes,
+                  budget: work,
+                ),
               },
           ],
         },
@@ -343,7 +384,13 @@ void _validateDTOConstructors(ClassElement element, List<FieldElement> fields) {
 }
 
 /// Fingerprints effective constant defaults, including imported const values.
-Object? _constantShape(DartObject? value, Element origin) {
+Object? _constantShape(
+  DartObject? value,
+  Element origin, {
+  _LegacySchemaBudget? budget,
+  int depth = 0,
+}) {
+  budget?.visit(depth, origin);
   if (value == null) _fail('UI DTO default could not be evaluated.', origin);
   if (value.isNull) return null;
   if (value.toBoolValue() case final boolean?) return boolean;
@@ -366,6 +413,8 @@ Object? _constantShape(DartObject? value, Element origin) {
         field.displayName: _constantShape(
           value.getField(field.displayName),
           origin,
+          budget: budget,
+          depth: depth + 1,
         ),
     };
   }
@@ -437,10 +486,17 @@ final class _UIFragmentBuilder implements Builder {
       }
     }
     for (final function in library.topLevelFunctions) {
-      final annotation = _checker(
+      final annotations = _checker(
         'CCUIFragmentRenderer',
-      ).firstAnnotationOfExact(function, throwOnUnresolved: false);
-      if (annotation == null) continue;
+      ).annotationsOfExact(function, throwOnUnresolved: false).toList();
+      if (annotations.isEmpty) continue;
+      if (annotations.length != 1) {
+        _fail(
+          'UI Renderer requires exactly one CCUIFragmentRenderer annotation per function.',
+          function,
+        );
+      }
+      final annotation = annotations.single;
       final marker = annotation.getField('contract')?.toTypeValue();
       if (marker is! InterfaceType)
         _fail('Renderer requires a UI contract marker.', function);

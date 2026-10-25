@@ -106,7 +106,9 @@ UI source metadata 使用 schema 5；enum Action 保留 `uiSchemaVersion: 1` / I
 受限 DTO Action 使用 UI schema 2 / Index schema 4；根 Action 或载荷包含 sealed union 时
 使用 UI schema 3 / Index schema 5，混合文档取最高版本。sealed 根直接继承 Object，
 同库/part 内的变体必须为无后续子类型的 public final 数据类，支持 const `super.field`
-转发和继承 final 字段。Props 仍只允许原有 DTO。
+转发和继承 final 字段。Props 仍只允许原有 DTO。普通 DTO 也禁止同库子类或实现；
+旧 DTO 展开受 16,384 节点 / 256 层保护，union 类型图仍为 512 / 32，常量单独受
+16,384 / 256 保护。正常旧指纹不变；错标、未知或非整数版本在索引编码/读取时明确拒绝。
 未声明 UI 的 Package 保持原 schema。必须配套使用匹配版本的 Generator、Contracts、CCRouter
 和 UI Package。`create ui-fragment ... --dry-run` 可预览契约、公共入口及可选 Renderer；
 UI `find --usage` 从索引中的完整 schema 公共导出和实际 alias 输出接入步骤，旧索引需重生成。

@@ -6,6 +6,10 @@
 
 ## 最新源码自动化证据
 
+[2026-10-26 UI Action 扩大循环审查](20261026-ui-action-review/report.md)：数据闭包、
+类型身份、默认值/导出、校验预算、metadata 版本、Runtime 快照及旧回调撤销；保留 RED/GREEN
+和复审轮次，包含可观察的复杂度限制及 IDE 缓存边界。
+
 [2026-10-25 至 26 sealed Action 与嵌套联合](20261025-ui-action-unions/report.md)：独立 schema 3、
 旧 enum/DTO 对照、字段继承/const super、跨包/part/Portable 分发、真实 Server 与两阶段 pin。
 首次失败、环境干扰和 GUI IDE 缓存边界单独保留。

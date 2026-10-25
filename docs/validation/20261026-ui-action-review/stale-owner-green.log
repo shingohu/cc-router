@@ -1,0 +1,4 @@
+00:00 +0: loading test/ui_analysis_test.dart
+00:00 +0: review resolved UI Owner defers stale annotation facts removed=false
+00:02 +1: review resolved UI Owner defers stale annotation facts removed=true
+00:02 +2: All tests passed!

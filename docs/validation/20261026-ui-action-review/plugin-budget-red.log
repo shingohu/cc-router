@@ -1,0 +1,18 @@
+00:00 +0: loading test/ui_analysis_test.dart
+00:00 +0: review editor checks bound work for repeated DTO graphs
+00:04 +0 -1: review editor checks bound work for repeated DTO graphs [E]
+  Expected: a value less than Duration:<0:00:02.000000>
+    Actual: Duration:<0:00:03.289721>
+     Which: is not a value less than Duration:<0:00:02.000000>
+  Only Plugin validation is timed, after Analyzer resolution. Excess work must defer to the Generator.
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 97:5  main.<fn>
+
+00:04 +0 -1: Some tests failed.
+
+Failing tests:
+  test/ui_analysis_test.dart: review editor checks bound work for repeated DTO graphs
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

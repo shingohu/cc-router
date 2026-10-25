@@ -1,0 +1,14 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/ui_action_union_test.dart
+00:00 +0: review marker cannot silently select the first of duplicate UI Contracts
+00:10 +0 -1: review marker cannot silently select the first of duplicate UI Contracts [E]
+  Expected: empty
+    Actual: '{"schemaVersion":5,"componentDeclarations":[],"package":"ccrouter_test","source":"lib/src/ui_probe.dart","uiSchemaVersion":1,"uiLibrary":"lib/src/ccrouter_generated/ui/ui_probe.ui.g.dart","uiContracts":[{"declaration":{"symbol":"Summary","packageUri":"package:ccrouter_test/src/ui_probe.dart","libraryUri":"package:ccrouter_test/src/ui_probe.dart","line":12,"column":22},"componentId":"orders","id":"orders.other","version":"1.0.0","shapeFingerprint":"5d075893cc2f199b63e35358d11d7e41fe409330d81aa74a0af061f7728c248c","publicTypes":[{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Action"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Props"},{"package":"ccrouter_test","source":"lib/src/ui_probe.dart","symbol":"Summary"}]}],"uiRenderers":[],"uiRequirements":[]}\n'
+              ''
+
+  package:matcher                                                       expect
+  packages/ccrouter_test/generator_test/ui_action_union_test.dart 90:5  main.<fn>
+
+00:10 +0 -1: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

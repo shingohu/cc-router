@@ -83,6 +83,141 @@ String _fingerprint(String output) =>
     (jsonDecode(output) as Map)['uiContracts'][0]['shapeFingerprint'] as String;
 
 void main() {
+  test('review Renderer cannot silently select the first annotation', () async {
+    final result = await _generate('''$_source
+@CCUIFragmentContract<Props, Action>(componentId: owner, id: 'orders.other', version: '1.0.0')
+abstract final class Other {}
+@CCUIFragmentRenderer(Summary)
+@CCUIFragmentRenderer(Other)
+Widget render(CCUIFragmentRenderInput<Props, Action> input) => const SizedBox();
+''');
+    expect(result.output, isEmpty);
+    expect(result.logs, contains('exactly one'));
+  });
+
+  test(
+    'review marker cannot silently select the first of duplicate UI Contracts',
+    () async {
+      final source = _source.replaceFirst(
+        '@CCUIFragmentContract<Props, Action>',
+        "@CCUIFragmentContract<Props, Action>(componentId: owner, id: 'orders.other', version: '1.0.0')\n@CCUIFragmentContract<Props, Action>",
+      );
+      final result = await _generate(source);
+      expect(result.output, isEmpty);
+      expect(result.logs, contains('exactly one'));
+    },
+  );
+
+  for (final unionMode in [false, true]) {
+    test(
+      'review default type text stays data in schema ${unionMode ? 3 : 2}',
+      () async {
+        final action = unionMode
+            ? '''
+sealed class Action { const Action(); }
+final class Selected extends Action {
+  const Selected({this.detail = const Detail('package:ccrouter_test/src/ui_probe.dart#Phantom')});
+  final Detail detail;
+}
+'''
+            : '''
+final class Action {
+  const Action({this.detail = const Detail('package:ccrouter_test/src/ui_probe.dart#Phantom')});
+  final Detail detail;
+}
+''';
+        final result = await _generate(
+          _withAction('''$action
+final class Detail { const Detail(this.type); final String type; }
+'''),
+        );
+        expect(result.output, isNotEmpty, reason: result.logs);
+        final types =
+            (jsonDecode(result.output) as Map)['uiContracts'][0]['publicTypes']
+                as List;
+        expect(types.map((type) => type['symbol']), isNot(contains('Phantom')));
+      },
+    );
+  }
+  test(
+    'review same-name Object cannot bypass direct superclass identity',
+    () async {
+      final result = await _generate(
+        _withAction('''
+class Object { const Object(); String get id => 'unmodeled'; }
+final class Action extends Object { const Action(); }
+'''),
+      );
+      expect(result.output, isEmpty);
+      expect(result.logs, contains('UI DTO'));
+    },
+  );
+  for (final unionMode in [false, true]) {
+    test(
+      'review nested DTO rejects unmodeled subtypes in schema ${unionMode ? 3 : 2}',
+      () async {
+        final action = unionMode
+            ? '''
+sealed class Action { const Action(); }
+final class Selected extends Action { const Selected(this.detail); final Detail detail; }
+'''
+            : 'final class Action { const Action(this.detail); final Detail detail; }';
+        final result = await _generate(
+          _withAction('''$action
+final class Detail { const Detail(this.id); final String id; }
+final class Derived extends Detail {
+  const Derived(super.id);
+  @override String get id => 'unmodeled';
+}
+'''),
+        );
+        expect(result.output, isEmpty);
+        expect(result.logs, contains('UI DTO'));
+      },
+    );
+  }
+  test('review Props reject same-library subtypes', () async {
+    final result = await _generate('''$_source
+final class DerivedProps extends Props {
+  const DerivedProps({required super.orderId});
+  @override int get orderId => 0;
+}
+''');
+    expect(result.output, isEmpty);
+    expect(result.logs, contains('UI DTO'));
+  });
+  test(
+    'review DTO subclasses in parts cannot bypass the closed schema',
+    () async {
+      final source = _source.replaceFirst(
+        'const owner',
+        "part 'ui_hidden.dart';\nconst owner",
+      );
+      final result = await _generate(
+        source,
+        additionalSources: {
+          'ccrouter_test|lib/src/ui_hidden.dart':
+              "part of 'ui_probe.dart'; final class Derived extends Props { const Derived({required super.orderId}); @override int get orderId => 0; }",
+        },
+      );
+      expect(result.output, isEmpty);
+      expect(result.logs, contains('UI DTO'));
+    },
+  );
+  test('review excessive legacy DAG fails with a bounded diagnostic', () async {
+    final nodes = List.generate(7, (i) {
+      final child = i == 6 ? 'String' : 'Node${i + 1}';
+      return 'final class Node$i { const Node$i(this.left, this.right); final $child left; final $child right; }';
+    }).join('\n');
+    final result = await _generate(
+      _withAction(
+        'final class Action { const Action(this.node); final Node0 node; }\n$nodes',
+      ),
+    );
+    expect(result.output, isEmpty);
+    expect(result.logs, contains('UI DTO schema exceeds'));
+  });
+
   test('legacy enum fingerprint stays byte compatible', () async {
     final result = await _generate(_source);
     expect(

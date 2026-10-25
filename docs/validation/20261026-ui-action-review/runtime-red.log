@@ -1,0 +1,37 @@
+00:00 +0: loading <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_test/test/ui_fragment_test.dart
+00:00 +0: review Host rejects a stale Contract version even inside the range
+00:00 +0 -1: review Host rejects a stale Contract version even inside the range [E]
+  Expected: throws <Instance of 'CCUIFragmentError'> with `code`: 'staleGeneratedOutput'
+    Actual: <Closure: () => CCHostAssembly>
+     Which: returned <Instance of 'CCHostAssembly'>
+
+  package:matcher                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18       expect
+  packages/ccrouter_test/test/ui_fragment_test.dart 225:5  main.<fn>
+
+00:00 +0 -1: review stale schema updates permanently revoke retained Actions
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: <0>
+  Actual: <1>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file://<home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_test/test/ui_fragment_test.dart:244:5)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file://<home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_test/test/ui_fragment_test.dart line 244
+The test description was:
+  review stale schema updates permanently revoke retained Actions
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +0 -2: review stale schema updates permanently revoke retained Actions [E]
+  Test failed. See exception logs above.
+  The test description was: review stale schema updates permanently revoke retained Actions
+
+00:00 +0 -2: Some tests failed.

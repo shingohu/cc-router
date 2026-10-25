@@ -1,0 +1,193 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart
+00:00 +0: review index writer rejects inconsistent UI versions (2, 3)
+00:00 +0 -1: review index writer rejects inconsistent UI versions (2, 3) [E]
+  Expected: throws <Instance of 'CCPackageWorkspaceException'>
+    Actual: <Closure: () => String>
+     Which: returned '{\n'
+                       '  "schemaVersion": 4,\n'
+                       '  "generatorVersion": "0.1.5",\n'
+                       '  "package": {\n'
+                       '    "name": "review",\n'
+                       '    "version": "1.0.0"\n'
+                       '  },\n'
+                       '  "contentFingerprint": "e8871f771d5fd35f94129fdd6c2bd366b898a0838c9fc0ea2b41682bbc179645",\n'
+                       '  "bundle": null,\n'
+                       '  "dependencies": [],\n'
+                       '  "metadata": [\n'
+                       '    {\n'
+                       '      "schemaVersion": 5,\n'
+                       '      "package": "review",\n'
+                       '      "uiSchemaVersion": 2,\n'
+                       '      "uiContracts": [\n'
+                       '        {\n'
+                       '          "componentId": "owner",\n'
+                       '          "id": "panel",\n'
+                       '          "version": "1.0.0",\n'
+                       '          "uiSchemaVersion": 3\n'
+                       '        }\n'
+                       '      ]\n'
+                       '    }\n'
+                       '  ],\n'
+                       '  "capabilityCatalog": {\n'
+                       '    "schemaVersion": 1,\n'
+                       '    "records": []\n'
+                       '  }\n'
+                       '}\n'
+                       ''
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart 27:7  main.<fn>
+
+00:00 +0 -1: review index reader rejects inconsistent UI versions (2, 3)
+00:00 +0 -2: review index reader rejects inconsistent UI versions (2, 3) [E]
+  Expected: throws <Instance of 'CCPackageWorkspaceException'>
+    Actual: <Instance of 'Future<CCPackageIndex>'>
+     Which: emitted <Instance of 'CCPackageIndex'>
+
+  packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart 44:7  main.<fn>
+
+00:00 +0 -2: review index writer rejects inconsistent UI versions (3, 2)
+00:00 +0 -3: review index writer rejects inconsistent UI versions (3, 2) [E]
+  Expected: throws <Instance of 'CCPackageWorkspaceException'>
+    Actual: <Closure: () => String>
+     Which: returned '{\n'
+                       '  "schemaVersion": 5,\n'
+                       '  "generatorVersion": "0.1.5",\n'
+                       '  "package": {\n'
+                       '    "name": "review",\n'
+                       '    "version": "1.0.0"\n'
+                       '  },\n'
+                       '  "contentFingerprint": "bebebb62e653b9a77a83e5b1ec0f5b700c6576a00dba324bb1c0b2200300304b",\n'
+                       '  "bundle": null,\n'
+                       '  "dependencies": [],\n'
+                       '  "metadata": [\n'
+                       '    {\n'
+                       '      "schemaVersion": 5,\n'
+                       '      "package": "review",\n'
+                       '      "uiSchemaVersion": 3,\n'
+                       '      "uiContracts": [\n'
+                       '        {\n'
+                       '          "componentId": "owner",\n'
+                       '          "id": "panel",\n'
+                       '          "version": "1.0.0",\n'
+                       '          "uiSchemaVersion": 2\n'
+                       '        }\n'
+                       '      ]\n'
+                       '    }\n'
+                       '  ],\n'
+                       '  "capabilityCatalog": {\n'
+                       '    "schemaVersion": 1,\n'
+                       '    "records": []\n'
+                       '  }\n'
+                       '}\n'
+                       ''
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart 27:7  main.<fn>
+
+00:00 +0 -3: review index reader rejects inconsistent UI versions (3, 2)
+00:00 +0 -4: review index reader rejects inconsistent UI versions (3, 2) [E]
+  Expected: throws <Instance of 'CCPackageWorkspaceException'>
+    Actual: <Instance of 'Future<CCPackageIndex>'>
+     Which: emitted <Instance of 'CCPackageIndex'>
+
+  packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart 44:7  main.<fn>
+
+00:00 +0 -4: review index writer rejects inconsistent UI versions (3, 99)
+00:00 +0 -5: review index writer rejects inconsistent UI versions (3, 99) [E]
+  Expected: throws <Instance of 'CCPackageWorkspaceException'>
+    Actual: <Closure: () => String>
+     Which: returned '{\n'
+                       '  "schemaVersion": 5,\n'
+                       '  "generatorVersion": "0.1.5",\n'
+                       '  "package": {\n'
+                       '    "name": "review",\n'
+                       '    "version": "1.0.0"\n'
+                       '  },\n'
+                       '  "contentFingerprint": "c0a7ec302c0f0876d415650e7fef289bdaccfc0a75b76f33d336adc8f10f7d87",\n'
+                       '  "bundle": null,\n'
+                       '  "dependencies": [],\n'
+                       '  "metadata": [\n'
+                       '    {\n'
+                       '      "schemaVersion": 5,\n'
+                       '      "package": "review",\n'
+                       '      "uiSchemaVersion": 3,\n'
+                       '      "uiContracts": [\n'
+                       '        {\n'
+                       '          "componentId": "owner",\n'
+                       '          "id": "panel",\n'
+                       '          "version": "1.0.0",\n'
+                       '          "uiSchemaVersion": 99\n'
+                       '        }\n'
+                       '      ]\n'
+                       '    }\n'
+                       '  ],\n'
+                       '  "capabilityCatalog": {\n'
+                       '    "schemaVersion": 1,\n'
+                       '    "records": []\n'
+                       '  }\n'
+                       '}\n'
+                       ''
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart 27:7  main.<fn>
+
+00:00 +0 -5: review index reader rejects inconsistent UI versions (3, 99)
+00:00 +0 -6: review index reader rejects inconsistent UI versions (3, 99) [E]
+  Expected: throws <Instance of 'CCPackageWorkspaceException'>
+    Actual: <Instance of 'Future<CCPackageIndex>'>
+     Which: emitted <Instance of 'CCPackageIndex'>
+
+  packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart 44:7  main.<fn>
+
+00:00 +0 -6: review index writer rejects inconsistent UI versions (99, 99)
+00:00 +0 -7: review index writer rejects inconsistent UI versions (99, 99) [E]
+  Expected: throws <Instance of 'CCPackageWorkspaceException'>
+    Actual: <Closure: () => String>
+     Which: returned '{\n'
+                       '  "schemaVersion": 3,\n'
+                       '  "generatorVersion": "0.1.5",\n'
+                       '  "package": {\n'
+                       '    "name": "review",\n'
+                       '    "version": "1.0.0"\n'
+                       '  },\n'
+                       '  "contentFingerprint": "fbf56615e002158436638cf00d14afb731281fd98e82d8d9e972ca6e88547b92",\n'
+                       '  "bundle": null,\n'
+                       '  "dependencies": [],\n'
+                       '  "metadata": [\n'
+                       '    {\n'
+                       '      "schemaVersion": 5,\n'
+                       '      "package": "review",\n'
+                       '      "uiSchemaVersion": 99,\n'
+                       '      "uiContracts": [\n'
+                       '        {\n'
+                       '          "componentId": "owner",\n'
+                       '          "id": "panel",\n'
+                       '          "version": "1.0.0",\n'
+                       '          "uiSchemaVersion": 99\n'
+                       '        }\n'
+                       '      ]\n'
+                       '    }\n'
+                       '  ],\n'
+                       '  "capabilityCatalog": {\n'
+                       '    "schemaVersion": 1,\n'
+                       '    "records": []\n'
+                       '  }\n'
+                       '}\n'
+                       ''
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart 27:7  main.<fn>
+
+00:00 +0 -7: review index reader rejects inconsistent UI versions (99, 99)
+00:00 +0 -8: review index reader rejects inconsistent UI versions (99, 99) [E]
+  Expected: throws <Instance of 'CCPackageWorkspaceException'>
+    Actual: <Instance of 'Future<CCPackageIndex>'>
+     Which: emitted <Instance of 'CCPackageIndex'>
+
+  packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart 44:7  main.<fn>
+
+00:00 +0 -8: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

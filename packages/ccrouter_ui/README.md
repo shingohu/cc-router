@@ -16,6 +16,9 @@ DTO Actions without unions need UI schema 2 / Package Index 4 compatible tooling
 resources; `active: false` suppresses Actions, while pausing work and Session
 reset remain application responsibilities. Runtime shutdown invalidates old
 callbacks, and reinitialization requires an explicit UI subtree remount.
+Contract version snapshots must match exactly. Schema/version/range changes
+revoke retained sinks before rebuild validation; restoring valid glue creates
+a new sink rather than reviving an old callback.
 
 See [integration guidance](../../skills/ccrouter-integration-development/references/ui-fragments.md)
 and the [design and implementation record](../../docs/CCRouter-ui-fragment-design.md).

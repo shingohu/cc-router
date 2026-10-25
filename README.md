@@ -92,13 +92,17 @@ Generator、Contracts、CCRouter 和 UI Package，不能混用旧生成工具。
 支持 final、const、无继承的 DTO Props（scalar、普通 enum、嵌套 DTO）；Action 可用普通 enum
 或受限不可变 DTO，也支持根 Action 和载荷中的受限 sealed union。Props 仍只允许原有 DTO；
 集合、函数型 Props、动态 Slot 和 Renderer 热替换仍不支持。
-scalar 只能用于 DTO 字段，不能直接作为 Action 类型。
+scalar 只能用于 DTO 字段，不能直接作为 Action 类型；每个 marker/Renderer 函数只允许一个对应 UI 注解。
 普通 enum 不允许自定义成员、构造器、mixin 或 interface。DTO 通过 `this.field` 参数或字段
 声明处的常量初始值构造，两处默认值均计入指纹；当前拒绝初始化列表赋值和重定向构造器。
+DTO（含 Props）须为真正的数据叶子，同库/part 子类或实现也会拒绝；`Object` 按 SDK 身份校验。
+旧 DTO 的展开校验限制为 16,384 节点 / 256 层，union 类型图仍为 512 节点 / 32 层，
+默认常量也有 16,384 节点 / 256 层保护，超复杂图明确报错。正常旧模型的指纹与版本不变。
 UI 层允许类型化 `onAction`，不放宽 Service 对 Widget、BuildContext、callback、Stream
 的限制。实例身份、更新和释放遵循 Flutter Key/State；`active` 是宿主许可，不是自动曝光。
+Host 的 Contract 版本快照须精确一致，SemVer 范围不替代过期检查。
 Runtime 关闭立即使旧 Action 失效；重新初始化后 Host 必须显式重挂 UI 子树。
-实例卸载或 capability identity 更新会撤销旧 Action，并解除其对消费方回调的引用；
+实例卸载、capability identity 或生成 schema/version/range 快照更新会撤销旧 Action，并解除其对消费方回调的引用；
 仅保留失效 Action 不会继续保留 Fragment State/Props。B 仍须取消自己拥有的异步工作，
 并释放自己保存的 render input、Props、controller 和 subscription。
 `active` 只保护 Action 转发，无法撤销调用 `onAction` 前的业务副作用；旧点击回调应在执行时

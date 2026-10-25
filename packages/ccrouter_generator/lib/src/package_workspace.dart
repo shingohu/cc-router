@@ -385,11 +385,12 @@ final class CCPackageIndex {
     }
     final object = _decodeObject(await file.readAsString(), file.path);
     final schemaVersion = object['schemaVersion'];
-    if (schemaVersion != 1 &&
-        schemaVersion != 3 &&
-        schemaVersion != 4 &&
-        schemaVersion != 5 &&
-        schemaVersion != ccrouterPackageIndexSchemaVersion) {
+    if (schemaVersion is! int ||
+        (schemaVersion != 1 &&
+            schemaVersion != 3 &&
+            schemaVersion != 4 &&
+            schemaVersion != 5 &&
+            schemaVersion != ccrouterPackageIndexSchemaVersion)) {
       throw CCPackageWorkspaceException(
         'Unsupported CCRouter Package index schema in ${file.path}: '
         '${object['schemaVersion']}. Expected '
@@ -420,13 +421,11 @@ final class CCPackageIndex {
       );
     }
     final metadata = _objectList(object['metadata']);
-    if (metadata.any((document) => document['uiSchemaVersion'] == 3)
-        ? schemaVersion != 5
-        : (schemaVersion != 4 &&
-              metadata.any((document) => document['uiSchemaVersion'] == 2))) {
+    final requiredIndex = _requiredUIIndexSchema(metadata, package.name);
+    if (requiredIndex > ccrouterPackageIndexSchemaVersion &&
+        schemaVersion != requiredIndex) {
       throw CCPackageWorkspaceException(
-        'UI Action metadata requires Package index schema '
-        '${metadata.any((d) => d['uiSchemaVersion'] == 3) ? 5 : 4} in ${file.path}. '
+        'UI Action metadata requires Package index schema $requiredIndex in ${file.path}. '
         'Regenerate with a compatible Generator.',
       );
     }
@@ -515,13 +514,7 @@ final class CCPackageIndex {
   /// Encodes this index with stable key ordering and indentation.
   String toJson() =>
       '${const JsonEncoder.withIndent('  ').convert(<String, Object?>{
-        'schemaVersion': metadata.any((document) => document['uiSchemaVersion'] == 3)
-            ? 5
-            : metadata.any((document) => document['uiSchemaVersion'] == 2)
-            ? 4
-            : metadata.any((document) => document.containsKey('uiSchemaVersion'))
-            ? 3
-            : ccrouterPackageIndexSchemaVersion,
+        'schemaVersion': _requiredUIIndexSchema(metadata, packageName),
         'generatorVersion': ccrouterPackageIndexGeneratorVersion,
         'package': <String, Object?>{'name': packageName, 'version': packageVersion},
         'contentFingerprint': contentFingerprint,
@@ -530,6 +523,69 @@ final class CCPackageIndex {
         'metadata': metadata,
         'capabilityCatalog': capabilityCatalog.toJson(),
       })}\n';
+}
+
+/// Derives the minimum UI reader only after document/record agreement is proven.
+///
+/// Planning-only empty UI documents keep their explicit version. Populated
+/// documents must state the exact highest record version; omitted record flags
+/// are legacy schema 1. This prevents a stale outer tag from downgrading unions
+/// to a reader that never understood them, including in read-only find queries.
+int _requiredUIIndexSchema(
+  List<Map<String, Object?>> metadata,
+  String packageName,
+) {
+  var highest = 0;
+  int version(Object? value) {
+    if (value is! int || value < 1 || value > 3) {
+      throw CCPackageWorkspaceException(
+        'Unsupported UI schema version in Package $packageName; expected integer 1, 2 or 3. Upgrade the Generator and regenerate.',
+      );
+    }
+    return value;
+  }
+
+  for (final document in metadata) {
+    final explicit = document.containsKey('uiSchemaVersion');
+    final declared = explicit ? version(document['uiSchemaVersion']) : 1;
+    var required = 1;
+    var populated = false;
+    for (final key in ['uiContracts', 'uiRenderers', 'uiRequirements']) {
+      if (!document.containsKey(key)) continue;
+      final records = document[key];
+      if (records is! List) {
+        throw CCPackageWorkspaceException(
+          'Invalid UI schema metadata in Package $packageName: $key must be a list. Regenerate the Package.',
+        );
+      }
+      for (final record in records) {
+        if (record is! Map) {
+          throw CCPackageWorkspaceException(
+            'Invalid UI schema metadata in Package $packageName: $key contains a non-record. Regenerate the Package.',
+          );
+        }
+        populated = true;
+        final needed = record.containsKey('uiSchemaVersion')
+            ? version(record['uiSchemaVersion'])
+            : 1;
+        if (needed > required) required = needed;
+      }
+    }
+    if (!explicit && !populated) continue;
+    if (document['schemaVersion'] != null &&
+        (document['schemaVersion'] is! int || document['schemaVersion'] != 5)) {
+      throw CCPackageWorkspaceException(
+        'UI schema metadata in Package $packageName requires source schema 5. Regenerate the Package.',
+      );
+    }
+    if (populated && (declared != required || !explicit && required > 1)) {
+      throw CCPackageWorkspaceException(
+        'UI schema document and record versions disagree in Package $packageName. Regenerate the Package.',
+      );
+    }
+    if (declared > highest) highest = declared;
+  }
+  return highest == 0 ? ccrouterPackageIndexSchemaVersion : highest + 2;
 }
 
 /// Immutable generated identity for one direct Package dependency.

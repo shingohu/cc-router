@@ -16,7 +16,8 @@ Optional typed local UI declarations have a separate Pure Dart entry point,
 `CCUIFragmentContract`, `CCUIFragmentDependency`, and `CCUIFragmentRenderer`;
 `CCComponent.uiDependencies` records required UI consumption. Props use immutable
 DTOs; Actions use plain enums, restricted immutable DTOs or restricted sealed
-unions, including nested union payloads. Props remain DTO-only. Scalar types
+unions, including nested union payloads. Props remain DTO-only. All DTOs are terminal, including within their defining
+library/parts; same-library inheritance cannot bypass data-only validation. Scalar types
 are supported only as DTO fields, not as root Actions. DTO Actions
 require UI schema 2 / Package Index schema 4 compatible tooling; union Actions
 require UI schema 3 / Package Index schema 5. Union roots directly extend Object,

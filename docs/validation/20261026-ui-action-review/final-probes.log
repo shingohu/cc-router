@@ -1,0 +1,117 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/ui_action_union_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/ui_action_union_test.dart: review marker cannot silently select the first of duplicate UI Contracts
+00:14 +1: packages/ccrouter_test/generator_test/ui_action_union_test.dart: review default type text stays data in schema 2
+00:18 +2: packages/ccrouter_test/generator_test/ui_action_union_test.dart: review default type text stays data in schema 3
+00:22 +3: packages/ccrouter_test/generator_test/ui_action_union_test.dart: review same-name Object cannot bypass direct superclass identity
+00:25 +4: packages/ccrouter_test/generator_test/ui_action_union_test.dart: review nested DTO rejects unmodeled subtypes in schema 2
+00:28 +5: packages/ccrouter_test/generator_test/ui_action_union_test.dart: review nested DTO rejects unmodeled subtypes in schema 3
+00:31 +6: packages/ccrouter_test/generator_test/ui_action_union_test.dart: review Props reject same-library subtypes
+00:34 +7: packages/ccrouter_test/generator_test/ui_action_union_test.dart: review DTO subclasses in parts cannot bypass the closed schema
+00:37 +8: packages/ccrouter_test/generator_test/ui_action_union_test.dart: review excessive legacy DAG fails with a bounded diagnostic
+00:40 +9: packages/ccrouter_test/generator_test/ui_action_union_test.dart: legacy enum fingerprint stays byte compatible
+00:43 +10: packages/ccrouter_test/generator_test/ui_action_union_test.dart: legacy DTO fingerprint stays byte compatible
+00:46 +11: packages/ccrouter_test/generator_test/ui_action_union_test.dart: sealed root and nested inherited targets use UI schema 3
+00:49 +12: packages/ccrouter_test/generator_test/ui_action_union_test.dart: DTO Action can contain a union without opening Props
+00:55 +13: packages/ccrouter_test/generator_test/ui_action_union_test.dart: generated Renderer and Client preserve the exact Action type
+00:58 +14: packages/ccrouter_test/generator_test/ui_action_union_test.dart: part variants are discovered with defining-library identity
+01:04 +15: packages/ccrouter_test/generator_test/ui_action_union_test.dart: nested unions imported from another Package retain all public types
+01:07 +16: packages/ccrouter_test/generator_test/ui_action_union_test.dart: variant order is inert but variant, inherited data and default changes alter shape
+01:32 +17: packages/ccrouter_test/generator_test/ui_action_union_test.dart: implicit super defaults and inherited nullable values are fingerprinted
+01:38 +18: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects empty union
+01:41 +19: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects open leaf
+01:45 +20: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects abstract leaf
+01:48 +21: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects nested inheritance
+01:51 +22: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects implements edge
+01:54 +23: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects private leaf
+01:57 +24: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects generic leaf
+02:00 +25: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects mutable
+02:04 +26: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects non-const
+02:07 +27: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects resource
+02:10 +28: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects behavior
+02:13 +29: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects field cycle
+02:16 +30: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects field override
+02:19 +31: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects explicit super initializer
+02:22 +32: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects assert initializer
+02:26 +33: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects redirect
+02:29 +34: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union rejects factory
+02:32 +35: packages/ccrouter_test/generator_test/ui_action_union_test.dart: legacy deep DTO generation remains outside the union depth limit
+02:35 +36: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union width is bounded to 512 expanded schema nodes
+02:38 +37: packages/ccrouter_test/generator_test/ui_action_union_test.dart: union data graph expansion is bounded
+02:41 +38: loading packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart
+02:41 +38: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: UI marker and DTOs require explicit public Contract exposure
+02:41 +39: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: no UI declaration emits nothing
+02:51 +40: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: shape includes DTO fields and enum values
+03:04 +41: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: effective const defaults participate in the fingerprint
+03:09 +42: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: effective field initializers participate in the fingerprint
+03:17 +43: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: nested imported defaults and named DTO constructors remain supported
+03:27 +44: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unmodeled DTO construction: const Props() : orderId = 1;
+03:30 +45: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unmodeled DTO construction: const Props({int orderId = 1}) : orderId = orderId * 2;
+03:34 +46: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unmodeled DTO construction: const Props({required int orderId}) : orderId = orderId;
+03:37 +47: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unmodeled DTO construction: const Props() : this.named(1); const Props.named(this.orderId);
+03:40 +48: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects enhanced UI enum: enum Action { openDetails; Widget get content => const SizedBox(); }
+03:44 +49: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects enhanced UI enum: enum Action { openDetails; Widget content() => const SizedBox(); }
+03:47 +50: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects enhanced UI enum: enum Action { openDetails; set content(Widget value) {} }
+03:50 +51: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects enhanced UI enum: enum Action { openDetails; static const label = "open"; }
+03:53 +52: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects enhanced UI enum: mixin Behavior { Widget get content => const SizedBox(); } enum Action with Behavior { openDetails }
+03:56 +53: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects enhanced UI enum: abstract interface class Behavior {} enum Action implements Behavior { openDetails }
+03:59 +54: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects enhanced UI enum: enum Action { openDetails; const Action(); }
+04:02 +55: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: nested DTO enum uses the same plain-enum boundary
+04:05 +56: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unsupported Props field Widget
+04:08 +57: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unsupported Props field BuildContext
+04:11 +58: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unsupported Props field Axis
+04:14 +59: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unsupported Props field TextDirection
+04:17 +60: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unsupported Props field Future<int>
+04:20 +61: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unsupported Props field Stream<int>
+04:24 +62: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unsupported Props field void Function()
+04:27 +63: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unsupported Props field List<int>
+04:30 +64: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects unsupported Props field dynamic
+04:34 +65: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: Action enum cannot originate from Flutter
+04:37 +66: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: consumer generation uses isolated typed Widget Client
+04:40 +67: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: consumer generation accepts single comparator >=1.0.0
+04:43 +68: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: consumer generation accepts single comparator <=1.0.0
+04:46 +69: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: consumer generation accepts single comparator <2.0.0
+04:50 +70: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: missing required owner explains the repair (optional: false)
+04:53 +71: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: missing required owner explains the repair (optional: true)
+04:55 +72: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: consumer identifies invalidAlias: build-card
+04:58 +73: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: consumer identifies invalidAlias: toString
+05:01 +74: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: consumer identifies duplicateAlias: summary
+05:04 +75: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: consumer identifies duplicateDependency: other
+05:07 +76: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: cross-Package DTO Action selectedId uses UI schema 2 everywhere
+05:10 +77: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: cross-Package DTO Action deviceId uses UI schema 2 everywhere
+05:13 +78: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action String (metadata: true)
+05:16 +79: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action String (metadata: false)
+05:19 +80: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action int (metadata: true)
+05:22 +81: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action int (metadata: false)
+05:25 +82: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action bool (metadata: true)
+05:28 +83: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action bool (metadata: false)
+05:31 +84: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action num (metadata: true)
+05:33 +85: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action num (metadata: false)
+05:36 +86: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action double (metadata: true)
+05:39 +87: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: rejects scalar root Action double (metadata: false)
+05:42 +88: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: DTO Action still permits every scalar as a field
+05:45 +89: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: DTO Action field defaults and types affect the shape
+05:57 +90: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: invalid DTO Action is rejected: class Action { const Action(); }
+06:00 +91: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: invalid DTO Action is rejected: sealed class Action { const Action(); }
+06:03 +92: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: invalid DTO Action is rejected: final class Action { Action(); }
+06:06 +93: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: invalid DTO Action is rejected: final class Action { const Action({required this.id}); final Object id; }
+06:09 +94: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: invalid DTO Action is rejected: final class Action { const Action({required this.id}); final List<int> id; }
+06:12 +95: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: invalid DTO Action is rejected: final class Action { const Action(); String get id => "x"; }
+06:16 +96: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: invalid consumer range identifies the contract and repair
+06:20 +97: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: Renderer signature must match exact schema
+06:24 +98: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: UI metadata proves marker renderer and consumer source locations
+06:28 +99: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: part UI metadata separates source location from library identity
+06:31 +100: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: UI workspace diagnostics preserve portable consumer location
+06:31 +101: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: mixed UI metadata validates record versions and rejects downgraded documents
+06:31 +102: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: Host validation rejects missing or foreign-owner Renderer
+06:31 +103: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: Host reports the consumer behind a missing required UI owner edge
+06:31 +104: loading packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart
+06:31 +104: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review source and index version tags must be integers
+06:31 +105: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index writer rejects inconsistent UI versions (2, 3)
+06:31 +106: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index reader rejects inconsistent UI versions (2, 3)
+06:31 +107: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index writer rejects inconsistent UI versions (3, 2)
+06:31 +108: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index reader rejects inconsistent UI versions (3, 2)
+06:31 +109: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index writer rejects inconsistent UI versions (3, 99)
+06:31 +110: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index reader rejects inconsistent UI versions (3, 99)
+06:31 +111: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index writer rejects inconsistent UI versions (99, 99)
+06:31 +112: packages/ccrouter_test/generator_test/ui_schema_index_review_test.dart: review index reader rejects inconsistent UI versions (99, 99)
+06:31 +113: All tests passed!
