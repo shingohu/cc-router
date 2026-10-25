@@ -352,7 +352,8 @@ component definitions, public barrels or generated glue. Follow the printed
 direct dependency steps, generate the actual Host, then use UI `find --usage`.
 The scaffold validates source presence/syntax; generation still proves Owner
 identity, schema and implementation closure. It defaults to enum Actions;
-restricted DTO Actions are supported after explicit schema and SemVer review.
+restricted DTO and sealed union Actions are supported after explicit schema and
+SemVer review. Props remain DTO-only; follow the bounded data rules in the UI guide.
 Each participating contracts/Owner/Consumer Package needs its own generator dev
 dependency; the Host also needs `build_runner`. Confirm generated component/UI
 counts, not just a zero exit code. See the
@@ -509,7 +510,15 @@ the log and is never mixed into Flutter Tool's machine stream.
   Builder-owned `ui/*.ui.g.dart` and metadata feed the consumer-owned stable
   `<componentId>.ui.api.g.dart`; do not copy factories into Core bundles or
   import another component's generated Client. Enum Actions use UI schema 1 /
-  Package Index schema 3; DTO Actions use UI schema 2 / Package Index schema 4.
+  Package Index schema 3; DTO Actions without unions use UI schema 2 / Package
+  Index schema 4. Root or nested sealed unions use UI schema 3 / Package Index
+  schema 5; migrating to a union or adding/removing variants requires major
+  Contract SemVer and regeneration of A/B/Host. Ordinary DTOs are terminal even
+  within their own library/parts. Legacy DTO/constant expansion is bounded at
+  16,384 visits/256 levels; union type graphs remain 512 nodes/32 levels.
+  Malformed, unknown or non-integer UI versions are rejected; document, record
+  and index versions must agree. Multiple Contract/Renderer annotations never
+  silently select the first binding.
   Mixed UI documents use the highest required UI version; non-UI indexes retain
   schema 2. UI source metadata uses metadata schema 5 plus `uiSchemaVersion`
   matching the required UI version. UI metadata also records portable marker, Renderer and

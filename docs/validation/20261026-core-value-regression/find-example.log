@@ -1,0 +1,8 @@
+Route order.detail (component: demo_order_component)
+  Declaring package: demo_order_contracts
+  Contract/declaration: package:demo_order_contracts/src/order_detail_route_contract.dart:16:16 (OrderDetailRouteContract)
+  Implementation: package:demo_order/src/order_detail_page.dart:6:13 (OrderDetailPage)
+  Pattern: /orders/:orderId (primary)
+  Pattern: /order/:orderId
+  Generated routeBinding: package:demo_order/src/ccrouter_generated/binding/order_detail_page.route_binding.g.dart (ccrouterRegisterOrderDetailPageRoute)
+  Generated routeContract: package:demo_order_contracts/src/ccrouter_generated/contract/order_detail_route_contract.route.contract.g.dart (OrderDetailRoute)

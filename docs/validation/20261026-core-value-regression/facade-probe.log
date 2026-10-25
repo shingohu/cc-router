@@ -1,0 +1,14 @@
+PASS public business navigator and UI render input compile with actual SDK/package graph.
+PASS business facade hides CCRouterRuntime
+PASS business facade hides CCRouterHost
+PASS business facade hides CCScope
+PASS business facade hides CCNavigationHostLifetime
+PASS business facade hides CCManagedRouterBackend
+PASS business facade hides CCUIHostAssembly
+PASS business facade hides CCUIFragmentDescriptor
+PASS business facade hides CCUIFragmentRequirement
+PASS business facade hides CCUIRenderer
+PASS business facade hides CCUIGeneratedFragment
+PASS business facade rejects CCRouter.initialize
+PASS business facade rejects CCRouter.shutdown
+PASS: 1 positive and 12 negative actual Analyzer probes; no runtime/Host/Generated SPI exposed.

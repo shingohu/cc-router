@@ -8,6 +8,14 @@
 下文 Telemetry Context、Restoration Listener/Source 等条目是历史实现；当前身份快照与校验
 归应用观察桥，框架仍校验稳定的导航 Source 标识。布局由应用决定，再通过 Host SPI 同步可见 Outlet。
 
+## 2026-10-26 sealed Action 后的核心价值回归
+
+本轮从 `bbb4a4163dfcacb1fa2597eea99511c7af7cb619` 复核 13 条核心价值，区分新执行与
+相同源码的已提交全量证据。类型边界、Runtime/Host、诊断、并发、资源清理、模块/应用
+和有界压力分别核对；见[当前回归报告](validation/20261026-core-value-regression/report.md)。
+修正 CLI Skill 的 schema 3/Index 5 漂移，并恢复误写成当前能力的 10 月 20 日历史行。
+当前支持受限 sealed Action，不回写到早期审查快照；发布和真机未关闭项仍独立维护。
+
 ## 2026-10-24 核心价值收口回归
 
 当前原生 Managed 与绑定导航入口的 13 条核心价值逐项判断、源码身份、实际命令和原始
@@ -144,7 +152,7 @@ Analyzer 的 declaration library 身份、typedef/part、真实构造调用证�
 | --- | --- | --- |
 | 1 | 智能 | 机制保持、产物一致性有缺口（R01、R02）：声明、生成 Client、Host Assembly 和静态 Owner 索引承担胶水；不依赖运行时反射猜测 |
 | 2 | 简单易用 | 有条件：scaffold/find 减少模板和查找成本，首次 UI 接入仍需协调 Contract、A/B、Host；未测新人耗时和误配率 |
-| 3 | 功能强大 | 保持明确范围：typed Route/Service/Command/Event/InitTask 回归，UI 支持单 DTO 与受限 sealed union 输出；不包含集合、动态 Slot 或完整 Restoration |
+| 3 | 功能强大 | 保持明确范围：typed Route/Service/Command/Event/InitTask 回归，UI 新增单 DTO 输出；不包含 sealed union、动态 Slot 或完整 Restoration |
 | 4 | 可扩展性 | 保持分层：Contracts/Core 仍为 Pure Dart，UI 与 GoRouter 独立；尚无第二个生产 Backend 验证 |
 | 5 | 可测试 | 分层保持，独立 Host freshness 与 clean parity 门禁有遗漏（R01、R02）：框架、Demo、生成器、独立 Plugin 和真实 Server/LSP 分层；不把 UI process-default Runtime 说成 TestHost overlay 隔离 |
 | 6 | 最小公开 API | 保持：业务 Facade 不导出 Host 生命周期、Runtime 和 Adapter SPI；UI 业务、generated、Host barrel 分离，API 反向编译探针通过 |
