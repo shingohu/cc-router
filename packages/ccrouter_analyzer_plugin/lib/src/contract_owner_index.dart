@@ -104,7 +104,29 @@ final class CCRouterContractOwnerIndex {
                   owner.contractLibraryUri == uri.toString()),
         )
         .toList();
-    return candidates.length == 1 ? candidates.single : null;
+    if (candidates.length != 1) return null;
+    final owner = candidates.single;
+    if (kind == CCRouterContractKind.uiFragment) {
+      // Generated facts can outlive source edits. A resolved UI marker must
+      // still carry exactly one real framework annotation with the same Owner.
+      final annotations = type.element.metadata.annotations.where((annotation) {
+        final annotationType = annotation.computeConstantValue()?.type;
+        return annotationType is InterfaceType &&
+            CCRouterResolvedSymbols.isFrameworkType(
+              annotationType,
+              'CCUIFragmentContract',
+              'ui_fragment',
+            );
+      }).toList();
+      if (annotations.length != 1) return null;
+      final currentOwner = annotations.single
+          .computeConstantValue()
+          ?.getField('componentId')
+          ?.getField('value')
+          ?.toStringValue();
+      if (currentOwner != owner.componentId) return null;
+    }
+    return owner;
   }
 
   /// Finds one unambiguous Contract owner visible from an authored source.

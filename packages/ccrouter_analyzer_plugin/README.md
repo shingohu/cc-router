@@ -24,7 +24,9 @@ library/parts. Editor type/field/variant checks share a work budget and cached
 per-annotation subtype facts; oversized graphs defer rather than reject or block
 the editor. The cache is discarded between checks so edits cannot retain stale facts.
 Malformed or inconsistent UI document/record/index versions defer UI Owner
-diagnostics and Quick Fixes rather than trusting stale metadata.
+diagnostics and Quick Fixes rather than trusting stale metadata. Resolved UI
+markers must still carry one framework annotation whose Owner matches metadata;
+removed annotations and source Owner changes defer until facts are regenerated.
 Union Actions require UI schema 3 / Package Index schema 5 and a matching Plugin. DTO Actions need the matching
 UI schema 2 Generator; mixed UI schema 2 Owner metadata retains required-edge checks.
 

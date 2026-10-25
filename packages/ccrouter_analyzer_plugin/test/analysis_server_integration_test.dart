@@ -20,6 +20,67 @@ bool _has(List<Map<String, dynamic>> errors, String code) =>
 
 void main() {
   test(
+    'review real LSP refreshes terminal DTO facts after part-only edits',
+    () async {
+      const file = 'lib/src/dto_root.dart';
+      const part = 'lib/src/dto_part.dart';
+      const source = '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:ccrouter_contracts/ccrouter_ui_contracts.dart';
+part 'dto_part.dart';
+final class Props { const Props(); }
+final class Action { const Action(this.id); final String id; }
+@CCUIFragmentContract<Props, Action>(componentId: CCComponentId('orders'), id: 'panel', version: '1.0.0')
+abstract final class Marker {}
+''';
+      const derived =
+          "part of 'dto_root.dart'; final class Derived extends Action { const Derived(super.id); @override String get id => 'override'; }";
+      final server = await AnalysisServerSession.start({
+        file: source,
+        part: derived,
+      }, lsp: true);
+      addTearDown(server.close);
+      for (final (path, text) in [(file, source), (part, derived)]) {
+        server.notify('textDocument/didOpen', {
+          'textDocument': {
+            'uri': Uri.file(server.path(path)).toString(),
+            'languageId': 'dart',
+            'version': 1,
+            'text': text,
+          },
+        });
+      }
+      bool invalid(List<Map<String, dynamic>> errors) =>
+          _has(errors, 'ccrouter_ui_action_invalid');
+      await server.waitFor(file, invalid);
+      final revision = server.revisions[server.path(file)]!;
+      server.notify('textDocument/didChange', {
+        'textDocument': {
+          'uri': Uri.file(server.path(part)).toString(),
+          'version': 2,
+        },
+        'contentChanges': [
+          {'text': "part of 'dto_root.dart';"},
+        ],
+      });
+      await server.waitFor(file, (errors) => !invalid(errors), after: revision);
+      final repaired = server.revisions[server.path(file)]!;
+      server.notify('textDocument/didChange', {
+        'textDocument': {
+          'uri': Uri.file(server.path(part)).toString(),
+          'version': 3,
+        },
+        'contentChanges': [
+          {'text': derived},
+        ],
+      });
+      await server.waitFor(file, invalid, after: repaired);
+      expect(File(server.path(part)).readAsStringSync(), derived);
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test(
     'real LSP refreshes sealed Action diagnostics after an unsaved part repair',
     () async {
       const file = 'lib/src/union.dart';

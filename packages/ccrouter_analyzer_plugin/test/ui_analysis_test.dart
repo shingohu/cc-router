@@ -142,6 +142,36 @@ final class Action extends Object { const Action(); }
     );
   });
 
+  for (final removeAnnotation in [false, true]) {
+    test(
+      'review resolved UI Owner defers stale annotation facts removed=$removeAnnotation',
+      () async {
+        final file = File(p.join(fixture.root.path, 'owner/lib/contract.dart'));
+        final original = file.readAsStringSync();
+        file.writeAsStringSync(
+          removeAnnotation
+              ? original.replaceAll(
+                  RegExp(r'@CCUIFragmentContract[^\n]*\n'),
+                  '',
+                )
+              : original.replaceFirst(
+                  "CCComponentId('orders')",
+                  "CCComponentId('changed_owner')",
+                ),
+        );
+        final result = await fixture.resolve(
+          "$_imports import 'package:owner_contracts/owner_contracts.dart'; const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', dependencies: [${removeAnnotation ? '' : 'orderOwner'}], uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card', versionRange: '*')]);",
+        );
+        expect(result.diagnostics, isEmpty);
+        final owners = CCRouterContractOwnerIndexCache().resolve(fixture.file);
+        expect(
+          fixture.issues(result, owners: owners).map((d) => d.code),
+          isNot(contains('ccrouter_component_owner_dependency_missing')),
+        );
+      },
+    );
+  }
+
   const union = '''
 sealed class Target { const Target(this.id); final String id; }
 final class UserTarget extends Target { const UserTarget(super.id); }
@@ -420,11 +450,18 @@ const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
           'owner/lib/src/ccrouter_generated/metadata/ccrouter_package.json',
         );
         final metadata = jsonDecode(File(metadataPath).readAsStringSync());
+        final cache = CCRouterContractOwnerIndexCache();
+        expect(
+          fixture
+              .issues(result, owners: cache.resolve(fixture.file))
+              .map((d) => d.code),
+          contains('ccrouter_component_owner_dependency_missing'),
+        );
         metadata['metadata'][0]['uiSchemaVersion'] = documentVersion;
         metadata['metadata'][0]['uiContracts'][0]['uiSchemaVersion'] =
             recordVersion;
         File(metadataPath).writeAsStringSync(jsonEncode(metadata));
-        final cache = CCRouterContractOwnerIndexCache();
+        cache.invalidate(metadataPath);
         expect(
           fixture
               .issues(result, owners: cache.resolve(fixture.file))
