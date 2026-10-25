@@ -68,6 +68,80 @@ CCUIFragmentDependency<Summary>(alias: 'card', versionRange: 'latest')
       contains('ccrouter_ui_version_range_invalid'),
     );
   });
+  test(
+    'review subtype facts refresh after edits without retaining stale graphs',
+    () async {
+      const base =
+          'final class Action { const Action(this.id); final String id; }';
+      const derived =
+          "final class Derived extends Action { const Derived(super.id); @override String get id => 'unmodeled'; }";
+      final before = await fixture.resolve(
+        '$_imports${_contract.replaceFirst('enum Action { select }', base)}',
+      );
+      expect(
+        fixture.codes(before),
+        isNot(contains('ccrouter_ui_action_invalid')),
+      );
+      final changed = await fixture.resolve(
+        '$_imports${_contract.replaceFirst('enum Action { select }', '$base\n$derived')}',
+      );
+      expect(fixture.codes(changed), contains('ccrouter_ui_action_invalid'));
+      final restored = await fixture.resolve(
+        '$_imports${_contract.replaceFirst('enum Action { select }', base)}',
+      );
+      expect(
+        fixture.codes(restored),
+        isNot(contains('ccrouter_ui_action_invalid')),
+      );
+    },
+  );
+
+  test('review DTO subtype cannot add unmodeled behavior', () async {
+    final result = await fixture.resolve(
+      '$_imports${_contract.replaceFirst('enum Action { select }', '''
+final class Action { const Action(this.id); final String id; }
+final class Derived extends Action { const Derived(super.id); @override String get id => 'unmodeled'; }
+''')}',
+    );
+    expect(result.diagnostics, isEmpty);
+    expect(fixture.codes(result), contains('ccrouter_ui_action_invalid'));
+  });
+  test(
+    'review same-name Object model is valid Dart but invalid UI data',
+    () async {
+      final result = await fixture.resolve(
+        '$_imports${_contract.replaceFirst('enum Action { select }', '''
+class Object { const Object(); String get id => 'unmodeled'; }
+final class Action extends Object { const Action(); }
+''')}',
+      );
+      expect(result.diagnostics, isEmpty);
+      expect(fixture.codes(result), contains('ccrouter_ui_action_invalid'));
+    },
+  );
+  test('review editor checks bound work for repeated DTO graphs', () async {
+    final nodes = List.generate(24, (i) {
+      final child = i == 23 ? 'String' : 'Node${i + 1}';
+      return 'final class Node$i { const Node$i(this.left, this.right); final $child left; final $child right; }';
+    }).join('\n');
+    final result = await fixture.resolve(
+      '$_imports${_contract.replaceFirst('enum Action { select }', 'final class Action { const Action(this.node); final Node0 node; }')}\n$nodes',
+    );
+    expect(result.diagnostics, isEmpty);
+    final timer = Stopwatch()..start();
+    expect(
+      fixture.codes(result),
+      isNot(contains('ccrouter_ui_action_invalid')),
+    );
+    timer.stop();
+    expect(
+      timer.elapsed,
+      lessThan(const Duration(seconds: 2)),
+      reason:
+          'Only Plugin validation is timed, after Analyzer resolution. Excess work must defer to the Generator.',
+    );
+  });
+
   const union = '''
 sealed class Target { const Target(this.id); final String id; }
 final class UserTarget extends Target { const UserTarget(super.id); }
@@ -334,6 +408,33 @@ const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
       );
     }
   });
+  for (final (documentVersion, recordVersion) in [(1.0, 1), (2, 3)]) {
+    test(
+      'review UI Owner facts defer malformed versions $documentVersion/$recordVersion',
+      () async {
+        final result = await fixture.resolve(
+          "$_imports import 'package:owner_contracts/owner_contracts.dart'; const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card', versionRange: '*')]);",
+        );
+        final metadataPath = p.join(
+          fixture.root.path,
+          'owner/lib/src/ccrouter_generated/metadata/ccrouter_package.json',
+        );
+        final metadata = jsonDecode(File(metadataPath).readAsStringSync());
+        metadata['metadata'][0]['uiSchemaVersion'] = documentVersion;
+        metadata['metadata'][0]['uiContracts'][0]['uiSchemaVersion'] =
+            recordVersion;
+        File(metadataPath).writeAsStringSync(jsonEncode(metadata));
+        final cache = CCRouterContractOwnerIndexCache();
+        expect(
+          fixture
+              .issues(result, owners: cache.resolve(fixture.file))
+              .map((d) => d.code),
+          isNot(contains('ccrouter_component_owner_dependency_missing')),
+        );
+      },
+    );
+  }
+
   test('UI owner metadata removal and legacy records defer safely', () async {
     final result = await fixture.resolve(
       "$_imports import 'package:owner_contracts/owner_contracts.dart'; const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card', versionRange: '*')]);",

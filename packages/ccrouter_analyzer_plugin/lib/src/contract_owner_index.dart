@@ -579,12 +579,13 @@ final class CCRouterContractOwnerIndexCache {
       }
       final metadataDocuments = document['metadata'];
       if (metadataDocuments is List) {
+        final usableUI = _usableUIOwnerMetadata(
+          metadataDocuments,
+          document['schemaVersion'],
+        );
         for (final value in metadataDocuments.whereType<Map>()) {
           final metadata = value.cast<String, Object?>();
-          if ((metadata['uiSchemaVersion'] == 1 ||
-                  metadata['uiSchemaVersion'] == 2 ||
-                  metadata['uiSchemaVersion'] == 3) &&
-              metadata['uiContracts'] is List) {
+          if (usableUI && metadata['uiContracts'] is List) {
             for (final ui
                 in (metadata['uiContracts'] as List).whereType<Map>()) {
               final declaration = ui['declaration'];
@@ -841,4 +842,43 @@ final class _PendingContractOwner {
 
   /// Defining library identity when metadata distinguishes it from the source.
   final String? contractLibraryUri;
+}
+
+/// Defers UI Owner fixes when format evidence cannot prove current UI metadata.
+///
+/// Legacy indexes may omit their outer version, but explicit document/record
+/// versions must be integers and agree. Other capability families are unaffected.
+/// The authoritative Generator still owns full schema and content verification.
+bool _usableUIOwnerMetadata(List<Object?> documents, Object? indexVersion) {
+  var highest = 0;
+  for (final document in documents.whereType<Map>()) {
+    final tagged = document.containsKey('uiSchemaVersion');
+    final declared = document['uiSchemaVersion'];
+    var populated = false;
+    var required = 1;
+    for (final key in ['uiContracts', 'uiRenderers', 'uiRequirements']) {
+      if (!document.containsKey(key)) continue;
+      final records = document[key];
+      if (records is! List) return false;
+      for (final record in records) {
+        if (record is! Map) return false;
+        populated = true;
+        final version = record.containsKey('uiSchemaVersion')
+            ? record['uiSchemaVersion']
+            : 1;
+        if (version is! int || version < 1 || version > 3) return false;
+        if (version > required) required = version;
+      }
+    }
+    if (!tagged && !populated) continue;
+    if (declared is! int || declared < 1 || declared > 3) return false;
+    if (populated && declared != required) return false;
+    final sourceVersion = document['schemaVersion'];
+    if (sourceVersion != null && (sourceVersion is! int || sourceVersion != 5))
+      return false;
+    if (declared > highest) highest = declared;
+  }
+  return highest > 0 &&
+      (indexVersion == null ||
+          indexVersion is int && indexVersion == highest + 2);
 }

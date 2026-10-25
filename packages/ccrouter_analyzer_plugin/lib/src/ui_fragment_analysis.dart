@@ -89,7 +89,7 @@ abstract final class CCRouterUIFragmentAnalysis {
             annotation,
             'action_invalid',
             'UI Action requires a public plain enum, immutable DTO or restricted sealed union.',
-            'Use const data constructors, public final fields and final direct leaves in the sealed root library. Collections, behavior and open inheritance are unsupported. Union Actions require a UI schema 3 compatible Generator.',
+            'Use const data constructors, public final fields and terminal DTOs; sealed roots require final direct leaves in their defining library. Collections, behavior and open inheritance are unsupported. Union Actions require a UI schema 3 compatible Generator.',
           );
         }
       } else if (name == 'CCUIFragmentRenderer') {
@@ -244,7 +244,10 @@ abstract final class CCRouterUIFragmentAnalysis {
     DartType type, [
     Set<InterfaceElement>? ancestors,
     ClassElement? parent,
+    _UIActionCheckContext? context,
   ]) {
+    final work = context ?? _UIActionCheckContext();
+    if (!work.visit()) return false;
     if (_unknown(type)) return false;
     if (type is! InterfaceType || type.typeArguments.isNotEmpty) return true;
     final element = type.element;
@@ -290,30 +293,32 @@ abstract final class CCRouterUIFragmentAnalysis {
     if (stack.length >= 32) return false;
     if (!stack.add(element)) return true;
     if (element.isSealed) {
-      final variants = _directSubtypes(element);
-      if (variants.isEmpty ||
-          variants.any(
-            (variant) =>
-                variant is! ClassElement ||
-                !variant.isFinal ||
-                variant.isAbstract ||
-                variant.supertype?.element != element ||
-                _directSubtypes(variant).isNotEmpty ||
-                _invalidAction(variant.thisType, stack, element),
-          ))
-        return true;
-    }
-    if (parent != null &&
-        element.fields.any(
-          (field) =>
-              !field.isStatic &&
-              parent.fields.any(
-                (base) => !base.isStatic && base.name == field.name,
-              ),
-        )) {
+      final variants = work.subtypes(element);
+      if (variants.isEmpty) return true;
+      for (final variant in variants) {
+        if (!work.visit()) return false;
+        if (variant is! ClassElement ||
+            !variant.isFinal ||
+            variant.isAbstract ||
+            variant.supertype?.element != element ||
+            _invalidAction(variant.thisType, stack, element, work))
+          return true;
+      }
+    } else if (work.subtypes(element).isNotEmpty) {
       return true;
     }
+    if (parent != null) {
+      final inherited = parent.fields
+          .where((field) => !field.isStatic)
+          .map((field) => field.name)
+          .toSet();
+      if (element.fields.any(
+        (field) => !field.isStatic && inherited.contains(field.name),
+      ))
+        return true;
+    }
     for (final field in element.fields.where((f) => !f.isStatic)) {
+      if (!work.visit()) return false;
       if (!field.isFinal || field.isPrivate || field.isSynthetic) return true;
       final fieldType = field.type;
       if (_unknown(fieldType)) continue;
@@ -327,23 +332,11 @@ abstract final class CCRouterUIFragmentAnalysis {
             'num',
           }.contains(fieldType.element.name))
         continue;
-      if (_invalidAction(fieldType, stack)) return true;
+      if (_invalidAction(fieldType, stack, null, work)) return true;
     }
     stack.remove(element);
     return false;
   }
-
-  /// Enumerates semantic subtype edges across the root library and all parts.
-  static List<InterfaceElement> _directSubtypes(ClassElement root) =>
-      [...root.library.classes, ...root.library.enums, ...root.library.mixins]
-          .where(
-            (candidate) =>
-                candidate != root &&
-                (candidate.supertype?.element == root ||
-                    candidate.interfaces.any((type) => type.element == root) ||
-                    candidate.mixins.any((type) => type.element == root)),
-          )
-          .toList();
 
   /// Unknown semantic evidence is deferred while an editor buffer is incomplete.
   static bool _unknown(DartType type) =>
@@ -437,4 +430,44 @@ final class _SPIReferences extends RecursiveAstVisitor<void> {
     if (type is InterfaceType && _forbidden(type.element)) locations.add(node);
     super.visitNamedType(node);
   }
+}
+
+/// Per-check work and subtype facts; oversized editor graphs defer to generation.
+final class _UIActionCheckContext {
+  /// Starts a fresh budget for one resolved Action annotation.
+  _UIActionCheckContext();
+
+  /// Shared across branches so repeated DAGs cannot multiply editor work.
+  int _remaining = 512;
+
+  /// Library facts expire with this annotation check, never a global cache.
+  final _libraries =
+      <LibraryElement, Map<InterfaceElement, List<InterfaceElement>>>{};
+
+  /// Exhaustion is conservative deferral, not a false invalid-model diagnostic.
+  bool visit() => _remaining-- > 0;
+
+  /// Scans same-library subtype edges once, including parts and implements.
+  List<InterfaceElement> subtypes(ClassElement root) =>
+      (_libraries.putIfAbsent(root.library, () {
+        final result = <InterfaceElement, List<InterfaceElement>>{};
+        for (final candidate in <InterfaceElement>[
+          ...root.library.classes,
+          ...root.library.enums,
+          ...root.library.mixins,
+        ]) {
+          final parents = <InterfaceElement>{
+            if (candidate.supertype case final type?) type.element,
+            ...candidate.interfaces.map((type) => type.element),
+            ...candidate.mixins.map((type) => type.element),
+          };
+          for (final parent in parents) {
+            if (parent.library == root.library) {
+              result.putIfAbsent(parent, () => []).add(candidate);
+            }
+          }
+        }
+        return result;
+      }))[root] ??
+      const [];
 }
