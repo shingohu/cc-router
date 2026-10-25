@@ -1,0 +1,74 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/portable_distribution_test.dart
+00:00 +0: prebuilt Service Package survives independent Git and archive consumption
+00:56 +1: prebuilt sealed UI Package survives independent Git and archive consumption
+01:13 +1 -1: prebuilt sealed UI Package survives independent Git and archive consumption [E]
+  Expected: <0>
+    Actual: <1>
+  <home>/fvm/versions/ohos/oh-3.41.9-release/bin/cache/dart-sdk/bin/dart.ccrouter-original [run, --verbosity=error, ccrouter_generator:ccrouter, portable, prepare, .]
+  Generating Package artifacts for distributed_component from /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_distribution_6UxINt/producer/....
+    1s compiling builders/aot
+    2s compiling builders/aot
+    3s compiling builders/aot
+    4s compiling builders/aot
+    5s compiling builders/aot
+    6s compiling builders/aot
+    7s compiling builders/aot
+    8s compiling builders/aot
+    9s compiling builders/aot
+    9s compiling builders/aot
+    0s ccrouter_generator:ui_metadata on 3 inputs; lib/src/component.dart
+    2s ccrouter_generator:ui_metadata on 3 inputs: 1 no-op; spent 1s analyzing; lib/src/panel.dart
+    2s ccrouter_generator:ui_metadata on 3 inputs: 1 output, 2 no-op; spent 1s analyzing
+    0s ccrouter_generator:ui_fragments on 3 inputs; lib/src/component.dart
+    0s ccrouter_generator:ui_fragments on 3 inputs: 3 no-op
+    0s ccrouter_generator:service_contracts on 3 inputs; lib/src/component.dart
+    0s ccrouter_generator:service_contracts on 3 inputs: 3 no-op
+    0s ccrouter_generator:services on 3 inputs; lib/src/component.dart
+    0s ccrouter_generator:services on 3 inputs: 1 output, 2 no-op
+    0s ccrouter_generator:service_proxies on 3 inputs; lib/src/component.dart
+    0s ccrouter_generator:service_proxies on 3 inputs: 3 no-op
+    0s ccrouter_generator:service_metadata on 4 inputs; lib/component.dart
+    0s ccrouter_generator:service_metadata on 4 inputs: 1 output, 3 no-op
+    0s ccrouter_generator:route_contracts on 3 inputs; lib/src/component.dart
+    0s ccrouter_generator:route_contracts on 3 inputs: 3 no-op
+    0s ccrouter_generator:routes on 3 inputs; lib/src/component.dart
+    0s ccrouter_generator:routes on 3 inputs: 3 no-op
+    0s ccrouter_generator:route_metadata on 4 inputs; lib/component.dart
+    0s ccrouter_generator:route_metadata on 4 inputs: 4 no-op
+    0s ccrouter_generator:route_bindings on 3 inputs; lib/src/component.dart
+    0s ccrouter_generator:route_bindings on 3 inputs: 3 no-op
+    0s ccrouter_generator:init_tasks on 3 inputs; lib/src/component.dart
+    0s ccrouter_generator:init_tasks on 3 inputs: 3 no-op
+    0s ccrouter_generator:init_task_metadata on 4 inputs; lib/component.dart
+    0s ccrouter_generator:init_task_metadata on 4 inputs: 4 no-op
+    0s ccrouter_generator:events on 3 inputs; lib/src/component.dart
+    0s ccrouter_generator:events on 3 inputs: 3 no-op
+    0s ccrouter_generator:event_metadata on 4 inputs; lib/component.dart
+    0s ccrouter_generator:event_metadata on 4 inputs: 4 no-op
+    0s ccrouter_generator:component_metadata on 4 inputs; lib/component.dart
+    0s ccrouter_generator:component_metadata on 4 inputs: 1 output, 3 no-op
+    0s ccrouter_generator:commands on 3 inputs; lib/src/component.dart
+    0s ccrouter_generator:commands on 3 inputs: 3 no-op
+    0s ccrouter_generator:command_metadata on 4 inputs; lib/component.dart
+    0s ccrouter_generator:command_metadata on 4 inputs: 4 no-op
+    Built with build_runner/aot in 12s; wrote 4 outputs.
+  CCRouter generation failed: elapsed=14369ms.
+
+  error: Public UI contract "distributed.panel" must re-export "PanelAction" from lib/src/panel.dart in a public barrel using `show`.
+  error: Public UI contract "distributed.panel" must re-export "PanelContract" from lib/src/panel.dart in a public barrel using `show`.
+  error: Public UI contract "distributed.panel" must re-export "PanelProps" from lib/src/panel.dart in a public barrel using `show`.
+  error: Public UI contract "distributed.panel" must re-export "Selected" from lib/src/panel.dart in a public barrel using `show`.
+  error: Public UI contract "distributed.panel" must re-export "Settings" from lib/src/panel.dart in a public barrel using `show`.
+  error: Public UI contract "distributed.panel" must re-export "Target" from lib/src/panel.dart in a public barrel using `show`.
+  error: Public UI contract "distributed.panel" must re-export "User" from lib/src/panel.dart in a public barrel using `show`.
+
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/portable_distribution_test.dart 290:3  _run
+  ===== asynchronous gap ===========================
+  packages/ccrouter_test/generator_test/portable_distribution_test.dart 77:7   main.<fn>
+
+01:13 +1 -1: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

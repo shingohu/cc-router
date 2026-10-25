@@ -388,11 +388,12 @@ final class CCPackageIndex {
     if (schemaVersion != 1 &&
         schemaVersion != 3 &&
         schemaVersion != 4 &&
+        schemaVersion != 5 &&
         schemaVersion != ccrouterPackageIndexSchemaVersion) {
       throw CCPackageWorkspaceException(
         'Unsupported CCRouter Package index schema in ${file.path}: '
         '${object['schemaVersion']}. Expected '
-        '1, $ccrouterPackageIndexSchemaVersion, 3 (enum UI) or 4 (DTO Action UI).',
+        '1, $ccrouterPackageIndexSchemaVersion, 3 (enum UI), 4 (DTO Action UI) or 5 (union Action UI).',
       );
     }
     final packageObject = object['package'];
@@ -419,10 +420,13 @@ final class CCPackageIndex {
       );
     }
     final metadata = _objectList(object['metadata']);
-    if (schemaVersion != 4 &&
-        metadata.any((document) => document['uiSchemaVersion'] == 2)) {
+    if (metadata.any((document) => document['uiSchemaVersion'] == 3)
+        ? schemaVersion != 5
+        : (schemaVersion != 4 &&
+              metadata.any((document) => document['uiSchemaVersion'] == 2))) {
       throw CCPackageWorkspaceException(
-        'DTO Action metadata requires Package index schema 4 in ${file.path}. '
+        'UI Action metadata requires Package index schema '
+        '${metadata.any((d) => d['uiSchemaVersion'] == 3) ? 5 : 4} in ${file.path}. '
         'Regenerate with a compatible Generator.',
       );
     }
@@ -430,7 +434,8 @@ final class CCPackageIndex {
     CCCapabilitySourceCatalog? publishedCatalog;
     if (schemaVersion == ccrouterPackageIndexSchemaVersion ||
         schemaVersion == 3 ||
-        schemaVersion == 4) {
+        schemaVersion == 4 ||
+        schemaVersion == 5) {
       final catalogObject = object['capabilityCatalog'];
       if (catalogObject is! Map) {
         throw CCPackageWorkspaceException(
@@ -485,7 +490,8 @@ final class CCPackageIndex {
       includeCapabilityCatalog:
           schemaVersion == ccrouterPackageIndexSchemaVersion ||
           schemaVersion == 3 ||
-          schemaVersion == 4,
+          schemaVersion == 4 ||
+          schemaVersion == 5,
     );
     if (index.contentFingerprint != expectedFingerprint) {
       throw CCPackageWorkspaceException(
@@ -509,7 +515,9 @@ final class CCPackageIndex {
   /// Encodes this index with stable key ordering and indentation.
   String toJson() =>
       '${const JsonEncoder.withIndent('  ').convert(<String, Object?>{
-        'schemaVersion': metadata.any((document) => document['uiSchemaVersion'] == 2)
+        'schemaVersion': metadata.any((document) => document['uiSchemaVersion'] == 3)
+            ? 5
+            : metadata.any((document) => document['uiSchemaVersion'] == 2)
             ? 4
             : metadata.any((document) => document.containsKey('uiSchemaVersion'))
             ? 3

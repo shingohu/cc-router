@@ -144,7 +144,7 @@ Analyzer 的 declaration library 身份、typedef/part、真实构造调用证�
 | --- | --- | --- |
 | 1 | 智能 | 机制保持、产物一致性有缺口（R01、R02）：声明、生成 Client、Host Assembly 和静态 Owner 索引承担胶水；不依赖运行时反射猜测 |
 | 2 | 简单易用 | 有条件：scaffold/find 减少模板和查找成本，首次 UI 接入仍需协调 Contract、A/B、Host；未测新人耗时和误配率 |
-| 3 | 功能强大 | 保持明确范围：typed Route/Service/Command/Event/InitTask 回归，UI 新增单 DTO 输出；不包含 sealed union、动态 Slot 或完整 Restoration |
+| 3 | 功能强大 | 保持明确范围：typed Route/Service/Command/Event/InitTask 回归，UI 支持单 DTO 与受限 sealed union 输出；不包含集合、动态 Slot 或完整 Restoration |
 | 4 | 可扩展性 | 保持分层：Contracts/Core 仍为 Pure Dart，UI 与 GoRouter 独立；尚无第二个生产 Backend 验证 |
 | 5 | 可测试 | 分层保持，独立 Host freshness 与 clean parity 门禁有遗漏（R01、R02）：框架、Demo、生成器、独立 Plugin 和真实 Server/LSP 分层；不把 UI process-default Runtime 说成 TestHost overlay 隔离 |
 | 6 | 最小公开 API | 保持：业务 Facade 不导出 Host 生命周期、Runtime 和 Adapter SPI；UI 业务、generated、Host barrel 分离，API 反向编译探针通过 |

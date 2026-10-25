@@ -15,9 +15,13 @@ Optional typed local UI declarations have a separate Pure Dart entry point,
 `package:ccrouter_contracts/ccrouter_ui_contracts.dart`. It provides
 `CCUIFragmentContract`, `CCUIFragmentDependency`, and `CCUIFragmentRenderer`;
 `CCComponent.uiDependencies` records required UI consumption. Props use immutable
-DTOs; Actions use plain enums or equally restricted immutable DTOs. Scalar types
+DTOs; Actions use plain enums, restricted immutable DTOs or restricted sealed
+unions, including nested union payloads. Props remain DTO-only. Scalar types
 are supported only as DTO fields, not as root Actions. DTO Actions
-require UI schema 2 / Package Index schema 4 compatible tooling. Rendering
+require UI schema 2 / Package Index schema 4 compatible tooling; union Actions
+require UI schema 3 / Package Index schema 5. Union roots directly extend Object,
+with public final direct leaves in the same library/parts, inherited final data
+and const super.field forwarding. Export all variants and nested types. Rendering
 and Host assembly require the separate Flutter package `ccrouter_ui`; these
 declarations do not create another navigation Contract kind or relax Service
 types. See the [UI integration guide](../../skills/ccrouter-integration-development/references/ui-fragments.md).

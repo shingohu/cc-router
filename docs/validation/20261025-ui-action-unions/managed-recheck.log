@@ -1,0 +1,28 @@
+00:00 +0: loading <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart
+00:00 +0: same-frame pane reparent preserves live popup and native Guard
+00:00 +1: Shell renderer remount preserves both retained branch identities
+00:00 +2: live Adapter releases old Routes after renderer remount
+00:01 +3: native Back and predictive policy stay in an inactive Host
+00:01 +4: repeated pane remount preserves Scope, result and exact identity
+00:01 +5: root renderer remount also preserves its logical Entry
+00:01 +6: native Pop then shutdown closes Scope without another frame
+00:01 +7: Outlet unmount retires its foreign ledger before remount
+00:01 +8: ordinary maybePop leaves backend synchronization healthy
+00:01 +9: Back follows the sole visible pane after folding
+00:01 +10: iOS gesture checks its own pane guard rather than focused pane
+00:01 +11: native local Back cannot bypass the non-focused pane guard
+00:01 +12: business Pop interrupted by pop stays consistent
+00:01 +13: business Pop interrupted by push stays consistent
+00:01 +14: business Pop interrupted by replace stays consistent
+00:01 +15: business Pop interrupted by go stays consistent
+00:01 +16: business Pop interrupted by reset stays consistent
+00:02 +17: business Pop interrupted by close stays consistent
+00:02 +18: business Pop interrupted by popup stays consistent
+00:02 +19: Scope remains live through business outgoing animation
+00:02 +20: Scope remains live through direct outgoing animation
+00:02 +21: Scope remains live through system outgoing animation
+00:02 +22: Scope remains live through gesture outgoing animation
+00:02 +23: Scope remains live through go outgoing animation
+00:02 +24: Scope remains live through reset outgoing animation
+00:02 +25: Scope remains live through replace outgoing animation
+00:02 +26: All tests passed!

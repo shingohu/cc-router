@@ -1,11 +1,11 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "generatorVersion": "0.1.5",
   "package": {
     "name": "demo_navigation_lab",
     "version": "0.1.0"
   },
-  "contentFingerprint": "3f756b23b060a107ece473f323e9982b3013a1c6e0efeeaba4f171e337171c92",
+  "contentFingerprint": "1063e3b40b5e68ac4c6ef8e2fdc67aea13e3239d428e2721abf10b708e2579d6",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -34,7 +34,7 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "9be062d35979f3c2565898c66ff5fb39a8d5fbdce046e4ff8adbae333fe359fd"
+      "contentFingerprint": "39b43549ac2f31f45f9f00a1eec85fbf603669a7ad1042277a9ce14801077ffa"
     },
     {
       "name": "demo_web_contracts",
@@ -48,11 +48,87 @@
       "componentDeclarations": [],
       "package": "demo_navigation_lab",
       "source": "lib/src/navigation_lab_component.dart",
-      "uiSchemaVersion": 2,
+      "uiSchemaVersion": 3,
       "uiLibrary": "lib/src/ccrouter_generated/ui/navigation_lab_component.ui.g.dart",
       "uiContracts": [],
       "uiRenderers": [],
       "uiRequirements": [
+        {
+          "uiSchemaVersion": 3,
+          "declaration": {
+            "symbol": "OrderPanelFragmentContract",
+            "packageUri": "package:demo_order_contracts/src/order_panel_fragment.dart",
+            "libraryUri": "package:demo_order_contracts/src/order_panel_fragment.dart",
+            "line": 31,
+            "column": 22
+          },
+          "componentId": "demo_order_component",
+          "id": "order.panel",
+          "version": "1.0.0",
+          "shapeFingerprint": "b6dc30358b7f47719d5cb0f80b23711e54de0367fa7aeb732d67668a275f26ba",
+          "publicTypes": [
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelAction"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelArtist"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelFragmentContract"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelProps"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelScore"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelSettingsRequested"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelTarget"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelTargetSelected"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelUser"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelVideo"
+            }
+          ],
+          "consumerDeclaration": {
+            "symbol": "demoNavigationLabComponent",
+            "packageUri": "package:demo_navigation_lab/src/navigation_lab_component.dart",
+            "libraryUri": "package:demo_navigation_lab/src/navigation_lab_component.dart",
+            "line": 12,
+            "column": 7
+          },
+          "consumer": "demo_navigation_lab_component",
+          "alias": "orderPanel",
+          "versionRange": "^1.0.0"
+        },
         {
           "declaration": {
             "symbol": "OrderSummaryFragmentContract",

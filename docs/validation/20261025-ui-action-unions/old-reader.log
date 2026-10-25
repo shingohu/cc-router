@@ -1,0 +1,1 @@
+error: Unsupported CCRouter Package index schema in <home>/.codex/worktrees/sealed-action-unions/cc-router/demo/modules/navigation_lab/lib/src/ccrouter_generated/metadata/ccrouter_package.json: 5. Expected 1, 2, 3 (enum UI) or 4 (DTO Action UI).

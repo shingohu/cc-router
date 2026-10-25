@@ -1,0 +1,210 @@
+00:00 +0: loading test/plugin_test.dart
+00:00 +0: test/plugin_test.dart: advertises a stable name and supported server boundary
+00:00 +1: test/plugin_test.dart: returns protocol Quick Fixes for one conflict diagnostic
+00:00 +2: test/plugin_test.dart: returns protocol Quick Fixes for one conflict diagnostic
+00:00 +3: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:00 +4: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:00 +5: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:00 +6: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:00 +7: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:00 +8: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:00 +9: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:00 +10: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:00 +11: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:00 +12: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:00 +13: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:01 +14: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:01 +15: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:01 +16: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:01 +17: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:01 +18: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:01 +19: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:01 +20: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:01 +21: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:01 +22: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:01 +23: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:01 +24: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:01 +25: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:01 +26: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:01 +27: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:01 +28: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:02 +29: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:02 +30: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:02 +31: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:02 +32: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:03 +33: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:03 +34: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:03 +35: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:03 +36: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:03 +37: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:03 +38: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:03 +39: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:03 +40: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:03 +41: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:03 +42: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:03 +43: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:03 +44: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +45: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +46: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +47: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +48: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +49: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +50: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +51: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +52: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +53: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +54: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +55: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +56: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +57: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +58: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +59: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +60: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +61: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +62: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +63: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +64: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +65: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +66: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +67: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:04 +68: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +69: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +70: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +71: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +72: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +73: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +74: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +75: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +76: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +77: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +78: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +79: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +80: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +81: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +82: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +83: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +84: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +85: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +86: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +87: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +88: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +89: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +90: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +91: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +92: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +93: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +94: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +95: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +96: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +97: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +98: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +99: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +100: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +101: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:05 +102: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:07 +103: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:08 +104: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:10 +105: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:10 +106: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:11 +107: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:12 +108: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:12 +109: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:14 +110: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:14 +111: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:16 +112: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:16 +113: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:18 +114: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:19 +115: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:21 +116: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:21 +117: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:24 +118: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:25 +119: test/semantic_analysis_test.dart: real plugin session fixes and unsaved overlays use resolved semantics
+00:26 +120: test/ui_analysis_test.dart: sealed invalid model is diagnosed: sealed class Target { const Target(this.id); final String id; }
+final class UserTarget extends Target { const UserTarget(super.id); }
+final class ScoreTarget extends Target { const ScoreTarget(super.id); }
+sealed class Action { const Action(); }
+final class SettingsRequested extends Action { const SettingsRequested(); }
+final class TargetSelected extends Action { const TargetSelected(this.target); final Target target; }
+ final class Impostor implements Action { const Impostor(); }
+00:26 +121: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:27 +122: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:27 +123: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:29 +124: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:29 +125: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:30 +126: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:30 +127: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:31 +128: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:31 +129: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:33 +130: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:33 +131: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:34 +132: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:34 +133: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:37 +134: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:37 +135: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:39 +136: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:39 +137: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:40 +138: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:40 +139: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:42 +140: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:42 +141: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:42 +142: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:42 +143: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:44 +144: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:44 +145: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:45 +146: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:45 +147: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:46 +148: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:47 +149: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:48 +150: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:48 +151: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:49 +152: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:49 +153: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:50 +154: test/ui_analysis_test.dart: prefixed and transitive UI symbols preserve framework identity
+00:50 +155: test/semantic_analysis_test.dart: local shadow cannot be inserted by a fix
+00:51 +156: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:51 +157: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:51 +158: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:52 +159: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:52 +160: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:53 +161: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:53 +162: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:53 +163: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:54 +164: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:54 +165: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:54 +166: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:55 +167: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:55 +168: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:55 +169: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:55 +170: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:57 +171: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:57 +172: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:58 +173: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:59 +174: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+01:01 +175: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+01:02 +176: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+01:03 +177: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+01:04 +178: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+01:04 +179: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+01:05 +180: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+01:06 +181: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+01:07 +182: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+01:07 +183: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+01:07 +184: test/analysis_server_integration_test.dart: real server publishes and clears invalid ccrouter.yaml
+01:18 +185: test/analysis_server_integration_test.dart: real LSP reports and clears UI alias diagnostics on editor overlay
+01:25 +186: test/analysis_server_integration_test.dart: real LSP accepts DTO Action after editor shape repair
+01:33 +187: test/analysis_server_integration_test.dart: real legacy ccrouter_host_component_owner_missing server bridges and clears current watch diagnostics
+01:39 +188: test/analysis_server_integration_test.dart: real LSP ccrouter_host_component_owner_missing server bridges and clears current watch diagnostics
+01:45 +189: test/analysis_server_integration_test.dart: real LSP ccrouter_ui_missing_implementation server bridges and clears current watch diagnostics
+01:51 +190: test/analysis_server_integration_test.dart: real legacy server follows unsaved Pub manifest overlays
+01:55 +191: test/analysis_server_integration_test.dart: real LSP server follows unsaved Pub manifest overlays
+01:59 +192: test/analysis_server_integration_test.dart: real legacy server publishes and clears stale Pub resolution hints
+02:04 +193: test/analysis_server_integration_test.dart: real LSP server publishes and clears stale Pub resolution hints
+02:10 +194: test/analysis_server_integration_test.dart: real server publishes an initial stale Pub hint for a Workspace member
+02:14 +195: test/analysis_server_integration_test.dart: real server polls structured diagnostics for a nested Workspace Host
+02:18 +196: test/analysis_server_integration_test.dart: real server clears foreign annotation diagnostics despite unrelated errors
+02:24 +197: test/analysis_server_integration_test.dart: real watcher refreshes consumers across workspace Contract packages
+02:34 +198: test/analysis_server_integration_test.dart: real LSP diagnostics and codeAction fix the open document
+02:41 +199: test/analysis_server_integration_test.dart: real legacy disk watcher refreshes all five generated capability kinds
+03:14 +200: test/analysis_server_integration_test.dart: real LSP disk watcher refreshes all five generated capability kinds
+03:44 +201: test/analysis_server_integration_test.dart: real server: unsaved overlays and service Quick Fix round trip
+03:54 +202: All tests passed!

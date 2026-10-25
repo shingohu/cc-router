@@ -8,8 +8,11 @@ transitive public exports. They report `ccrouter_ui_alias_invalid`,
 `ccrouter_ui_action_invalid`, and `ccrouter_ui_renderer_invalid`. Unknown or
 ambiguous types defer. The Generator remains authoritative for the complete
 Props/Action constructor/default schemas, Contract identity/version grammar, and Host closure.
-Action checks accept a plain enum or immutable final DTO and reject proven
-mutable, behavioral, cyclic or non-data types. DTO Actions need the matching
+Action checks accept a plain enum, immutable final DTO or restricted sealed
+union (including nested unions and same-library/part data leaves), and reject proven
+mutable, behavioral, cyclic or non-data types. Complete constructor/default
+validation stays Generator-owned; deep editor checks defer rather than reject.
+Union Actions require UI schema 3 / Package Index schema 5 and a matching Plugin. DTO Actions need the matching
 UI schema 2 Generator; mixed UI schema 2 Owner metadata retains required-edge checks.
 
 `ccrouter_ui_spi_access` rejects handwritten Generated SPI and component access

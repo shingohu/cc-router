@@ -90,7 +90,8 @@ Package 声明 `@CCUIFragmentContract<Props, Action>`，在实现 Package 提供
 Generator、Contracts、CCRouter 和 UI Package，不能混用旧生成工具。
 
 支持 final、const、无继承的 DTO Props（scalar、普通 enum、嵌套 DTO）；Action 可用普通 enum
-或同样受限的单一不可变 DTO，暂不支持集合、sealed Action、函数型 Props、动态 Slot 或 Renderer 热替换。
+或受限不可变 DTO，也支持根 Action 和载荷中的受限 sealed union。Props 仍只允许原有 DTO；
+集合、函数型 Props、动态 Slot 和 Renderer 热替换仍不支持。
 scalar 只能用于 DTO 字段，不能直接作为 Action 类型。
 普通 enum 不允许自定义成员、构造器、mixin 或 interface。DTO 通过 `this.field` 参数或字段
 声明处的常量初始值构造，两处默认值均计入指纹；当前拒绝初始化列表赋值和重定向构造器。
@@ -116,9 +117,14 @@ Host 测试追加组件或修改路由目录时，使用 `CCHostAssembly.extend(
 [UI 接入指南](skills/ccrouter-integration-development/references/ui-fragments.md)。同一 Fragment
 渲染多个实例只声明一次依赖，以 Key 区分实例。B 私有加载列表后，可通过 DTO Action
 回传所选项 ID；enum 仍适合无 payload 通知。enum 改 DTO 是破坏性变更，需 major SemVer
-并重生成 A/B/Host。DTO 使用 UI schema 2 / Package Index schema 4，旧工具明确拒绝。
+并重生成 A/B/Host。DTO 使用 UI schema 2 / Package Index schema 4；sealed Action 使用
+UI schema 3 / Package Index schema 5，旧工具明确拒绝。sealed 根直接继承 Object，同库/part
+中的变体须为无后续子类型的 public final 数据类；支持基类 final 字段与 const `super.field`
+转发，拒绝显式初始化列表、行为成员和有环类型图。所有变体及嵌套类型须公开导出。
+迁移到 union、增删变体及破坏性载荷变化需要 major Contract 版本，并重生成 A/B/Host。
+Demo `order.panel` 与原 enum/DTO 示例并存，消费者对动作及目标分别做穷尽 switch。
 [UI Fragment 规范](docs/CCRouter-ui-fragment-design.md)统一维护已有能力、接入边界和待设计扩展。
-可选 Analyzer Plugin 提供 UI alias、重复依赖、明显非法版本范围、enum/DTO Action、
+可选 Analyzer Plugin 提供 UI alias、重复依赖、明显非法版本范围、enum/DTO/sealed Action、
 Renderer 签名及 Host/Generated SPI 越界检查；缺少 required Owner 可在公共常量已导入时
 提供保守 Quick Fix。Host 完整性错误通过有效的 Generator 结构化快照进入 IDE；
 完整 Props schema 和最终正确性仍以 `generate --check` 为准。

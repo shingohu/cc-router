@@ -77,6 +77,56 @@ Widget _payloadRenderer(CCUIFragmentRenderInput<_Props, _Selection> input) {
   return const SizedBox();
 }
 
+sealed class _UnionTarget {
+  const _UnionTarget(this.id);
+  final String id;
+}
+
+final class _UserTarget extends _UnionTarget {
+  const _UserTarget(super.id);
+}
+
+final class _ScoreTarget extends _UnionTarget {
+  const _ScoreTarget(super.id);
+}
+
+final class _VideoTarget extends _UnionTarget {
+  const _VideoTarget(super.id);
+}
+
+final class _ArtistTarget extends _UnionTarget {
+  const _ArtistTarget(super.id);
+}
+
+sealed class _UnionAction {
+  const _UnionAction();
+}
+
+final class _SettingsRequested extends _UnionAction {
+  const _SettingsRequested();
+}
+
+final class _TargetSelected extends _UnionAction {
+  const _TargetSelected(this.target);
+  final _UnionTarget target;
+}
+
+final _unionCallbacks = <ValueChanged<_UnionAction>>[];
+Widget _unionRenderer(CCUIFragmentRenderInput<_Props, _UnionAction> input) {
+  _unionCallbacks.add(input.onAction);
+  return const SizedBox();
+}
+
+String _unionLabel(_UnionAction action) => switch (action) {
+  _SettingsRequested() => 'settings',
+  _TargetSelected(:final target) => switch (target) {
+    _UserTarget(:final id) => 'user:$id',
+    _ScoreTarget(:final id) => 'score:$id',
+    _VideoTarget(:final id) => 'video:$id',
+    _ArtistTarget(:final id) => 'artist:$id',
+  },
+};
+
 int _created = 0;
 int _disposed = 0;
 final _actions = <void Function()>[];
@@ -169,6 +219,98 @@ void main() {
     _actions.clear();
   });
   tearDown(CCRouterHost.shutdown);
+  testWidgets(
+    'sealed payloads preserve instances, callbacks and all revocation fences',
+    (tester) async {
+      CCHostAssembly assembly() => _assembly(
+        contributions: [
+          const CCUIRenderer<_Props, _UnionAction>(
+            contract: _contract,
+            renderer: _unionRenderer,
+          ),
+        ],
+      );
+      final first = <_UnionAction>[];
+      final latest = <_UnionAction>[];
+      final second = <_UnionAction>[];
+      Widget tree({
+        bool active = true,
+        bool update = false,
+        int identity = 0,
+      }) => Row(
+        textDirection: TextDirection.ltr,
+        children: [
+          CCUIGeneratedFragment<_Props, _UnionAction>(
+            key: ValueKey('first-$identity'),
+            requirement: _requirement,
+            props: const _Props(1),
+            active: active,
+            onAction: (update ? latest : first).add,
+          ),
+          CCUIGeneratedFragment<_Props, _UnionAction>(
+            key: ValueKey('second-$identity'),
+            requirement: _requirement,
+            props: const _Props(2),
+            onAction: second.add,
+          ),
+        ],
+      );
+      const payloads = <_UnionAction>[
+        _SettingsRequested(),
+        _TargetSelected(_UserTarget('1')),
+        _TargetSelected(_ScoreTarget('2')),
+        _TargetSelected(_VideoTarget('3')),
+        _TargetSelected(_ArtistTarget('4')),
+      ];
+      _unionCallbacks.clear();
+      CCRouterHost.initialize(hostAssembly: assembly());
+      await tester.pumpWidget(tree());
+      final oldFirst = _unionCallbacks[0];
+      final oldSecond = _unionCallbacks[1];
+      for (final payload in payloads) {
+        oldFirst(payload);
+      }
+      expect(first.map(_unionLabel), [
+        'settings',
+        'user:1',
+        'score:2',
+        'video:3',
+        'artist:4',
+      ]);
+      for (var i = 0; i < payloads.length; i++) {
+        expect(first[i], same(payloads[i]));
+      }
+      oldSecond(payloads.last);
+      expect(second.single, same(payloads.last));
+      await tester.pumpWidget(tree(update: true));
+      oldFirst(payloads.first);
+      expect(latest.single, same(payloads.first));
+      await tester.pumpWidget(tree(update: true, active: false));
+      oldFirst(payloads.last);
+      expect(latest, hasLength(1));
+      await tester.pumpWidget(tree(update: true));
+      oldFirst(payloads.last);
+      expect(latest, hasLength(2));
+      await tester.pumpWidget(tree(update: true, identity: 1));
+      oldFirst(payloads.first);
+      oldSecond(payloads.first);
+      expect(latest, hasLength(2));
+      expect(second, hasLength(1));
+      final current = _unionCallbacks.last;
+      await CCRouterHost.shutdown();
+      current(payloads.first);
+      CCRouterHost.initialize(hostAssembly: assembly());
+      current(payloads.first);
+      await tester.pumpWidget(tree(identity: 2));
+      _unionCallbacks.last(payloads.first);
+      expect(second.map(_unionLabel), ['artist:4', 'settings']);
+      await tester.pumpWidget(const SizedBox());
+      _unionCallbacks.last(payloads.first);
+      expect(second, hasLength(2));
+      expect(tester.takeException(), isNull);
+      _unionCallbacks.clear();
+    },
+  );
 
   test(
     'optional binding failure rolls back in reverse order and blocks reentry',

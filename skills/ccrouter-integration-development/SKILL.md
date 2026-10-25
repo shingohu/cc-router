@@ -129,7 +129,7 @@ publish it only with the user's authorization. Do not include private business
 code, credentials, account data or unsanitized logs.
 
 UI Fragment editor diagnostics cover aliases, repeated dependencies, definitely
-invalid range tokens, enum/DTO Action, exact Renderer signatures and UI SPI
+invalid range tokens, enum/DTO/sealed Action, exact Renderer signatures and UI SPI
 boundaries. Metadata-proven UI Owners share the conservative required-edge fix;
 full Props schemas and Host completeness remain Generator-owned, with Host
 failures bridged only from current structured snapshots. Follow
@@ -161,6 +161,13 @@ Actions; change to a restricted immutable DTO when B must return a privately loa
 Scalar types are supported only inside DTOs, not as root Actions.
 DTO Actions require UI schema 2 / Package Index schema 4 and matching Plugin support;
 enum-to-DTO migration needs major SemVer and regeneration of A/B/Host.
+Sealed Actions and DTO payloads containing unions require UI schema 3 / Package
+Index schema 5. Roots extend Object and same-library/part variants are public
+final data leaves; inherited final fields and const super.field forwarding are
+supported. Props stay DTO-only. Export every variant/nested type. Migrating to
+a union, adding/removing variants or breaking payload shape requires major
+Contract SemVer and regeneration of A/B/Host. Preserve enum/DTO controls and
+verify part-only changes, Portable State, Host fingerprints and stale tooling.
 Treat the local enum/DTO technical workflow as verified, with API freeze, first
 use by uninvolved developers, distribution/upgrades, real platform coverage and
 long-term memory/performance still pending. See the UI reference's adoption

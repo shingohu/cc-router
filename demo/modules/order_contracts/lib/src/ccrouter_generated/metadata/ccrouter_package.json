@@ -1,11 +1,11 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "generatorVersion": "0.1.5",
   "package": {
     "name": "demo_order_contracts",
     "version": "0.1.0"
   },
-  "contentFingerprint": "9be062d35979f3c2565898c66ff5fb39a8d5fbdce046e4ff8adbae333fe359fd",
+  "contentFingerprint": "39b43549ac2f31f45f9f00a1eec85fbf603669a7ad1042277a9ce14801077ffa",
   "bundle": null,
   "dependencies": [],
   "metadata": [
@@ -90,6 +90,114 @@
               "package": "demo_order_contracts",
               "source": "lib/src/order_fragments.dart",
               "symbol": "OrderRecommendationsProps",
+              "publicLibraries": [
+                "package:demo_order_contracts/demo_order_contracts.dart"
+              ]
+            }
+          ]
+        }
+      ],
+      "uiRenderers": [],
+      "uiRequirements": []
+    },
+    {
+      "schemaVersion": 5,
+      "componentDeclarations": [],
+      "package": "demo_order_contracts",
+      "source": "lib/src/order_panel_fragment.dart",
+      "uiSchemaVersion": 3,
+      "uiLibrary": "lib/src/ccrouter_generated/ui/order_panel_fragment.ui.g.dart",
+      "uiContracts": [
+        {
+          "uiSchemaVersion": 3,
+          "declaration": {
+            "symbol": "OrderPanelFragmentContract",
+            "packageUri": "package:demo_order_contracts/src/order_panel_fragment.dart",
+            "libraryUri": "package:demo_order_contracts/src/order_panel_fragment.dart",
+            "line": 31,
+            "column": 22
+          },
+          "componentId": "demo_order_component",
+          "id": "order.panel",
+          "version": "1.0.0",
+          "shapeFingerprint": "b6dc30358b7f47719d5cb0f80b23711e54de0367fa7aeb732d67668a275f26ba",
+          "publicTypes": [
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelAction",
+              "publicLibraries": [
+                "package:demo_order_contracts/demo_order_contracts.dart"
+              ]
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelArtist",
+              "publicLibraries": [
+                "package:demo_order_contracts/demo_order_contracts.dart"
+              ]
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelFragmentContract",
+              "publicLibraries": [
+                "package:demo_order_contracts/demo_order_contracts.dart"
+              ]
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelProps",
+              "publicLibraries": [
+                "package:demo_order_contracts/demo_order_contracts.dart"
+              ]
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelScore",
+              "publicLibraries": [
+                "package:demo_order_contracts/demo_order_contracts.dart"
+              ]
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelSettingsRequested",
+              "publicLibraries": [
+                "package:demo_order_contracts/demo_order_contracts.dart"
+              ]
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelTarget",
+              "publicLibraries": [
+                "package:demo_order_contracts/demo_order_contracts.dart"
+              ]
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelTargetSelected",
+              "publicLibraries": [
+                "package:demo_order_contracts/demo_order_contracts.dart"
+              ]
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelUser",
+              "publicLibraries": [
+                "package:demo_order_contracts/demo_order_contracts.dart"
+              ]
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelVideo",
               "publicLibraries": [
                 "package:demo_order_contracts/demo_order_contracts.dart"
               ]

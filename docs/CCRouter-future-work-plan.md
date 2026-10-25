@@ -32,7 +32,7 @@ UI 已有 enum/受限 DTO、生成、查找和本地首次接入技术闭环。�
 | Workspace/Feature Scope | 真实共享生命周期触发，不开放任意字符串层级 Scope |
 | Action Pipeline | 只有动态来源需本地白名单、多候选处理器或真实仲裁缺陷才立项；先约束来源、优先级、短路、取消、超时、白名单与报告 |
 | Host-owned Route Mount | [旧 Proposal](CCRouter-host-owned-route-mount-design.md)含历史 GoRouter 语境，须基于 Managed 与已有局部 Outlet 重新评估；不是现行 API |
-| UI sealed union/集合/动态 Slot | 真实异构动作或多贡献者场景触发；不能用 Object/Map/函数 Props 绕过 schema；每项先定义兼容、实例身份与资源所有权 |
+| UI 集合/动态 Slot | 多值或多贡献者场景触发；不能用 Object/Map/函数 Props 绕过 schema；每项先定义兼容、实例身份与资源所有权。受限 sealed Action 已按 Issue #2 进入 UI schema 3 路径，见 UI Fragment 规范 |
 | Event Runtime Contract Registry | 仅在 generated SPI 需要成为严格防伪边界时评估；正常 Client、Workspace 校验和 publisher identity 已覆盖常规场景 |
 
 [Action Pipeline 方案](CCRouter-action-pipeline-plan.md)仅作候选设计。新能力不能因为外部框架有同名功能就进入默认 API。

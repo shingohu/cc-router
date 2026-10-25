@@ -103,7 +103,10 @@ required `dependencies`。Generator 校验 DTO、普通 enum、有效默认值�
 装配，生成消费者专属 `<componentId>.ui.api.g.dart`。消费方不得导入 Owner Renderer 或
 `ui/*.ui.g.dart` SPI。实际消费 UI 的 Host 直接依赖 `ccrouter_ui`，启动仍传一个完整 Assembly。
 UI source metadata 使用 schema 5；enum Action 保留 `uiSchemaVersion: 1` / Index schema 3，
-受限 DTO Action 使用 UI schema 2 / Index schema 4，混合文档取最高版本；
+受限 DTO Action 使用 UI schema 2 / Index schema 4；根 Action 或载荷包含 sealed union 时
+使用 UI schema 3 / Index schema 5，混合文档取最高版本。sealed 根直接继承 Object，
+同库/part 内的变体必须为无后续子类型的 public final 数据类，支持 const `super.field`
+转发和继承 final 字段。Props 仍只允许原有 DTO。
 未声明 UI 的 Package 保持原 schema。必须配套使用匹配版本的 Generator、Contracts、CCRouter
 和 UI Package。`create ui-fragment ... --dry-run` 可预览契约、公共入口及可选 Renderer；
 UI `find --usage` 从索引中的完整 schema 公共导出和实际 alias 输出接入步骤，旧索引需重生成。

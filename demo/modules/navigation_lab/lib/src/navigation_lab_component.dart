@@ -25,6 +25,10 @@ const demoNavigationLabComponent = CCComponent(
   ],
   commandDependencies: [CCCommandDependency<ReserveOrderCommand>()],
   uiDependencies: [
+    CCUIFragmentDependency<OrderPanelFragmentContract>(
+      versionRange: '^1.0.0',
+      alias: 'orderPanel',
+    ),
     CCUIFragmentDependency<OrderSummaryFragmentContract>(
       versionRange: '^1.0.0',
       alias: 'orderSummary',

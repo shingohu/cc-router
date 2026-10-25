@@ -20,7 +20,7 @@ v1 范围：
 v1 不提供动态 install/uninstall、运行时替换 Renderer、多贡献者 Slot、排序规则、
 通用 UI 沙箱、自动曝光、状态恢复、跨进程或原生视图容器。Android/iOS/OHOS/Web
 上的 Flutter Widget 可按平台验证；原生 Fragment/ViewController/ArkUI 挂载不在承诺内。
-v1 不支持泛型 UI 契约、多个独立 Action 通道、集合、sealed Action 或任意函数型 Props。
+v1 不支持泛型 UI 契约、多个独立 Action 通道、集合或任意函数型 Props。受限 sealed Action 通过独立 UI schema 3 路径支持，Props 边界不变。
 
 ## 2. Package、API 与依赖分层
 
@@ -78,7 +78,8 @@ enum OrderSummaryAction { openDetails, retry }
 
 Action 也可使用与 Props 相同约束的单一不可变 DTO，以返回 B 私有加载的
 selectedId/deviceId。该路径采用 UI schema 2 / Package Index schema 4；enum-only 保持原格式。
-enum 改 DTO 需要 major SemVer 与 A/B/Host 重生成，sealed union 继续不支持。完整约束与验证
+enum 改 DTO 需要 major SemVer 与 A/B/Host 重生成。sealed Action 及嵌套联合使用 UI schema 3 /
+Package Index schema 5。完整约束与验证
 见 [Action schema 与兼容](#action-schema-与兼容)。
 
 Contract marker 必须公开且非泛型；Props 为 final class，只提供 const generative constructor，
@@ -89,12 +90,12 @@ DTO 构造器参数只允许 `this.field`；每个字段必须在声明处提供
 v1 拒绝初始化列表赋值和重定向构造器，避免未建模的构造表达式绕过默认值兼容校验。
 Props 字段仅支持 scalar、普通 enum 与无环嵌套 DTO（可空字段可用），不可包含集合、Widget、
 BuildContext、controller、Service 实例、Future、Stream 或 function。
-根 Action 必须为普通 enum 或上述受限 DTO，scalar 只允许作为 DTO 字段类型。
+根 Action 必须为普通 enum、受限 DTO 或受限 sealed union，scalar 只允许作为数据字段类型。
 输入以 UI 所需最小数据为准，不把完整业务对象图或账号凭证传入视图。
 
 v1 每份 Props 必须有明确字段 schema，所有存储字段公开且 final。不得在原对象中
 修改字段期待 UI 自动刷新。更新应传入新的 Props；B 显式比较影响数据请求的字段。
-复杂对象、通用外部库类型、递归 schema 和 sealed Action 暂不开放。
+复杂对象、通用外部库类型和递归 schema 暂不开放；Props 中的 sealed 类型仍拒绝。
 
 ### 3.2 A 声明消费依赖
 
@@ -311,7 +312,8 @@ requirement family，复用 SemVer 算法，不直接向旧 enum 追加成员。
 不能静默忽略后声称装配成功。
 
 UI shape fingerprint 覆盖 identity、Props 字段/类型/必填与默认语义、Action enum 成员或
-受限 DTO payload schema；不能只 hash 类型名。sealed Action 尚不支持，Renderer 内部布局不作为 shape。
+受限 DTO/union payload schema；不能只 hash 类型名。union 包含完整变体集合、继承数据、
+构造转发和默认值的具体变体身份；Renderer 内部布局不作为 shape。
 行为语义变化仍由 Owner 正确提升 SemVer，fingerprint 无法替代版本责任。
 
 | 现有区域 | 兼容目标 | 必须验证 |
@@ -325,7 +327,8 @@ UI shape fingerprint 覆盖 identity、Props 字段/类型/必填与默认语义
 
 新增默认字段对普通调用可兼容，但生成 SPI、metadata 消费者和 Package 版本必须同步。
 不能声明任意版本的新旧工具可以混用。enum-only 保留 UI schema 1 / Package Index 3，
-DTO 使用 UI schema 2 / Package Index 4；混合文档声明所需最高版本。
+DTO 使用 UI schema 2 / Package Index 4；union 使用 UI schema 3 / Package Index 5。
+混合文档声明所需最高版本。
 enum 改 DTO 需要 major Contract SemVer、消费范围更新和 A/B/Host 重生成；
 配套来源与验证边界见[Action schema 与兼容](#action-schema-与兼容)。
 
@@ -335,16 +338,25 @@ enum 改 DTO 需要 major Contract SemVer、消费范围更新和 A/B/Host 重�
 | --- | --- | --- |
 | 保持 enum，使用普通 Widget | 无框架改动，支持普通数据型 callback | 缺少 Fragment 契约版本和静态实现装配；继续支持这种选型 |
 | 允许单个不可变 DTO Action | 两个单一选择结果可直接表达；复用 Props schema 校验 | 新增兼容和生成规则；当前支持此范围 |
-| sealed union Action | 多种动作携带不同 payload，可避免非法字段组合 | 类型闭包、穷尽性、指纹和代码生成成本更高；以真实异构动作需求触发 |
+| sealed union Action | 多种动作携带不同 payload，可避免非法字段组合 | Issue #2 触发受限支持；通过独立 schema 3 路径隔离旧 enum/DTO |
 | Object、Map 或任意 callback | 表面上通用 | 丢失静态契约与兼容证明，不采用 |
 
-当前范围：保留 enum；新增 public final class、const 生成构造器和 public final 存储字段的
-单 DTO Action。示意结果是 `RecommendationSelected(selectedId: ...)`，而不是多个动作共享
-`kind + nullable fields`。Generator 与 Plugin 均识别该受限类型。
-根 Action 只允许普通 enum 或受限不可变 DTO；scalar 不能直接作为 Action。
-DTO 字段仅接受受限 Pure Dart scalar、普通 enum 和嵌套 DTO，继续排除 Flutter 对象、Object/dynamic、
-函数、Future/Stream、泛型集合及带行为成员的类型。对多种异构输出先评估 union，
-不把单 DTO 宣称为已解决全部 Action 建模。
+当前范围保留 enum、单 DTO，并支持 Action 根或载荷字段中的受限 sealed union。Props
+仍走原有 DTO schema，不允许 sealed。各联合根直接继承 Object，所有直接子类型必须是
+同库（含 part）内公开、非泛型的 final 具体数据叶子；拒绝叶子继续派生、implements、
+mixin、额外 sealed 继承层级及覆盖基类字段。嵌套联合可以来自其他 Pure Dart 契约包。
+
+基类可声明 public final 存储字段，所有构造器为 const generative。只允许 `this.field`、
+叶子 `super.field` 直接转发，以及隐式无名 const super 调用；参数默认值和常量字段初始值
+均纳入指纹。显式初始化列表（含 `super(...)`、assert）、重定向和 factory 拒绝。
+数据字段只允许受限 scalar、普通 enum、DTO 和 union，不允许行为、资源、泛型集合或有环
+字段图。生成图限制为 32 个数据层级与 512 个展开节点（含变体、字段及参数 schema）。
+
+类型身份以 defining library URI + symbol 为准；变体按身份确定性排序，part 内移动或声明
+顺序变化不改变 shape。公共 barrel 必须导出根、全部变体及嵌套类型；const 默认值记录具体
+变体及继承字段，例如 `User('x')` 与 `Score('x')` 不同。Part-only 变化仍须使 Builder、
+metadata 和 Portable State 正确失效。示例见 Demo `order.panel` 和
+[集成指南](../skills/ccrouter-integration-development/references/ui-fragments.md#sealed-action-unions-ui-schema-3)。
 
 ### 契约、版本与发布
 
@@ -355,9 +367,12 @@ DTO 字段仅接受受限 Pure Dart scalar、普通 enum 和嵌套 DTO，继续�
   都带匹配版本。混合文档应声明其所需最高 UI schema；旧 Generator 必须明确拒绝。
   DTO Package Index 升至 schema 4：真实旧 schema 3 读取器会直接接受 Index 3 的 metadata，
   因此仅改变内部 UI 版本不能保证只读查询拒绝新能力。旧读取器已验证明确拒绝 Index 4。
+- union Action 使用 UI schema 3 / Package Index 5；旧 Index 读取器明确拒绝。Portable State
+  的结构无需升级，继续校验 tool、source、resolution、metadata 和 managed-output 的内容身份。
 - Action 字段类型、nullable、构造参数/default、嵌套类型与公共导出纳入 shape fingerprint。
   指纹记录形状，不包含运行时业务值。enum 改为 DTO 是破坏性契约变更，需要 major SemVer，
   更新消费范围并重生成 A/B/Host；不会自动把原 enum 解释成 DTO。
+  enum/DTO 改 union、增删变体及破坏性嵌套载荷变化同样要求 major Contract 版本。
 - Generator、Analyzer、运行时 UI 包和分发来源必须按验证过的组合发布；不静默升级 SDK
   或 analyzer 约束。新 Plugin 行为仍走独立提交、远程 SHA、Demo pin 两阶段流程。
 
@@ -394,4 +409,4 @@ DTO 字段仅接受受限 Pure Dart scalar、普通 enum 和嵌套 DTO，继续�
 
 [独立首次接入技术验证](validation/ui-fragment-adoption-20261020/README.md)保留 enum/DTO 两条路径的复现源码、日志和条件化成本；它不等于未参与实现者的可用性研究。历史实施验收、易用性审查及 Action 增量记录统一保留在[归档索引](archive/20261024-consolidation/README.md)。
 
-回归至少覆盖无 UI 组件兼容、required Owner/Renderer、指纹与旧 schema 拒绝、多实例/重排、Props 竞争、最新 callback、active、Runtime generation、卸载后晚到 Action 和引用释放。UI DevTools Catalog、集合、sealed Action、动态 Slot 与热替换尚未支持。新能力按[后续工作与触发条件](CCRouter-future-work-plan.md)评估；API 冻结、正式分发、平台矩阵与长期性能门禁只在[Release Readiness](CCRouter-release-readiness.md)维护。
+回归至少覆盖无 UI 组件兼容、required Owner/Renderer、指纹与旧 schema 拒绝、多实例/重排、Props 竞争、最新 callback、active、Runtime generation、卸载后晚到 Action 和引用释放。UI DevTools Catalog、集合、动态 Slot 与热替换尚未支持。新能力按[后续工作与触发条件](CCRouter-future-work-plan.md)评估；API 冻结、正式分发、平台矩阵与长期性能门禁只在[Release Readiness](CCRouter-release-readiness.md)维护。

@@ -1,11 +1,11 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "generatorVersion": "0.1.5",
   "package": {
     "name": "demo_order",
     "version": "0.1.0"
   },
-  "contentFingerprint": "51e730e234a76711eeba8ed43121ba2637d7731e06b3c6dfd2f0f8f05c586758",
+  "contentFingerprint": "4b91061376b5953893e0c7941800f21d304622b423c511126bcc5e694838e1ff",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_order_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -14,7 +14,7 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "9be062d35979f3c2565898c66ff5fb39a8d5fbdce046e4ff8adbae333fe359fd"
+      "contentFingerprint": "39b43549ac2f31f45f9f00a1eec85fbf603669a7ad1042277a9ce14801077ffa"
     }
   ],
   "metadata": [
@@ -101,6 +101,92 @@
             "packageUri": "package:demo_order/src/order_fragment_renderers.dart",
             "libraryUri": "package:demo_order/src/order_fragment_renderers.dart",
             "line": 18,
+            "column": 8
+          }
+        }
+      ],
+      "uiRequirements": []
+    },
+    {
+      "schemaVersion": 5,
+      "componentDeclarations": [],
+      "package": "demo_order",
+      "source": "lib/src/order_panel_renderer.dart",
+      "uiSchemaVersion": 3,
+      "uiLibrary": "lib/src/ccrouter_generated/ui/order_panel_renderer.ui.g.dart",
+      "uiContracts": [],
+      "uiRenderers": [
+        {
+          "uiSchemaVersion": 3,
+          "declaration": {
+            "symbol": "OrderPanelFragmentContract",
+            "packageUri": "package:demo_order_contracts/src/order_panel_fragment.dart",
+            "libraryUri": "package:demo_order_contracts/src/order_panel_fragment.dart",
+            "line": 31,
+            "column": 22
+          },
+          "componentId": "demo_order_component",
+          "id": "order.panel",
+          "version": "1.0.0",
+          "shapeFingerprint": "b6dc30358b7f47719d5cb0f80b23711e54de0367fa7aeb732d67668a275f26ba",
+          "publicTypes": [
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelAction"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelArtist"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelFragmentContract"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelProps"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelScore"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelSettingsRequested"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelTarget"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelTargetSelected"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelUser"
+            },
+            {
+              "package": "demo_order_contracts",
+              "source": "lib/src/order_panel_fragment.dart",
+              "symbol": "OrderPanelVideo"
+            }
+          ],
+          "function": "renderOrderPanel",
+          "implementation": {
+            "symbol": "renderOrderPanel",
+            "packageUri": "package:demo_order/src/order_panel_renderer.dart",
+            "libraryUri": "package:demo_order/src/order_panel_renderer.dart",
+            "line": 7,
             "column": 8
           }
         }

@@ -2,12 +2,19 @@ import 'component.dart';
 
 /// Declares a non-generic marker for one statically composed UI capability.
 ///
-/// [P] is an immutable input DTO; [A] is a plain public enum or an immutable
-/// output DTO. DTOs are public final Pure Dart classes with const generative
-/// constructors and public final stored scalar, plain enum or nested DTO fields.
-/// Neither type may contain Flutter objects, functions, collections, streams,
-/// asynchronous values or sealed unions. DTO Actions require a Generator that
-/// supports UI schema 2; changing an enum to a DTO is a breaking Contract change.
+/// [P] is an immutable input DTO; [A] is a plain public enum, an immutable
+/// output DTO or a restricted sealed union. DTOs are public final Pure Dart
+/// classes with const generative constructors and public final stored data.
+/// Action fields can nest sealed unions: each root directly extends Object,
+/// with public final direct leaves in the same library (including parts).
+/// Base final fields and const `super.field` forwarding are supported; leaves
+/// cannot have further subtypes. Props retain the DTO-only boundary.
+/// Neither type may contain Flutter objects, functions, collections, streams
+/// or asynchronous values. DTO Actions require UI schema 2; union Actions
+/// require UI schema 3 / Package Index 5 with compatible tooling. Changing the
+/// Action representation or adding/removing variants is a breaking Contract
+/// change. Constructors with explicit initializers, redirects or factories
+/// are unsupported for union data; full validation belongs to the Generator.
 /// Output belongs to the mounted consumer callback, without serialization or
 /// payload retention in diagnostics. This annotation creates no Route or Scope.
 final class CCUIFragmentContract<P extends Object, A extends Object> {

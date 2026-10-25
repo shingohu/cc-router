@@ -71,7 +71,8 @@
 ### 已实现
 
 - 可选类型化 UI Fragment：Pure Dart DTO/enum 契约、消费 Client、Renderer 静态装配、
-  Host generation 校验与 Flutter State 生命周期；集合、sealed Action 和动态 Slot 未支持。
+  Host generation 校验与 Flutter State 生命周期；受限 sealed Action/嵌套联合使用独立
+  UI schema 3，集合和动态 Slot 未支持。
 - 原生 Managed Host、Shell、StatefulShell、多 Outlet、MultiHost 和调用级 Context 定位。
   可选 `CCRouter.navigatorOf(context)` 复用绑定当前 Host/Outlet 的原 `CCNavigator` 接口，
   原全局与 per-call Context 调用保留。渐进接入使用局部 Managed Outlet；不再提供 GoRouter attach。

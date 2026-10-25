@@ -48,6 +48,41 @@ void main() {
       ],
     },
   ];
+  test(
+    'union schema 3 validates mixed documents and rejects stale snapshots',
+    () {
+      final docs = documents();
+      for (final doc in docs) {
+        doc['uiSchemaVersion'] = 3;
+        for (final key in ['uiContracts', 'uiRenderers', 'uiRequirements']) {
+          for (final record in (doc[key] as List? ?? [])) {
+            record['uiSchemaVersion'] = 3;
+          }
+        }
+      }
+      (docs[0]['uiContracts'] as List).add({
+        ...contract(),
+        'id': 'orders.legacy',
+      });
+      expect(
+        validateUIFragmentWorkspaceDiagnostics(docs, host: false),
+        isEmpty,
+      );
+      (docs[0]['uiContracts'] as List).removeLast();
+      expect(validateUIFragmentWorkspaceDiagnostics(docs, host: true), isEmpty);
+      (docs[1]['uiRenderers'] as List).single['shapeFingerprint'] =
+          'changed-variant';
+      expect(
+        validateUIFragmentWorkspace(docs, host: true),
+        contains(contains('staleGeneratedOutput')),
+      );
+      docs[0]['uiSchemaVersion'] = 2;
+      expect(
+        validateUIFragmentWorkspace(docs, host: true),
+        contains(contains('unsupported UI schema')),
+      );
+    },
+  );
   test('valid UI workspace emits no diagnostics', () {
     expect(
       validateUIFragmentWorkspaceDiagnostics(documents(), host: true),

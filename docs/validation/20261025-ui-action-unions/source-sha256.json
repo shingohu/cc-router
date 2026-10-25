@@ -1,0 +1,11 @@
+{
+  "packages/ccrouter_analyzer_plugin/lib/src/contract_owner_index.dart": "d45a005492cc797e94ce751955f615ade2ca3e1608722c3ea9e7ab49f172e375",
+  "packages/ccrouter_analyzer_plugin/lib/src/ui_fragment_analysis.dart": "fcfa6afd17c9208f5aaf6be2b5cc973153a666ecfeedc7990a82c3020aaeb5ef",
+  "packages/ccrouter_contracts/lib/src/ui_fragment.dart": "056091b428b626c7204fbc9c9d734585027875d5a93b60351ce47991805837a5",
+  "packages/ccrouter_generator/lib/src/barrel_validator.dart": "daeee1c1f88708c4e4a54f5a0d296df336031e5c1b3c851790c871ac07aa29d8",
+  "packages/ccrouter_generator/lib/src/package_workspace.dart": "2e6ac26d45597c9261b7f6b96112fb3539cae0deda33991fa05d10b7e968512d",
+  "packages/ccrouter_generator/lib/src/ui_action_schema.dart": "69732ed999e3dac87f63c2179081bff135d435a192199fdf8b3a65d541df217d",
+  "packages/ccrouter_generator/lib/src/ui_fragment_generator.dart": "43ba67da7d3d3bc52ef4f19bf6878f640eb2dfffb6ed80595a7395701697d409",
+  "packages/ccrouter_generator/lib/src/ui_fragment_workspace.dart": "3cea2bcf982c9a59c3ae9e3f6f9a035eeef448901aec32d2a50b076c5fe5296c",
+  "packages/ccrouter_generator/lib/src/workspace_validator.dart": "0c705270932a1a47b74afd0b16dfdcee3c3c2ed2f8c4403a5cb22d530cade1e1"
+}

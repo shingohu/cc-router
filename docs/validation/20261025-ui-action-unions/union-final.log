@@ -1,0 +1,31 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/ui_action_union_test.dart
+00:00 +0: legacy enum fingerprint stays byte compatible
+00:06 +1: legacy DTO fingerprint stays byte compatible
+00:08 +2: sealed root and nested inherited targets use UI schema 3
+00:09 +3: DTO Action can contain a union without opening Props
+00:12 +4: generated Renderer and Client preserve the exact Action type
+00:14 +5: part variants are discovered with defining-library identity
+00:17 +6: nested unions imported from another Package retain all public types
+00:19 +7: variant order is inert but variant, inherited data and default changes alter shape
+00:31 +8: implicit super defaults and inherited nullable values are fingerprinted
+00:34 +9: union rejects empty union
+00:36 +10: union rejects open leaf
+00:37 +11: union rejects abstract leaf
+00:39 +12: union rejects nested inheritance
+00:40 +13: union rejects implements edge
+00:42 +14: union rejects private leaf
+00:44 +15: union rejects generic leaf
+00:45 +16: union rejects mutable
+00:47 +17: union rejects non-const
+00:48 +18: union rejects resource
+00:50 +19: union rejects behavior
+00:51 +20: union rejects field cycle
+00:53 +21: union rejects field override
+00:54 +22: union rejects explicit super initializer
+00:56 +23: union rejects assert initializer
+00:58 +24: union rejects redirect
+01:00 +25: union rejects factory
+01:01 +26: legacy deep DTO generation remains outside the union depth limit
+01:03 +27: union width is bounded to 512 expanded schema nodes
+01:05 +28: union data graph expansion is bounded
+01:07 +29: All tests passed!

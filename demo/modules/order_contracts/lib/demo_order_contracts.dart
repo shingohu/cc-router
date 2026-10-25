@@ -17,3 +17,16 @@ export 'src/order_summary_service.dart'
 export 'src/order_commands.dart' show ReserveOrderCommand;
 export 'src/order_detail_route_contract.dart' show demoOrderComponentId;
 export 'src/order_init_tasks.dart' show demoOrderFoundationInitTask;
+
+export 'src/order_panel_fragment.dart'
+    show
+        OrderPanelProps,
+        OrderPanelAction,
+        OrderPanelSettingsRequested,
+        OrderPanelTargetSelected,
+        OrderPanelTarget,
+        OrderPanelUser,
+        OrderPanelScore,
+        OrderPanelVideo,
+        OrderPanelArtist,
+        OrderPanelFragmentContract;

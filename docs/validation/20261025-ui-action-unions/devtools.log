@@ -1,0 +1,26 @@
+00:00 +0: loading <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/provider_test.dart
+00:00 +0: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools_protocol/test/runtime_diagnostics_test.dart: Host health names tracked lifetimes and accepts the former wire key
+00:00 +1: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools_protocol/test/protocol_test.dart: envelope round trips static catalog and runtime edges
+00:00 +2: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools_protocol/test/protocol_test.dart: envelope round trips static catalog and runtime edges
+00:00 +3: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools_protocol/test/runtime_diagnostics_test.dart: optional diagnostics round-trip while version 1 remains compatible
+00:00 +4: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools_protocol/test/runtime_diagnostics_test.dart: optional diagnostics round-trip while version 1 remains compatible
+00:00 +5: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/provider_test.dart: burst invocation changes are coalesced into one refresh interval
+00:00 +6: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/provider_test.dart: burst invocation changes are coalesced into one refresh interval
+00:00 +7: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/provider_test.dart: burst invocation changes are coalesced into one refresh interval
+00:00 +8: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/provider_test.dart: burst invocation changes are coalesced into one refresh interval
+00:00 +9: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/provider_test.dart: burst invocation changes are coalesced into one refresh interval
+00:00 +10: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/provider_test.dart: burst invocation changes are coalesced into one refresh interval
+00:00 +11: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/provider_test.dart: burst invocation changes are coalesced into one refresh interval
+00:00 +12: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/provider_test.dart: burst invocation changes are coalesced into one refresh interval
+00:00 +13: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/provider_test.dart: burst invocation changes are coalesced into one refresh interval
+00:00 +14: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/panel_test.dart: provider replacement releases the old source even with value equality
+00:00 +15: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/panel_test.dart: provider replacement releases the old source even with value equality
+00:00 +16: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/panel_test.dart: provider replacement releases the old source even with value equality
+00:00 +17: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/panel_test.dart: provider replacement releases the old source even with value equality
+00:00 +18: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/panel_test.dart: failures show placement, cancellation and recovery selection distinctly
+00:00 +19: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/panel_test.dart: hidden panel suspends observation and resumes with a fresh snapshot
+00:00 +20: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/panel_test.dart: small panel explains disabled retention and Sink losses
+00:00 +21: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/panel_test.dart: panel renders tabs and remains read-only for empty Runtime
+00:00 +22: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/panel_test.dart: panel links static Catalog records to Runtime and source
+00:00 +23: <home>/.codex/worktrees/sealed-action-unions/cc-router/packages/ccrouter_devtools/test/panel_test.dart: panel refreshes from a static test snapshot
+00:00 +24: All tests passed!

@@ -22,8 +22,8 @@ Declare it as the Contract's Action type and explicitly export it with all neste
 types. B calls `input.onAction(RecommendationSelected(selectedId: loaded.id))`;
 A receives the exact type through its generated Client's `onAction`. The payload
 is process-local and synchronous, with no JSON conversion or diagnostic retention.
-DTO Actions share the restricted Props schema below. Sealed unions and heterogeneous
-`kind + nullable fields` modeling are outside this increment. Use ordinary public
+DTO Actions without unions share the restricted Props schema below. Use a restricted sealed union for heterogeneous actions instead of
+`kind + nullable fields` modeling. Use ordinary public
 Flutter composition when Fragment version/assembly guarantees are unnecessary;
 never route selection through global state, a Service getter or a broadcast Event.
 
@@ -182,9 +182,11 @@ Props and DTO Actions are final classes with only const generative constructors,
 stored fields, no inheritance/mixins/interfaces or declared methods. Fields may
 contain scalar values, ordinary enums and nested DTOs, with supported nullable
 fields. Generic collections, dynamic/Object, Flutter types, Future/Stream,
-functions, enhanced enums, and sealed Action unions are unsupported.
+functions and enhanced enums are unsupported. Action unions use the separate
+schema 3 rules below; sealed types remain unsupported in Props.
 Scalar types (`String`, `int`, `bool`, `num`, `double`) are DTO field types only;
-the root Action must be a plain enum or a restricted immutable DTO.
+the root Action must be a plain enum, restricted immutable DTO or restricted
+sealed union.
 Enum Actions and DTO enum fields must be plain public enums: no authored fields, getters,
 setters, methods, constructors, mixins or interfaces, including static members.
 DTO constructors accept only `this.field` parameters. Each stored field must
@@ -221,6 +223,76 @@ Generator: declaration `packageUri` keeps the part location, while `libraryUri`
 records the defining library for exact type matching. Older part metadata defers
 until regeneration; a shared Package and marker name alone cannot prove identity.
 
+### Sealed Action unions (UI schema 3)
+
+Use a sealed union when one Fragment emits actions with different payloads.
+Props retain the existing DTO-only rules. An Action may be a union itself or
+an immutable DTO containing a union. Unions can nest through allowed data fields:
+
+```dart
+sealed class SelectionTarget {
+  const SelectionTarget(this.id);
+  final String id;
+}
+final class SelectedUser extends SelectionTarget {
+  const SelectedUser(super.id);
+}
+final class SelectedScore extends SelectionTarget {
+  const SelectedScore(super.id);
+}
+sealed class PanelAction { const PanelAction(); }
+final class SettingsRequested extends PanelAction {
+  const SettingsRequested();
+}
+final class TargetSelected extends PanelAction {
+  const TargetSelected(this.target);
+  final SelectionTarget target;
+}
+```
+
+Declare `PanelAction` as the Contract's Action and export the root, every variant,
+all nested data types and the marker through authored public barrels. The consumer
+receives `PanelAction` and can exhaustively switch on both unions. The Demo's
+`order.panel` adds this path alongside the existing enum and DTO Fragments.
+
+Each sealed root directly extends Object. All direct subtypes must be public,
+non-generic final concrete classes extending that root in the same Dart library,
+including its `part` files. Final leaves cannot have further subtypes; interfaces,
+mixins, extra sealed inheritance levels and overriding inherited fields are
+rejected. Type identity uses the defining library URI and symbol, not the part
+file location. A nested union may belong to a separate Pure Dart contracts Package;
+its variants remain in that union's defining library.
+
+Only public final stored scalar, plain enum, DTO or union fields are allowed.
+Every constructor is const and generative. Constructors accept `this.field`
+and leaves may use `super.field` to forward directly to base field parameters.
+Implicit unnamed const super construction, base field initializers and optional
+parameter defaults are supported. Explicit initializer lists (including explicit
+`super(...)` calls and asserts), redirects, factories and executable members are
+rejected. The data graph must be acyclic and fit within 32 data levels and 512
+expanded schema nodes, counting field/parameter schemas and variants.
+
+Fingerprints include the sorted complete variant set, inherited field schemas,
+constructor/forwarding/default semantics and concrete types of constant defaults.
+Changing `const SelectedUser('x')` to `const SelectedScore('x')` changes the shape.
+Reordering variants or moving them between parts of the same library is inert.
+
+Union Actions require UI schema 3 / Package Index schema 5 and compatible tooling.
+Mixed documents use the highest required UI version. Legacy enum/DTO contracts keep
+their original fingerprints and output versions. SDK scalar modifiers (including
+sealed num) never opt a DTO into the union schema. Migrating enum/DTO to a union,
+adding/removing union variants, or breaking nested payload shape needs a major
+Contract version, an updated consumer range and regeneration of A/B/Host.
+Exact Host fingerprints are still required even when SemVer ranges match.
+Distributed Packages must regenerate Portable State; modifying a part or a
+variant invalidates the published proof. Older tools reject Index 5.
+
+The sink remains synchronous and instance-local. It does not serialize Actions,
+return a navigation Future or own account cleanup/session work. Use the existing
+active, unmount, capability identity and Runtime generation rules. The Plugin
+checks proven union/data violations; complete constructor syntax, defaults,
+export proofs and the final schema remain Generator-owned.
+
 ## Rendering and consuming
 
 The Owner implementation directly depends on `ccrouter_ui` and declares a public
@@ -253,6 +325,8 @@ Source metadata schema 5 remains opt-in for UI. Enum contracts retain UI schema 
 Index schema 3 with unchanged shape fingerprints and signatures. DTO Actions use
 UI schema 2 and Package Index schema 4; Contract, Renderer and consumer records
 carry the required version and mixed documents declare the highest UI version.
+Union Actions use UI schema 3 / Package Index schema 5, including DTO Actions
+with nested union fields; old readers reject these indexes.
 Older generators reject these artifacts. Changing an enum Action to DTO requires
 major Contract SemVer, updated consumer range and regeneration of A/B/Host. Use matching framework/UI/generator
 sources. Packages without UI retain their existing schema and generated API.
@@ -465,6 +539,6 @@ For an adoption change, complete these steps before calling it integrated:
 The public API is not finally frozen. Independent human first use, published
 installation/upgrades, real platform/device coverage, production backend data,
 and long-term memory/performance require separate evidence. UI DevTools Catalog,
-complete editor-time schema validation, sealed Actions and dynamic Slots remain
+complete editor-time schema validation and dynamic Slots remain
 outside the implemented scope. Prefer ordinary Flutter composition when its
 ownership and dependency boundary already meets the application need.

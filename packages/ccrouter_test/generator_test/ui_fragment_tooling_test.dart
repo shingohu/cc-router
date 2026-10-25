@@ -293,6 +293,54 @@ const component = CCComponent(
       );
     }
   });
+  test(
+    'UI public exports normalize trailing slash and dot Package roots',
+    () async {
+      await plan().write();
+      for (final suffix in ['', '/', '/.']) {
+        final packageRoot = Directory('${contracts.path}$suffix');
+        final docs = <Map<String, Object?>>[
+          {
+            'package': 'ccrouter_test',
+            'source': 'lib/src/order_summary_fragment.dart',
+            'uiContracts': [
+              {
+                'id': 'orders.summary',
+                'publicTypes': [
+                  {
+                    'package': 'ccrouter_test',
+                    'source': 'lib/src/order_summary_fragment.dart',
+                    'symbol': 'OrderSummaryProps',
+                  },
+                ],
+              },
+            ],
+          },
+        ];
+        CCRouteBarrelExportValidator.annotatePublicLibraries(
+          docs,
+          packageRoots: {'ccrouter_test': packageRoot},
+        );
+        expect(
+          (docs.single['uiContracts'] as List)
+              .single['publicTypes']
+              .single['publicLibraries'],
+          ['package:ccrouter_test/order_summary_fragment.dart'],
+          reason: 'root suffix: $suffix',
+        );
+        expect(
+          CCRouteBarrelExportValidator.validate(
+            root,
+            docs,
+            packageRoots: {'ccrouter_test': packageRoot},
+          ),
+          isEmpty,
+          reason: 'root suffix: $suffix',
+        );
+      }
+    },
+  );
+
   test('UI proof deferral preserves existing Service public-library facts', () {
     File(p.join(contracts.path, 'lib', 'src', 'reader.dart'))
       ..createSync(recursive: true)

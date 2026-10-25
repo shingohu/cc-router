@@ -4,6 +4,7 @@ import 'package:analyzer/dart/analysis/features.dart';
 import 'package:analyzer/dart/analysis/results.dart';
 import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
+import 'package:path/path.dart' as path;
 
 /// Checks that public cross-Package contracts are re-exported.
 ///
@@ -415,7 +416,7 @@ final class _PackageBarrelExportIndex {
         continue;
       }
       if (importProof && parsed.errors.isNotEmpty) continue;
-      final barrelPath = file.absolute.path;
+      final barrelPath = path.normalize(file.absolute.path);
       if (importProof) {
         if (parsed.unit.directives.any(
           (d) => d is PartDirective || d is PartOfDirective,
@@ -476,7 +477,9 @@ final class _PackageBarrelExportIndex {
             shown.removeAll(combinator.hiddenNames.map((name) => name.name));
           }
         }
-        final targetPath = File(resolved.toFilePath()).absolute.path;
+        final targetPath = path.normalize(
+          File(resolved.toFilePath()).absolute.path,
+        );
         if (importProof) {
           if (!hasShow) unprovenBarrels.add(barrelPath);
           for (final symbol in shown) {
@@ -490,16 +493,11 @@ final class _PackageBarrelExportIndex {
         }
         exportsByTarget
             .putIfAbsent(targetPath, () => <_BarrelExport>[])
-            .add(
-              _BarrelExport(
-                barrelPath: file.absolute.path,
-                shownSymbols: shown,
-              ),
-            );
+            .add(_BarrelExport(barrelPath: barrelPath, shownSymbols: shown));
       }
     }
     return _PackageBarrelExportIndex(
-      packageRoot.absolute.path,
+      path.normalize(packageRoot.absolute.path),
       exportsByTarget,
       unprovenBarrels,
       contestedSymbols,
@@ -516,12 +514,13 @@ final class _PackageBarrelExportIndex {
   }
 
   /// Returns every top-level public library reached through explicit exports.
+  /// Equivalent trailing-slash and dot paths share one lexical identity.
   List<String> publicLibraries(
     File target,
     Set<String> requiredSymbols, {
     required String packageName,
   }) {
-    final targetPath = target.absolute.path;
+    final targetPath = path.normalize(target.absolute.path);
     final pending = <String>[targetPath];
     final visited = <String>{targetPath};
     final publicLibraries = <String>{};

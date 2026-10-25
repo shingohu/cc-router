@@ -23,6 +23,19 @@ final class _UIFragmentLabPageState extends State<UIFragmentLabPage> {
   bool _error = false;
   String _status = '等待选择';
 
+  void _onPanelAction(OrderPanelAction action) {
+    final message = switch (action) {
+      OrderPanelSettingsRequested() => 'A 收到设置请求',
+      OrderPanelTargetSelected(:final target) => switch (target) {
+        OrderPanelUser(:final id) => 'A 收到用户 $id',
+        OrderPanelScore(:final id) => 'A 收到曲谱 $id',
+        OrderPanelVideo(:final id) => 'A 收到作品 $id',
+        OrderPanelArtist(:final id) => 'A 收到艺术家 $id',
+      },
+    };
+    setState(() => _status = message);
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('类型化 UI Fragment')),
@@ -71,6 +84,11 @@ final class _UIFragmentLabPageState extends State<UIFragmentLabPage> {
               ListView(
                 key: ValueKey('recommendations-$_session'),
                 children: [
+                  DemoNavigationLabComponentFragments.orderPanel(
+                    props: const OrderPanelProps(),
+                    active: _tab == 1,
+                    onAction: _onPanelAction,
+                  ),
                   DemoNavigationLabComponentFragments.orderRecommendations(
                     key: const ValueKey('recommendations'),
                     props: OrderRecommendationsProps(

@@ -233,6 +233,78 @@ generation:
     },
   );
 
+  test(
+    'union Action index uses schema 5 and cannot be relabeled as legacy UI',
+    () async {
+      final root = Directory.systemTemp.createTempSync(
+        'ccrouter_payload_index_',
+      );
+      addTearDown(() => root.deleteSync(recursive: true));
+      final package = CCResolvedPackage(
+        name: 'payload',
+        version: '1.0.0',
+        root: root,
+        dependencies: const [],
+        devDependencies: const [],
+        writable: false,
+      );
+      final metadata = <Map<String, Object?>>[
+        {
+          'schemaVersion': 5,
+          'package': 'payload',
+          'uiSchemaVersion': 3,
+          'uiContracts': [],
+        },
+      ];
+      final fingerprint = computeCCPackageFingerprint(
+        packageName: 'payload',
+        packageVersion: '1.0.0',
+        bundleLibrary: null,
+        bundleSymbol: null,
+        dependencies: const [],
+        metadata: metadata,
+      );
+      final index = CCPackageIndex(
+        packageName: 'payload',
+        packageVersion: '1.0.0',
+        contentFingerprint: fingerprint,
+        dependencies: const [],
+        metadata: metadata,
+      );
+      final encoded = jsonDecode(index.toJson()) as Map<String, dynamic>;
+      expect(encoded['schemaVersion'], 5);
+      package.indexFile
+        ..createSync(recursive: true)
+        ..writeAsStringSync(index.toJson());
+      expect(
+        (await CCPackageIndex.read(package)).contentFingerprint,
+        fingerprint,
+      );
+      encoded['schemaVersion'] = 4;
+      package.indexFile.writeAsStringSync(jsonEncode(encoded));
+      await expectLater(
+        CCPackageIndex.read(package),
+        throwsA(
+          isA<CCPackageWorkspaceException>().having(
+            (e) => e.message,
+            'message',
+            contains('requires Package index schema 5'),
+          ),
+        ),
+      );
+      final legacy = CCPackageIndex(
+        packageName: 'payload',
+        packageVersion: '1.0.0',
+        contentFingerprint: '',
+        dependencies: const [],
+        metadata: const [
+          {'schemaVersion': 5, 'uiSchemaVersion': 1},
+        ],
+      );
+      expect(jsonDecode(legacy.toJson())['schemaVersion'], 3);
+    },
+  );
+
   test('non-framework CCRouter dependencies require a published index', () {
     final root = Directory.systemTemp;
     final component = CCResolvedPackage(

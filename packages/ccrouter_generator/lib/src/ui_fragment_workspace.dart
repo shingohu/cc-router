@@ -71,9 +71,10 @@ List<CCWorkspaceDiagnostic> validateUIFragmentWorkspaceDiagnostics(
       ..._objects(document['uiRenderers']),
       ..._objects(document['uiRequirements']),
     ];
-    final requiredSchema = records.any((r) => r['uiSchemaVersion'] == 2)
-        ? 2
-        : 1;
+    final requiredSchema = records.fold<int>(1, (version, record) {
+      final required = record['uiSchemaVersion'];
+      return required is int && required > version ? required : version;
+    });
     if ((document.containsKey('uiSchemaVersion') &&
             document['uiSchemaVersion'] != requiredSchema) ||
         (!document.containsKey('uiSchemaVersion') && requiredSchema > 1) ||
@@ -81,7 +82,8 @@ List<CCWorkspaceDiagnostic> validateUIFragmentWorkspaceDiagnostics(
           (r) =>
               r.containsKey('uiSchemaVersion') &&
               r['uiSchemaVersion'] != 1 &&
-              r['uiSchemaVersion'] != 2,
+              r['uiSchemaVersion'] != 2 &&
+              r['uiSchemaVersion'] != 3,
         )) {
       report(
         'stale_generated_output',

@@ -1,0 +1,39 @@
+Generating Package artifacts for ccrouter_demo, demo_kv_storage, demo_navigation_lab, demo_network, demo_order, demo_order_contracts, demo_payment, demo_web, demo_web_contracts from <home>/.codex/worktrees/sealed-action-unions/cc-router...
+  0s ccrouter_generator:ui_metadata on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  0s ccrouter_generator:ui_fragments on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  0s ccrouter_generator:service_contracts on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  0s ccrouter_generator:services on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  0s ccrouter_generator:service_proxies on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  0s ccrouter_generator:service_metadata on 55 inputs; demo_web_contracts|lib/demo_web_contracts.dart
+  0s ccrouter_generator:route_contracts on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  0s ccrouter_generator:routes on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  0s ccrouter_generator:route_metadata on 55 inputs; demo_web_contracts|lib/demo_web_contracts.dart
+  0s ccrouter_generator:route_bindings on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  0s ccrouter_generator:init_tasks on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  0s ccrouter_generator:init_task_metadata on 55 inputs; demo_web_contracts|lib/demo_web_contracts.dart
+  0s ccrouter_generator:events on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  0s ccrouter_generator:event_metadata on 55 inputs; demo_web_contracts|lib/demo_web_contracts.dart
+  0s ccrouter_generator:component_metadata on 55 inputs; demo_web_contracts|lib/demo_web_contracts.dart
+  0s ccrouter_generator:commands on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  0s ccrouter_generator:command_metadata on 55 inputs; demo_web_contracts|lib/demo_web_contracts.dart
+  0s ccrouter_generator:ui_metadata on 45 inputs: 45 skipped
+  0s ccrouter_generator:ui_fragments on 45 inputs: 45 skipped
+  0s ccrouter_generator:service_contracts on 45 inputs: 45 skipped
+  0s ccrouter_generator:services on 45 inputs: 45 skipped
+  0s ccrouter_generator:service_proxies on 45 inputs: 45 skipped
+  0s ccrouter_generator:service_metadata on 55 inputs: 55 skipped
+  0s ccrouter_generator:route_contracts on 45 inputs: 45 skipped
+  0s ccrouter_generator:routes on 45 inputs: 45 skipped
+  0s ccrouter_generator:route_metadata on 55 inputs: 55 skipped
+  0s ccrouter_generator:route_bindings on 45 inputs: 45 skipped
+  0s ccrouter_generator:init_tasks on 45 inputs: 45 skipped
+  0s ccrouter_generator:init_task_metadata on 55 inputs: 55 skipped
+  0s ccrouter_generator:events on 45 inputs: 45 skipped
+  0s ccrouter_generator:event_metadata on 55 inputs: 55 skipped
+  0s ccrouter_generator:component_metadata on 55 inputs: 55 skipped
+  0s ccrouter_generator:commands on 45 inputs: 45 skipped
+  0s ccrouter_generator:command_metadata on 55 inputs: 55 skipped
+  Built with build_runner/aot in 0s; wrote 0 outputs.
+Validated 6 components and 34 routes across 11 generated Packages.
+CCRouter generated artifacts are up to date.
+CCRouter generation finished: elapsed=2044ms.

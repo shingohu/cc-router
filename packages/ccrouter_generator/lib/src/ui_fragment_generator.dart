@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
@@ -10,6 +11,8 @@ import 'package:source_gen/source_gen.dart';
 
 import 'contract_fingerprint.dart';
 import 'generated_client_naming.dart';
+
+part 'ui_action_schema.dart';
 
 /// Creates the opt-in UI source or metadata builder; old libraries emit nothing.
 Builder createUIFragmentBuilder({required bool metadata}) =>
@@ -33,8 +36,18 @@ final _formatter = DartFormatter(
 
 /// Validated contract and referenced DTO types used by both builders.
 final class _Contract {
+  /// Allocates a contract only within the validated asynchronous reader.
+  _Contract._();
+
+  /// Resolves constructor syntax for union schemas through the Builder resolver.
+  static Future<_Contract> read(InterfaceElement marker, BuildStep step) async {
+    final contract = _Contract._();
+    await contract._read(marker, step);
+    return contract;
+  }
+
   /// Validates the marker and reads its generic annotation schema.
-  _Contract(InterfaceElement marker) {
+  Future<void> _read(InterfaceElement marker, BuildStep step) async {
     final annotation = _checker(
       'CCUIFragmentContract',
     ).firstAnnotationOfExact(marker, throwOnUnresolved: false);
@@ -78,17 +91,22 @@ final class _Contract {
       _fail(
         'UI requires immutable DTO Props and plain enum or immutable DTO Action for '
         '"${marker.displayName}" ($owner/$id). '
-        'Sealed unions and arbitrary payload types are unsupported.',
+        'Arbitrary payload types are unsupported.',
         marker,
       );
     }
-    schemaVersion = actionElement is EnumElement ? 1 : 2;
+    final actionReader = _ActionSchema(step);
+    final hasUnion = actionReader.containsUnion(action);
+    schemaVersion = hasUnion ? 3 : (actionElement is EnumElement ? 1 : 2);
+    final actionShape = hasUnion
+        ? await actionReader.read(action, <Element>{}, marker)
+        : _schema(action, <Element>{}, marker);
     final shape = {
       'schemaVersion': schemaVersion,
       'owner': owner,
       'id': id,
       'props': _schema(props, <Element>{}, marker),
-      'action': _schema(action, <Element>{}, marker),
+      'action': actionShape,
     };
     fingerprint = contractShapeFingerprint(shape);
     final publicTypes = <String>{'${marker.library.uri}#${marker.displayName}'};
@@ -131,7 +149,7 @@ final class _Contract {
   /// Immutable input DTO type.
   late final DartType props;
 
-  /// Plain public enum or closed immutable output DTO.
+  /// Plain enum, closed immutable DTO, or restricted sealed Action union.
   late final DartType action;
 
   /// Minimum UI reader version; enum contracts preserve their original shape.
@@ -415,7 +433,7 @@ final class _UIFragmentBuilder implements Builder {
     final sourcePrefix = imports.prefix(sourceUri);
     for (final element in reader.allElements.whereType<InterfaceElement>()) {
       if (_checker('CCUIFragmentContract').hasAnnotationOfExact(element)) {
-        contracts.add(_Contract(element).record);
+        contracts.add((await _Contract.read(element, buildStep)).record);
       }
     }
     for (final function in library.topLevelFunctions) {
@@ -426,7 +444,7 @@ final class _UIFragmentBuilder implements Builder {
       final marker = annotation.getField('contract')?.toTypeValue();
       if (marker is! InterfaceType)
         _fail('Renderer requires a UI contract marker.', function);
-      final contract = _Contract(marker.element);
+      final contract = await _Contract.read(marker.element, buildStep);
       final parameters = function.formalParameters;
       final input = parameters.length == 1 ? parameters.single.type : null;
       final result = function.returnType;
@@ -493,8 +511,9 @@ final class _UIFragmentBuilder implements Builder {
             depType.typeArguments.single is! InterfaceType) {
           _fail('UI dependency requires a contract marker.', variable);
         }
-        final contract = _Contract(
+        final contract = await _Contract.read(
           (depType.typeArguments.single as InterfaceType).element,
+          buildStep,
         );
         final alias = dependency.getField('alias')!.toStringValue()!;
         final range = dependency.getField('versionRange')!.toStringValue()!;
@@ -574,14 +593,11 @@ final class _UIFragmentBuilder implements Builder {
     );
     final generated = 'lib/src/ccrouter_generated/ui/$stem.ui.g.dart';
     if (metadata) {
-      final schemaVersion =
-          [
-            ...contracts,
-            ...renderers,
-            ...requirements,
-          ].any((record) => record['uiSchemaVersion'] == 2)
-          ? 2
-          : 1;
+      final schemaVersion = [...contracts, ...renderers, ...requirements]
+          .fold<int>(1, (version, record) {
+            final required = record['uiSchemaVersion'] as int? ?? 1;
+            return required > version ? required : version;
+          });
       await buildStep.writeAsString(
         buildStep.allowedOutputs.single,
         '${jsonEncode({'schemaVersion': 5, 'componentDeclarations': <String>[], 'package': buildStep.inputId.package, 'source': buildStep.inputId.path, 'uiSchemaVersion': schemaVersion, 'uiLibrary': generated, 'uiContracts': contracts, 'uiRenderers': renderers, 'uiRequirements': requirements})}\n',

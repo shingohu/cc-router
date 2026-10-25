@@ -60,11 +60,14 @@ Demo 全部使用原生 Managed Backend，包括默认入口、多 Host、自适
 相同逻辑 ID 的新实例，组件不接触 Host 注册。自动化见 `test/host_lifecycle_lab_test.dart`。
 
 首页“展示”→“类型化 UI Fragment”（`/ui-fragments`）使用真实生成 Host：
-`navigation_lab` 只依赖 `order_contracts`，订单组件提供摘要与推荐两个 Renderer。
+`navigation_lab` 只依赖 `order_contracts`，订单组件提供摘要、推荐和动作面板三个 Renderer。
 可验证两个摘要实例备注独立、切换 Tab 保留备注、更新 Props 保持 State、模拟账号 Key
 重建、推荐加载错误与重试。Fake 请求归 B 的 State 所有，卸载时取消并释放 controller。
 入口和边界见[UI Fragment 接入指导](../skills/ccrouter-integration-development/references/ui-fragments.md)，
 自动化验证见 [UI Fragment Demo 测试](test/ui_fragment_demo_test.dart)。
+推荐列表 Tab 中的 `order.panel` 还演示 sealed Action：无载荷设置请求与四类嵌套目标，
+使用基类 final id、const super 转发及 part 声明，消费方分别做穷尽 switch。旧 enum/DTO
+示例继续保留作为兼容对照。见 [sealed Action 测试](test/ui_action_union_demo_test.dart)。
 
 首页的“组件能力实验室”使用真实 Runtime 展示非路由能力：
 

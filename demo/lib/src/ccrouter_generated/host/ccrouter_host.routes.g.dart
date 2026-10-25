@@ -8,6 +8,8 @@ import "package:demo_navigation_lab/src/ccrouter_generated/ui/navigation_lab_com
     as ui_package_0;
 import "package:demo_order/src/ccrouter_generated/ui/order_fragment_renderers.ui.g.dart"
     as ui_package_1;
+import "package:demo_order/src/ccrouter_generated/ui/order_panel_renderer.ui.g.dart"
+    as ui_package_2;
 
 import 'package:ccrouter_demo/src/ccrouter_generated/host/ccrouter_demo_ccrouter.g.dart'
     as host_package;
@@ -852,9 +854,11 @@ final ccrouterGeneratedHostAssembly = CCUIHostAssembly.attach(
   contributions: [
     ...ui_package_0.ccUIContributions,
     ...ui_package_1.ccUIContributions,
+    ...ui_package_2.ccUIContributions,
   ],
   requirements: [
     ...ui_package_0.ccUIRequirements,
     ...ui_package_1.ccUIRequirements,
+    ...ui_package_2.ccUIRequirements,
   ],
 );

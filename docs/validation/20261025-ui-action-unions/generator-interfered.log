@@ -1,0 +1,280 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: lease close during startup cannot leave a heartbeat running
+00:00 +1: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: canonical identity resolves the macOS temporary-directory alias
+00:00 +2: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: reload waits for the cycle covering the observed input
+00:00 +3: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: reload does not accept an older cycle after a second save
+00:00 +4: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: generation failure blocks the matching reload
+00:00 +5: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: topology change rejects reload but permits explicit restart
+00:00 +6: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: host identity accepts a symbolic-link alias
+00:00 +7: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: missing versioned input evidence fails within the bound
+00:00 +8: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: machine proxy forwards reload only after matching success
+00:01 +9: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: machine proxy forwards parent stdin EOF to Flutter
+00:02 +10: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: Flutter run supervisor preserves exit and removes its lease
+CCRouter interactive Hot Reload is not generation-gated. After changing generated declarations, wait for `aggregationSucceeded` before pressing r or R.
+00:02 +11: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: interactive supervisor reports that terminal reload is ungated
+00:04 +12: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: interactive supervisor removes its lease before child termination
+00:08 +13: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: machine supervisor removes its lease before child termination
+00:13 +14: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: interactive supervisor handles termination at the first heartbeat
+00:17 +15: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: machine supervisor handles termination at the first heartbeat
+00:21 +16: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: stale supervised lease expires an orphaned watch
+00:22 +17: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: shared watch remains active until its last run lease exits
+00:22 +18: packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart: machine proxy returns daemon error and withholds failed reload
+00:23 +19: loading packages/ccrouter_test/generator_test/workspace_validator_test.dart
+00:32 +19: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts typed InitTask dependencies across required components
+00:32 +20: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects missing, optional-owner, and cyclic InitTask dependencies
+00:32 +21: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects malformed persisted InitTask ownership and policy
+00:32 +22: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects unsafe required InitTask startup contracts
+00:32 +23: packages/ccrouter_test/generator_test/workspace_validator_test.dart: preserves first optional InitTask order across shared DAG paths
+00:32 +24: packages/ccrouter_test/generator_test/workspace_validator_test.dart: keeps cycle and optional InitTask diagnostics on reference path
+00:32 +25: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts Event subscribers through required or optional owners
+00:32 +26: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects invalid Event relationships and duplicate Subscriber IDs
+00:32 +27: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts an exact Service dependency owned by a required component
+00:32 +28: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects missing owner and duplicate Service Client members
+00:32 +29: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects invalid persisted Service and Command Client aliases
+00:32 +30: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects a generated consumer for a Route-scoped Service
+00:32 +31: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts components and emits derived route exposure
+00:32 +32: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects missing required component dependencies
+00:32 +33: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects required and optional self dependencies
+00:32 +34: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects cycles across required and present optional dependencies
+00:32 +35: packages/ccrouter_test/generator_test/workspace_validator_test.dart: ignores absent optional dependencies
+00:32 +36: packages/ccrouter_test/generator_test/workspace_validator_test.dart: orders present optional and required dependencies deterministically
+00:32 +37: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects unknown route owners
+00:32 +38: packages/ccrouter_test/generator_test/workspace_validator_test.dart: missing owner diagnostics retain exact authored locations
+00:32 +39: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects duplicate and unknown component contributions
+00:32 +40: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts a generated Service contract and implementation
+00:32 +41: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects invalid Service ownership and Provider conflicts
+00:32 +42: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects unknown source exposure
+00:32 +43: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects duplicate routes and conflicting component descriptors
+00:32 +44: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires an explicit registrar component declaration
+00:32 +45: packages/ccrouter_test/generator_test/workspace_validator_test.dart: derives package exposure for a same-package public contract
+00:32 +46: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects missing, duplicate, and unknown public implementations
+00:32 +47: packages/ccrouter_test/generator_test/workspace_validator_test.dart: derives external exposure and requires the owner implementation
+00:32 +48: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects unsupported metadata schemas
+00:32 +49: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects invalid persisted identifiers and SemVer values
+00:32 +50: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects missing, self-referencing, and cyclic route parents
+00:32 +51: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects parent placement mismatches
+00:32 +52: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires cross-component parents to be visible dependencies
+00:32 +53: packages/ccrouter_test/generator_test/workspace_validator_test.dart: reuses exact parent visibility through present optional dependencies
+00:32 +54: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects equal-specificity overlapping path patterns
+00:32 +55: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts path patterns with different fixed segments
+00:32 +56: packages/ccrouter_test/generator_test/workspace_validator_test.dart: indexed candidates retain swapped fixed and dynamic conflicts
+00:32 +57: packages/ccrouter_test/generator_test/workspace_validator_test.dart: indexed candidates retain wildcard conflicts
+00:32 +58: packages/ccrouter_test/generator_test/workspace_validator_test.dart: validates a large fixed-path catalog without conflict diagnostics
+00:32 +59: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts provably disjoint path constraints
+00:32 +60: packages/ccrouter_test/generator_test/workspace_validator_test.dart: does not compare URI patterns with different authorities
+00:32 +61: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects identical regex patterns
+00:32 +62: packages/ccrouter_test/generator_test/workspace_validator_test.dart: leaves complex regex overlap to runtime validation
+00:32 +63: packages/ccrouter_test/generator_test/workspace_validator_test.dart: does not require a public barrel for internal contracts
+00:32 +64: packages/ccrouter_test/generator_test/workspace_validator_test.dart: handles many internal-only documents without public barrel work
+00:33 +65: packages/ccrouter_test/generator_test/workspace_validator_test.dart: validates mixed public contracts through one package export index
+00:33 +66: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires public contracts to export the generated library
+00:33 +67: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts a stable generated Contract barrel only through public API
+00:33 +68: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires public Service contracts to export the authored interface
+00:33 +69: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires contracts Package Command declarations in a public barrel
+00:33 +70: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires contracts Package Event declarations in a public barrel
+00:33 +71: packages/ccrouter_test/generator_test/workspace_validator_test.dart: does not require component-internal messaging contracts in a barrel
+00:33 +72: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires contracts Package InitTask constants in a public barrel
+00:33 +73: packages/ccrouter_test/generator_test/workspace_validator_test.dart: annotates and clears public libraries for messaging contracts
+00:33 +74: loading packages/ccrouter_test/generator_test/service_generator_test.dart
+00:34 +74: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder emits a typed owner-only Token
+01:06 +75: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder infers one directly implemented contract
+01:13 +76: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder emits an internal type-local Provider
+01:17 +77: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder emits a component caller for sync and async members
+01:21 +78: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder preserves bounded generic methods and explicit forwarding
+01:25 +79: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy defaults preserve Dart string and collection constants
+01:29 +80: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy preserves wide collection default types
+01:32 +81: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy rejects inaccessible default-only enum types
+01:35 +82: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy forwards colliding parameter and generic names
+01:38 +83: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy import prefixes avoid generic parameter names
+01:40 +84: packages/ccrouter_test/generator_test/service_generator_test.dart: contract alias is the default generated Service Client member
+01:42 +85: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder embeds typed Key and explicit alias
+01:43 +86: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder emits nothing without a Service dependency
+01:45 +87: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder rejects an owner missing from required dependencies
+01:47 +88: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder rejects a contract imported through src
+01:49 +89: packages/ccrouter_test/generator_test/service_generator_test.dart: service metadata records contracts and ownerless implementations
+01:56 +90: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects keyword alias
+01:58 +91: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects concrete declaration
+01:59 +92: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects invalid ID
+02:01 +93: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects generic contract
+02:03 +94: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects stream result
+02:04 +95: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects future-or result
+02:06 +96: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects callback parameter
+02:08 +97: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects setter
+02:10 +98: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects operator
+02:12 +99: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects contract inheritance
+02:14 +100: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects missing identity
+02:16 +101: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects parameterized constructor
+02:18 +102: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects private implementation
+02:19 +103: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects invalid Key
+02:21 +104: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects multiple directly implemented contracts
+02:23 +105: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects an id beside an inferred contract
+02:25 +106: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder does not infer an indirectly inherited contract
+02:26 +107: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects direct and indirect contracts together
+02:28 +108: loading packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart
+02:28 +108: packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart: collects only completed required phases
+02:28 +109: packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart: collects lazy phases and every execution outcome
+02:28 +110: packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart: retains malformed terminal lines without failing collection
+02:28 +111: packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart: reset isolates consecutive watch cycles
+02:28 +112: packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart: does not encode unavailable phase details as zero counters
+02:28 +113: loading packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart
+02:28 +113: packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart: accepts only the exact ready lease with a live owner
+02:29 +114: packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart: reports a watch ownership conflict immediately
+02:29 +115: packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart: does not accept stale status from another lease
+02:31 +116: packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart: accepts an exact lease acknowledged by an existing watch
+02:31 +117: packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart: rejects an attachment acknowledged by a different watch PID
+02:32 +118: packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart: does not accept ready status after ownership was released
+02:33 +119: packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart: rejects ready status backed only by a legacy V1 owner
+02:33 +120: packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart: accepts the legacy owner when legacy coordination is selected
+02:34 +121: packages/ccrouter_test/generator_test/watch_startup_handshake_test.dart: fails immediately when the wrapper lease disappears
+02:35 +122: loading packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart
+02:35 +122: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: routes resolves transitive cross-package inputs and constants
+02:43 +123: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: route_bindings resolves transitive cross-package inputs and constants
+02:50 +124: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: route_contracts resolves transitive cross-package inputs and constants
+02:59 +125: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: route_metadata resolves transitive cross-package inputs and constants
+03:06 +126: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: services resolves transitive cross-package inputs and constants
+03:11 +127: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: service_contracts resolves transitive cross-package inputs and constants
+03:16 +128: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: service_proxies resolves transitive cross-package inputs and constants
+03:22 +129: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: service_metadata resolves transitive cross-package inputs and constants
+03:28 +130: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: commands resolves transitive cross-package inputs and constants
+03:33 +131: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: command_metadata resolves transitive cross-package inputs and constants
+03:39 +132: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: events resolves transitive cross-package inputs and constants
+03:45 +133: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: event_metadata resolves transitive cross-package inputs and constants
+03:51 +134: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: init_tasks resolves transitive cross-package inputs and constants
+03:59 +135: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: init_task_metadata resolves transitive cross-package inputs and constants
+04:05 +136: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: component_metadata resolves transitive cross-package inputs and constants
+04:11 +137: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: route_metadata observes location but ignores a trailing ordinary comment
+04:18 +138: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: service_metadata observes location but ignores a trailing ordinary comment
+04:36 +139: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: command_metadata observes location but ignores a trailing ordinary comment
+04:52 +140: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: event_metadata observes location but ignores a trailing ordinary comment
+05:00 +141: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: init_task_metadata observes location but ignores a trailing ordinary comment
+05:07 +142: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: routes embeds a changed transitive default constant
+05:11 +143: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: route_contracts embeds a changed transitive default constant
+05:15 +144: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: service_proxies embeds a changed transitive default constant
+05:19 +145: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: command metadata validates bodies even without local declarations
+05:22 +146: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: event metadata validates bodies even without local declarations
+05:26 +147: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: InitTask metadata distinguishes equal constants from reference syntax
+05:29 +148: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: barrel changes must re-resolve even when the consumer bytes are unchanged
+05:32 +149: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: part declarations contribute output and source locations
+05:35 +150: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: Route DartDoc affects metadata without changing executable output
+05:41 +151: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: Service Proxy consumes imported generic bounds and typedef targets
+05:46 +152: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: Route Codec validation follows imported supertype arguments
+05:49 +153: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: a transitive annotation changes diagnostics in an unchanged ordinary body
+05:52 +154: packages/ccrouter_test/generator_test/builder_dependency_scope_test.dart: a previously empty input can gain a Route without changing the graph
+05:55 +155: loading packages/ccrouter_test/generator_test/generation_atomicity_test.dart
+05:55 +155: packages/ccrouter_test/generator_test/generation_atomicity_test.dart: (setUpAll)
+05:55 +155: packages/ccrouter_test/generator_test/generation_atomicity_test.dart: failed generation restores the previous managed source outputs
+06:03 +156: packages/ccrouter_test/generator_test/generation_atomicity_test.dart: (tearDownAll)
+06:03 +156: loading packages/ccrouter_test/generator_test/host_aggregation_test.dart
+06:03 +156: packages/ccrouter_test/generator_test/host_aggregation_test.dart: host aggregation includes a component without routes
+06:05 +157: packages/ccrouter_test/generator_test/host_aggregation_test.dart: host aggregation joins an external contract to its page binding
+06:06 +158: packages/ccrouter_test/generator_test/host_aggregation_test.dart: component Route API rejects colliding generated member names
+06:07 +159: packages/ccrouter_test/generator_test/host_aggregation_test.dart: component contribution requires a Package component owner
+06:08 +160: loading packages/ccrouter_test/generator_test/reverse_dependency_closure_test.dart
+06:08 +160: packages/ccrouter_test/generator_test/reverse_dependency_closure_test.dart: finds chain, diamond, cycle, and disconnected dependents
+06:08 +161: packages/ccrouter_test/generator_test/reverse_dependency_closure_test.dart: preserves unknown seeds and propagates their known dependents
+06:08 +162: packages/ccrouter_test/generator_test/reverse_dependency_closure_test.dart: matches fixed-point reference across deterministic random graphs
+06:08 +163: loading packages/ccrouter_test/generator_test/generation_watch_test.dart
+06:08 +163: packages/ccrouter_test/generator_test/generation_watch_test.dart: (setUpAll)
+06:08 +163: packages/ccrouter_test/generator_test/generation_watch_test.dart: machine requires watch mode
+06:12 +164: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch stops during child session startup before reading signals
+06:16 +165: packages/ccrouter_test/generator_test/generation_watch_test.dart: initial snapshot failure stops the child before releasing ownership
+06:25 +166: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch kill switch performs one machine-readable fallback
+06:41 +167: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch publishes active and stopped local status
+06:59 +168: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch restores deleted Host observability from stable session
+07:07 +169: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch invalidates after persistent build-root state removal
+07:14 +170: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch stops after a supervised Flutter lease heartbeat expires
+07:27 +171: packages/ccrouter_test/generator_test/generation_watch_test.dart: shared Builder status publication is fail-open
+07:33 +172: packages/ccrouter_test/generator_test/generation_watch_test.dart: optimized and reference watch cycles publish identical artifacts
+watch aggregation timing: inProcess=1332ms subprocessReference=3973ms
+08:08 +173: packages/ccrouter_test/generator_test/generation_watch_test.dart: non-generating Dart edits preserve artifacts across generation entrypoints
+08:53 +174: packages/ccrouter_test/generator_test/generation_watch_test.dart: generating annotation edits publish identical bytes across entrypoints
+09:56 +175: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch restarts only when the resolved Host closure needs a new session
+10:07 +176: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch does not attribute a mid-cycle save to the older cycle
+10:24 +177: packages/ccrouter_test/generator_test/generation_watch_test.dart: watch handles Dart file add rename and delete without session restart
+11:03 +178: packages/ccrouter_test/generator_test/generation_watch_test.dart: one-shot check reuses exact watch evidence while reference paths fail fast
+12:38 +178 -1: packages/ccrouter_test/generator_test/generation_watch_test.dart: one-shot check reuses exact watch evidence while reference paths fail fast [E]
+  TimeoutException: watch did not stop after its lease was removed
+  stdout:
+  {"schemaVersion":1,"type":"starting","timestamp":"2026-10-25T15:32:05.558105Z","buildRoot":"<home>/.codex/worktrees/sealed-action-unions/cc-router","hostRoot":"<home>/.codex/worktrees/sealed-action-unions/cc-router/demo","sessionId":"2361-1792942325557455","eventRevision":1,"mode":"auto"}
+  {"schemaVersion":1,"type":"targetsResolved","timestamp":"2026-10-25T15:32:05.618925Z","buildRoot":"<home>/.codex/worktrees/sealed-action-unions/cc-router","hostRoot":"<home>/.codex/worktrees/sealed-action-unions/cc-router/demo","sessionId":"2361-1792942325557455","eventRevision":1,"elapsedMs":34,"packages":["ccrouter_demo","demo_kv_storage","demo_navigation_lab","demo_network","demo_order","demo_order_contracts","demo_payment","demo_web","demo_web_contracts"],"topologyFingerprint":"f57263949e646456ce9a2d130472efc55990f86f9003c4cca27990c68e7c8249"}
+  {"schemaVersion":1,"type":"watchStarted","timestamp":"2026-10-25T15:32:06.117466Z","buildRoot":"<home>/.codex/worktrees/sealed-action-unions/cc-router","hostRoot":"<home>/.codex/worktrees/sealed-action-unions/cc-router/demo","sessionId":"2361-1792942325557455","eventRevision":2,"elapsedMs":123,"protectionSnapshotMs":362,"topologyFingerprint":"f57263949e646456ce9a2d130472efc55990f86f9003c4cca27990c68e7c8249"}
+  {"schemaVersion":1,"type":"buildStarted","timestamp":"2026-10-25T15:32:06.157805Z","buildRoot":"<home>/.codex/worktrees/sealed-action-unions/cc-router","hostRoot":"<home>/.codex/worktrees/sealed-action-unions/cc-router/demo","sessionId":"2361-1792942325557455","eventRevision":3,"initial":true}
+  {"schemaVersion":1,"type":"buildSucceeded","timestamp":"2026-10-25T15:32:07.773520Z","buildRoot":"<home>/.codex/worktrees/sealed-action-unions/cc-router","hostRoot":"<home>/.codex/worktrees/sealed-action-unions/cc-router/demo","sessionId":"2361-1792942325557455","eventRevision":3,"initial":true,"elapsedMs":1454,"reportedDuration":"1s","buildRunner":{"formatVersion":2,"available":false,"reason":"profile-disabled"},"protectionRestoreMs":166}
+  {"schemaVersion":1,"type":"aggregationStarted","timestamp":"2026-10-25T15:32:07.777360Z","buildRoot":"<home>/.codex/worktrees/sealed-action-unions/cc-router","hostRoot":"<home>/.codex/worktrees/sealed-action-unions/cc-router/demo","sessionId":"2361-1792942325557455","eventRevision":4,"initial":true}
+  {"schemaVersion":1,"type":"aggregationSucceeded","timestamp":"2026-10-25T15:32:09.625399Z","buildRoot":"<home>/.codex/worktrees/sealed-action-unions/cc-router","hostRoot":"<home>/.codex/worktrees/sealed-action-unions/cc-router/demo","sessionId":"2361-1792942325557455","eventRevision":5,"stage":"aggregation","initial":true,"cycleMode":"inProcess","exitCode":0,"elapsedMs":1833}
+  {"schemaVersion":1,"type":"ready","timestamp":"2026-10-25T15:32:09.722047Z","buildRoot":"<home>/.codex/worktrees/sealed-action-unions/cc-router","hostRoot":"<home>/.codex/worktrees/sealed-action-unions/cc-router/demo","sessionId":"2361-1792942325557455","eventRevision":6}
+  {"schemaVersion":1,"type":"failed","timestamp":"2026-10-25T15:32:34.704893Z","buildRoot":"<home>/.codex/worktrees/sealed-action-unions/cc-router","hostRoot":"<home>/.codex/worktrees/sealed-action-unions/cc-router/demo","sessionId":"2361-1792942325557455","eventRevision":7,"stage":"watch-exit","exitCode":0,"diagnostics":"Exiting as requested by another build_runner process."}
+  stderr:
+  build_runner:   0s ccrouter_generator:ui_metadata on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  build_runner:   0s ccrouter_generator:ui_fragments on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  build_runner:   0s ccrouter_generator:service_contracts on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  build_runner:   0s ccrouter_generator:services on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  build_runner:   0s ccrouter_generator:service_proxies on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  build_runner:   0s ccrouter_generator:service_metadata on 55 inputs; demo_web_contracts|lib/demo_web_contracts.dart
+  build_runner:   0s ccrouter_generator:route_contracts on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  build_runner:   0s ccrouter_generator:routes on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  build_runner:   0s ccrouter_generator:route_metadata on 55 inputs; demo_web_contracts|lib/demo_web_contracts.dart
+  build_runner:   0s ccrouter_generator:route_bindings on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  build_runner:   0s ccrouter_generator:init_tasks on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  build_runner:   0s ccrouter_generator:init_task_metadata on 55 inputs; demo_web_contracts|lib/demo_web_contracts.dart
+  build_runner:   0s ccrouter_generator:events on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  build_runner:   0s ccrouter_generator:event_metadata on 55 inputs; demo_web_contracts|lib/demo_web_contracts.dart
+  build_runner:   0s ccrouter_generator:component_metadata on 55 inputs; demo_web_contracts|lib/demo_web_contracts.dart
+  build_runner:   0s ccrouter_generator:commands on 45 inputs; demo_web_contracts|lib/src/web_request.dart
+  build_runner:   0s ccrouter_generator:command_metadata on 55 inputs; demo_web_contracts|lib/demo_web_contracts.dart
+  build_runner:   0s ccrouter_generator:ui_metadata on 45 inputs: 45 skipped
+  build_runner:   0s ccrouter_generator:ui_fragments on 45 inputs: 45 skipped
+  build_runner:   0s ccrouter_generator:service_contracts on 45 inputs: 45 skipped
+  build_runner:   0s ccrouter_generator:services on 45 inputs: 45 skipped
+  build_runner:   0s ccrouter_generator:service_proxies on 45 inputs: 45 skipped
+  build_runner:   0s ccrouter_generator:service_metadata on 55 inputs: 55 skipped
+  build_runner:   0s ccrouter_generator:route_contracts on 45 inputs: 45 skipped
+  build_runner:   0s ccrouter_generator:routes on 45 inputs: 45 skipped
+  build_runner:   0s ccrouter_generator:route_metadata on 55 inputs: 55 skipped
+  build_runner:   0s ccrouter_generator:route_bindings on 45 inputs: 45 skipped
+  build_runner:   0s ccrouter_generator:init_tasks on 45 inputs: 45 skipped
+  build_runner:   0s ccrouter_generator:init_task_metadata on 55 inputs: 55 skipped
+  build_runner:   0s ccrouter_generator:events on 45 inputs: 45 skipped
+  build_runner:   0s ccrouter_generator:event_metadata on 55 inputs: 55 skipped
+  build_runner:   0s ccrouter_generator:component_metadata on 55 inputs: 55 skipped
+  build_runner:   0s ccrouter_generator:commands on 45 inputs: 45 skipped
+  build_runner:   0s ccrouter_generator:command_metadata on 55 inputs: 55 skipped
+  build_runner:   Built with build_runner/aot in 1s; wrote 0 outputs.
+  build_runner: Exiting as requested by another build_runner process.
+  packages/ccrouter_test/generator_test/generation_watch_test.dart 2202:24  _runWatchUntilReady.<fn>
+  ===== asynchronous gap ===========================
+  packages/ccrouter_test/generator_test/generation_watch_test.dart 2200:5   _runWatchUntilReady
+  ===== asynchronous gap ===========================
+  packages/ccrouter_test/generator_test/generation_watch_test.dart 939:7    main.<fn>
+
+12:38 +178 -1: packages/ccrouter_test/generator_test/generation_watch_test.dart: installed flutter build preflight reuses an active watch
+Installed CCRouter pub hook in Flutter SDK: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_jIaA4E
+The hook runs after successful Flutter/Dart pub commands and before `flutter run/build`.
+CCRouter pub hook SDK: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_jIaA4E
+  marker: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_jIaA4E/bin/.ccrouter_pub_hook.json (valid)
+  POSIX wrapper: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_jIaA4E/bin/flutter (verified)
+  POSIX backup: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_jIaA4E/bin/flutter.ccrouter-original (present)
+  Dart POSIX wrapper: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_jIaA4E/bin/cache/dart-sdk/bin/dart (verified)
+  Dart POSIX backup: /var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_watch_build_wrapper_jIaA4E/bin/cache/dart-sdk/bin/dart.ccrouter-original (present)
+  run/build preflight: enabled, run watch: enabled, clean guard: enabled, watch startup handshake: enabled, run supervisor: enabled, machine reload gate: enabled, flutter pub post-hook: enabled, dart pub post-hook: enabled
+CCRouter pub hook result: installed and verified
+12:47 +178 -2: packages/ccrouter_test/generator_test/generation_watch_test.dart: installed flutter build preflight reuses an active watch [E]
+  Expected: contains 'reused active watch cycle'
+    Actual: ''
+     Which: does not contain 'reused active watch cycle'
+
+  package:matcher                                                          expect
+  packages/ccrouter_test/generator_test/generation_watch_test.dart 1036:7  main.<fn>
+
+12:47 +178 -2: packages/ccrouter_test/generator_test/generation_watch_test.dart: one-shot check waits for watch evidence matching a current source edit
+13:09 +179 -2: packages/ccrouter_test/generator_test/generation_watch_test.dart: Hosts sharing one build root reuse one Builder owner in either start order
+14:34 +180 -2: packages/ccrouter_test/generator_test/generation_watch_test.dart: subscriber takes over the shared Builder when its owner exits
+14:52 +181 -2: packages/ccrouter_test/generator_test/generation_watch_test.dart: subscriber rotates its Host session when its topology adds a target
+15:12 +182 -2: packages/ccrouter_test/generator_test/generation_watch_test.dart: multi-Host watch kill switch preserves fail-fast ownership
+Waiting for current test(s) to finish.
+Press Control-C again to terminate immediately.
+15:23 +182 -2: packages/ccrouter_test/generator_test/generation_watch_test.dart: multi-Host watch kill switch preserves fail-fast ownership - did not complete [E]
+15:23 +182 -2: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.
