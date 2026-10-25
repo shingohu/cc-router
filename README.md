@@ -491,6 +491,13 @@ Catalog 创建由 CCRouter Runtime 管理路由状态的 Managed Backend，并�
 Composition Root 显式调用；全局拦截器、Deep Link 白名单、Aspect、Telemetry 等配置也放在
 这里：
 
+首次接入只需要记住三层入口：业务代码导入 `ccrouter.dart` 并使用 `CCRouter` 与生成的
+typed API；Composition Root 导入 `ccrouter_host.dart` 并负责初始化/关闭；普通应用使用
+`CCManagedRouterApp`。`CCRouterApp.managed`、`CCManagedRouterBackend`、
+`CCManagedMultiHostBackend`、`CCFlutterRouteCatalog` 和 `CCHostAssembly` 属于高级 Host
+装配或测试路径，不应被业务组件直接引用。它们保留用于自定义 Shell/Outlet、MultiHost 和
+Backend SPI，不代表普通应用需要同时学习这些类型。
+
 需要自定义主题、国际化或 Shell/Outlet 时仍可直接传入对应参数；复杂拓扑使用
 `backendFactory`。底层显式创建 `CCManagedRouterBackend` 并组合
 `CCRouterApp.managed` 的写法仍保留给高级 Host 和测试。
@@ -536,6 +543,52 @@ runApp(
 `routeInformationParser` 和 `backButtonDispatcher` 不对外透传；它们由
 `CCManagedRouterApp` 或对应 Backend 唯一管理。需要自定义 Shell/Outlet 拓扑时使用
 `backendFactory`，不要在应用 Widget 和 Backend 两处重复配置路由所有权。
+
+卸载 managed App 不会释放 Runtime 持有的 Backend。更换路由配置时，先卸载旧 App、
+等待 `CCRouterHost.shutdown()`，再初始化 Runtime 并挂载新的 App／Backend；仅更换 Key
+不能完成所有权切换。managed App 与 `CCRouterHostBinding` 共享同一装配所有权；
+重复使用已被预留、绑定或仍在 shutdown／拒绝清理中的 Backend／Adapter 会被拒绝且不会销毁
+原 Owner 的资源；Adapter getter 内重入接管也适用，装配仅采样一次该 Adapter 身份。
+若另建了共享该 Adapter 的 wrapper，拒绝后该 wrapper 的资源仍由创建方负责清理，
+清理时不能再次 dispose 共享 Adapter。
+装配回调内同步触发 shutdown 时，该次 shutdown 接管临时 Adapter 和已登记的 Backend 清理；
+装配抛错后不要重复释放，等待该次 shutdown 即可。普通装配失败时，managed 入口负责释放
+被拒绝的独立 Backend／Adapter，包括 Host 挂载或页面生命周期桥接失败；已取得的挂载资源
+会回滚，不影响另一棵树的 Host。直接 HostBinding 的失败资源仍由调用方释放。
+TestHost overlay 内不允许 managed 装配：显式传入的 Backend 在接管前被拒绝，资源仍归调用方；
+`CCManagedRouterApp` 在调用 Backend factory 前拒绝该场景，避免创建无人清理的内部资源。
+Adapter 初始化回调中触发销毁会取消初始化，不能重新开放 Runtime 或创建 Session。
+shutdown 会等待已移除页面的 Route Scope 和异步 Service 销毁；即使退出监听注册或清理
+回调内重入 shutdown，也不会等待后续 UI 帧。Host detach 同样结束该实例退出中的 Scope 等待。
+批量移除时，单个 Adapter release 回调抛错不会跳过其它 Entry、状态终结或 Scope 关闭；
+Host detach 仍完成 Backend ledger 清理。shutdown 清理后报告首个原始错误与堆栈；
+生命周期 Binding 解绑先失败时，后续 Runtime／Adapter／Backend 错误不会覆盖它；
+`go/reset` 导航继续使用既有的脱敏 Adapter 错误语义。
+导航已经失败时，后续 release 清理异常不会覆盖主错误，也不会跳过 `lost/after/failed` 终态。
+同步移除错误与异步 Scope 关闭进入同一清理结果；重入 shutdown 等待 Scope 结束后收到首个清理错误。
+
+Host 或只读调试面板可以读取 Runtime 健康摘要：
+
+```dart
+final health = CCRouter.runtimeHealth;
+debugPrint(
+  'routes=${health.activeRouteEntryCount} '
+  'pending=${health.pendingNavigationCount} '
+  'backend=${health.activeBackendEntryCount}/${health.backendEntryCount}',
+);
+```
+
+该摘要只包含当前 Entry、挂起请求、Backend ledger、观察队列和生命周期计数，不包含
+参数、结果、Widget、Navigator 或可变句柄。它不能用于导航，也不能单独证明存在内存泄漏；
+`unattributedBackendEventCount` 包含 Foreign/opaque 转换，不等同于直接 `Navigator.pop`
+次数。结构变更会在外部 Adapter／清理回调前使缓存失效，回调内采样反映当时已生效的计数；
+稳定状态复用不可变快照。满载的终态观察采用同步背压，重入交付保持等待队列容量和各监听器的 FIFO。
+Sink 投递健康和历史保留完整度继续通过 `CCRouter.diagnosticSnapshot` 查看。
+`trackedNavigationHostCount` 统计 Runtime 经导航、Pop 或 scoped navigator 捕获且尚未
+detach 的 Host 生命周期，按需创建；它不是 Adapter 注册的全部 Host 数，导航前可以为 0。
+`inFlightNavigationCount` 仅统计 `singleFlight/rejectDuplicate` 的在途并发 gate，默认
+`allow` 下可以为 0；它不是全部未完成导航数。`observerQueueDepth` 只统计等待交付的批次，
+不包含正在交付的批次；容量为 `max(64, navigationDiagnosticCapacity)`，关闭历史保留不关闭观察交付。
 
 复杂 Shell/Outlet 或自定义 Router 构造仍可复用同一个 Widget，通过一次性 Factory 消除
 `StatefulWidget + late Backend + CCRouterApp.managed + MaterialApp.router` 样板：
@@ -639,6 +692,9 @@ Runtime，原始启动异常和 StackTrace 仍同步抛出。重试前可 `await
 清理错误按原始实例和 StackTrace 在各调用方 Zone 抛出。应在发起调用的 Zone 内 await/处理
 该 Future 后再传递结果；直接把可能失败的 Future 跨 error Zone 传递仍受 Dart 规则约束。
 门禁在任一等待者返回前解除，该等待者可以初始化新 Host；旧轮次的返回不会改动新轮次门禁。
+已移出活动栈的 Route 关闭任务同样支持跨 error Zone 汇合；即使退出监听解绑时重入
+shutdown 后抛错，也会继续释放 Adapter、App Scope 和 Backend，再向各 shutdown 调用方
+交付原始错误与堆栈。
 
 不要在页面 Pop、组件页面销毁、App 后台或 Session 关闭时 shutdown。Runtime 会先销毁它拥有的 Adapter，再释放 Managed Backend 的 RouterDelegate 和 RouteInformationProvider。Backend 销毁、动态 Host 注销或 Backend 初始化失败时采用 best-effort 结构化清理：某个 listener remover、PopGuard 解绑或子 Adapter 抛错不会跳过其它资源，清理调用方最终收到首个失败。Runtime 启动回滚仍保留上文的原始启动异常。
 
@@ -761,12 +817,24 @@ Widget 同时占用同一逻辑 Host。多 Host Demo 的“Host 生命周期”�
 自定义 Adapter 的同步调用和旧 Scope 清理回调也是生命周期边界：若回调结束原 Host
 或 Runtime，返回后不能继续提交新 Entry；晚到的 Backend Future 错误会被消费。
 动态 `registerHost` 在参数/生命周期校验后接管尚未被持有的 Adapter，重复 ID、初始化或绑定
-失败都会释放该次接管的资源；重用已被接管的同一 Adapter 会被拒绝，但不会销毁原 Owner。
-同 ID 初始化重入被拒绝，绑定期间注销后建立的新注册不会被旧事务回滚删除。绑定完成前
+失败都会释放该次接管的资源，并撤销 Runtime 已观察到的该次 Host 生命周期与活动 Backend
+状态；旧 scoped navigator 不会因同名 Host 重开而复活。重用已被接管的同一 Adapter 会被拒绝，
+但不会销毁原 Owner。同 ID 初始化重入被拒绝，绑定期间注销后建立的新注册不会被旧事务回滚删除。绑定完成前
 不能将该 Host 激活为默认目标；初始化前加入的 Adapter 只在正式初始化时绑定一次。
 聚合初始化事务执行期间拒绝再次初始化或注册 Host，避免改变正在配置的集合。
 注销先完成旧实例的 detach 通知，再调用外部解绑/销毁回调；detach 投递期间拒绝同 ID
-注册，投递结束后的清理回调可建立替代实例，旧清理不会取消替代实例的新导航。
+注册，投递结束后的清理回调可使用新的 Adapter 建立替代实例，旧清理不会取消替代实例的新导航。
+旧 Adapter 的所有权保留到解绑与 dispose 返回，期间不能将它注册到同名或其他 Host。
+Backend、predictive 和聚合 Outlet 事件在每次向监听者投递前复核原注册；前一个监听者注销／
+替换 Host 后，旧事件停止向后续监听者传播，显式 detach 通知仍完成投递。
+MultiHost 按每次子 Host 注册校验可选事件 sequence：丢弃重复或倒退序列，保留跳号以报告
+Backend desync；聚合器自己的 Outlet／detach 事件不改变子序列基线，同名新注册独立计数。
+普通 Backend／Outlet 事件在监听者同步重入时按 FIFO 投递，显式 detach 仍同步完成。
+operation 去重与 sequence 接收独立：重复 operation 不再次应用，但有效的新序号仍推进基线；
+过期事件不占用 operation ID，真实缺口即使出现在重复 operation 上也会更新健康诊断。
+初始 Backend 快照表示读取开始时的一致活动栈；读取期间的事件在导入后按 FIFO 重放。
+快照 Entry sequence 只提供拒绝旧报告的下界，不作为实时事件连续性基线，避免虚假 gap；
+MultiHost 先在子序号域判旧，再映射到聚合读取边界。缺少 sequence 时按交付顺序处理，无法可靠识别延迟旧报告。
 
 禁止业务代码直接调用 `Navigator.push/pop`、`GoRouter.push/go` 或 Adapter 来操作 CCRouter 管理的页面。临时、局部且不需要组件契约的 Flutter Dialog/BottomSheet 可以继续使用原生 API；它们属于 foreign/overlay，不应改变 Managed Route Scope。
 

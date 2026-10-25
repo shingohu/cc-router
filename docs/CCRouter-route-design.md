@@ -14,6 +14,11 @@ CCRouter 自有 Managed Stack 是导航事实来源，Flutter `RouterDelegate + 
 | 自定义 Backend | Host-only Adapter SPI；明确声明可选能力，执行 Runtime 已校验请求 |
 | 生成代码 | Generated SPI；业务不能手写身份或通过 SPI 绕过依赖 |
 
+普通应用的唯一推荐 Host 路径是 `CCRouterHost.initialize` 加
+`CCManagedRouterApp`。`CCRouterApp.managed` 与显式 Backend 组合只用于高级 Host、
+自定义 Shell/Outlet、MultiHost 或测试；业务组件不得导入 Host/Backend SPI。该分层减少
+首次接入时的选择数量，但不删除高级能力。
+
 默认 Runtime 由应用 Composition Root 创建和关闭；导航 Host 的卸载不等于 Runtime shutdown。Session 的业务操作与 Runtime 生命周期分开。跨组件页面通过 Route Contract 协作，不导入目标页面实现。测试使用真实测试 Host/Backend，不为方便让业务访问 Core Runtime。
 
 ## 2. Host 接入与渐进迁移
@@ -33,7 +38,13 @@ void main() {
 
 示例中的生成 barrel 路径以本工程输出为准。该 Widget 从初始化时的 Catalog 创建由 CCRouter Runtime 管理路由状态的 Managed Backend，组合 `CCRouterApp.managed` 和 `MaterialApp.router`；不隐式初始化或关闭 Runtime。主题、国际化等非路由参数可以直接配置，路由配置由 Backend 唯一拥有。
 
-复杂 Shell 使用一次性的 `backendFactory`；高级 Host 可直接组合 `CCManagedRouterBackend`、`CCRouterApp.managed` 与 `MaterialApp.router(routerConfig: backend.routerConfig)`。Catalog 必须来自同一 Assembly，不在业务门面开放覆盖。挂载后 Backend 构造输入不可原地替换；拓扑变化要明确重建其 Owner。
+复杂 Shell 使用一次性的 `backendFactory`；高级 Host 可直接组合 `CCManagedRouterBackend`、
+`CCRouterApp.managed` 与 `MaterialApp.router(routerConfig: backend.routerConfig)`。Catalog
+必须来自同一 Assembly，不在业务门面开放覆盖。挂载后 Backend 构造输入不可原地替换。
+更换配置时先卸载旧 App、等待 `CCRouterHost.shutdown()`、
+重新初始化 Runtime，再挂载新 App／Backend；仅换 Key 不会转移所有权。managed 和
+HostBinding 共享装配预留，拒绝复用仍被持有或清理中的 Backend／Adapter，不销毁原 Owner 资源。
+TestHost overlay 在 managed 接管资源前拒绝该入口；便捷 App 不调用 Backend factory。
 
 已有应用可以在局部功能区挂载 `CCManagedOutlet`，逐步迁移页面，保留外围 Navigator。Managed 页面始终经 CCRouter 操作；普通局部 Dialog/BottomSheet 可继续使用 Flutter API。当前没有接管任意外部 Router 的通用 attach，也没有 Navigator 1.0 Backend。
 
@@ -88,7 +99,19 @@ Composition Root 通过 `CCManagedShellBinding`、`CCManagedOutlet` 显式声明
 
 使用未绑定的 `CCRouter.navigator` 且不传 Context 时，使用调用开始时的 active Host fallback。Host 的 Pointer/Focus 接入可调用 `activateHost` 更新默认目标；一次操作已固定的归属不会因异步拦截、redirect、recovery、defer/resume 期间焦点改变而漂移。原 Host 退役则取消，不把旧请求转给同名 replacement。
 
-同名 Host 重开属于新的注册轮次；聚合 backend Entry ID 是不透明身份，不能与子后端原始 ID 混用。聚合器不负责原生窗口创建、Flutter View 映射或平台关闭手势。动态注册、注销、shutdown 和异步等待的边界按[接入模式](../skills/ccrouter-integration-development/references/implementation-patterns.md#multiple-hosts-and-shells)执行。
+同名 Host 重开属于新的注册轮次；动态绑定失败也会撤销 Runtime 已观察到的临时 Host 生命周期
+和活动 Backend 状态，旧 scoped navigator 不会复活。MultiHost 丢弃子事件重复／倒退的 sequence，
+保留跳号以报告 desync；聚合器自身事件不推进子序列基线，新注册独立计数。
+解绑／销毁回调返回前旧 Adapter 仍由旧注册持有；同名重建必须使用新 Adapter。子事件与
+聚合 Outlet 事件每次投递前复核注册身份，避免重入注销后污染 replacement；显式 detach 完成投递。
+普通 Backend／Outlet 事件在监听者同步重入时按 FIFO 投递，detach 仍为同步终止边界。
+operation 去重不阻止有效 sequence 推进；过期事件不占用 operation ID，真实缺口始终更新健康诊断。
+初始快照描述读取开始时的活动栈，读取期间事件在导入后按 FIFO 重放。快照 Entry 版本的最大值
+仅作为判旧下界，不作为实时连续性基线；MultiHost 先在子域判旧，再映射聚合读取边界。
+无序号时以交付顺序为准，不能保证识别延迟旧报告。
+退出监听登记前已预留 Scope 关闭任务，shutdown 会等待异步销毁；shutdown／Host detach
+均可中断退出监听，不依赖额外 UI 帧。
+聚合 backend Entry ID 是不透明身份，不能与子后端原始 ID 混用。聚合器不负责原生窗口创建、Flutter View 映射或平台关闭手势。动态注册、注销、shutdown 和异步等待的边界按[接入模式](../skills/ccrouter-integration-development/references/implementation-patterns.md#multiple-hosts-and-shells)执行。
 
 Shell 支持保留分支与跨 Shell push。返回先处理当前选中 Outlet，再在允许时退出外层 Shell 揭示来路；同一 Shell 重入复用保留容器，不创建第二套 Outlet Navigator。分支激活更新 URL；独立 pane 焦点只改变默认 Back 目标。关闭被覆盖的种子 Entry 不撤掉仍被其他 Entry 使用的 Shell。
 
@@ -122,6 +145,14 @@ Host/Session/Runtime 或原调用 Owner 结束后，旧策略等待、Failure Po
 
 Shell 外层退出时，已渲染分支与 Scope 保留到转场完成。途中重新进入同一 Shell，旧 renderer 交出 Outlet 渲染权，不能争用 Navigator Key 或清除新 generation。卸载与 shutdown 结束渲染等待，不依赖下一帧；可选退出 SPI 使用可解绑回调，不能永久用 Future 持有 Runtime。
 
+待关闭的 Route 以结果数据汇合，包括原始错误与堆栈，因此另一 error Zone 的 shutdown 也能等待其完成。退出监听解绑回调重入 shutdown 后抛错，不得阻断 Adapter、App Scope 和 Backend 的后续清理；各 shutdown 调用方在自己的 Zone 收到清理失败。
+批量移除会在单个 Adapter release 抛错后继续处理全部 Entry、状态终结和 Scope 关闭；
+Host detach 仍完成 Backend ledger 清理。shutdown 返回首个原始清理错误，业务 `go/reset`
+继续保持既有脱敏 Adapter 错误语义。导航失败后的清理错误不覆盖主错误或跳过终态；
+同步 release 错误与异步 Scope 关闭合并到同一结果，重入 shutdown 等待关闭后恢复首错。
+初始化回调启动销毁后不能重新启用 Runtime；TestHost overlay 在 managed 资源接管前被拒绝。
+生命周期 Binding 解绑的首错不会被后续 Runtime／Adapter／Backend 清理失败覆盖。
+
 Renderer 真正卸载会释放 Route 关联、PopEntry、foreign 记录与页面 top 观察，不关闭保留的 Managed Entries、Scopes 或业务结果。重挂使用新 renderer generation 投影当前 Stack，不重放完成的启动 Go；已 dispose 的 Widget State/foreign Popup 不会恢复。同帧移动与真正卸载区分，前者保留原 Navigator 与 native gate。
 
 Scope-owned Service、共享 readiness 和清理在 Host 上下文运行，不保留首次调用者任意 Zone 值。资源归属、释放顺序和初始化失败回收见[Service 生命周期](CCRouter-service-lifecycle-design.md)。所有结果只完成一次；旧 backend callback 不得修改新 Entry。
@@ -131,6 +162,10 @@ Scope-owned Service、共享 readiness 和清理在 Host 上下文运行，不�
 普通 Flutter Dialog、BottomSheet、Popup 和外部 Navigator Route 以 foreign identity 观察；返回优先处理真正顶层 Route，不让底页 Guard 拦截上方弹窗。它们不建立 Managed Scope，也不借用底页 Scope 拥有独立资源。
 
 同一 Managed Navigator 上直接执行 `Navigator.pop(result)` 时，Adapter 会在 Flutter 确认移除后关联实际 Route，完成对应 Managed Entry 的结果和生命周期同步。这是兼容性回收路径；Observer 只能在 Pop 发生后观察，不能把直接 Pop 变成可等待的 CCRouter PopGuard 或异步拦截。业务页面需要离开策略时必须使用 `CCRouter.navigator.maybePop()` 或 CCRouter 的其它导航 API。
+
+调试面板可以读取 `CCRouter.runtimeHealth`，观察当前 Managed Entry、退出中 Entry、挂起请求、
+Backend ledger、已跟踪 Host 生命周期、观察队列和生命周期计数。健康摘要是只读的瞬时快照，不改变栈，
+也不把无 Runtime identity 的 Foreign/opaque backend 事件解释成直接 `Navigator.pop`。
 
 LocalHistory 由实际 Flutter Route 的返回流程协调；系统/业务 maybePop 只能移除一次。精确 close 则按目标身份执行，不消费覆盖 Popup 或 LocalHistory。关闭最后一个 Managed Entry 仍保留覆盖的 foreign Popup；空 anchor 在最后一个 Popup 真正离开后回收。
 

@@ -234,6 +234,28 @@ CCDevToolsDiagnosticHealth _protocolHealth(CCDiagnosticSnapshot health) {
     failed: delivery.failedEventCount,
     dropped: delivery.droppedEventCount,
     closed: delivery.isClosed,
+    runtimeHealth: health.runtimeHealth == null
+        ? null
+        : CCDevToolsRuntimeHealth(
+            activeRouteEntries: health.runtimeHealth!.activeRouteEntryCount,
+            exitingRouteEntries: health.runtimeHealth!.exitingRouteEntryCount,
+            pendingNavigations: health.runtimeHealth!.pendingNavigationCount,
+            inFlightNavigations: health.runtimeHealth!.inFlightNavigationCount,
+            trackedNavigationHosts:
+                health.runtimeHealth!.trackedNavigationHostCount,
+            activeBackendEntries: health.runtimeHealth!.activeBackendEntryCount,
+            backendEntries: health.runtimeHealth!.backendEntryCount,
+            desynchronizedBackendHosts:
+                health.runtimeHealth!.desynchronizedBackendHostCount,
+            observerQueueDepth: health.runtimeHealth!.observerQueueDepth,
+            observerQueueCapacity: health.runtimeHealth!.observerQueueCapacity,
+            navigationEvents: health.runtimeHealth!.navigationEventCount,
+            routeEntryTransitions:
+                health.runtimeHealth!.routeEntryTransitionCount,
+            backendEvents: health.runtimeHealth!.backendEventCount,
+            unattributedBackendEvents:
+                health.runtimeHealth!.unattributedBackendEventCount,
+          ),
     histories: health.histories.map(
       (history) => CCDevToolsHistoryStatus(
         name: history.name,

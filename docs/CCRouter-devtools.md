@@ -86,7 +86,8 @@ Debug 默认开启，可用 `CCROUTER_DEVTOOLS=false` 关闭；Profile 默认关
 ## 视图
 
 - **Overview**：Runtime 状态、组件数、Managed Route Entry、Backend Entry、Pending
-  导航、Failure 和 InitTask 数量；历史保留完整性与外部 Sink 投递健康。
+  导航、Failure 和 InitTask 数量；历史保留完整性、外部 Sink 投递健康和只读 Runtime
+  navigation health。
 - **Catalog**：搜索 Route、Service、Command、Event、InitTask，显示它是否出现在当前
   Runtime，并展示可复制的源码位置。Host 可以提供 `onOpenSource` 做 IDE/源码浏览器映射。
 - **Components**：组件版本、必选/可选依赖组成的只读 Component Graph，支持搜索、聚焦和反向
@@ -111,6 +112,20 @@ identity/revision 或独立 Sink 计数变化后通知重读完整快照，覆�
 七类事件历史分别显示 retained/capacity/omitted，capacity=0 为关闭保留；omitted 为容量关闭
 或轮转造成的未保留，不包含外部 Sink 过滤和采样损失。Sink 单独显示 queued/capacity、inFlight、
 peak、delivered/failed/dropped/closed；delivered 只表示 Sink 调用完成，不保证持久化上传。
+Runtime navigation health 额外显示当前 Managed/退出中 Entry、挂起和 in-flight 导航、已跟踪
+Host 生命周期、活动/保留 Backend Entry、Backend desync、观察队列深度以及生命周期累计计数。
+`trackedNavigationHostCount`（协议 `trackedNavigationHosts`，界面 `trackedHosts`）只统计导航、
+Pop 或 scoped navigator 按需捕获且尚未 detach 的 Host，不代表 Adapter 的完整注册表。
+`inFlightNavigationCount` 仅统计 `singleFlight/rejectDuplicate` 的并发 gate，默认 `allow`
+下可以为 0，不代表没有未完成导航。观察队列深度只包含等待交付的批次，容量为
+`max(64, navigationDiagnosticCapacity)`；历史容量设为 0 不关闭观察交付。终态批次满载时
+同步背压，重入仍保持等待容量和逐监听器 FIFO。结构变更先使健康缓存失效，再调用外部
+Adapter／清理回调；稳定时复用不可变快照，健康读取本身不创建 Timer 或订阅。
+Backend desync 包括 sequence gap（含 MultiHost 子 Host 序列跳号）和无法关联到具体 Entry
+的 Managed Pop。MultiHost 在聚合前丢弃重复或倒退的子序列；注销清除旧注册的 desync，
+同名新注册独立计数。
+这些值是采样时的只读快照，不提供操作按钮，也不把 Foreign/opaque backend 事件解释成直接
+`Navigator.pop` 次数。它们不能单独证明内存泄漏。
 订阅者错误与已移除 Backend ledger 不在该七类历史列表内。空历史不能证明从未失败。
 恢复需求采集属于应用，不进入 Runtime Snapshot 或 DevTools 面板；完整路由状态恢复尚未实现。
 
@@ -122,7 +137,11 @@ peak、delivered/failed/dropped/closed；delivered 只表示 Sink 调用完成�
 或 Entry ID 关联；静态存在但运行时未安装、或运行时条目没有静态声明时，工具应显示“未解析”，
 不能删除一侧或推断完整历史调用链。
 
-协议版本仍为 1，以可选 `diagnostics` 与 `diagnosticHealth` 扩展固定白名单字段。
+协议版本仍为 1，以可选 `diagnostics` 与 `diagnosticHealth` 扩展固定白名单字段；
+`diagnosticHealth.runtimeHealth` 提供上述 Runtime navigation health，旧 Producer 缺失时保持
+null。
+Runtime health 的 Host 计数使用 `trackedNavigationHosts`；新 reader 兼容旧
+`registeredHosts` 键，但仍按“已跟踪生命周期数”解释，不将其推断为完整注册数。
 diagnostics 包含 Failure、Fallback、Pending、InitTask；无任意 metadata Map，Pending
 不导出 address/source，Failure 不导出业务取消 code。旧 reader 忽略未知字段；新 reader 对
 旧 producer 缺失或 null 字段保持 null，UI 显示未提供而非零失败。存在但格式错误的已知字段

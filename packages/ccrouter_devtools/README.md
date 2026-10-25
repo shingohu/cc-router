@@ -3,7 +3,10 @@
 Optional read-only Flutter diagnostics UI for a CCRouter Host. It displays
 sanitized static Catalog and bounded Runtime snapshots, component relationships,
 Route/Backend entries, failures, InitTask state, and a single trace call chain.
-Overview shows bounded history completeness and external Sink delivery health.
+Overview shows bounded history completeness, external Sink delivery health and
+optional Runtime navigation health (Entry, captured Host lifetime, concurrency
+gate and observer queue counts). Counts do not prove resource leaks or expose
+controls; missing producer support remains unavailable rather than zero.
 While subscribed the default Provider compares lightweight state every 250ms;
 full histories refresh only on changes, including non-navigation work and Runtime
 restart. The panel unsubscribes when TickerMode is disabled or it is disposed.

@@ -4,12 +4,14 @@ import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:flutter/widgets.dart';
 
-import 'app.dart';
 import 'generated_package_bundle.dart';
 import 'host_tool_integration.dart';
 import 'host_lifecycle_binding.dart';
 import 'route_catalog.dart';
 
+part 'app_host.dart';
+part 'backend_binding.dart';
+part 'page_lifecycle.dart';
 part 'navigation.dart';
 part 'deep_link.dart';
 part 'generated_command_binding.dart';
@@ -117,6 +119,13 @@ abstract final class CCRouter {
   /// before capturing full histories. This value contains no business payload.
   static CCDiagnosticSnapshot get diagnosticSnapshot =>
       _runtime.diagnosticSnapshot;
+
+  /// Point-in-time read-only Runtime navigation health.
+  ///
+  /// Use this for local debug panels and diagnostics. It does not authorize
+  /// navigation, expose mutable Entries, or prove that an exiting resource is
+  /// leaked. Counts reset when the Runtime generation is replaced.
+  static CCRuntimeHealthSnapshot get runtimeHealth => _runtime.runtimeHealth;
 
   /// Payload-free external diagnostic queue, write and drop counters.
   ///
@@ -577,10 +586,16 @@ abstract final class CCRouterHostBinding {
   ///
   /// Managed application wrappers use this Host-only snapshot after
   /// `CCRouterHost.initialize` so the Composition Root cannot accidentally pass a
-  /// Catalog from another generated assembly. Test Runtime overlays do not
-  /// replace this value. Access before initialization or after shutdown throws
-  /// [CCRouterNotInitializedError].
+  /// Catalog from another generated assembly. Test Runtime overlays cannot
+  /// create a default managed Backend and are rejected before factory allocation.
+  /// Access before initialization or after shutdown throws
+  /// [CCRouterNotInitializedError]; overlay access throws [CCNavigationAdapterError].
   static CCFlutterRouteCatalog get routeCatalog {
+    if (_runtimeResolver.hasOverlayRuntime) {
+      throw const CCNavigationAdapterError(
+        'A test Runtime receives its Adapter from CCRouterTestHost.',
+      );
+    }
     final catalog = CCRouterHost._hostRouteCatalog;
     if (catalog == null) throw const CCRouterNotInitializedError();
     return catalog;
@@ -661,6 +676,9 @@ abstract final class CCRouterHostBinding {
   /// imports its initial stack before this method returns. It owns Adapter
   /// disposal after success. A failed binding leaves Adapter cleanup with the
   /// caller so Backend-specific resources can be released deterministically.
+  /// If shutdown interrupts an Adapter callback, that shutdown owns the
+  /// provisional Adapter and optional Backend cleanup; attachment throws and
+  /// callers must not dispose those resources a second time.
   /// When supplied, [disposeBackend] is retained until `CCRouterHost.shutdown` and
   /// runs only after Runtime disposal.
   /// Test Runtime overlays must inject their Adapter when constructing the Test
@@ -668,18 +686,10 @@ abstract final class CCRouterHostBinding {
   static void attachNavigationAdapter(
     CCNavigationAdapter adapter, {
     Future<void> Function()? disposeBackend,
-  }) {
-    if (_runtimeResolver.hasOverlayRuntime) {
-      throw const CCNavigationAdapterError(
-        'A test Runtime receives its Adapter from CCRouterTestHost.',
-      );
-    }
-    if (CCRouterHost._backendDisposer != null) {
-      throw const CCNavigationAdapterError(
-        'A navigation Backend is already bound to CCRouter.',
-      );
-    }
-    CCRouter._runtime.attachNavigationAdapter(adapter);
-    CCRouterHost._backendDisposer = disposeBackend;
-  }
+  }) => _attachNavigationAdapter(
+    _CCNavigationAdapterAttachment(
+      adapter: adapter,
+      disposeBackend: disposeBackend,
+    ),
+  );
 }

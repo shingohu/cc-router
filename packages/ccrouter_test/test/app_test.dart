@@ -446,6 +446,48 @@ void main() {
     expect(CCRouter.isInitialized, isTrue);
   });
 
+  for (final reuseBackend in [true, false]) {
+    testWidgets('rejected alias preserves active Backend reuse=$reuseBackend', (
+      tester,
+    ) async {
+      final active = _TestAppBackend();
+      final rejected = reuseBackend
+          ? active
+          : _TestAppBackend(hostId: 'test.alias', adapter: active.adapter);
+      CCRouterHost.initialize(
+        hostAssembly: CCHostAssembly.fromComponents(
+          components: active.manifests,
+        ),
+      );
+      await tester.pumpWidget(
+        CCRouterApp.managed(backend: active, child: const SizedBox()),
+      );
+      await tester.pumpWidget(const SizedBox());
+      await tester.pumpWidget(
+        CCRouterApp.managed(backend: rejected, child: const SizedBox()),
+      );
+
+      expect(tester.takeException(), isA<CCNavigationAdapterError>());
+      expect(CCRouter.isInitialized, isTrue);
+      expect(active.adapter.isInitialized, isTrue);
+      expect(active.disposeCount, 0);
+      expect(rejected.disposeCount, 0);
+
+      await tester.pumpWidget(const SizedBox());
+      await CCRouterHost.shutdown();
+      expect(active.disposeCount, 1);
+      expect(active.adapter.isInitialized, isFalse);
+      if (!reuseBackend) {
+        // The rejected alias never transfers ownership; its creator releases it.
+        expect(rejected.disposeCount, 0);
+        await rejected.dispose();
+        expect(rejected.disposeCount, 1);
+      }
+      await CCRouterHost.shutdown();
+      expect(active.disposeCount, 1);
+    });
+  }
+
   testWidgets('rejected managed App does not shut down attached Runtime', (
     tester,
   ) async {
@@ -493,6 +535,7 @@ final class _TestAppBackend implements CCRouterAppBackend {
   _TestAppBackend({
     Iterable<CCComponentManifest> manifests = const [],
     String hostId = 'test.managed',
+    CCMemoryNavigationAdapter? adapter,
   }) : manifests = List.unmodifiable(manifests),
        routeCatalog = CCFlutterRouteCatalog(
          const [],
@@ -500,7 +543,8 @@ final class _TestAppBackend implements CCRouterAppBackend {
            for (final manifest in manifests) manifest.id: manifest.version,
          },
        ),
-       host = CCNavigationHost(id: hostId);
+       host = CCNavigationHost(id: hostId),
+       adapter = adapter ?? CCMemoryNavigationAdapter();
 
   /// Component manifests installed explicitly by the test Host.
   final List<CCComponentManifest> manifests;
@@ -514,7 +558,10 @@ final class _TestAppBackend implements CCRouterAppBackend {
   final CCNavigationHost host;
 
   /// In-memory Adapter whose lifecycle is owned by the Runtime.
-  final CCMemoryNavigationAdapter adapter = CCMemoryNavigationAdapter();
+  final CCMemoryNavigationAdapter adapter;
+
+  /// Exact Backend disposal count across rejection and Runtime shutdown.
+  int disposeCount = 0;
 
   /// Whether App teardown released backend-owned resources.
   bool disposed = false;
@@ -527,6 +574,7 @@ final class _TestAppBackend implements CCRouterAppBackend {
   /// Records release after Runtime disposal for ordering assertions.
   Future<void> dispose() async {
     expect(adapter.isInitialized, isFalse);
+    disposeCount++;
     disposed = true;
   }
 }

@@ -1,0 +1,65 @@
+00:00 +0: loading <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/route_cleanup_zone_regression_test.dart
+00:00 +0: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/route_cleanup_zone_regression_test.dart: exit failure keeps precedence over later Scope failure crossZone=false
+00:00 +1: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: release callback invalidates a health snapshot captured during Adapter acceptance
+00:00 +2: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: release callback invalidates a health snapshot captured during Adapter acceptance
+00:00 +3: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: release callback invalidates a health snapshot captured during Adapter acceptance
+00:00 +4: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: release callback invalidates a health snapshot captured during Adapter acceptance
+00:00 +5: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: release callback invalidates a health snapshot captured during Adapter acceptance
+00:00 +6: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: release callback invalidates a health snapshot captured during Adapter acceptance
+00:00 +7: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: release callback invalidates a health snapshot captured during Adapter acceptance
+00:00 +8: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: release callback invalidates a health snapshot captured during Adapter acceptance
+00:00 +9: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: release callback invalidates a health snapshot captured during Adapter acceptance
+00:00 +10: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: Adapter getter reentry cannot destroy ownership acquired during that getter
+00:00 +10 -1: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: Adapter getter reentry cannot destroy ownership acquired during that getter
+00:00 +10 -1: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: backend reconciliation invalidates health before capability callbacks [E]
+  Expected: <0>
+    Actual: <1>
+
+  package:matcher                                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18                   expect
+  packages/ccrouter_test/test/diagnostic_health_cache_test.dart 118:7  main.<fn>
+
+00:00 +11 -1: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: Adapter getter reentry cannot destroy ownership acquired during that getter
+00:00 +12 -1: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: Adapter getter reentry cannot destroy ownership acquired during that getter
+00:00 +13 -1: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: Adapter getter reentry cannot destroy ownership acquired during that getter
+00:00 +14 -1: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: Adapter getter reentry cannot destroy ownership acquired during that getter
+00:00 +15 -1: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: Adapter getter reentry cannot destroy ownership acquired during that getter
+00:00 +16 -1: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: Adapter getter reentry cannot destroy ownership acquired during that getter
+00:00 +17 -1: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: Adapter getter reentry cannot destroy ownership acquired during that getter
+00:00 +18 -1: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: Adapter getter reentry cannot destroy ownership acquired during that getter
+00:00 +19 -1: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: Adapter getter reentry cannot destroy ownership acquired during that getter
+00:00 +20 -1: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: Adapter getter reentry cannot destroy ownership acquired during that getter
+00:00 +21 -1: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: Adapter getter reentry cannot destroy ownership acquired during that getter
+00:00 +22 -1: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: Adapter getter reentry cannot destroy ownership acquired during that getter
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: <0>
+  Actual: <1>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file://<home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart:87:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file://<home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart line 87
+The test description was:
+  Adapter getter reentry cannot destroy ownership acquired during that getter
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:00 +22 -2: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: Adapter getter reentry cannot destroy ownership acquired during that getter [E]
+  Test failed. See exception logs above.
+  The test description was: Adapter getter reentry cannot destroy ownership acquired during that getter
+
+00:00 +22 -2: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: rejected Adapter cannot transfer while disposer is on stack
+00:00 +23 -2: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: managed alias rejection cannot dispose overlay TestHost Adapter
+00:00 +24 -2: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: rejected identities stay reserved through async cleanup fails=false
+00:00 +25 -2: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: rejected identities stay reserved through async cleanup fails=true
+00:00 +26 -2: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: overlay preflight retains independent rejected resources with caller
+00:00 +27 -2: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: managed convenience rejects overlay before Backend factory allocation
+00:00 +28 -2: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/backend_rejection_ownership_test.dart: rejected cleanup finishes despite Adapter, Backend and diagnostics failures
+00:00 +29 -2: Some tests failed.

@@ -8,7 +8,6 @@ import 'package:flutter/material.dart'
     show MaterialApp, MaterialPageRoute, TargetPlatform, Theme;
 import 'package:flutter/widgets.dart';
 
-import 'app.dart';
 import 'facade.dart';
 import 'flutter_route_factory.dart';
 import 'managed_predictive_back.dart';

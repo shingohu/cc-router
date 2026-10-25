@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:flutter/widgets.dart';
 
-import 'app.dart';
 import 'facade.dart';
 import 'managed_router.dart';
 import 'multi_host.dart';

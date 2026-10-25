@@ -1,0 +1,38 @@
+fvm dart test tool/test/skill_bundle_check_test.dart
+00:00 +0: loading tool/test/skill_bundle_check_test.dart
+00:00 +0: consumer copy resolves required links without repository docs
+00:00 +1: installing just the integration Skill is rejected
+00:00 +2: repository-relative references fail even if target exists outside
+00:00 +3: missing local references fail and optional remote links pass
+00:00 +4: links between bundled Skills are valid
+00:00 +5: reference-style links cannot hide a missing bundled resource
+00:00 +6: Markdown examples do not become required bundle resources
+00:00 +7: local paths with parentheses and URL suffixes resolve in the bundle
+00:00 +8: encoded traversal cannot escape the isolated bundle
+00:00 +9: protocol-relative links stay external and remote file URIs fail cleanly
+00:00 +10: a symlinked Skill root is rejected before reading or copying
+00:00 +11: CLI examples cannot invent commands or command-specific flags
+00:00 +12: CLI matrix cannot omit an executable command
+00:00 +13: documented CLI matrix matches current executable help
+00:06 +14: Host, Route and generic Service examples analyze against actual APIs
+00:25 +15: All tests passed!
+
+fvm dart tool/skill_bundle_check.dart
+Isolated two-Skill bundle and live CLI command checks passed.
+
+fvm dart tool/release_sensitivity_check.dart --include-untracked
+Release sensitivity check passed.
+
+fvm dart analyze
+Analyzing cc-router...
+No issues found!
+
+Staged documentation link check
+Checked 287 local Markdown link targets; all exist.
+
+Evidence normalization
+Local home paths normalized by tool/sanitize_validation_evidence.mjs.
+Initial staged diff check found trailing whitespace in copied test logs;
+normalized log line endings/whitespace without changing outcomes.
+node tool/sanitize_validation_evidence.mjs: 0 files need normalization.
+git diff --cached --check: passed after normalization.

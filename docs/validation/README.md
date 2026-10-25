@@ -1,10 +1,14 @@
 # CCRouter 验证证据索引
 
-更新日期：2026-10-24。这里集中导航验证记录，不替代[当前能力矩阵](../README.md)或
+更新日期：2026-10-25。这里集中导航验证记录，不替代[当前能力矩阵](../README.md)或
 [发布门禁](../CCRouter-release-readiness.md)。每份报告只证明其注明源码、命令、设备和范围；
 旧失败由后续修复报告闭环，不删除失败证据，也不改写历史测试数字。
 
 ## 最新源码自动化证据
+
+[2026-10-25 Managed 装配与健康诊断循环审查](20261025-managed-health-review/report.md)：
+统一推荐 Host 路径和只读健康摘要，修复装配重入、清理屏障／首错、快照顺序及观察背压。
+框架 1599 项、Demo 114 项、DevTools／协议 24 项通过；保留红灯及旧超时夹具首次失败记录。
 
 [2026-10-24 main 与 Managed 分支整合](20261024-main-integration/report.md)：保留历史与
 `0.1.0` 标签，吸收 Route Service generation 隔离和快照只读边界；保留 Managed 导航与

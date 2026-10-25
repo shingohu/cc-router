@@ -221,6 +221,129 @@ final class CCDevToolsHistoryStatus {
       );
 }
 
+/// Read-only Runtime ownership and observer counts for tooling.
+///
+/// This optional protocol value is a point-in-time health view. It does not
+/// expose mutation handles or imply that retained render resources are leaks.
+final class CCDevToolsRuntimeHealth {
+  /// Captures current navigation ownership and observer counts.
+  const CCDevToolsRuntimeHealth({
+    required this.activeRouteEntries,
+    required this.exitingRouteEntries,
+    required this.pendingNavigations,
+    required this.inFlightNavigations,
+    required this.trackedNavigationHosts,
+    required this.activeBackendEntries,
+    required this.backendEntries,
+    required this.desynchronizedBackendHosts,
+    required this.observerQueueDepth,
+    required this.observerQueueCapacity,
+    required this.navigationEvents,
+    required this.routeEntryTransitions,
+    required this.backendEvents,
+    required this.unattributedBackendEvents,
+  });
+
+  /// Current logical Managed Route Entries.
+  final int activeRouteEntries;
+
+  /// Removed Entries whose render transition still retains resources.
+  final int exitingRouteEntries;
+
+  /// Navigation requests waiting for external policy.
+  final int pendingNavigations;
+
+  /// In-flight singleFlight/rejectDuplicate gates; allow can report zero
+  /// despite unfinished navigation. This is not a count of every request.
+  final int inFlightNavigations;
+
+  /// Host lifetimes lazily captured by Runtime navigation, Pop, or scoped clients.
+  /// This is not the Adapter's complete Host registration count.
+  final int trackedNavigationHosts;
+
+  /// Active backend Entries in the adapter ledger.
+  final int activeBackendEntries;
+
+  /// All backend Entries retained by the ledger.
+  final int backendEntries;
+
+  /// Backend Hosts with a sequence gap or an uncorrelated Managed Pop.
+  final int desynchronizedBackendHosts;
+
+  /// Waiting observer batches, excluding batches already delivering.
+  final int observerQueueDepth;
+
+  /// Maximum waiting depth; terminal overflow applies synchronous backpressure.
+  final int observerQueueCapacity;
+
+  /// Lifetime navigation lifecycle phases.
+  final int navigationEvents;
+
+  /// Lifetime Managed Route Entry transitions.
+  final int routeEntryTransitions;
+
+  /// Lifetime backend observations accepted by Runtime.
+  final int backendEvents;
+
+  /// Backend observations without a correlated Runtime navigation identity.
+  /// This includes Foreign Routes and opaque transitions; it is not a direct
+  /// `Navigator.pop` counter.
+  final int unattributedBackendEvents;
+
+  /// Encodes this point-in-time health view.
+  Map<String, Object> toJson() => {
+    'activeRouteEntries': activeRouteEntries,
+    'exitingRouteEntries': exitingRouteEntries,
+    'pendingNavigations': pendingNavigations,
+    'inFlightNavigations': inFlightNavigations,
+    'trackedNavigationHosts': trackedNavigationHosts,
+    'activeBackendEntries': activeBackendEntries,
+    'backendEntries': backendEntries,
+    'desynchronizedBackendHosts': desynchronizedBackendHosts,
+    'observerQueueDepth': observerQueueDepth,
+    'observerQueueCapacity': observerQueueCapacity,
+    'navigationEvents': navigationEvents,
+    'routeEntryTransitions': routeEntryTransitions,
+    'backendEvents': backendEvents,
+    'unattributedBackendEvents': unattributedBackendEvents,
+  };
+
+  /// Decodes a Runtime health view, accepting the former `registeredHosts` key
+  /// as the same lazily tracked lifetime count when the corrected key is absent.
+  factory CCDevToolsRuntimeHealth.fromJson(
+    Map<String, Object?> json,
+  ) => CCDevToolsRuntimeHealth(
+    activeRouteEntries: _requiredNonNegativeInt(json, 'activeRouteEntries'),
+    exitingRouteEntries: _requiredNonNegativeInt(json, 'exitingRouteEntries'),
+    pendingNavigations: _requiredNonNegativeInt(json, 'pendingNavigations'),
+    inFlightNavigations: _requiredNonNegativeInt(json, 'inFlightNavigations'),
+    trackedNavigationHosts: _requiredNonNegativeInt(
+      json,
+      json.containsKey('trackedNavigationHosts')
+          ? 'trackedNavigationHosts'
+          : 'registeredHosts',
+    ),
+    activeBackendEntries: _requiredNonNegativeInt(json, 'activeBackendEntries'),
+    backendEntries: _requiredNonNegativeInt(json, 'backendEntries'),
+    desynchronizedBackendHosts: _requiredNonNegativeInt(
+      json,
+      'desynchronizedBackendHosts',
+    ),
+    observerQueueDepth: _requiredNonNegativeInt(json, 'observerQueueDepth'),
+    observerQueueCapacity: _requiredPositiveInt(json, 'observerQueueCapacity'),
+    navigationEvents: _requiredNonNegativeInt(json, 'navigationEvents'),
+    routeEntryTransitions: _requiredNonNegativeInt(
+      json,
+      'routeEntryTransitions',
+    ),
+    backendEvents: _requiredNonNegativeInt(json, 'backendEvents'),
+    unattributedBackendEvents: _requiredNonNegativeInt(
+      json,
+      'unattributedBackendEvents',
+    ),
+  );
+}
+
 /// Runtime-local delivery health; counts never promise durable external upload.
 final class CCDevToolsDiagnosticHealth {
   /// Captures fixed counters and immutable history completeness rows.
@@ -237,6 +360,7 @@ final class CCDevToolsDiagnosticHealth {
     required this.dropped,
     required this.closed,
     required Iterable<CCDevToolsHistoryStatus> histories,
+    this.runtimeHealth,
   }) : histories = List.unmodifiable(histories);
 
   /// Runtime generation, so equal revisions across restarts are distinct.
@@ -275,6 +399,9 @@ final class CCDevToolsDiagnosticHealth {
   /// Fixed event history completeness, independent of Sink filtering/sampling.
   final List<CCDevToolsHistoryStatus> histories;
 
+  /// Optional live Runtime health from newer producers.
+  final CCDevToolsRuntimeHealth? runtimeHealth;
+
   /// Encodes safe delivery and completeness counters.
   Map<String, Object> toJson() => {
     'runtimeId': runtimeId,
@@ -291,6 +418,7 @@ final class CCDevToolsDiagnosticHealth {
     'histories': histories
         .map((history) => history.toJson())
         .toList(growable: false),
+    if (runtimeHealth != null) 'runtimeHealth': runtimeHealth!.toJson(),
   };
 
   /// Decodes health; malformed optional extension data fails explicitly.
@@ -311,6 +439,11 @@ final class CCDevToolsDiagnosticHealth {
           json,
           'histories',
         ).map((value) => CCDevToolsHistoryStatus.fromJson(_object(value))),
+        runtimeHealth: _optionalObject(
+          json,
+          'runtimeHealth',
+          CCDevToolsRuntimeHealth.fromJson,
+        ),
       );
 }
 

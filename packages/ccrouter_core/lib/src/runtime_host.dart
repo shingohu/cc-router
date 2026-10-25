@@ -325,8 +325,9 @@ final class CCRouterRuntime {
   /// Subscribers receiving Route Entry visibility observations.
   final Map<CCRouteVisibilityListener, Object> _routeVisibilityListeners = {};
 
-  /// Route Scope close operations that Runtime must await during shutdown.
-  final List<Future<void>> _routeEntryCloseFutures = [];
+  /// Pending Route Scope close outcomes, including failure data, that shutdown
+  /// joins across error Zones before releasing the remaining owned resources.
+  final List<Future<_SharedOutcome<void>>> _routeEntryCloseFutures = [];
 
   /// Optional adapter that executes Runtime-validated navigation requests.
   CCNavigationAdapter? _navigationAdapter;
@@ -387,6 +388,9 @@ final class CCRouterRuntime {
 
   /// Lifetime backend observations accepted into diagnostic history.
   int _backendNavigationEventTotal = 0;
+
+  /// Lifetime backend observations without a Runtime navigation identity.
+  int _unattributedBackendEventTotal = 0;
 
   /// Last immutable health value; retains scalar DTOs, never live event data.
   CCDiagnosticSnapshot? _diagnosticSnapshot;
@@ -459,6 +463,13 @@ final class CCRouterRuntime {
   /// Last monotonic backend event sequence observed for each Host.
   final Map<String, int> _backendSequencesByHost = {};
 
+  /// Snapshot lower bounds reject old reports without inventing stream gaps.
+  final Map<String, int> _backendSnapshotSequencesByHost = {};
+
+  /// Observations during a snapshot read replayed only after its import.
+  /// Cleared on failure and teardown; never retained as diagnostic payloads.
+  Queue<CCNavigationBackendEvent>? _initialBackendEvents;
+
   /// Hosts whose backend event stream skipped at least one sequence.
   final Set<String> _desynchronizedBackendHosts = {};
 
@@ -468,6 +479,11 @@ final class CCRouterRuntime {
 
   /// FIFO batches waiting for isolated observer delivery.
   final Queue<_QueuedNavigationObservation> _navigationObservationQueue =
+      Queue();
+
+  /// Admitted batches currently delivering, shared with nested backpressure.
+  /// Cursors release each callback once; the list drains synchronously.
+  final Queue<_QueuedNavigationObservation> _navigationObservationDeliveries =
       Queue();
 
   /// Event-loop task currently scheduled to drain observer batches.
@@ -506,6 +522,9 @@ final class CCRouterRuntime {
   /// Whether initialization completed and operations are accepted.
   bool _initialized = false;
 
+  /// Prevents callback reentry from starting a second initialization attempt.
+  bool _initializing = false;
+
   /// Whether shutdown permanently closed this Runtime.
   bool _disposed = false;
 
@@ -533,7 +552,7 @@ final class CCRouterRuntime {
       max(64, navigationDiagnosticCapacity);
 
   /// Whether this Runtime currently accepts framework operations.
-  bool get isInitialized => _initialized;
+  bool get isInitialized => _initialized && !_disposed;
 
   /// Immutable installed component list.
   List<CCComponentManifest> get components => List.unmodifiable(_components);
@@ -578,10 +597,16 @@ final class CCRouterRuntime {
   /// call, so initialization validates one complete graph atomically. Hosts may
   /// bind an Adapter afterward; direct registry mutation remains frozen once
   /// initialization completes. Successful return means the Runtime is ready;
-  /// this method never schedules asynchronous initialization work.
+  /// this method never schedules asynchronous initialization work. Nested
+  /// initialization is rejected. If an Adapter callback starts disposal, the
+  /// attempt is cancelled and cannot re-enable operations or create new Scopes.
   void initialize() {
     if (_disposed) throw const CCScopeClosedError('runtime');
     if (_initialized) return;
+    if (_initializing) {
+      throw const CCRegistrationError('Runtime initialization is in progress.');
+    }
+    _initializing = true;
     final startedAt = DateTime.now();
     var failureStage = 'configurationValidation';
     _emitInitializationDiagnostic(
@@ -594,19 +619,24 @@ final class CCRouterRuntime {
       _validateInitTasks();
       _validateRouteConfiguration();
       _validateNavigationAdapterCapabilities();
+      _ensureNavigationAlive();
       failureStage = 'adapterInitialization';
       _navigationAdapter?.initialize(
         _navigationRoutesForAdapter(),
         shells: _shellRegistry.navigationShells,
       );
+      _ensureNavigationAlive();
       final adapter = _navigationAdapter;
       if (adapter != null) {
         failureStage = 'popGuardBinding';
         _bindNavigationPopGuards(adapter);
+        _ensureNavigationAlive();
       }
       failureStage = 'backendAttachment';
       _attachBackendNavigationSource();
+      _ensureNavigationAlive();
       _readInitialBackendEntries();
+      _ensureNavigationAlive();
       _initialized = true;
     } on Object catch (error) {
       _emitInitializationDiagnostic(
@@ -619,6 +649,8 @@ final class CCRouterRuntime {
         errorType: error.runtimeType.toString(),
       );
       rethrow;
+    } finally {
+      _initializing = false;
     }
     _emitInitializationDiagnostic(
       occurredAt: startedAt,
@@ -636,6 +668,8 @@ final class CCRouterRuntime {
   /// and imports its initial stack. The Runtime takes ownership only after all
   /// steps succeed and disposes the Adapter during [dispose]. Business and
   /// component code must not bind navigation infrastructure directly.
+  /// If a callback synchronously starts disposal, Runtime retains provisional
+  /// Adapter ownership for that teardown and attachment fails without resuming.
   void attachNavigationAdapter(CCNavigationAdapter adapter) {
     _ensureInitialized();
     if (_navigationAdapter != null) {
@@ -646,19 +680,28 @@ final class CCRouterRuntime {
     _navigationAdapter = adapter;
     try {
       _validateNavigationAdapterCapabilities();
+      _ensureNavigationAlive();
       adapter.initialize(
         _navigationRoutesForAdapter(),
         shells: _shellRegistry.navigationShells,
       );
+      _ensureNavigationAlive();
       _bindNavigationPopGuards(adapter);
+      _ensureNavigationAlive();
       _attachBackendNavigationSource();
+      _ensureNavigationAlive();
       _readInitialBackendEntries();
+      _ensureNavigationAlive();
     } catch (error, stackTrace) {
+      // Shutdown has already adopted the provisional Adapter. Leave its
+      // subscriptions and identity in place for the single teardown owner.
+      if (_disposed) Error.throwWithStackTrace(error, stackTrace);
       try {
         _bindNavigationPopGuards(adapter, clear: true);
       } catch (_) {
         // Preserve the attachment failure after best-effort policy cleanup.
       }
+      if (_disposed) Error.throwWithStackTrace(error, stackTrace);
       final backendNavigationRemover = _backendNavigationRemover;
       _backendNavigationRemover = null;
       try {
@@ -666,6 +709,7 @@ final class CCRouterRuntime {
       } catch (_) {
         // Preserve the attachment failure after best-effort listener cleanup.
       }
+      if (_disposed) Error.throwWithStackTrace(error, stackTrace);
       final predictiveBackRemover = _predictiveBackRemover;
       _predictiveBackRemover = null;
       try {
@@ -673,11 +717,16 @@ final class CCRouterRuntime {
       } catch (_) {
         // Preserve the attachment failure after best-effort listener cleanup.
       }
+      if (_disposed) Error.throwWithStackTrace(error, stackTrace);
       _backendEntries.clear();
       _processedBackendOperations.clear();
       _backendSequencesByHost.clear();
+      _backendSnapshotSequencesByHost.clear();
+      _initialBackendEvents = null;
       _desynchronizedBackendHosts.clear();
       _navigationAdapter = null;
+      // Adapter callbacks may have sampled health before attachment failed.
+      _diagnosticRevision++;
       Error.throwWithStackTrace(error, stackTrace);
     }
   }
@@ -796,6 +845,7 @@ final class CCRouterRuntime {
         : null;
     if (capabilitySource == null) return;
     final capabilities = capabilitySource.capabilities;
+    _ensureNavigationAlive();
     final missing = <String>{};
     final predictiveSource = adapter is CCNavigationPredictiveBackSourceProvider
         ? (adapter as CCNavigationPredictiveBackSourceProvider)
@@ -803,6 +853,7 @@ final class CCRouterRuntime {
         : adapter is CCNavigationPredictiveBackSource
         ? adapter as CCNavigationPredictiveBackSource
         : null;
+    _ensureNavigationAlive();
     if (predictiveSource != null && !capabilities.supportsPredictiveBack) {
       missing.add('supportsPredictiveBack');
     }
@@ -1968,6 +2019,8 @@ final class CCRouterRuntime {
   /// Callback failures do not skip subsequent cleanup. The first structural
   /// cleanup error is returned after teardown, including an App cancellation
   /// notification failure. Reentrant calls share the same disposal Future.
+  /// Pending Route closes carry errors as data so teardown can join work
+  /// created in a different error Zone without losing its original failure.
   Future<void> dispose() {
     if (_disposeFuture != null) return _disposeFuture!;
     final completion = Completer<void>();
@@ -2024,7 +2077,17 @@ final class CCRouterRuntime {
       capture(error, stackTrace);
     }
     try {
-      await Future.wait(_routeEntryCloseFutures);
+      await Future.wait(
+        _routeEntryCloseFutures.map((close) async {
+          final outcome = await close;
+          try {
+            outcome.unwrap();
+          } catch (error, stackTrace) {
+            // Capture in completion order, then continue all owned cleanup.
+            capture(error, stackTrace);
+          }
+        }),
+      );
     } catch (error, stackTrace) {
       capture(error, stackTrace);
     }
@@ -2101,6 +2164,8 @@ final class CCRouterRuntime {
     _backendEntries.clear();
     _processedBackendOperations.clear();
     _backendSequencesByHost.clear();
+    _backendSnapshotSequencesByHost.clear();
+    _initialBackendEvents = null;
     _desynchronizedBackendHosts.clear();
     _inFlightNavigation.clear();
     _navigationHostRegistrations.clear();
@@ -3200,13 +3265,13 @@ final class CCRouterRuntime {
 
   /// Ensures capability registration has not been frozen or disposed.
   void _ensureConfigurable() {
-    if (_initialized || _disposed)
+    if (_initialized || _initializing || _disposed)
       throw const CCRegistrationError('Runtime registration is frozen.');
   }
 
   /// Ensures this Runtime currently accepts framework operations.
   void _ensureInitialized() {
-    if (!_initialized) throw const CCRouterNotInitializedError();
+    if (!isInitialized) throw const CCRouterNotInitializedError();
   }
 
   /// Validates, topologically orders, and executes component registrars.

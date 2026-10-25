@@ -300,6 +300,8 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
   }
 
   /// Marks one Entry as removed and closes its Route Scope asynchronously.
+  /// Callback failures are rethrown only after state retirement and scheduling
+  /// closure; no external release hook may skip the Entry's terminal lifecycle.
   void _removeRouteEntry(
     _RouteEntryRecord entry, {
     required String reason,
@@ -309,71 +311,127 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
         entry.state == CCRouteEntryLifecycleState.removed) {
       return;
     }
-    _routeEntries.remove(entry);
-    entry.removal.cancel();
-    final adapter = _navigationAdapter;
-    if (adapter is CCNavigationManagedEntryReleaseSink) {
-      (adapter as CCNavigationManagedEntryReleaseSink).releaseManagedNavigation(
-        entry.request.navigationId,
-      );
-    }
-    final wasVisible = entry.state == CCRouteEntryLifecycleState.visible;
-    if (wasVisible) {
-      _emitRouteVisibility(
-        entry,
-        CCRouteVisibilityPhase.willHide,
-        reason: reason,
-      );
-    }
-    if (entry.state != CCRouteEntryLifecycleState.popping) {
-      _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.popping);
-    }
-    if (wasVisible) {
-      _emitRouteVisibility(
-        entry,
-        CCRouteVisibilityPhase.didHide,
-        reason: reason,
-      );
-    }
-    _emitRouteEntryTransition(entry, CCRouteEntryLifecycleState.removed);
-    if (revealPrevious &&
-        !_usesBackendVisibilityConfirmationFor(entry.request.hostId)) {
-      for (final previous in _routeEntries.reversed) {
-        if (_sameRouteEntryPartition(previous, entry)) {
-          _setRouteEntryVisible(previous, reason: reason);
-          break;
-        }
-      }
-    }
-    final close = _closeRouteEntry(entry, reason);
+    // Reserve the close before callbacks can synchronously start shutdown.
+    // That shutdown must join this Scope even while removal is still on stack.
+    // Observe failures in the producer's Zone and carry them as data. A
+    // reentrant shutdown may join from a different Dart error Zone.
+    final completion = _SharedResult<void>();
+    final close = completion.settled;
     _routeEntryCloseFutures.add(close);
     // Retain only pending closes. Runtime shutdown snapshots this collection
     // before awaiting it, while completed entries do not consume memory for
     // the lifetime of a long-running host.
-    unawaited(
-      close.then(
-        (_) => _routeEntryCloseFutures.remove(close),
-        onError: (Object _, StackTrace __) {
-          _routeEntryCloseFutures.remove(close);
-        },
-      ),
-    );
-    unawaited(close);
+    unawaited(close.then((_) => _routeEntryCloseFutures.remove(close)));
+    Object? firstError;
+    StackTrace? firstStack;
+    // External cancellation/release hooks may fail. Finish this Entry's state
+    // machine and start Scope closure before returning the first failure.
+    void attempt(void Function() action) {
+      try {
+        action();
+      } catch (error, stack) {
+        firstError ??= error;
+        firstStack ??= stack;
+      }
+    }
+
+    try {
+      if (_routeEntries.remove(entry)) _diagnosticRevision++;
+      attempt(entry.removal.cancel);
+      final adapter = _navigationAdapter;
+      if (adapter is CCNavigationManagedEntryReleaseSink) {
+        attempt(
+          () => (adapter as CCNavigationManagedEntryReleaseSink)
+              .releaseManagedNavigation(entry.request.navigationId),
+        );
+      }
+      final wasVisible = entry.state == CCRouteEntryLifecycleState.visible;
+      if (wasVisible) {
+        attempt(
+          () => _emitRouteVisibility(
+            entry,
+            CCRouteVisibilityPhase.willHide,
+            reason: reason,
+          ),
+        );
+      }
+      if (entry.state != CCRouteEntryLifecycleState.popping) {
+        attempt(
+          () => _emitRouteEntryTransition(
+            entry,
+            CCRouteEntryLifecycleState.popping,
+          ),
+        );
+      }
+      if (wasVisible) {
+        attempt(
+          () => _emitRouteVisibility(
+            entry,
+            CCRouteVisibilityPhase.didHide,
+            reason: reason,
+          ),
+        );
+      }
+      attempt(
+        () => _emitRouteEntryTransition(
+          entry,
+          CCRouteEntryLifecycleState.removed,
+        ),
+      );
+      if (revealPrevious &&
+          !_usesBackendVisibilityConfirmationFor(entry.request.hostId)) {
+        for (final previous in _routeEntries.reversed) {
+          if (_sameRouteEntryPartition(previous, entry)) {
+            attempt(() => _setRouteEntryVisible(previous, reason: reason));
+            break;
+          }
+        }
+      }
+    } finally {
+      completion.follow(
+        _closeRemovedRouteEntry(entry, reason, firstError, firstStack),
+      );
+    }
+    if (firstError != null) {
+      Error.throwWithStackTrace(firstError!, firstStack!);
+    }
+  }
+
+  /// Joins Scope cleanup before publishing the first removal failure as data.
+  /// Synchronous release failures keep precedence over later Scope failures.
+  Future<void> _closeRemovedRouteEntry(
+    _RouteEntryRecord entry,
+    String reason,
+    Object? removalError,
+    StackTrace? removalStack,
+  ) async {
+    try {
+      await _closeRouteEntry(entry, reason);
+    } catch (_) {
+      if (removalError == null) rethrow;
+    }
+    if (removalError != null) {
+      Error.throwWithStackTrace(removalError, removalStack!);
+    }
   }
 
   /// Closes one Route Scope without blocking the Adapter transition.
+  /// Publishes disposal even if Scope resource cleanup reports a failure.
   Future<void> _closeRouteEntry(_RouteEntryRecord entry, String reason) async {
     try {
       final exit = _waitForRouteExit(entry, reason);
       if (exit != null) await exit;
     } finally {
-      await entry.scope.close();
-      if (entry.state == CCRouteEntryLifecycleState.removed) {
-        _emitRouteEntryTransition(
-          entry,
-          CCRouteEntryLifecycleState.disposed,
-          reason: reason,
-        );
+      try {
+        await entry.scope.close();
+      } finally {
+        if (entry.state == CCRouteEntryLifecycleState.removed) {
+          _emitRouteEntryTransition(
+            entry,
+            CCRouteEntryLifecycleState.disposed,
+            reason: reason,
+          );
+        }
       }
     }
   }
@@ -381,12 +439,41 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
   /// Waits for rendering with explicit cancellation and no active-stack entry.
   Future<void>? _waitForRouteExit(_RouteEntryRecord entry, String reason) {
     final adapter = _navigationAdapter;
-    if (!_disposed &&
-        reason != 'hostDetached' &&
-        adapter is CCNavigationRouteExitBinding) {
-      final navigationId = entry.request.navigationId;
-      final completed = Completer<void>();
-      final unsubscribe = (adapter as CCNavigationRouteExitBinding)
+    if (_disposed ||
+        reason == 'hostDetached' ||
+        adapter is! CCNavigationRouteExitBinding) {
+      return null;
+    }
+    final navigationId = entry.request.navigationId;
+    final completed = Completer<void>();
+    void Function()? unsubscribe;
+    var released = false;
+    void release() {
+      if (released) return;
+      released = true;
+      final remove = unsubscribe;
+      unsubscribe = null;
+      try {
+        remove?.call();
+      } finally {
+        if (identical(_routeExitWaiters[navigationId], release)) {
+          _routeExitWaiters.remove(navigationId);
+        }
+        if (identical(_exitingRouteEntries[navigationId], entry)) {
+          _exitingRouteEntries.remove(navigationId);
+          _diagnosticRevision++;
+        }
+        if (!completed.isCompleted) completed.complete();
+      }
+    }
+
+    // Reserve cancellation before invoking Adapter code. Shutdown/detach may
+    // release this provisional wait before the subscription remover is returned.
+    _exitingRouteEntries[navigationId] = entry;
+    _routeExitWaiters[navigationId] = release;
+    _diagnosticRevision++;
+    try {
+      final remove = (adapter as CCNavigationRouteExitBinding)
           .addRouteExitListener(
             navigationId: navigationId,
             hostId: entry.request.hostId,
@@ -394,28 +481,36 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
               if (!completed.isCompleted) completed.complete();
             },
           );
-      if (unsubscribe != null) {
-        _exitingRouteEntries[navigationId] = entry;
-        void release() {
-          try {
-            unsubscribe();
-          } finally {
-            if (!completed.isCompleted) completed.complete();
-          }
-        }
+      if (released) {
+        remove?.call();
+        return null;
+      }
+      unsubscribe = remove;
+      if (remove == null) {
+        release();
+        return null;
+      }
+      return completed.future.whenComplete(release);
+    } catch (_) {
+      release();
+      rethrow;
+    }
+  }
 
-        _routeExitWaiters[navigationId] = release;
-        return completed.future.whenComplete(() {
-          try {
-            unsubscribe();
-          } finally {
-            _routeExitWaiters.remove(navigationId);
-            _exitingRouteEntries.remove(navigationId);
-          }
-        });
+  /// Ends outgoing render waits when their exact Host registration detaches.
+  /// Removed Entries are absent from the active stack; their Scopes still need
+  /// cancellation even when a custom Adapter never reports an outgoing frame.
+  void _releaseRouteExitsForHost(String hostId) {
+    for (final entry in _exitingRouteEntries.values.toList()) {
+      if (entry.request.hostId != hostId) continue;
+      try {
+        _routeExitWaiters[entry.request.navigationId]?.call();
+      } catch (error) {
+        _recordNavigationCallbackFailure(
+          'Route exit unsubscription failed: ${error.runtimeType}.',
+        );
       }
     }
-    return null;
   }
 
   /// Removes the current top Entry, preserving the root when requested.
@@ -441,12 +536,9 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
   }
 
   /// Removes retained Entries, optionally isolated to one Host.
-  void _removeAllRouteEntries({required String reason, String? hostId}) {
-    for (final entry in _routeEntries.toList().reversed) {
-      if (hostId != null && entry.request.hostId != hostId) continue;
-      _removeRouteEntry(entry, reason: reason, revealPrevious: false);
-    }
-  }
+  /// Every matching Entry is retired before the first callback error is rethrown.
+  void _removeAllRouteEntries({required String reason, String? hostId}) =>
+      _removeMatchingRouteEntries(reason: reason, hostId: hostId);
 
   /// Removes retained Entries from one exact Host and Navigator Outlet.
   ///
@@ -456,13 +548,35 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
     required String reason,
     required String hostId,
     required String navigatorOutlet,
+  }) => _removeMatchingRouteEntries(
+    reason: reason,
+    hostId: hostId,
+    navigatorOutlet: navigatorOutlet,
+  );
+
+  /// Drains the captured partition despite individual Entry cleanup failures.
+  void _removeMatchingRouteEntries({
+    required String reason,
+    String? hostId,
+    String? navigatorOutlet,
   }) {
+    Object? firstError;
+    StackTrace? firstStack;
     for (final entry in _routeEntries.toList().reversed) {
-      if (entry.request.hostId != hostId ||
-          entry.request.placement.navigatorOutlet != navigatorOutlet) {
+      if (hostId != null && entry.request.hostId != hostId ||
+          navigatorOutlet != null &&
+              entry.request.placement.navigatorOutlet != navigatorOutlet) {
         continue;
       }
-      _removeRouteEntry(entry, reason: reason, revealPrevious: false);
+      try {
+        _removeRouteEntry(entry, reason: reason, revealPrevious: false);
+      } catch (error, stack) {
+        firstError ??= error;
+        firstStack ??= stack;
+      }
+    }
+    if (firstError != null) {
+      Error.throwWithStackTrace(firstError, firstStack!);
     }
   }
 

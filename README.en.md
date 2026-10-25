@@ -380,6 +380,47 @@ CCManagedRouterApp forwards MaterialApp theme, locale, localization, actions,
 restoration and debug settings. Its backendFactory runs once and owns routing
 configuration; do not wrap it in another MaterialApp or configure a second Router.
 Backend inputs are immutable after mounting.
+Unmounting leaves the Backend owned by the Runtime. To replace routing inputs,
+unmount the old App, await `CCRouterHost.shutdown()`, initialize a new Runtime,
+then mount a fresh App/Backend. Changing only the Key does not transfer ownership.
+Managed Apps and `CCRouterHostBinding` share attachment ownership. Backend or
+Adapter aliases are rejected without disposal while reserved, attached, or still
+being cleaned up by shutdown or rejected-Backend disposal. A distinct rejected wrapper sharing that Adapter
+remains caller-owned; its cleanup must not dispose the shared Adapter again.
+Attachment samples the Adapter getter once and rechecks ownership after it
+returns, including ownership acquired by reentry within that getter.
+If an attachment callback synchronously starts shutdown, that shutdown owns the
+provisional Adapter and registered Backend cleanup. Await it after attachment
+fails; do not dispose those resources again. Host mount and page-lifecycle
+bridge failures roll back acquired mount resources and release an independent
+rejected Backend/Adapter without disturbing another tree's Host. Ordinary managed
+attachment failure cleans up the rejected independent Backend/Adapter; ordinary direct HostBinding
+failure leaves cleanup with its caller. Managed attachment inside a TestHost
+Runtime overlay is rejected before ownership transfer: explicitly supplied Backend
+resources remain caller-owned. `CCManagedRouterApp` rejects the overlay before
+calling its Backend factory. Disposal from an initialization callback cancels the
+attempt; it cannot re-enable Runtime operations or create a Session.
+
+A failing Adapter release hook during batch removal does not skip other
+Entries, terminal lifecycle transitions, or Route Scope closure. Host detach
+also finishes Backend ledger cleanup. Shutdown reports the first original
+cleanup error and stack after teardown; `go/reset` retain their existing
+sanitized Adapter error semantics. If dispatch has already failed, release
+cleanup errors do not replace its primary failure or skip `lost/after/failed`.
+Synchronous removal failures and asynchronous Scope closure share one cleanup
+receipt; reentrant shutdown waits for Scope closure and receives the first failure.
+An earlier lifecycle Binding detach failure keeps precedence over later Runtime,
+Adapter, or Backend errors. Structural changes invalidate health before external
+Adapter/cleanup callbacks; stable state reuses immutable snapshots. Terminal
+observer backpressure preserves waiting capacity and each listener's FIFO even
+when callbacks synchronously produce more backend events.
+
+New integrations only need three entry layers: business code imports
+`ccrouter.dart` and uses `CCRouter` plus generated typed APIs; the Composition
+Root imports `ccrouter_host.dart` and owns initialization/shutdown; ordinary
+applications use `CCManagedRouterApp`. `CCRouterApp.managed`, explicit Managed
+Backends, Catalogs, Assemblies, and MultiHost types remain advanced Host or test
+composition APIs. Feature packages should not import them directly.
 
 For a custom MaterialApp, explicitly compose:
 
@@ -441,6 +482,9 @@ explicitly awaits CCRouterHost.shutdown(). Runtime releases Adapter resources
 before Backend delegate/provider resources. Session close does not dispose the
 navigation stack. Startup failure rolls back unpublished Runtime state; await
 shutdown before retrying. Cleanup failures must not skip remaining resources.
+Pending removed Route closures also join across error Zones. An exit listener
+remover that reenters shutdown and then throws does not skip Adapter, App Scope,
+or Backend cleanup; shutdown callers receive the original error and stack.
 See the [Managed Demo assembly](demo/lib/demo_managed_router_backend.dart).
 
 ### Application Layout and Restoration Demand
@@ -807,6 +851,22 @@ CCRouterHost.initialize(
 
 The Sink is asynchronous, bounded, and observational. Throwing, slow, or closed Sinks do not change business results. Noncritical diagnostics may be dropped under load, while the Runtime retains its own bounded Trace history independently. Category policies control external Sink delivery only; they do not disable Runtime errors or lifecycle state. Applications may map `CCDiagnosticEvent` to existing Logger, Sentry, Crashlytics, or OpenTelemetry integrations, while preserving sanitization boundaries. Do not append full URIs, arguments, Extra, Tokens, Widgets, Navigators, raw exception text, or business result objects.
 
+Hosts and local debug panels can read `CCRouter.runtimeHealth` for a point-in-time
+summary of active and exiting Managed Entries, pending/in-flight navigation,
+tracked Host lifetimes, Backend ledger state, observer queue depth, desynchronization, and
+lifetime counters. It is immutable and observational: it cannot navigate or
+prove a memory leak. `unattributedBackendEventCount` includes foreign/opaque
+transitions and is not a direct `Navigator.pop` counter. Sink delivery and
+history completeness remain available through `CCRouter.diagnosticSnapshot`.
+`trackedNavigationHostCount` counts lifetimes lazily captured by navigation, Pop,
+or scoped clients until detach, not all Adapter-registered Hosts; it may be zero
+before any navigation or client capture.
+`inFlightNavigationCount` counts concurrency gates for `singleFlight` and
+`rejectDuplicate`; it can be zero under the default `allow` policy even while
+navigation is pending. `observerQueueDepth` counts waiting batches, excluding
+current delivery. Capacity is `max(64, navigationDiagnosticCapacity)`; disabling
+history retention does not disable observer delivery.
+
 Component assembly and Runtime startup also use the `initialization` category: `componentGraph` records manifest validation and dependency topology; `componentRegistration` records each Registrar in actual dependency order; `runtimeInitialize` records Runtime configuration validation and Adapter/Backend startup. Every operation emits `started` followed by `succeeded` or `failed`. Failures include only stable component IDs, `failureStage`, and `errorType`, never raw exception text. Set `defaultMinimumLevel` or the relevant category policy to `CCDiagnosticLevel.debug` to observe the full start phase.
 
 For a cross-component call, `CCRouter.traceBundle(traceId)` aggregates bounded `CCTraceRecord` entries by stable `traceId`. Capacity limits may make it incomplete. It is not a business audit trail, event bus, or request replay source.
@@ -927,6 +987,31 @@ all its Outlets. MultiHost qualifies them by registration across events,
 snapshots, Pop/Guard targets and predictive outcomes. Treat aggregate IDs as
 opaque and do not mix them with raw child IDs. Reopening a Host creates a new
 identity domain. One predictive observer's failure cannot block other observers.
+Failed dynamic Host binding retires any provisional Host lifetime and active
+Backend state already observed by Runtime before unsubscribe/dispose callbacks
+can install a replacement. Old scoped navigators stay invalid after ID reuse.
+MultiHost rejects duplicate or decreasing child event sequences and preserves
+gaps for Backend desync diagnostics. Aggregate Outlet/detach events do not move
+the child sequence baseline; each new registration starts independently.
+Adapter ownership remains reserved until unsubscribe/dispose returns, so cleanup
+hooks may register a fresh Adapter under the same Host ID but cannot reuse the
+old Adapter under any Host. Backend, predictive and aggregate Outlet event fanout
+rechecks the original registration before each observer; retiring it stops the
+old event from reaching later observers. Explicit detach delivery still completes.
+Ordinary Backend/Outlet events use FIFO delivery under synchronous observer
+reentry; explicit detach remains synchronous. Operation deduplication does not
+freeze stream progress: newer valid sequences still advance the baseline,
+stale reports do not reserve operation IDs, and a real gap updates health
+snapshots even when its operation has already been applied.
+Initial Backend snapshots describe a coherent active stack at read entry; events
+emitted during the read replay after import in FIFO order. Entry versions provide
+only a stale-report lower bound, never the live stream continuity baseline.
+MultiHost checks child versions before translating the aggregate read boundary.
+Without sequence metadata, delivery order is the fallback; delayed old reports
+cannot be identified reliably.
+Shutdown joins removed Route Scope and asynchronous Service cleanup even when
+exit subscription/cleanup reenters shutdown; it never waits for another UI frame.
+Host detach also cancels outgoing render waits belonging to that registration.
 Receipts from a retired managed Host lifetime cannot mutate a same-name
 replacement's state or desynchronization diagnostics.
 Pop establishes that registration before Guard evaluation, even for an initial backend stack with no

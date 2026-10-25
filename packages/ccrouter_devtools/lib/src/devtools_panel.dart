@@ -283,6 +283,24 @@ final class _DiagnosticHealthView extends StatelessWidget {
             'dropped=${health.delivery.droppedEventCount} · closed=${health.delivery.isClosed}',
           ),
         ),
+        if (health.runtimeHealth case final runtimeHealth?)
+          ListTile(
+            title: const Text('Runtime navigation health'),
+            subtitle: Text(
+              'routes=${runtimeHealth.activeRouteEntryCount} active / '
+              '${runtimeHealth.exitingRouteEntryCount} exiting · '
+              'pending=${runtimeHealth.pendingNavigationCount} · '
+              'inFlight=${runtimeHealth.inFlightNavigationCount}\n'
+              'backend=${runtimeHealth.activeBackendEntryCount} active / '
+              '${runtimeHealth.backendEntryCount} retained · '
+              'trackedHosts=${runtimeHealth.trackedNavigationHostCount} · '
+              'desync=${runtimeHealth.desynchronizedBackendHostCount}\n'
+              'observerQueue=${runtimeHealth.observerQueueDepth}/'
+              '${runtimeHealth.observerQueueCapacity} · '
+              'routeTransitions=${runtimeHealth.routeEntryTransitionCount} · '
+              'unattributedBackend=${runtimeHealth.unattributedBackendEventCount}',
+            ),
+          ),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 16),
           child: Text(

@@ -299,6 +299,29 @@
 - Does a Managed startup page receive the same Entry/Scope binding as later
   routes, while foreign Routes and local Outlet base surfaces create no Scope?
 - Are PageShow/PageHide not mistaken for Widget lifetime or physical visibility?
+- Exercise managed and direct HostBinding aliases during attachment, rejection
+  and asynchronous shutdown. Reenter from the Adapter getter, mount, validation,
+  unsubscribe and dispose; sample one Adapter identity and never dispose another
+  owner's resources. TestHost overlays retain caller-supplied resources; the
+  convenience App rejects before Backend factory allocation. Replacing an App
+  Key does not bypass shutdown/reinitialize ownership.
+- On initialization and shutdown, inject distinct errors/stacks in lifecycle
+  Binding detach, Runtime/Adapter and Backend cleanup. Join concurrently and
+  synchronously from different error Zones: finish all resources once and return
+  the first structural failure without replacing a primary startup/navigation error.
+- Import initial Backend snapshots before FIFO replay of read-time events.
+  Cross stale/duplicate operations, live gaps, child/aggregate sequence domains,
+  detach/replacement and unsequenced reports; snapshot Entry versions are lower
+  bounds, not a complete event-stream watermark.
+- Cache health during Adapter acceptance, then read it inside release/capability
+  callbacks after Route/Backend mutation. Counts must reflect applied state;
+  stable reads reuse the immutable snapshot. Distinguish captured Host lifetimes
+  from registered Hosts, concurrency gates from all unfinished navigation, and
+  waiting observer batches from batches already delivering.
+- Fill the observer queue with terminal batches and emit nested events from
+  multiple listeners, during normal drain and synchronous backpressure. Check
+  bounded waiting capacity, each listener's FIFO and once-only delivery through
+  unsubscribe, observer failure and shutdown; disabled histories still deliver.
 - Are listener removers, streams, controllers, and Overlay entries cleaned up?
 
 ## Messaging and Initialization

@@ -4,7 +4,10 @@ Flutter-facing CCRouter facade for application and component code. Its business
 entry point exposes typed navigation, Service/Command/Event access, Session
 operations, and page lifecycle integration.
 Read-only `CCRouter.diagnosticSnapshot` reports history completeness and external
-Sink health. Failure diagnostics preserve attempted Host/Outlet and fixed reason,
+Sink health. `CCRouter.runtimeHealth` adds payload-free Managed/Backend Entry,
+captured Host lifetime, concurrency gate and observer queue counts; these are
+point-in-time diagnostics, not navigation handles or proof of a memory leak.
+Failure diagnostics preserve attempted Host/Outlet and fixed reason,
 attempt and recovery depth; arbitrary business payloads remain excluded.
 
 Business code normally imports:
@@ -31,6 +34,14 @@ Do not import `ccrouter_core/src/*` or use Runtime internals directly. Use nativ
 `CCManagedRouterApp`, or compose `CCManagedRouterBackend` and
 `CCRouterApp.managed` with `MaterialApp.router(routerConfig: backend.routerConfig)`.
 The GoRouter compatibility package and attach API have been removed.
+`CCManagedRouterApp` is the recommended application path; explicit Backends and
+`CCRouterApp.managed` remain advanced Host/test composition. Backend replacement
+requires unmount, awaited `CCRouterHost.shutdown`, reinitialization and a fresh
+App/Backend. Changing only the Key cannot transfer ownership. Managed and direct
+HostBinding aliases are rejected without disposing their current owner, including
+reentrant attachment and pending cleanup. See the
+[Host ownership guide](../../skills/ccrouter-integration-development/references/implementation-patterns.md)
+for failure cleanup, TestHost overlays and cross-Zone shutdown semantics.
 
 Managed completes ordinary Pop results at logical removal and keeps the outgoing
 content and Route Scope until Flutter finishes rendering the exit. Exact close

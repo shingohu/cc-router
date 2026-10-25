@@ -237,6 +237,24 @@ final class _DiagnosticsTab extends StatelessWidget {
               'delivered=${health.delivered} · failed=${health.failed} · dropped=${health.dropped} · closed=${health.closed}',
             ),
           ),
+          if (health.runtimeHealth case final runtimeHealth?)
+            ListTile(
+              title: const Text('Runtime navigation health'),
+              subtitle: Text(
+                'routes=${runtimeHealth.activeRouteEntries} active / '
+                '${runtimeHealth.exitingRouteEntries} exiting · '
+                'pending=${runtimeHealth.pendingNavigations} · '
+                'inFlight=${runtimeHealth.inFlightNavigations}\n'
+                'backend=${runtimeHealth.activeBackendEntries} active / '
+                '${runtimeHealth.backendEntries} retained · '
+                'trackedHosts=${runtimeHealth.trackedNavigationHosts} · '
+                'desync=${runtimeHealth.desynchronizedBackendHosts}\n'
+                'observerQueue=${runtimeHealth.observerQueueDepth}/'
+                '${runtimeHealth.observerQueueCapacity} · '
+                'routeTransitions=${runtimeHealth.routeEntryTransitions} · '
+                'unattributedBackend=${runtimeHealth.unattributedBackendEvents}',
+              ),
+            ),
           const Text(
             'History omissions and external Sink losses are independent. Empty history does not prove absence of failures. Delivered means Sink completion only.',
           ),

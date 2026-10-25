@@ -13,8 +13,8 @@ abstract final class CCRouterHost {
   /// Prevents optional attachment callbacks from reentering initialization.
   static bool _initializing = false;
 
-  /// Releases Backend-owned resources after Runtime-owned Adapter disposal.
-  static Future<void> Function()? _backendDisposer;
+  /// Provisional or committed Adapter ownership, shared by all Host entry points.
+  static _CCNavigationAdapterAttachment? _navigationAttachment;
 
   /// Host tooling owned by the current process-default Runtime lifecycle.
   static List<CCHostToolIntegration> _hostToolIntegrations = const [];
@@ -173,7 +173,11 @@ abstract final class CCRouterHost {
             bindingStack ??= stack;
           }
         }
-        await runtime.dispose();
+        try {
+          await runtime.dispose();
+        } catch (_) {
+          if (bindingError == null) rethrow;
+        }
         if (bindingError != null) {
           Error.throwWithStackTrace(bindingError, bindingStack!);
         }
@@ -261,6 +265,8 @@ abstract final class CCRouterHost {
   /// Stopping and cancellation callbacks run behind the shutdown gate, so they
   /// cannot reinitialize early. Cleanup continues after notification failures;
   /// the Host receives the first structural failure after resources are released.
+  /// An earlier lifecycle Binding detach failure keeps its original stack and
+  /// precedence over subsequent Runtime, Adapter, and Backend cleanup errors.
   /// Each caller joins cleanup from its own Zone, including a different error
   /// Zone from startup or the first shutdown call. Cleanup failures retain their
   /// original identity and stack and are thrown in each joining caller's Zone.
@@ -276,14 +282,15 @@ abstract final class CCRouterHost {
     final existingShutdown = _shuttingDown;
     if (existingShutdown != null) return _joinCleanup(existingShutdown);
     final active = _runtimeResolver.takeDefault();
-    final disposeBackend = _backendDisposer;
+    final attachment = _navigationAttachment;
+    final disposeBackend = attachment?.disposeAfterRuntime;
     final hostToolIntegrations = _hostToolIntegrations;
     final lifecycleBindings = _lifecycleBindings;
     _lifecycleBindings = const [];
     _hostRouteCatalog = null;
     _hostToolIntegrations = const [];
     if (active == null &&
-        disposeBackend == null &&
+        attachment == null &&
         hostToolIntegrations.isEmpty &&
         lifecycleBindings.isEmpty) {
       return;
@@ -291,7 +298,7 @@ abstract final class CCRouterHost {
 
     final completion = _beginCleanup();
     final shuttingDown = completion.future;
-    _backendDisposer = null;
+    attachment?.claimedByShutdown = true;
     Object? bindingError;
     StackTrace? bindingStack;
     for (final binding in lifecycleBindings.reversed) {
@@ -315,7 +322,15 @@ abstract final class CCRouterHost {
     }
     completion.complete(
       _captureCleanup(() async {
-        await _disposeRuntimeAndBackend(active, disposeBackend);
+        try {
+          await _disposeRuntimeAndBackend(active, disposeBackend);
+        } catch (_) {
+          if (bindingError == null) rethrow;
+        } finally {
+          if (identical(_navigationAttachment, attachment)) {
+            _navigationAttachment = null;
+          }
+        }
         if (bindingError != null) {
           Error.throwWithStackTrace(bindingError, bindingStack!);
         }

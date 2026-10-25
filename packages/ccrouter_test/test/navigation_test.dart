@@ -134,6 +134,7 @@ final class BackendEventNavigationAdapter
   String activePopHostId = 'default';
   String activePopOutlet = 'root';
   List<CCInitialBackendEntrySnapshot> initialSnapshot = const [];
+  void Function()? onReadInitialBackendEntries;
 
   @override
   CCNavigationPopTarget get activePopTarget => CCNavigationPopTarget(
@@ -151,8 +152,10 @@ final class BackendEventNavigationAdapter
       );
 
   @override
-  List<CCInitialBackendEntrySnapshot> readInitialBackendEntries() =>
-      initialSnapshot;
+  List<CCInitialBackendEntrySnapshot> readInitialBackendEntries() {
+    onReadInitialBackendEntries?.call();
+    return initialSnapshot;
+  }
 
   void emit(
     CCNavigationBackendEventKind kind, {

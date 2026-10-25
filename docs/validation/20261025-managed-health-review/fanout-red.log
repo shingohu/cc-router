@@ -1,0 +1,67 @@
+00:00 +0: loading <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/observation_backpressure_regression_test.dart
+00:00 +0: terminal backpressure reserves FIFO capacity reenter=false
+00:00 +1: terminal backpressure reserves FIFO capacity reenter=true
+00:00 +2: backpressure preserves FIFO for every listener during nested fan-out
+00:00 +2 -1: backpressure preserves FIFO for every listener during nested fan-out [E]
+  Expected: [
+              '0',
+              '1',
+              '2',
+              '3',
+              '4',
+              '5',
+              '6',
+              '7',
+              '8',
+              '9',
+              '10',
+              '11',
+              '12',
+              '13',
+              '14',
+              '15',
+              '16',
+              '17',
+              '18',
+              '19',
+              '20',
+              '21',
+              '22',
+              '23',
+              ...
+            ]
+    Actual: [
+              '1',
+              '0',
+              '2',
+              '3',
+              '4',
+              '5',
+              '6',
+              '7',
+              '8',
+              '9',
+              '10',
+              '11',
+              '12',
+              '13',
+              '14',
+              '15',
+              '16',
+              '17',
+              '18',
+              '19',
+              '20',
+              '21',
+              '22',
+              '23',
+              ...
+            ]
+     Which: at location [0] is '1' instead of '0'
+
+  package:matcher                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                              expect
+  packages/ccrouter_test/test/observation_backpressure_regression_test.dart 85:7  main.<fn>
+
+00:00 +2 -1: repeated backpressure invalidates health before synchronous delivery
+00:00 +3 -1: Some tests failed.

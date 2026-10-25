@@ -1,0 +1,22 @@
+00:00 +0: loading <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/observation_backpressure_regression_test.dart
+00:00 +0: terminal backpressure reserves FIFO capacity reenter=false
+00:00 +1: terminal backpressure reserves FIFO capacity reenter=true
+00:00 +1 -1: terminal backpressure reserves FIFO capacity reenter=true [E]
+  Expected: a value less than or equal to <64>
+    Actual: <65>
+     Which: is not a value less than or equal to <64>
+
+  package:matcher                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                              expect
+  packages/ccrouter_test/test/observation_backpressure_regression_test.dart 37:9  main.<fn>
+
+00:00 +1 -1: repeated backpressure invalidates health before synchronous delivery
+00:00 +1 -2: repeated backpressure invalidates health before synchronous delivery [E]
+  Expected: <64>
+    Actual: <63>
+
+  package:matcher                                                                 expect
+  package:flutter_test/src/widget_tester.dart 477:18                              expect
+  packages/ccrouter_test/test/observation_backpressure_regression_test.dart 76:7  main.<fn>
+
+00:00 +1 -2: Some tests failed.

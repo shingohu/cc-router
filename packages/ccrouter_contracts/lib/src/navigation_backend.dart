@@ -346,7 +346,11 @@ final class CCInitialBackendEntrySnapshot {
   /// retained history or business-facing diagnostic API.
   final String? location;
 
-  /// Backend sequence associated with this snapshot, when available.
+  /// Entry's last known version in this Host's event sequence domain.
+  /// The maximum version is a lower bound for rejecting stale reports, not a
+  /// complete stream watermark: removed entries may have advanced the stream.
+  /// Runtime starts gap detection with the first observed live event instead.
+  /// MultiHost translates child versions to its aggregate read boundary.
   final int? sequence;
 }
 
@@ -390,6 +394,9 @@ final class CCNavigationBackendEvent {
   final String? backendEntryId;
 
   /// Adapter operation identity used for duplicate-event suppression.
+  /// Repeated reports may carry newer [sequence] values: Runtime advances the
+  /// stream baseline without applying the same operation again. A stale report
+  /// does not reserve this identity for future valid reports.
   final String? backendOperationId;
 
   /// Backend Entry related to the affected Entry, when known.
@@ -415,6 +422,8 @@ final class CCNavigationBackendEvent {
   final List<String> activeNavigatorOutlets;
 
   /// Monotonic adapter sequence for this backend event.
+  /// Sequence acceptance precedes operation deduplication. A real gap marks
+  /// the Host desynchronized even when its operation was already applied.
   final int? sequence;
 
   /// Adapter ownership classification, when it can be established.
@@ -627,6 +636,9 @@ abstract interface class CCNavigationRouteExitBinding {
   /// Unsubscribing must release the callback without changing navigation.
   /// Host disposal must release pending callbacks. Runtime unsubscribes and
   /// closes the Scope immediately on shutdown rather than awaiting UI frames.
+  /// Runtime reserves cancellation before calling this method. If the call
+  /// reenters shutdown or Host detach, the returned subscription is immediately
+  /// removed; shutdown still joins asynchronous Route Scope resource cleanup.
   void Function()? addRouteExitListener({
     required String navigationId,
     required String hostId,
@@ -666,8 +678,12 @@ abstract interface class CCNavigationPredictiveBackSourceProvider {
 abstract interface class CCNavigationBackendSnapshotSource {
   /// Reads active backend entries that predate Runtime event observation.
   ///
-  /// The snapshot must already be available in adapter memory so attachment is
-  /// atomic and navigation cannot race an asynchronous initial-stack import.
+  /// Return a coherent active stack as of entry to this synchronous read, from
+  /// Adapter memory. Reports emitted reentrantly while reading are replayed
+  /// after import, so newer observations cannot be overwritten by older state.
+  /// Snapshot versions share the Host event sequence domain, but do not imply
+  /// contiguous observation before attachment. Without versions, delivery order
+  /// is the fallback and delayed old reports cannot be identified reliably.
   List<CCInitialBackendEntrySnapshot> readInitialBackendEntries();
 }
 

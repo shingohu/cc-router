@@ -19,6 +19,26 @@ calls `CCRouterHost.initialize` and `CCRouterHost.shutdown` explicitly.
 Flutter or third-party Navigator pages are Foreign Routes and do not receive a
 Managed Entry, Scope, or typed-result channel.
 
+Managed attachment includes Host mounting and page-lifecycle bridging: failure
+rolls back acquired mounts and releases independent rejected resources, while
+active or still-cleaning Backend/Adapter aliases remain with their original owner.
+TestHost overlays reject managed attachment before taking ownership; supplied
+resources remain caller-owned and the convenience App rejects before factory
+allocation. Disposal during initialization cannot reopen Runtime operations.
+Snapshot reads replay reentrant reports after import; versions reject old data
+without seeding live-stream gap detection. Missing versions fall back to arrival
+order. Dispatch cleanup errors preserve the primary error and terminal aspects;
+reentrant shutdown joins synchronous removal errors with asynchronous Scope close.
+Batch Route
+cleanup continues after a release hook fails; shutdown returns the first
+original cleanup error after teardown. Ordinary MultiHost Backend/Outlet events
+preserve FIFO order during synchronous observer reentry; detach remains a
+synchronous terminal boundary. Stream sequence acceptance is independent of
+operation deduplication, including health-cache invalidation for real gaps.
+See the lifecycle and multiple-Host guidance in
+[implementation-patterns.md](references/implementation-patterns.md).
+
+
 This Skill and the sibling `ccrouter-cli-development` directory form one
 installation bundle. Keep both complete directories together, including their
 references. Required guidance is bundled; framework design links are optional
@@ -270,6 +290,12 @@ whitespace separators, and parsed SemVer prerelease identifiers are immutable.
   cancellation is warning and recovery selection is not later success. Keep
   arbitrary business cancellation codes private. See the diagnostic semantics
   in `references/implementation-patterns.md` before changing a logging bridge.
+- Runtime health invalidates before external Adapter/cleanup hooks observe a
+  structural change and reuses immutable snapshots while stable. Terminal
+  observer backpressure preserves bounded waiting depth and each listener's
+  FIFO through synchronous reentry. Managed binding samples the Adapter getter
+  once and checks ownership after it returns. Shutdown preserves an earlier
+  lifecycle Binding detach error through later Runtime/Adapter/Backend failures.
 - Runtime construction failure schedules the same best-effort final drain and cleanup on a later event-loop turn, since no Runtime is returned for disposal. Synchronous failure logs remain deliverable; the first unfinished write discards the remainder. The original construction error is rethrown immediately, and late completion cannot restart delivery.
 - Treat `componentGraph`, `componentRegistration`, and `runtimeInitialize` as the framework-owned component/startup diagnostic flow. Configure the Host Sink at `CCRouterHost.initialize` with `CCDiagnosticLevel.debug` when start events are needed; do not duplicate these lifecycle logs in application bootstrap code.
 - Host layout breakpoints, pane selection and fold policy are application-owned.
@@ -352,6 +378,14 @@ whitespace separators, and parsed SemVer prerelease identifiers are immutable.
   construction references; ended-Scope admission fences still apply. This does
   not cancel application Timers/subscriptions or release objects captured by
   application callbacks.
+- Keep the integration surface in three tiers: feature code imports
+  `ccrouter.dart` and uses `CCRouter` plus generated APIs; the Composition Root
+  imports `ccrouter_host.dart` for Runtime lifecycle; ordinary applications use
+  `CCManagedRouterApp`. `CCRouterApp.managed`, `CCManagedRouterBackend`,
+  `CCManagedMultiHostBackend`, `CCFlutterRouteCatalog`, and `CCHostAssembly`
+  are advanced Host/test assembly APIs and must not be imported by feature
+  components. Do not delete those advanced types merely to simplify the
+  default path.
 - After initialization, new Hosts should prefer `CCManagedRouterApp`, which
   creates `CCManagedRouterBackend` from the initialized Catalog and mounts it
   through `CCRouterApp.managed` and `MaterialApp.router`. For custom topology,
@@ -360,6 +394,17 @@ whitespace separators, and parsed SemVer prerelease identifiers are immutable.
   tests. The Managed Adapter owns each Host/Outlet Stack and projects it through
   `RouterDelegate + Navigator.pages`; Runtime owns contract resolution, Entry,
   result and Scope lifecycle, synchronized through backend events.
+  Unmounting does not release the Runtime-owned Backend. To replace routing
+  configuration, unmount, await shutdown, initialize a new Runtime, then mount
+  a fresh App/Backend. A new Key alone is insufficient. Active Backend/Adapter
+  aliases are rejected without disposal across managed and HostBinding entry
+  points, including provisional attachment and asynchronous shutdown cleanup.
+  A distinct rejected wrapper sharing the Adapter remains caller-owned; clean
+  its resources without disposing the shared Adapter again. If an attachment
+  callback synchronously starts shutdown, that shutdown owns the provisional
+  Adapter and registered Backend cleanup; await it without disposing again.
+  Ordinary managed attachment failure cleans up independent rejected resources;
+  ordinary direct HostBinding failure leaves cleanup with the caller.
   `initialLocation` is a trusted fallback (`/` by default); a non-root platform
   startup URI wins and remains external ingress. Set
   `overridePlatformDefaultLocation: true` only to deliberately ignore platform
@@ -378,6 +423,20 @@ whitespace separators, and parsed SemVer prerelease identifiers are immutable.
   Intents and navigator calls stay unchanged; migrate Composition Roots to
   Managed. For gradual adoption, embed a Managed Outlet in an existing feature
   area; do not claim support for attaching CCRouter to an external GoRouter.
+- `CCRouter.runtimeHealth` is a read-only point-in-time summary for Host and
+  debug tooling. It reports current Managed/Backend counts, pending and
+  in-flight navigation counts, observer queue depth, desynchronization count,
+  and lifetime transition totals. It contains no arguments, results, Widgets,
+  Navigator objects, or mutation handles. `unattributedBackendEventCount`
+  includes Foreign/opaque observations and must not be interpreted as a direct
+  `Navigator.pop` count; the summary does not prove a memory leak.
+  `trackedNavigationHostCount` counts Host lifetimes lazily captured by
+  navigation, Pop or scoped clients until detach, not all Adapter registrations;
+  it can be zero before any navigation/client capture.
+  `inFlightNavigationCount` counts `singleFlight/rejectDuplicate` concurrency
+  gates, not every unfinished navigation; default `allow` can report zero.
+  Observer depth counts waiting batches, excluding current delivery; capacity
+  is `max(64, navigationDiagnosticCapacity)` even with disabled history retention.
 - Use `CCManagedMultiHostBackend.managed` when an application tree truly owns
   multiple independent Router Hosts. Its factories receive the initialized
   Catalog and declared Host ID, while the aggregate owns Adapter and Router
@@ -479,13 +538,28 @@ the Service Contract.
   registration reserves its identity during initialization and rolls back only
   its own record. After argument/lifetime validation, rejected unowned Adapters
   are disposed; reusing an owned Adapter never disposes its current owner.
+  Failed binding also retires Runtime-observed provisional Host lifetime and
+  active Backend state; old scoped navigators cannot revive after ID reuse.
   A replacement registered during binding survives the old transaction's failure.
   Activate a new Host only after registration returns successfully. Pre-init
   registrations bind once during initialization, never once per setup phase.
   Aggregate initialization rejects recursive initialize/register operations.
   Detach delivery finishes before unsubscribe/dispose hooks can install a
   replacement. Same-ID registration during detach delivery is rejected;
-  cleanup hooks after delivery may register new work without a later old detach.
+  cleanup hooks after delivery may register a fresh Adapter without a later old
+  detach. The old Adapter stays owned until unsubscribe/dispose returns and
+  cannot be reused under any Host during that interval. Backend, predictive and
+  aggregate Outlet fanout rechecks the original registration before each
+  observer; retirement stops the old event, while explicit detach still finishes.
+  Shutdown joins removed Route Scope/asynchronous Service cleanup even when
+  exit subscription or cleanup reenters shutdown. Host detach also cancels its
+  outgoing render waits; neither boundary requires another UI frame.
+  Pending Route close failures also join across error Zones: an exit remover
+  that reenters shutdown and then throws must not skip Adapter, App Scope or
+  Backend cleanup. Each shutdown caller receives the original error and stack.
+  MultiHost drops duplicate/decreasing child event sequences and preserves gaps
+  for Backend desync diagnostics. Aggregate Outlet/detach events do not advance
+  the child sequence baseline; new registrations start independently.
 - `singleFlight` and `rejectDuplicate` partition by exact trusted origin as well
   as Host/Outlet, operation, Open mode, route ID and URI. Different internal,
   platform, notification and QR origins run their own Interceptor policies.

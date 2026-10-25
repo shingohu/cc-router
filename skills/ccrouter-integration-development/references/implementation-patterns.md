@@ -38,6 +38,21 @@ For full control, create `CCManagedRouterBackend` explicitly and pass its
 `RouterConfig` to `MaterialApp.router`; this is the advanced/test composition,
 not the default application path.
 
+Keep this API separation visible in code review: feature Packages import only
+`ccrouter.dart` and generated business APIs; the Composition Root owns
+`ccrouter_host.dart`; Backend, Catalog, Assembly, Shell, and MultiHost types are
+Host-only assembly details. A read-only Host/debug health panel may use
+`CCRouter.runtimeHealth`, but must not use its counts to mutate navigation or
+infer memory leaks. `unattributedBackendEventCount` includes Foreign and opaque
+backend observations, so it is not a direct `Navigator.pop` counter.
+`trackedNavigationHostCount` counts Host lifetimes captured lazily by navigation,
+Pop or scoped clients until detach. It is not the Adapter registration count and
+can be zero before a lifetime is captured. `inFlightNavigationCount` counts only
+`singleFlight/rejectDuplicate` concurrency gates; zero under default `allow` does
+not mean all navigation has finished. Observer queue depth excludes current
+delivery; capacity stays `max(64, navigationDiagnosticCapacity)` when history
+retention is disabled.
+
 Managed startup treats `initialLocation` as a trusted fallback. A non-root
 platform default route takes precedence and passes external ingress policy;
 `overridePlatformDefaultLocation: true` deliberately forces the Host fallback.
@@ -185,7 +200,8 @@ CCRouterHost.initialize(hostAssembly: hostAssembly);
 `CCManagedRouterApp` forwards non-routing MaterialApp settings (theme, locale,
 localizations, shortcuts/actions, restoration and debug flags). Its stable
 `backendFactory` runs once. Backend inputs cannot change after mounting:
-recreate it with a new Key when changing routing ownership. A custom factory
+unmount, await shutdown, initialize a new Runtime, then recreate it with a new Key
+when changing routing ownership. A custom factory
 must preserve both initialLocation and overridePlatformDefaultLocation.
 Advanced Hosts may explicitly create a Backend and mount it through
 `CCRouterApp.managed`; do not configure Router ownership twice.
@@ -203,13 +219,54 @@ Regex and constraints have already been resolved.
 
 Unmounting a navigation surface does not shut down the shared Runtime.
 Composition Roots explicitly await `CCRouterHost.shutdown()`. Runtime releases
-its owned Adapter before Backend RouterDelegate/provider resources. Session close
-does not dispose navigation. Initialization failure disposes unpublished Runtime
+its owned Adapter before Backend RouterDelegate/provider resources. Managed and
+HostBinding entry points share ownership reservations. Backend/Adapter aliases
+are rejected without disposal while reserved, attached, or still being cleaned
+up by shutdown or rejected-Backend disposal. A distinct rejected wrapper sharing the Adapter remains
+caller-owned; release its resources without disposing the shared Adapter again.
+Capture the Adapter getter once, then recheck ownership: a getter can
+synchronously reenter HostBinding and transfer that exact Adapter.
+If an attachment callback synchronously starts shutdown, that shutdown owns the
+provisional Adapter and registered Backend cleanup. Await it after attachment
+fails without disposing again. Ordinary managed attachment failure cleans up
+independent rejected resources; ordinary direct HostBinding failure leaves
+cleanup with its caller. The managed transaction also covers Host mounting and
+page-lifecycle bridging: rejection rolls back mounts acquired by that State,
+without unmounting another tree's Host. Inside a TestHost Runtime overlay,
+managed attachment is rejected before ownership transfer, so even independent
+explicitly supplied resources remain caller-owned. `CCManagedRouterApp` and the
+Host Catalog accessor reject that overlay before Backend factory allocation.
+An initialization callback starting disposal cancels initialization; operations
+and Session creation cannot resume. Nested initialize calls are rejected.
+Session close
+does not dispose navigation or permit reattachment. Initialization failure disposes unpublished Runtime
 state and preserves the original exception. Await shutdown to join rollback
 before retrying. Concurrent shutdown callers join one cleanup generation in
 their own error Zones. Listener/PopGuard/disposal failures must not skip other
 resources; cleanup returns the first structural failure after attempting all
-owned cleanup. Do not await an Owner's teardown from its own disposable.
+owned cleanup. Removed Route Scope and asynchronous Service cleanup are joined
+also when exit subscription or removal callbacks synchronously start shutdown.
+Pending Route closures carry failure data across error Zones. An exit remover
+may reenter shutdown from a different error Zone and then throw; Adapter, App
+Scope and Backend cleanup still finish before shutdown delivers the original
+error and stack to each caller. Observe the returned Future in its caller Zone.
+Shutdown and Host detach cancel outgoing render waits without another UI frame.
+Batch removal drains every matching Entry despite a failing Adapter release
+hook, advances terminal states and closes each Scope. Host detach completes its
+Backend ledger cleanup as well. Shutdown returns the first original cleanup
+error/stack; business `go/reset` retain sanitized Adapter error semantics.
+A navigation dispatch failure keeps its primary error even if removal/release
+also throws; `lost/after/failed` observations still terminate. Cleanup diagnostics
+retain only the failure type. Synchronous removal errors and asynchronous Scope
+closure use one shared receipt: a reentrant shutdown waits for Scope closure
+before restoring the first removal error and stack in its caller Zone.
+An earlier lifecycle Binding detach failure takes precedence over subsequent
+Runtime/Adapter/Backend cleanup errors after all cleanup completes. Health
+cache invalidation precedes external callbacks after structural changes.
+Terminal observer overflow reserves the incoming slot before synchronous
+backpressure; nested fan-out preserves each listener's FIFO and bounded waiting
+depth without duplicating callbacks.
+Do not await an Owner's teardown from its own disposable.
 
 For isolated tests, `CCRouterTestHost.dispose()` also joins concurrent,
 synchronously reentrant and late callers, carrying the original error and stack
@@ -515,6 +572,27 @@ Custom Adapter operation IDs need only be stable within one registration;
 MultiHost namespaces them per registration and rejects retired subscriptions'
 queued notifications. Repeated notifications with the same operation ID within
 one registration retain Runtime's bounded deduplication semantics.
+Optional child event sequences are checked per registration: duplicate or
+non-increasing values are discarded before forwarding; gaps remain visible to
+Runtime's Backend desync diagnostics. Aggregate-generated Outlet/detach events
+and unsequenced child events do not advance the child sequence baseline. A new
+registration starts independently, even when it reuses the logical Host ID.
+Ordinary Backend/Outlet events use FIFO fan-out under synchronous observer
+reentry. Explicit detach still completes synchronously while its retiring
+reservation is held; queued events from a retired registration are discarded.
+Operation deduplication is separate from stream sequence acceptance: a repeated
+operation with a newer valid sequence advances the baseline without applying
+again. Stale events do not reserve operation IDs. A true gap still invalidates
+health snapshots even when that operation is a duplicate.
+Initial snapshots must describe a coherent active stack at read entry. Runtime
+imports that state before replaying events emitted during the read. Snapshot
+Entry versions share the Host event sequence domain: their maximum rejects
+older buffered reports, but is not a stream watermark and does not establish
+the live gap-detection baseline. Removed entries may have advanced the stream
+before observation began. MultiHost validates child versions separately and
+maps snapshots to its aggregate read boundary, preserving FIFO order with
+aggregate Outlet events and observer reentry. Without sequence metadata,
+arrival order is the fallback and delayed old reports cannot be rejected reliably.
 
 Custom Adapter synchronous callbacks and old Scope cancellation/disposal may
 retire the dispatch Host or Runtime before a new Entry is committed. The Runtime
@@ -527,13 +605,21 @@ duplicate-ID or initialization/binding failure releases that ownership. Passing
 an already owned Adapter is rejected without disposing its current registration.
 Same-ID initialization reentry is rejected. Binding may unregister and replace
 its owner; the old transaction must fail without erasing the replacement. A
-pending Host cannot become active or replace the current active Host. Registering
+failed binding also retires any Runtime-observed provisional Host lifetime and
+active Backend state before cleanup hooks; an old scoped navigator never revives
+when the logical ID is reused. A pending Host cannot become active or replace
+the current active Host. Registering
 before aggregate initialization installs bindings once at initialization.
 The aggregate's initialization transaction rejects recursive initialize/register
 operations instead of mutating the collection being configured.
 The old detach is fully delivered before invoking unsubscribe/dispose hooks.
 Same-ID registration during delivery is rejected; after delivery, cleanup hooks
-may create a replacement without the old event cancelling its newly opened page.
+may create a replacement with a fresh Adapter without the old event cancelling
+its newly opened page. The old Adapter remains reserved until unsubscribe and
+dispose return, including error paths; it cannot be registered under any Host
+inside those callbacks. Each child Backend/predictive and aggregate Outlet event
+checks its original registration before every observer delivery. Retirement in
+an earlier observer stops the old event; explicit detach delivery still completes.
 
 For overlapping requests, Host `navigationConcurrencyPolicy` defaults to allow.
 `singleFlight` shares one unfinished result, and `rejectDuplicate` rejects only

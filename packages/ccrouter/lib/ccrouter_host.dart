@@ -4,6 +4,11 @@
 /// library when wiring component page factories to a concrete navigation
 /// backend. Feature code should continue to import `ccrouter.dart` and navigate
 /// only through `CCRouter.navigator`.
+///
+/// The normal Host path is `CCRouterHost.initialize` followed by
+/// `CCManagedRouterApp`. `CCRouterApp.managed`, Backend, Catalog, Assembly,
+/// Shell, and MultiHost declarations exported here are advanced assembly or
+/// test APIs; they are not required in feature Packages.
 library;
 
 export 'package:ccrouter_contracts/ccrouter_contracts.dart'

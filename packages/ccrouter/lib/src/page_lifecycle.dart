@@ -1,4 +1,4 @@
-part of 'app.dart';
+part of 'facade.dart';
 
 /// Optional page lifecycle callbacks for a `StatefulWidget` destination.
 ///

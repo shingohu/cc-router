@@ -2,6 +2,18 @@
 
 ## 0.1.0 - Unreleased
 
+- Add `CCRouter.runtimeHealth` for immutable navigation ownership/queue counters;
+  distinguish captured Host lifetimes and concurrency gates from registrations
+  and all unfinished requests. Keep the normal Host path on `CCManagedRouterApp`.
+- Share managed/direct HostBinding attachment ownership, reject active or
+  still-cleaning aliases without disposal, roll back partial mounts and reject
+  TestHost overlays before managed allocation. Recheck getter reentry ownership.
+- Complete cleanup through callback failures and cross-Zone reentry while
+  preserving original error/stack priority. Unmounting or changing Key alone
+  does not release a Runtime-owned Backend; replacement requires shutdown.
+- Preserve registration identity, snapshot/event FIFO and child sequence gaps
+  across MultiHost reentry, detach and failed registration.
+
 - Expose lightweight read-only diagnostic health, history omissions and Runtime
   revision; navigation failures retain attempted Host/Outlet and safe reason,
   attempt and recovery depth. Normal cancellation no longer emits error alarms.

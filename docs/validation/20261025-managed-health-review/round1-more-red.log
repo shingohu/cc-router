@@ -1,0 +1,52 @@
+00:00 +0: loading <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart
+00:00 +0: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: release callback invalidates a health snapshot captured during Adapter acceptance
+00:00 +1: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: release callback invalidates a health snapshot captured during Adapter acceptance
+00:00 +2: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: release callback invalidates a health snapshot captured during Adapter acceptance
+00:00 +2 -1: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: release callback invalidates a health snapshot captured during Adapter acceptance
+00:00 +2 -2: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/host_cleanup_failure_order_test.dart: Host cleanup returns first structural error binding=true adapter=false [E]
+  Expected: same instance as StateError:<Bad state: first binding failure>
+    Actual: StateError:<Bad state: last Backend failure>
+
+  package:matcher                                                         expect
+  package:flutter_test/src/widget_tester.dart 477:18                      expect
+  packages/ccrouter_test/test/host_cleanup_failure_order_test.dart 95:13  main.<fn>
+
+00:00 +2 -2: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/host_cleanup_failure_order_test.dart: Host cleanup returns first structural error binding=true adapter=true
+00:00 +2 -3: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: release callback invalidates a health snapshot captured during Adapter acceptance [E]
+  Expected: <0>
+    Actual: <1>
+
+  package:matcher                                                     expect
+  package:flutter_test/src/widget_tester.dart 477:18                  expect
+  packages/ccrouter_test/test/diagnostic_health_cache_test.dart 96:7  main.<fn>
+
+00:00 +2 -3: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/host_cleanup_failure_order_test.dart: Host cleanup returns first structural error binding=true adapter=true [E]
+  Expected: same instance as StateError:<Bad state: first binding failure>
+    Actual: StateError:<Bad state: second Adapter failure>
+
+  package:matcher                                                         expect
+  package:flutter_test/src/widget_tester.dart 477:18                      expect
+  packages/ccrouter_test/test/host_cleanup_failure_order_test.dart 95:13  main.<fn>
+
+00:00 +2 -3: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: backend reconciliation invalidates health before capability callbacks
+00:00 +2 -4: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: backend reconciliation invalidates health before capability callbacks [E]
+  Expected: <0>
+    Actual: <1>
+
+  package:matcher                                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18                   expect
+  packages/ccrouter_test/test/diagnostic_health_cache_test.dart 118:7  main.<fn>
+
+00:00 +2 -4: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: all seven history totals survive rotation and disabled retention
+00:00 +3 -4: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: runtime health exposes live ownership counts without mutation handles
+00:00 +4 -4: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: attaching an adapter invalidates health after initial ledger import
+00:00 +5 -4: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: attachment rollback invalidates health with buffered initial reports
+00:00 +6 -4: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: Host health counts captured lifetimes and retires detached Hosts
+00:00 +7 -4: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: Aspect-only enqueue invalidates health before the next drain
+00:00 +8 -4: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: uncorrelated managed Pop invalidates health only for a new desync
+00:00 +9 -4: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: idle health is reused and no-Sink commands invalidate at 0
+00:00 +10 -4: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: idle health is reused and no-Sink commands invalidate at 1
+00:00 +11 -4: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: delivery changes invalidate health including late failure=false
+00:00 +12 -4: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: delivery changes invalidate health including late failure=true
+00:00 +13 -4: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/diagnostic_health_cache_test.dart: shutdown invalidates a snapshot read after delivery closes
+00:00 +14 -4: Some tests failed.

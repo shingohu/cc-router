@@ -25,6 +25,80 @@ final class CCDiagnosticHistorySnapshot {
   final int omittedCount;
 }
 
+/// Immutable live counts used to assess Runtime navigation health.
+///
+/// These values are a point-in-time diagnostic view. They do not grant
+/// permission to mutate a Route Entry, backend Entry, Host, or pending
+/// navigation, and they do not prove that a retained resource is leaked.
+/// Queue and lifetime counters are intentionally separated from retained
+/// histories so a zero-capacity history remains observable.
+final class CCRuntimeHealthSnapshot {
+  /// Captures current navigation ownership and bounded observer health.
+  const CCRuntimeHealthSnapshot({
+    required this.activeRouteEntryCount,
+    required this.exitingRouteEntryCount,
+    required this.pendingNavigationCount,
+    required this.inFlightNavigationCount,
+    required this.trackedNavigationHostCount,
+    required this.activeBackendEntryCount,
+    required this.backendEntryCount,
+    required this.desynchronizedBackendHostCount,
+    required this.observerQueueDepth,
+    required this.observerQueueCapacity,
+    required this.navigationEventCount,
+    required this.routeEntryTransitionCount,
+    required this.backendEventCount,
+    required this.unattributedBackendEventCount,
+  });
+
+  /// Number of logical Managed Route Entries currently retained.
+  final int activeRouteEntryCount;
+
+  /// Number of removed Entries whose render transition still owns resources.
+  final int exitingRouteEntryCount;
+
+  /// Navigation requests paused by an external policy decision.
+  final int pendingNavigationCount;
+
+  /// In-flight gates for singleFlight/rejectDuplicate; allow can report zero
+  /// while navigation is unfinished. This is not a count of every request.
+  final int inFlightNavigationCount;
+
+  /// Host lifetimes captured by navigation, Pop, or a scoped navigation client.
+  /// Lazily tracked until detach; this is not the Adapter's registered Host count.
+  final int trackedNavigationHostCount;
+
+  /// Backend Entries currently reported as active by the adapter ledger.
+  final int activeBackendEntryCount;
+
+  /// All backend Entries retained by the ledger, including removed diagnostics.
+  final int backendEntryCount;
+
+  /// Hosts with a backend sequence gap or an uncorrelated Managed Pop.
+  final int desynchronizedBackendHostCount;
+
+  /// Observer batches waiting for delivery, excluding batches already delivering.
+  final int observerQueueDepth;
+
+  /// Waiting capacity: max(64, navigationDiagnosticCapacity), including when
+  /// histories are disabled. Terminal overflow applies synchronous backpressure.
+  final int observerQueueCapacity;
+
+  /// Lifetime navigation lifecycle phases emitted by this Runtime.
+  final int navigationEventCount;
+
+  /// Lifetime Managed Route Entry transitions emitted by this Runtime.
+  final int routeEntryTransitionCount;
+
+  /// Lifetime backend observations accepted by this Runtime.
+  final int backendEventCount;
+
+  /// Backend observations without a correlated Runtime navigation identity.
+  /// This includes Foreign Routes and opaque transitions; it is not a direct
+  /// `Navigator.pop` counter.
+  final int unattributedBackendEventCount;
+}
+
 /// Lightweight diagnostic health without copying event or Trace histories.
 ///
 /// This read-only business/tooling value contains no Runtime back-reference.
@@ -38,6 +112,7 @@ final class CCDiagnosticSnapshot {
     required this.sinkConfigured,
     required this.delivery,
     required Iterable<CCDiagnosticHistorySnapshot> histories,
+    this.runtimeHealth,
   }) : histories = List.unmodifiable(histories);
 
   /// Non-reusable Runtime identity distinguishing shutdown/reinitialization.
@@ -56,12 +131,26 @@ final class CCDiagnosticSnapshot {
   /// Completeness of invocation, navigation, Entry, visibility and backend rings.
   /// Live state and removed backend ledger retention are not event histories.
   final List<CCDiagnosticHistorySnapshot> histories;
+
+  /// Current Runtime ownership and observer health, when supplied by the
+  /// producer. Older tooling snapshots may leave this null for compatibility.
+  final CCRuntimeHealthSnapshot? runtimeHealth;
 }
 
 /// Collects payload-free history counts without adding timers or listeners.
 extension CCRouterRuntimeDiagnosticHealth on CCRouterRuntime {
+  /// Returns the current Runtime health without exposing mutable internals.
+  ///
+  /// The returned value is suitable for a debug panel or local diagnostics.
+  /// It is a point-in-time snapshot and must not be used to perform navigation
+  /// or infer that an exiting resource is leaked.
+  CCRuntimeHealthSnapshot get runtimeHealth =>
+      diagnosticSnapshot.runtimeHealth!;
+
   /// Returns lightweight health suitable for an optional mounted debug panel.
   /// Reuses an immutable value while both observations and delivery are stable.
+  /// Structural mutations invalidate it before external Adapter/cleanup hooks
+  /// can reenter, so callbacks see counts for changes already applied.
   CCDiagnosticSnapshot get diagnosticSnapshot {
     final delivery = diagnosticDeliverySnapshot;
     final cached = _diagnosticSnapshot;
@@ -75,6 +164,27 @@ extension CCRouterRuntimeDiagnosticHealth on CCRouterRuntime {
       revision: _diagnosticRevision,
       sinkConfigured: diagnostics.sink != null,
       delivery: delivery,
+      runtimeHealth: CCRuntimeHealthSnapshot(
+        activeRouteEntryCount: _routeEntries.length,
+        exitingRouteEntryCount: _exitingRouteEntries.length,
+        pendingNavigationCount: _pendingNavigations.length,
+        inFlightNavigationCount: _inFlightNavigation.length,
+        trackedNavigationHostCount: _navigationHostRegistrations.length,
+        activeBackendEntryCount: _backendEntries.values
+            .where(
+              (entry) =>
+                  entry.lifecycleState == CCBackendEntryLifecycleState.active,
+            )
+            .length,
+        backendEntryCount: _backendEntries.length,
+        desynchronizedBackendHostCount: _desynchronizedBackendHosts.length,
+        observerQueueDepth: _navigationObservationQueue.length,
+        observerQueueCapacity: _navigationObservationCapacity,
+        navigationEventCount: _navigationEventTotal,
+        routeEntryTransitionCount: _routeEntryEventTotal,
+        backendEventCount: _backendNavigationEventTotal,
+        unattributedBackendEventCount: _unattributedBackendEventTotal,
+      ),
       histories: [
         _historySnapshot('traces', traceCapacity, _traces.length, _traceTotal),
         _historySnapshot(

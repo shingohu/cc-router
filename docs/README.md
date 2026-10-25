@@ -2,6 +2,10 @@
 
 ## 状态说明
 
+- 2026-10-25 [Managed 装配与健康诊断循环审查](validation/20261025-managed-health-review/report.md)：
+  明确默认／高级 Host 入口、只读健康计数含义和 Backend 换代流程；装配、清理、快照及背压
+  修复通过框架 1599 项、Demo 114 项和 DevTools／协议 24 项自动化，范围不扩展到新的真机验收。
+
 - 2026-10-24 [Native 分配归因](validation/20261024-native-attribution/report.md)：匹配引擎符号、
   全程采样、诊断对照与纯 Flutter 字体复现。内存问题按实际分配路径归因，不以 PSS 判定框架泄漏。
 - 2026-10-24 [遗留项收口](validation/20261024-closure/report.md)：修复 Demo Cupertino 正文、

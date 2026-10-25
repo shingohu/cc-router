@@ -136,15 +136,19 @@ extension CCRouterRuntimeNavigationOwnership on CCRouterRuntime {
   /// A token owns a Future and therefore its creation Zone. Retaining a token
   /// must not retain the first navigation or Pop caller for the Host's lifetime.
   CCCancellationToken _navigationHostRegistration(String hostId) =>
-      _navigationHostRegistrations.putIfAbsent(
-        hostId,
-        () => _hostZone.run(CCCancellationToken.new),
-      );
+      _navigationHostRegistrations.putIfAbsent(hostId, () {
+        _diagnosticRevision++;
+        return _hostZone.run(CCCancellationToken.new);
+      });
 
   /// Ends the old registration before an identical logical ID can be reused.
   void _detachNavigationHost(String hostId) {
     final registration = _navigationHostRegistrations.remove(hostId);
+    final inFlightCount = _inFlightNavigation.length;
     _inFlightNavigation.removeWhere((key, _) => key.hostId == hostId);
+    if (registration != null || inFlightCount != _inFlightNavigation.length) {
+      _diagnosticRevision++;
+    }
     try {
       registration?.cancel();
     } catch (error) {

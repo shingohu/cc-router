@@ -2,6 +2,16 @@
 
 ## 0.1.0 - Unreleased
 
+- Add immutable Runtime navigation health with structural cache invalidation
+  before external callbacks. Preserve bounded observer waiting depth and each
+  listener's FIFO during terminal backpressure, including nested fan-out.
+- Prevent initialization reentry/disposal from reviving Runtime operations.
+  Join removed Route Scope cleanup across error Zones, complete batch cleanup
+  despite release failures, and preserve the primary navigation failure.
+- Import initial Backend snapshots before read-time events, separate snapshot
+  lower bounds from live continuity, and advance valid sequences independently
+  of operation deduplication.
+
 - Track bounded history completeness independently of external Sink policy and
   retain exact failure placement across redirect, recovery and pending replay.
   Expose payload-free health counters without Runtime timers or subscriptions.

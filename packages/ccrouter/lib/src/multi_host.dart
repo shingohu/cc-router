@@ -6,6 +6,21 @@ import 'app.dart';
 
 part 'multi_host_identity.dart';
 
+/// Captures an ordinary event and its subscribers until earlier fan-out ends.
+final class _CCQueuedBackendEvent {
+  /// Retains only the synchronous delivery batch; disposal clears queued work.
+  _CCQueuedBackendEvent(this.event, this.isActive, this.listeners);
+
+  /// Normalized aggregate event in arrival order.
+  final CCNavigationBackendEvent event;
+
+  /// Revalidates the exact registration before each ordinary delivery.
+  final bool Function()? isActive;
+
+  /// Subscribers present at publication, excluding later subscriptions.
+  final List<CCNavigationBackendEventListener> listeners;
+}
+
 /// Host-only Adapter multiplexer for independent navigation backends.
 ///
 /// Register one independently owned Adapter per navigation Host, then
@@ -224,23 +239,34 @@ final class CCMultiHostNavigationAdapter
       hostId: hostId,
       outlets: activeOutlets,
     );
-    final sequence = ++record.eventSequence;
-    _publishBackendEvent(
-      CCNavigationBackendEvent(
-        kind: CCNavigationBackendEventKind.outletsChanged,
-        timestamp: DateTime.now(),
-        backendOperationId: '${record.eventNamespace}-outlets-$sequence',
-        hostId: hostId,
-        navigatorOutlet: activeOutlets.first,
-        sequence: sequence,
-        placement: CCRoutePlacement(
+    void publish() {
+      if (_disposed || !identical(_hosts[hostId], record)) return;
+      final sequence = ++record.eventSequence;
+      _publishBackendEvent(
+        CCNavigationBackendEvent(
+          kind: CCNavigationBackendEventKind.outletsChanged,
+          timestamp: DateTime.now(),
+          backendOperationId: '${record.eventNamespace}-outlets-$sequence',
           hostId: hostId,
-          shellId: shellId,
           navigatorOutlet: activeOutlets.first,
+          sequence: sequence,
+          placement: CCRoutePlacement(
+            hostId: hostId,
+            shellId: shellId,
+            navigatorOutlet: activeOutlets.first,
+          ),
+          activeNavigatorOutlets: activeOutlets,
         ),
-        activeNavigatorOutlets: activeOutlets,
-      ),
-    );
+        isActive: () => !_disposed && identical(_hosts[hostId], record),
+      );
+    }
+
+    final pending = _snapshotEventQueue;
+    if (pending != null) {
+      pending.add(publish);
+    } else {
+      publish();
+    }
   }
 
   /// Adds one Host Adapter, including after multi-Host initialization.
@@ -250,11 +276,15 @@ final class CCMultiHostNavigationAdapter
   /// unowned Adapter transfers to this call, including duplicate-ID rejection.
   /// Failure disposes only that Adapter and never removes a replacement Host.
   /// Reusing an already owned Adapter is rejected without disposing its owner.
+  /// Ownership remains reserved through unsubscription and disposal callbacks;
+  /// those callbacks may install a fresh Adapter but cannot reuse the old one.
   /// Same-ID initialization reentry is rejected; a binding callback may remove
   /// and replace its registration, but the retired registration cannot succeed.
   /// Registration during aggregate initialization is rejected. Before aggregate
   /// initialization, registration only adopts the Adapter; binding happens once
   /// when the complete aggregate is initialized.
+  /// If binding fails after Runtime has observed the provisional registration,
+  /// rollback publishes its detach before unsubscription can install a replacement.
   void registerHost(String hostId, CCNavigationAdapter adapter) =>
       _registerHost(hostId, adapter);
 
@@ -279,11 +309,7 @@ final class CCMultiHostNavigationAdapter
   void _registerHost(String hostId, CCNavigationAdapter adapter) {
     _ensureNotDisposed();
     _validateHost(hostId, adapter);
-    if ([
-      ..._hosts.values,
-      ..._pendingHosts.values,
-      ..._retiringHosts.values,
-    ].any((record) => identical(record.adapter, adapter))) {
+    if (_adapterOwners.containsKey(adapter)) {
       throw CCNavigationAdapterError(
         'The Adapter is already owned by a navigation Host.',
       );
@@ -309,14 +335,17 @@ final class CCMultiHostNavigationAdapter
     } catch (error, stackTrace) {
       if (identical(_pendingHosts[hostId], record))
         _pendingHosts.remove(hostId);
-      if (identical(_hosts[hostId], record)) _hosts.remove(hostId);
+      if (identical(_hosts[hostId], record)) {
+        _hosts.remove(hostId);
+        _publishHostDetached(hostId, record);
+      }
       try {
         _unbindRecord(record);
       } catch (_) {
         // Preserve the registration failure after best-effort listener cleanup.
       }
       try {
-        record.dispose();
+        _disposeRecord(record);
       } catch (_) {
         // Preserve the registration failure after best-effort Adapter cleanup.
       }
@@ -381,6 +410,31 @@ final class CCMultiHostNavigationAdapter
     }
     Object? cleanupError;
     StackTrace? cleanupStackTrace;
+    _publishHostDetached(hostId, record);
+    try {
+      _unbindRecord(record);
+    } catch (error, stackTrace) {
+      cleanupError = error;
+      cleanupStackTrace = stackTrace;
+    }
+    try {
+      _disposeRecord(record);
+    } catch (error, stackTrace) {
+      cleanupError ??= error;
+      cleanupStackTrace ??= stackTrace;
+    }
+    if (cleanupError != null) {
+      Error.throwWithStackTrace(cleanupError, cleanupStackTrace!);
+    }
+  }
+
+  /// Retires exactly one removed registration before callbacks can reuse its ID.
+  /// Shared by ordinary removal and failed dynamic binding so Runtime tokens,
+  /// pending work and observed backend state have the same terminal boundary.
+  void _publishHostDetached(
+    String hostId,
+    _CCNavigationHostAdapterRecord record,
+  ) {
     _hostByNavigationId.removeWhere((_, value) => value == hostId);
     final sequence = ++record.eventSequence;
     _retiringHosts[hostId] = record;
@@ -397,21 +451,6 @@ final class CCMultiHostNavigationAdapter
       );
     } finally {
       _retiringHosts.remove(hostId);
-    }
-    try {
-      _unbindRecord(record);
-    } catch (error, stackTrace) {
-      cleanupError = error;
-      cleanupStackTrace = stackTrace;
-    }
-    try {
-      record.dispose();
-    } catch (error, stackTrace) {
-      cleanupError ??= error;
-      cleanupStackTrace ??= stackTrace;
-    }
-    if (cleanupError != null) {
-      Error.throwWithStackTrace(cleanupError, cleanupStackTrace!);
     }
   }
 
@@ -653,19 +692,55 @@ final class CCMultiHostNavigationAdapter
   @override
   List<CCInitialBackendEntrySnapshot> readInitialBackendEntries() {
     _ensureAvailable();
-    final result = <CCInitialBackendEntrySnapshot>[];
-    for (final entry in _hosts.entries) {
-      final adapter = entry.value.adapter;
-      if (adapter is! CCNavigationBackendSnapshotSource) continue;
-      final snapshots = (adapter as CCNavigationBackendSnapshotSource)
-          .readInitialBackendEntries();
-      result.addAll(
-        snapshots.map(
-          (snapshot) => _snapshotForHost(entry.key, entry.value, snapshot),
-        ),
+    if (_snapshotEventQueue != null) {
+      throw const CCNavigationAdapterError(
+        'Backend snapshot read is in progress.',
       );
     }
-    return List.unmodifiable(result);
+    final pending = Queue<void Function()>();
+    _snapshotEventQueue = pending;
+    final result = <CCInitialBackendEntrySnapshot>[];
+    try {
+      for (final entry in _hosts.entries.toList()) {
+        final record = entry.value;
+        _ensureRegisteredRecord(entry.key, record);
+        final adapter = record.adapter;
+        if (adapter is! CCNavigationBackendSnapshotSource) continue;
+        final boundary = record.eventSequence;
+        final snapshots = (adapter as CCNavigationBackendSnapshotSource)
+            .readInitialBackendEntries();
+        _ensureRegisteredRecord(entry.key, record);
+        for (final snapshot in snapshots) {
+          final sequence = snapshot.sequence;
+          if (sequence != null &&
+              (record.snapshotChildSequence == null ||
+                  sequence > record.snapshotChildSequence!)) {
+            record.snapshotChildSequence = sequence;
+          }
+        }
+        // Snapshot versions are child-local. All queued observations follow
+        // this aggregate read boundary without allocating positions for stale
+        // child reports or confusing pre-observation history with stream loss.
+        result.addAll(
+          snapshots.map(
+            (snapshot) => _snapshotForHost(
+              entry.key,
+              record,
+              snapshot,
+              sequence: snapshot.sequence == null ? null : boundary,
+            ),
+          ),
+        );
+      }
+      while (pending.isNotEmpty) {
+        pending.removeFirst()();
+      }
+      _ensureAvailable();
+      return List.unmodifiable(result);
+    } finally {
+      _snapshotEventQueue = null;
+      pending.clear();
+    }
   }
 
   /// Subscribes to backend events from every current and future Host.
@@ -771,11 +846,7 @@ final class CCMultiHostNavigationAdapter
   void _dispose() {
     _disposed = true;
     _initialized = false;
-    final records = {
-      ..._hosts.values,
-      ..._pendingHosts.values,
-      ..._retiringHosts.values,
-    }.toList();
+    final records = _adapterOwners.values.toList();
     _hosts.clear();
     _pendingHosts.clear();
     _retiringHosts.clear();
@@ -790,6 +861,9 @@ final class CCMultiHostNavigationAdapter
       }
     }
     _hostByNavigationId.clear();
+    _pendingBackendEvents.clear();
+    _snapshotEventQueue?.clear();
+    _snapshotEventQueue = null;
     _backendListeners.clear();
     _predictiveBackListeners.clear();
     _popGuardEvaluator = null;
@@ -798,7 +872,7 @@ final class CCMultiHostNavigationAdapter
     _shells = const [];
     for (final record in records) {
       try {
-        record.dispose();
+        _disposeRecord(record);
       } catch (error, stackTrace) {
         firstError ??= error;
         firstStackTrace ??= stackTrace;
@@ -811,6 +885,12 @@ final class CCMultiHostNavigationAdapter
 
   /// Registered child Adapters indexed by concrete Host identity.
   final Map<String, _CCNavigationHostAdapterRecord> _hosts = {};
+
+  /// Exact Adapter ownership retained through unsubscription and disposal.
+  /// Logical Host IDs may be reused during cleanup, but their old Adapter may
+  /// not transfer to another registration before its disposer has returned.
+  final Map<CCNavigationAdapter, _CCNavigationHostAdapterRecord>
+  _adapterOwners = HashMap.identity();
 
   /// Ownership reserved until initialization and every binding has completed.
   ///
@@ -832,6 +912,16 @@ final class CCMultiHostNavigationAdapter
 
   /// Runtime listeners receiving merged backend events.
   final Set<CCNavigationBackendEventListener> _backendListeners = {};
+
+  /// Ordinary events waiting for the current observer fan-out to finish.
+  final Queue<_CCQueuedBackendEvent> _pendingBackendEvents = Queue();
+
+  /// Synchronous snapshot reads defer ordinary normalization in arrival order.
+  /// Terminal detach remains immediate; teardown drops these transient callbacks.
+  Queue<void Function()>? _snapshotEventQueue;
+
+  /// Prevents reentrant observers from overtaking the event being delivered.
+  bool _publishingBackendEvent = false;
 
   /// Runtime listeners receiving merged predictive-back phases.
   final Set<CCPredictiveBackEventListener> _predictiveBackListeners = {};
@@ -910,11 +1000,59 @@ final class CCMultiHostNavigationAdapter
   }
 
   /// Creates an isolated event lifetime without retaining historical Host IDs.
-  _CCNavigationHostAdapterRecord _createRecord(CCNavigationAdapter adapter) =>
-      _CCNavigationHostAdapterRecord(
-        adapter,
-        '$_adapterId-${++_nextRegistrationId}',
+  _CCNavigationHostAdapterRecord _createRecord(CCNavigationAdapter adapter) {
+    final record = _CCNavigationHostAdapterRecord(
+      adapter,
+      '$_adapterId-${++_nextRegistrationId}',
+    );
+    _adapterOwners[adapter] = record;
+    return record;
+  }
+
+  /// Releases one exact reservation after all external disposal code returns.
+  void _disposeRecord(_CCNavigationHostAdapterRecord record) {
+    try {
+      record.dispose();
+    } finally {
+      if (identical(_adapterOwners[record.adapter], record)) {
+        _adapterOwners.remove(record.adapter);
+      }
+    }
+  }
+
+  /// Defers child reports during snapshot reads, then normalizes live reports.
+  /// Child and aggregate Outlet reports share FIFO order; detach stays terminal.
+  void _forwardChildBackendEvent(
+    String hostId,
+    _CCNavigationHostAdapterRecord record,
+    CCNavigationBackendEvent event, {
+    bool fromSnapshot = false,
+  }) {
+    if (_disposed || !identical(_hosts[hostId], record)) return;
+    final pending = _snapshotEventQueue;
+    if (pending != null && !fromSnapshot) {
+      pending.add(
+        () => _forwardChildBackendEvent(
+          hostId,
+          record,
+          event,
+          fromSnapshot: true,
+        ),
       );
+      return;
+    }
+    final normalized = _eventForHost(hostId, record, event);
+    if (normalized == null) return;
+    if ((normalized.kind == CCNavigationBackendEventKind.pop ||
+            normalized.kind == CCNavigationBackendEventKind.remove) &&
+        normalized.navigationId != null) {
+      _hostByNavigationId.remove(normalized.navigationId);
+    }
+    _publishBackendEvent(
+      normalized,
+      isActive: () => !_disposed && identical(_hosts[hostId], record),
+    );
+  }
 
   /// Connects child backend and predictive sources to merged listeners.
   void _bindRecord(String hostId, _CCNavigationHostAdapterRecord record) {
@@ -922,14 +1060,7 @@ final class CCMultiHostNavigationAdapter
     if (adapter is CCNavigationBackendEventSource) {
       record.backendRemover = (adapter as CCNavigationBackendEventSource)
           .addBackendEventListener((event) {
-            if (_disposed || !identical(_hosts[hostId], record)) return;
-            final normalized = _eventForHost(hostId, record, event);
-            if ((normalized.kind == CCNavigationBackendEventKind.pop ||
-                    normalized.kind == CCNavigationBackendEventKind.remove) &&
-                normalized.navigationId != null) {
-              _hostByNavigationId.remove(normalized.navigationId);
-            }
-            _publishBackendEvent(normalized);
+            _forwardChildBackendEvent(hostId, record, event);
           });
       _ensureRegisteredRecord(hostId, record);
     }
@@ -947,6 +1078,8 @@ final class CCMultiHostNavigationAdapter
         if (_disposed || !identical(_hosts[hostId], record)) return;
         final normalized = _predictiveEventForHost(hostId, record, event);
         for (final listener in _predictiveBackListeners.toList()) {
+          if (_disposed || !identical(_hosts[hostId], record)) break;
+          if (!_predictiveBackListeners.contains(listener)) continue;
           try {
             listener(normalized);
           } catch (_) {
@@ -1005,10 +1138,45 @@ final class CCMultiHostNavigationAdapter
   }
 
   /// Publishes a merged backend event while isolating Host observers.
-  void _publishBackendEvent(CCNavigationBackendEvent event) {
-    for (final listener in _backendListeners.toList()) {
+  /// Child events recheck their registration before each delivery so an earlier
+  /// observer cannot retire the owner and then forward its stale event. Explicit
+  /// detach events have their own retiring reservation and must finish delivery.
+  void _publishBackendEvent(
+    CCNavigationBackendEvent event, {
+    bool Function()? isActive,
+  }) {
+    final delivery = _CCQueuedBackendEvent(
+      event,
+      isActive,
+      _backendListeners.toList(),
+    );
+    // Explicit detach is a synchronous terminal boundary: its retiring Host
+    // reservation must remain held until all observers have seen the detach.
+    // Ordinary child/Outlet events instead preserve arrival order under reentry.
+    if (isActive == null) {
+      _deliverBackendEvent(delivery);
+      return;
+    }
+    _pendingBackendEvents.add(delivery);
+    if (_publishingBackendEvent) return;
+    _publishingBackendEvent = true;
+    try {
+      while (_pendingBackendEvents.isNotEmpty) {
+        _deliverBackendEvent(_pendingBackendEvents.removeFirst());
+      }
+    } finally {
+      _publishingBackendEvent = false;
+    }
+  }
+
+  /// Delivers one captured subscription batch, dropping retired registrations.
+  void _deliverBackendEvent(_CCQueuedBackendEvent delivery) {
+    final isActive = delivery.isActive;
+    for (final listener in delivery.listeners) {
+      if (isActive?.call() == false) break;
+      if (isActive != null && !_backendListeners.contains(listener)) continue;
       try {
-        listener(event);
+        listener(delivery.event);
       } catch (_) {
         // Host diagnostics must never change navigation execution.
       }
@@ -1072,6 +1240,12 @@ final class _CCNavigationHostAdapterRecord {
 
   /// Merged sequence owned only by this registration, including its final detach.
   int eventSequence = 0;
+
+  /// Last accepted child sequence, independent of aggregate-generated events.
+  int? lastChildSequence;
+
+  /// Child snapshot lower bound, separate from observed event continuity.
+  int? snapshotChildSequence;
 
   /// Removes the child backend-event subscription.
   void Function()? backendRemover;

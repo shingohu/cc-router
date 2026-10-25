@@ -17,14 +17,21 @@ void Function() _subscribeNavigationObserver<T>(
 
 /// One queued batch of observational callbacks for the same framework event.
 final class _QueuedNavigationObservation {
-  /// Creates a batch whose callbacks share one priority and diagnostic label.
-  const _QueuedNavigationObservation({
-    required this.dispatch,
+  /// Captures callbacks with a cursor advanced before each external invocation.
+  _QueuedNavigationObservation({
+    required Iterable<void Function()> callbacks,
     required this.critical,
-  });
+  }) : _remaining = callbacks.iterator;
 
-  /// Delivers the snapshot of observers retained by this batch.
-  final void Function() dispatch;
+  /// Remaining observers; nested backpressure can finish this batch once only.
+  final Iterator<void Function()> _remaining;
+
+  /// Finishes earlier callbacks before a reentrant batch can overtake them.
+  void dispatch() {
+    while (_remaining.moveNext()) {
+      _remaining.current();
+    }
+  }
 
   /// Whether dropping this batch would lose a terminal lifecycle transition.
   final bool critical;
@@ -203,15 +210,15 @@ extension CCRouterRuntimeNavigationCallbacks on CCRouterRuntime {
     _enqueueNavigationObservation(
       _QueuedNavigationObservation(
         critical: critical,
-        dispatch: () {
-          for (final observer in snapshot) {
-            if (!isActive(observer)) continue;
+        callbacks: snapshot.map(
+          (observer) => () {
+            if (!isActive(observer)) return;
             _invokeNavigationObserver(
               () => notify(observer),
               failureLabel: failureLabel,
             );
-          }
-        },
+          },
+        ),
       ),
     );
   }
@@ -221,6 +228,10 @@ extension CCRouterRuntimeNavigationCallbacks on CCRouterRuntime {
   /// Overflow removes the oldest non-critical batch first. If every retained
   /// batch is terminal, the oldest one is delivered synchronously as explicit
   /// backpressure so terminal state is never silently lost.
+  /// The incoming terminal batch reserves its slot before synchronous delivery,
+  /// so reentrant reports preserve FIFO and cannot exceed queue capacity.
+  /// Every accepted batch invalidates health, including Aspect-only observations
+  /// with no retained navigation diagnostic to advance the revision for them.
   void _enqueueNavigationObservation(_QueuedNavigationObservation observation) {
     if (!_acceptingNavigationObservations) return;
     if (_navigationObservationQueue.length >= _navigationObservationCapacity) {
@@ -241,14 +252,20 @@ extension CCRouterRuntimeNavigationCallbacks on CCRouterRuntime {
         return;
       } else {
         final oldest = _navigationObservationQueue.removeFirst();
+        // Commit the incoming batch before callbacks can enqueue more work.
+        _navigationObservationQueue.addLast(observation);
+        _diagnosticRevision++;
+        _scheduleNavigationObservationDrain();
         _recordNavigationObservationOverflow(
           'Navigation observation queue reached capacity; the oldest '
           'terminal batch was delivered with backpressure.',
         );
-        oldest.dispatch();
+        _dispatchNavigationObservations([oldest]);
+        return;
       }
     }
     _navigationObservationQueue.addLast(observation);
+    _diagnosticRevision++;
     _scheduleNavigationObservationDrain();
   }
 
@@ -274,15 +291,32 @@ extension CCRouterRuntimeNavigationCallbacks on CCRouterRuntime {
     while (_navigationObservationQueue.isNotEmpty) {
       pending.add(_navigationObservationQueue.removeFirst());
     }
+    if (pending.isNotEmpty) _diagnosticRevision++;
     try {
-      for (final observation in pending) {
-        observation.dispatch();
-      }
+      _dispatchNavigationObservations(pending);
     } finally {
       _drainingNavigationObservations = false;
       _navigationObservationOverflowRecorded = false;
       if (_navigationObservationQueue.isNotEmpty) {
         _scheduleNavigationObservationDrain();
+      }
+    }
+  }
+
+  /// Delivers an admitted batch list, helping earlier fan-out on nested pressure.
+  ///
+  /// A callback cursor advances before invocation. Reentrant delivery finishes
+  /// the older listeners and admitted batches first, preserving each listener's
+  /// FIFO without duplicating callbacks or expanding the waiting queue.
+  void _dispatchNavigationObservations(
+    Iterable<_QueuedNavigationObservation> observations,
+  ) {
+    _navigationObservationDeliveries.addAll(observations);
+    while (_navigationObservationDeliveries.isNotEmpty) {
+      final oldest = _navigationObservationDeliveries.first;
+      oldest.dispatch();
+      if (identical(_navigationObservationDeliveries.firstOrNull, oldest)) {
+        _navigationObservationDeliveries.removeFirst();
       }
     }
   }

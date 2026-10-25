@@ -376,11 +376,29 @@ void main() {
           return lateResult.future;
         });
         runtime.initialize();
-        final result = await runtime
-            .command(Ping(), timeout: const Duration(milliseconds: 5))
-            .then<Object?>((v) => v, onError: (Object e, StackTrace _) => e);
+        var timeoutTimers = 0;
+        // Test timeout cancellation after Handler entry, independently of JIT
+        // startup or suite load. Advance the real timeout callback to the next
+        // event turn while leaving ample wall-clock time for initial admission.
+        final pending = runZoned(
+          () => runtime.command(Ping(), timeout: const Duration(hours: 1)),
+          zoneSpecification: ZoneSpecification(
+            createTimer: (_, parent, zone, duration, callback) {
+              if (duration > Duration.zero) {
+                timeoutTimers++;
+                return parent.createTimer(zone, Duration.zero, callback);
+              }
+              return parent.createTimer(zone, duration, callback);
+            },
+          ),
+        );
+        final result = await pending.then<Object?>(
+          (value) => value,
+          onError: (Object error, StackTrace _) => error,
+        );
         lateResult.completeError(StateError('late handler failure'));
         await Future<void>.delayed(Duration.zero);
+        expect(timeoutTimers, 1);
         expect(notifications, 1);
         expect(runtime.recentTraces.single.status, 'timedOut');
         debugPrint(

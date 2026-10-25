@@ -192,9 +192,12 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
   /// foreign route, a sibling Outlet, or an already removed page. Marking the
   /// Host desynchronized keeps the failure observable while preserving every
   /// managed Scope until a later exact event or result Future resolves it.
+  /// A newly marked Host invalidates cached health; repeated reports reuse it.
   void _recordUncorrelatedManagedPop(CCPopOutcome outcome) {
     final hostId = outcome.hostId ?? _activeRouteEntryHostId;
-    if (hostId != null) _desynchronizedBackendHosts.add(hostId);
+    if (hostId != null && _desynchronizedBackendHosts.add(hostId)) {
+      _diagnosticRevision++;
+    }
   }
 
   /// Changes the current location to the route targeted by [intent].
@@ -568,7 +571,10 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         navigationConcurrencyPolicy == CCNavigationConcurrencyPolicy.allow
         ? null
         : _SharedResult<Object?>();
-    if (shared != null) _inFlightNavigation[key] = shared;
+    if (shared != null) {
+      _inFlightNavigation[key] = shared;
+      _diagnosticRevision++;
+    }
     final pending = _dispatchNavigationUncoordinated(
       operation,
       prepared,
@@ -589,6 +595,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       void clear() {
         if (identical(_inFlightNavigation[key], shared)) {
           _inFlightNavigation.remove(key);
+          _diagnosticRevision++;
         }
         removeOwnershipCancellation?.call();
         removeOwnershipCancellation = null;
@@ -1103,7 +1110,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       // error must provide its own atomic rollback or capability boundary;
       // Runtime never guesses how to recreate an older entry.
       if (entry != null) {
-        _removeRouteEntry(entry, reason: 'failed');
+        _removeFailedNavigationEntry(entry);
       }
       final outcome = error is CCRouteCancelledError
           ? CCNavigationAspectOutcome.cancelled
@@ -1128,7 +1135,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       rethrow;
     } catch (error) {
       if (entry != null) {
-        _removeRouteEntry(entry, reason: 'failed');
+        _removeFailedNavigationEntry(entry);
       }
       if (entry != null) {
         _emitAspectLost(
@@ -1150,6 +1157,19 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       if (error is _RouteRevalidationRequestError) rethrow;
       throw CCNavigationAdapterError(
         'Navigation adapter failed: ${error.runtimeType}.',
+      );
+    }
+  }
+
+  /// Completes failure cleanup without replacing the primary dispatch error.
+  /// The shared close barrier still carries the original cleanup failure to
+  /// shutdown; diagnostics retain only its type, never its private message.
+  void _removeFailedNavigationEntry(_RouteEntryRecord entry) {
+    try {
+      _removeRouteEntry(entry, reason: 'failed');
+    } catch (error) {
+      _recordNavigationCallbackFailure(
+        'Failed navigation cleanup failed: ${error.runtimeType}.',
       );
     }
   }

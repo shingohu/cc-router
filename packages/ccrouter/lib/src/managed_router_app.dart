@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 
-import 'app.dart';
 import 'facade.dart';
 import 'managed_router.dart';
 import 'route_catalog.dart';
@@ -75,11 +74,18 @@ final class CCManagedRouterBackendConfiguration {
 /// [CCRouterApp.managed], and supplies its [RouterConfig] to
 /// [MaterialApp.router]. The Runtime remains owned by [CCRouterHost]; removing
 /// this widget does not shut down the Runtime.
+/// To change routing ownership, unmount, await shutdown, initialize a new Runtime,
+/// then create a new widget with a new Key; remounting alone cannot rebind it.
 ///
 /// Use [backendFactory] when the Host needs custom Shell/Outlet topology that
 /// cannot be expressed by the direct constructor fields. The factory is called
 /// once for the widget lifetime and receives the exact Catalog retained by the
 /// initialized Host Assembly.
+///
+/// This is the default application-facing Host entry point. Feature code should
+/// import `ccrouter.dart` and use [CCRouter] plus generated APIs; it should not
+/// import this widget or the Backend types. Use [CCRouterApp.managed] and an
+/// explicit Backend only for advanced Host composition or tests.
 final class CCManagedRouterApp extends StatefulWidget {
   /// Creates a Managed Router Host with the standard Material application
   /// configuration.
@@ -329,7 +335,8 @@ final class _CCManagedRouterAppState extends State<CCManagedRouterApp> {
         !identical(widget.additionalObservers, oldWidget.additionalObservers)) {
       throw FlutterError(
         'CCManagedRouterApp Backend configuration is immutable after mounting. '
-        'Recreate it with a new Key when its Backend inputs change.',
+        'Unmount it, await CCRouterHost.shutdown, initialize a new Runtime, '
+        'then recreate it with a new Key when its Backend inputs change.',
       );
     }
   }

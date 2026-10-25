@@ -186,6 +186,7 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
     if (adapter is CCNavigationBackendEventSource) {
       _backendNavigationRemover = (adapter as CCNavigationBackendEventSource)
           .addBackendEventListener(_recordBackendNavigationEvent);
+      _ensureNavigationAlive();
     }
     final predictiveSource = adapter is CCNavigationPredictiveBackSourceProvider
         ? (adapter as CCNavigationPredictiveBackSourceProvider)
@@ -193,6 +194,7 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
         : adapter is CCNavigationPredictiveBackSource
         ? adapter as CCNavigationPredictiveBackSource
         : null;
+    _ensureNavigationAlive();
     if (predictiveSource != null) {
       _predictiveBackRemover = predictiveSource.addPredictiveBackListener(
         _recordPredictiveBackEvent,
@@ -235,29 +237,53 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
     final source = adapter is CCNavigationBackendSnapshotSource
         ? adapter as CCNavigationBackendSnapshotSource
         : null;
-    if (source == null) return;
-    final snapshots = source.readInitialBackendEntries();
-    for (final snapshot in snapshots) {
-      if (snapshot.backendEntryId.isEmpty || snapshot.navigatorOutlet.isEmpty) {
-        throw const CCNavigationAdapterError(
-          'Initial backend snapshot contains an invalid entry identity.',
+    final pending = Queue<CCNavigationBackendEvent>();
+    _initialBackendEvents = pending;
+    try {
+      final snapshots = source?.readInitialBackendEntries() ?? const [];
+      _ensureNavigationAlive();
+      for (final snapshot in snapshots) {
+        if (snapshot.backendEntryId.isEmpty ||
+            snapshot.navigatorOutlet.isEmpty) {
+          throw const CCNavigationAdapterError(
+            'Initial backend snapshot contains an invalid entry identity.',
+          );
+        }
+        final sequence = snapshot.sequence;
+        if (sequence != null) {
+          final hostId = snapshot.hostId ?? 'default';
+          final previous = _backendSnapshotSequencesByHost[hostId];
+          if (previous == null || sequence > previous) {
+            _backendSnapshotSequencesByHost[hostId] = sequence;
+          }
+        }
+        _backendEntries[snapshot.backendEntryId] = _BackendEntryRecord(
+          backendEntryId: snapshot.backendEntryId,
+          owner: snapshot.owner,
+          routeEntryId: snapshot.routeEntryId,
+          routeId: snapshot.routeId,
+          hostId: snapshot.hostId,
+          navigatorOutlet: snapshot.navigatorOutlet,
+          address: _addressSummaryFor(
+            routeId: snapshot.routeId,
+            location: snapshot.location,
+          ),
+          lifecycleState: CCBackendEntryLifecycleState.active,
+          visibilityState: snapshot.visibilityState,
+          lastSequence: snapshot.sequence,
         );
       }
-      _backendEntries[snapshot.backendEntryId] = _BackendEntryRecord(
-        backendEntryId: snapshot.backendEntryId,
-        owner: snapshot.owner,
-        routeEntryId: snapshot.routeEntryId,
-        routeId: snapshot.routeId,
-        hostId: snapshot.hostId,
-        navigatorOutlet: snapshot.navigatorOutlet,
-        address: _addressSummaryFor(
-          routeId: snapshot.routeId,
-          location: snapshot.location,
-        ),
-        lifecycleState: CCBackendEntryLifecycleState.active,
-        visibilityState: snapshot.visibilityState,
-        lastSequence: snapshot.sequence,
-      );
+      if (snapshots.isNotEmpty) _diagnosticRevision++;
+      // Events observed during the snapshot getter belong after
+      // import. Versioned reports at/below the snapshot lower bound are stale;
+      // absent sequence metadata falls back to synchronous delivery order.
+      while (pending.isNotEmpty) {
+        _ensureNavigationAlive();
+        _applyBackendNavigationEvent(pending.removeFirst());
+      }
+    } finally {
+      _initialBackendEvents = null;
+      pending.clear();
     }
   }
 
@@ -270,12 +296,29 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
   /// PopupRoute, LocalHistoryEntry, or application-owned Navigator route and
   /// must never remove a managed Route Entry by position.
   void _recordBackendNavigationEvent(CCNavigationBackendEvent event) {
-    if (!_reconcileBackendEntry(event)) return;
+    if (_disposed) return;
+    final pending = _initialBackendEvents;
+    if (pending != null) {
+      pending.add(event);
+      return;
+    }
+    _applyBackendNavigationEvent(event);
+  }
+
+  /// Reconciles one report after bootstrap ordering has admitted its turn.
+  /// Reentrant reports join the pending bootstrap FIFO instead of overtaking it.
+  void _applyBackendNavigationEvent(CCNavigationBackendEvent event) {
+    if (_disposed || !_reconcileBackendEntry(event)) return;
+    // Ledger changes must be visible to reentrant Adapter and cleanup hooks.
+    _diagnosticRevision++;
     _applyObservedHostLifecycle(event);
     _applyObservedManagedPop(event);
     _applyObservedBackendTop(event);
     final diagnosticEvent = _backendDiagnosticEvent(event);
     _backendNavigationEventTotal++;
+    if (diagnosticEvent.navigationId == null) {
+      _unattributedBackendEventTotal++;
+    }
     _retainDiagnostic(
       _backendNavigationEvents,
       diagnosticEvent,
@@ -311,22 +354,28 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
     if (event.kind != CCNavigationBackendEventKind.hostDetached) return;
     final hostId = event.hostId ?? event.placement.hostId;
     _detachNavigationHost(hostId);
-    _removeAllRouteEntries(reason: 'hostDetached', hostId: hostId);
-    for (final ledgerEntry in _backendEntries.entries.toList()) {
-      final entry = ledgerEntry.value;
-      if (entry.hostId == hostId &&
-          entry.lifecycleState == CCBackendEntryLifecycleState.active) {
-        _backendEntries[ledgerEntry.key] = _copyBackendEntry(
-          entry,
-          lifecycleState: CCBackendEntryLifecycleState.removed,
-          visibilityState: CCBackendEntryVisibilityState.hidden,
-          lastSequence: event.sequence ?? entry.lastSequence,
-        );
+    _releaseRouteExitsForHost(hostId);
+    try {
+      _removeAllRouteEntries(reason: 'hostDetached', hostId: hostId);
+    } finally {
+      for (final ledgerEntry in _backendEntries.entries.toList()) {
+        final entry = ledgerEntry.value;
+        if (entry.hostId == hostId &&
+            entry.lifecycleState == CCBackendEntryLifecycleState.active) {
+          _backendEntries[ledgerEntry.key] = _copyBackendEntry(
+            entry,
+            lifecycleState: CCBackendEntryLifecycleState.removed,
+            visibilityState: CCBackendEntryVisibilityState.hidden,
+            lastSequence: event.sequence ?? entry.lastSequence,
+          );
+        }
       }
+      _trimRemovedBackendEntries();
+      _backendSequencesByHost.remove(hostId);
+      _backendSnapshotSequencesByHost.remove(hostId);
+      _desynchronizedBackendHosts.remove(hostId);
+      _diagnosticRevision++;
     }
-    _trimRemovedBackendEntries();
-    _backendSequencesByHost.remove(hostId);
-    _desynchronizedBackendHosts.remove(hostId);
   }
 
   /// Closes a Managed RouteEntry only for an identity-capable adapter event.
@@ -360,6 +409,10 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
 
   /// Reconciles one identity-bearing event and rejects duplicates or stale data.
   bool _reconcileBackendEntry(CCNavigationBackendEvent event) {
+    // Stream progress and operation idempotence are independent: repeated
+    // operations may carry newer sequence numbers, while stale events must not
+    // reserve an operation ID that a later valid report still needs to apply.
+    if (!_acceptBackendSequence(event)) return false;
     final operationId = event.backendOperationId;
     if (operationId != null) {
       if (_processedBackendOperations.contains(operationId)) return false;
@@ -369,7 +422,6 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
       }
       _processedBackendOperations.add(operationId);
     }
-    if (!_acceptBackendSequence(event)) return false;
     final backendEntryId = event.backendEntryId;
     if (backendEntryId == null || backendEntryId.isEmpty) return true;
 
@@ -461,10 +513,15 @@ extension CCRouterRuntimeNavigationBackend on CCRouterRuntime {
     final sequence = event.sequence;
     if (sequence == null) return true;
     final hostId = event.hostId ?? event.placement.hostId;
+    final snapshotSequence = _backendSnapshotSequencesByHost[hostId];
+    if (snapshotSequence != null && sequence <= snapshotSequence) return false;
     final previous = _backendSequencesByHost[hostId];
     if (previous != null && sequence <= previous) return false;
     if (previous != null && sequence > previous + 1) {
       _desynchronizedBackendHosts.add(hostId);
+      // A duplicate operation can return before diagnostic event retention.
+      // Invalidate health snapshots here even when no event will be applied.
+      _diagnosticRevision++;
       for (final ledgerEntry in _backendEntries.entries.toList()) {
         final entry = ledgerEntry.value;
         if (entry.hostId == hostId &&

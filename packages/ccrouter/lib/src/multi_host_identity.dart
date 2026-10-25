@@ -8,46 +8,66 @@ String? _entryIdForHost(String namespace, String? id) =>
     id == null || id.isEmpty ? id : '$namespace-entry-$id';
 
 /// Qualifies both sides of a child transition within its registered Host.
-CCNavigationBackendEvent _eventForHost(
+/// Rejects stale child sequences before any forwarding side effect. Child gaps
+/// reserve missing aggregate sequence positions, preserving Runtime diagnostics
+/// alongside aggregate-owned Outlet and detach events.
+CCNavigationBackendEvent? _eventForHost(
   String hostId,
   _CCNavigationHostAdapterRecord record,
   CCNavigationBackendEvent event,
-) => CCNavigationBackendEvent(
-  kind: event.kind,
-  timestamp: event.timestamp,
-  backendEntryId: _entryIdForHost(record.eventNamespace, event.backendEntryId),
-  backendOperationId: event.backendOperationId == null
-      ? null
-      : '${record.eventNamespace}-child-${event.backendOperationId}',
-  previousBackendEntryId: _entryIdForHost(
-    record.eventNamespace,
-    event.previousBackendEntryId,
-  ),
-  hostId: hostId,
-  navigatorOutlet: event.navigatorOutlet,
-  sequence: ++record.eventSequence,
-  owner: event.owner,
-  navigationId: event.navigationId,
-  routeId: event.routeId,
-  uri: event.uri,
-  placement: CCRoutePlacement(
+) {
+  final sequence = event.sequence;
+  if (sequence != null) {
+    final snapshot = record.snapshotChildSequence;
+    if (snapshot != null && sequence <= snapshot) return null;
+    final previous = record.lastChildSequence;
+    if (previous != null) {
+      if (sequence <= previous) return null;
+      record.eventSequence += sequence - previous - 1;
+    }
+    record.lastChildSequence = sequence;
+  }
+  return CCNavigationBackendEvent(
+    kind: event.kind,
+    timestamp: event.timestamp,
+    backendEntryId: _entryIdForHost(
+      record.eventNamespace,
+      event.backendEntryId,
+    ),
+    backendOperationId: event.backendOperationId == null
+        ? null
+        : '${record.eventNamespace}-child-${event.backendOperationId}',
+    previousBackendEntryId: _entryIdForHost(
+      record.eventNamespace,
+      event.previousBackendEntryId,
+    ),
     hostId: hostId,
-    parentRouteId: event.placement.parentRouteId,
-    shellId: event.placement.shellId,
-    navigatorOutlet: event.placement.navigatorOutlet,
-  ),
-  location: event.location,
-  origin: event.origin,
-  source: event.source,
-  activeNavigatorOutlets: event.activeNavigatorOutlets,
-);
+    navigatorOutlet: event.navigatorOutlet,
+    sequence: ++record.eventSequence,
+    owner: event.owner,
+    navigationId: event.navigationId,
+    routeId: event.routeId,
+    uri: event.uri,
+    placement: CCRoutePlacement(
+      hostId: hostId,
+      parentRouteId: event.placement.parentRouteId,
+      shellId: event.placement.shellId,
+      navigatorOutlet: event.placement.navigatorOutlet,
+    ),
+    location: event.location,
+    origin: event.origin,
+    source: event.source,
+    activeNavigatorOutlets: event.activeNavigatorOutlets,
+  );
+}
 
 /// Imports a snapshot into the same identity domain used by subsequent events.
 CCInitialBackendEntrySnapshot _snapshotForHost(
   String hostId,
   _CCNavigationHostAdapterRecord record,
-  CCInitialBackendEntrySnapshot snapshot,
-) => CCInitialBackendEntrySnapshot(
+  CCInitialBackendEntrySnapshot snapshot, {
+  required int? sequence,
+}) => CCInitialBackendEntrySnapshot(
   backendEntryId: _entryIdForHost(
     record.eventNamespace,
     snapshot.backendEntryId,
@@ -59,7 +79,7 @@ CCInitialBackendEntrySnapshot _snapshotForHost(
   routeId: snapshot.routeId,
   hostId: hostId,
   location: snapshot.location,
-  sequence: snapshot.sequence,
+  sequence: sequence,
 );
 
 /// Translates a child's Pop receipt using its dispatch-time registration.

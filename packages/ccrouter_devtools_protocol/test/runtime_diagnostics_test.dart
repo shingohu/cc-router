@@ -21,9 +21,55 @@ CCDevToolsDiagnosticHealth _health() => CCDevToolsDiagnosticHealth(
       omittedCount: 3,
     ),
   ],
+  runtimeHealth: const CCDevToolsRuntimeHealth(
+    activeRouteEntries: 2,
+    exitingRouteEntries: 1,
+    pendingNavigations: 3,
+    inFlightNavigations: 1,
+    trackedNavigationHosts: 2,
+    activeBackendEntries: 4,
+    backendEntries: 5,
+    desynchronizedBackendHosts: 0,
+    observerQueueDepth: 1,
+    observerQueueCapacity: 64,
+    navigationEvents: 9,
+    routeEntryTransitions: 6,
+    backendEvents: 7,
+    unattributedBackendEvents: 2,
+  ),
 );
 
 void main() {
+  test(
+    'Host health names tracked lifetimes and accepts the former wire key',
+    () {
+      final json = _health().runtimeHealth!.toJson();
+      expect(json['trackedNavigationHosts'], 2);
+      expect(json.containsKey('registeredHosts'), isFalse);
+      final legacy = Map<String, Object?>.of(json)
+        ..remove('trackedNavigationHosts')
+        ..['registeredHosts'] = 2;
+      expect(
+        CCDevToolsRuntimeHealth.fromJson(legacy).trackedNavigationHosts,
+        2,
+      );
+      expect(
+        CCDevToolsRuntimeHealth.fromJson({
+          ...legacy,
+          'trackedNavigationHosts': 1,
+        }).trackedNavigationHosts,
+        1,
+      );
+      expect(
+        () => CCDevToolsRuntimeHealth.fromJson({
+          ...legacy,
+          'trackedNavigationHosts': -1,
+        }),
+        throwsFormatException,
+      );
+    },
+  );
+
   test(
     'optional diagnostics round-trip while version 1 remains compatible',
     () {
@@ -58,6 +104,13 @@ void main() {
       expect(decoded.protocolVersion, 1);
       expect(decoded.diagnostics!.single.hostId, 'right');
       expect(decoded.diagnosticHealth!.histories.single.omittedCount, 3);
+      expect(decoded.diagnosticHealth!.runtimeHealth!.activeRouteEntries, 2);
+      final legacyHealth = Map<String, Object?>.of(_health().toJson())
+        ..remove('runtimeHealth');
+      expect(
+        CCDevToolsDiagnosticHealth.fromJson(legacyHealth).runtimeHealth,
+        isNull,
+      );
       expect(() => decoded.diagnostics!.clear(), throwsUnsupportedError);
       expect(
         () => decoded.diagnostics!.single.dependsOn.clear(),

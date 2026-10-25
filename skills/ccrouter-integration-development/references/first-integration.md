@@ -14,6 +14,9 @@ Service、Command、Event、InitTask 或 UI Fragment。已经有业务工程时�
   测试前查看实际 `.dart_tool/package_config.json`，确认没有混用不配套的 Generator/Runtime。
 - Host 直接依赖 `ccrouter`，通过 `CCManagedRouterApp` 或 Managed Backend 接入，开发依赖包含 `ccrouter_generator` 和 `build_runner`；
   参与生成的组件和 contracts 包按自身角色声明依赖。可选工具包按需添加。
+- 普通组件只需要业务层入口：`ccrouter.dart`、生成的 Client/Intent 和公开 contracts。
+  `ccrouter_host.dart`、`CCRouterApp.managed`、Backend、Catalog 与 Assembly 属于
+  Composition Root 的高级装配路径，不要在页面或组件中导入它们。
 - 标准 Flutter app 的 `.metadata` 可表明 Host 角色。自定义 Flutter Host 可在 `ccrouter.yaml`
   显式声明 `host: { enabled: true }`；Workspace 聚合根不应冒充 Host。
 
@@ -107,6 +110,37 @@ void main() {
 真实启动任务存在时，由 Host 显式 `runInitTasks(gate: ...)`；没有任务无需增加 DAG。
 Host 最终拥有 `CCRouterHost.shutdown`。页面返回、Tab 切换和单个导航 Host 卸载不能代替
 应用 Runtime 的终止。`CCManagedRouterApp` 只管理导航 Backend，不自动 shutdown 共享 Runtime。
+更换路由配置时先卸载、等待 shutdown、重新初始化，再挂载新的 App／Backend；仅换 Key
+不足以切换所有权。managed 与 `CCRouterHostBinding` 共享装配所有权；预留、已绑定或仍在
+shutdown 或拒绝清理中的 Backend／Adapter 重用会被拒绝，且不销毁原 Owner 的资源。
+装配仅采样一次 Adapter getter，返回后重新检查所有权，覆盖 getter 中同步重入的接管。
+另建共享 Adapter 的 wrapper 被拒绝后，其资源仍由创建方清理，不能再次 dispose 共享 Adapter。
+装配回调内同步 shutdown 时，该次 shutdown 负责临时 Adapter 和已登记的 Backend 清理；
+装配抛错后等待 shutdown，不要重复释放。普通装配失败时 managed 入口清理独立的拒绝资源，
+直接 HostBinding 的普通失败则保留调用方清理责任。TestHost overlay 在 managed 接管前拒绝装配，
+显式传入的资源仍归调用方；便捷 App 在调用 Backend factory 前拒绝。初始化中触发销毁不能重新启用 Runtime。
+等待 shutdown 也会等待已移除页面的 Route Scope 和异步 Service 销毁；退出监听回调中
+重入 shutdown 不会漏掉清理，也不会等待 UI 帧。Host detach 会结束该实例退出中的 Scope 等待。
+生命周期 Binding 解绑失败后仍清理 Runtime／Adapter／Backend，并保留最早结构性错误与堆栈。
+
+Host 或调试面板需要检查当前状态时，可以读取只读摘要：
+
+```dart
+final health = CCRouter.runtimeHealth;
+debugPrint(
+  'routes=${health.activeRouteEntryCount} '
+  'pending=${health.pendingNavigationCount}',
+);
+```
+
+该摘要用于诊断和回归采样，不用于导航或资源释放判断；参数、结果、Widget、Navigator
+对象和可变句柄不会进入摘要。结构变更先使缓存失效，再调用外部 Adapter／清理回调；
+稳定时复用快照。终态观察满载时同步背压，重入事件仍遵守等待容量和各监听器 FIFO。
+`trackedNavigationHostCount` 是导航、Pop 或 scoped navigator 按需捕获且未 detach 的
+Host 生命周期数，不是 Adapter 的完整注册数；首次捕获前可以为 0。
+`inFlightNavigationCount` 是 `singleFlight/rejectDuplicate` 的在途并发 gate 数；默认 `allow`
+可以为 0，不代表所有导航已结束。观察队列深度只统计等待批次，不包含正在交付的批次；
+容量为 `max(64, navigationDiagnosticCapacity)`，关闭历史保留不关闭观察交付。
 
 ## 4. 用行为完成验收
 

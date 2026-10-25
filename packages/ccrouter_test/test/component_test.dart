@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:test/test.dart';
+import 'package:flutter_test/flutter_test.dart' show testWidgets;
 
 final class Registrar implements CCComponentRegistrar {
   Registrar(this.body);
@@ -1240,9 +1241,9 @@ void main() {
     await runtime.dispose();
   });
 
-  test(
+  testWidgets(
     'Service timeout and caller cancellation reach invocation context',
-    () async {
+    (tester) async {
       const contract = CCServiceToken<ComponentService>('feature.counter');
       final pending = <Completer<int>>[];
       final contexts = <CCInvocationContext>[];
@@ -1281,10 +1282,16 @@ void main() {
         },
       );
 
-      await expectLater(
+      final timedOut = expectLater(
         invoke(timeout: const Duration(milliseconds: 10)),
         throwsA(isA<CCInvocationTimeoutError>()),
       );
+      // Readiness must finish before the virtual deadline advances. Real-time
+      // contention must not turn this invocation test into a readiness timeout.
+      await tester.pump();
+      expect(contexts, hasLength(1));
+      await tester.pump(const Duration(milliseconds: 10));
+      await timedOut;
       expect(contexts.first.cancellation.isCancelled, isTrue);
       pending.first.complete(1);
 

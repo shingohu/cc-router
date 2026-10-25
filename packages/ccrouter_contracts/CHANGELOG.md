@@ -2,6 +2,10 @@
 
 ## 0.1.0 - Unreleased
 
+- Clarify initial Backend snapshot/read-time event ordering, Entry sequence
+  lower bounds versus live continuity, and independent operation deduplication.
+  Document cancellable Route exit subscription reentry during shutdown/detach.
+
 - Add optional Host/Outlet failure and pending attribution plus fixed Sink
   reason/attempt/recovery-depth fields; arbitrary cancellation codes stay private.
 
