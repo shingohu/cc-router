@@ -709,6 +709,7 @@ abstract final class _DemoBottomSheetPageRouteContractBinding {
           isScrollControlled: true,
           showDragHandle: true,
           useSafeArea: true,
+          transparent: false,
         ),
         placement: const CCRoutePlacement(
           hostId: "default",

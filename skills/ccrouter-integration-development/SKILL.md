@@ -275,6 +275,8 @@ teardown. The unmount callback must complete and must not await its own disposal
   semantics are required; use `CCRouter.navigator.pop` only after the business
   decision is explicit.
 - Local Flutter Dialog, BottomSheet, Menu, and Overlay may use Flutter APIs when they do not need a cross-component contract, typed result, Interceptor, Trace, or Route Scope.
+- A managed `CCModalBottomSheetPresentation(transparent: true)` keeps the modal barrier, drag, dismissal, and route lifecycle while leaving the sheet surface transparent; the destination widget owns its visible card/image surface.
+- The Flutter adapter uses zero elevation for transparent sheets to prevent theme tint and wrapper shadows. The destination widget owns any card shadow; `transparent: false` preserves theme background and elevation defaults.
 - Do not import `ccrouter_core/src/*`, `ccrouter_host.dart`, Adapter types, generated binding/package/host files, or another component's page implementation from feature code.
 - Import a component's generated `<componentId>.api.g.dart` stable barrel for its typed Route,
   Service Proxy, Command, and Event APIs. Do not import the underlying

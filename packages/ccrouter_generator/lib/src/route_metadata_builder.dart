@@ -434,6 +434,7 @@ Map<String, Object?> _presentationJson(DartObject presentation) {
       ).toBoolValue(),
       'showDragHandle': _field(presentation, 'showDragHandle').toBoolValue(),
       'useSafeArea': _field(presentation, 'useSafeArea').toBoolValue(),
+      'transparent': _field(presentation, 'transparent').toBoolValue(),
     },
     'CCDialogPresentation' => {
       'type': 'dialog',

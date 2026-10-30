@@ -214,6 +214,7 @@ void main() {
         isScrollControlled: true,
         showDragHandle: true,
         useSafeArea: true,
+        transparent: true,
       ),
     );
 
@@ -224,7 +225,83 @@ void main() {
     expect(sheet.isScrollControlled, isTrue);
     expect(sheet.showDragHandle, isTrue);
     expect(sheet.useSafeArea, isTrue);
+    expect(sheet.backgroundColor, Colors.transparent);
   });
+
+  for (final themed in [false, true]) {
+    for (final transparent in [false, true]) {
+      testWidgets(
+        'mounted sheet preserves surface and barrier: themed=$themed, '
+        'transparent=$transparent',
+        (tester) async {
+          final navigatorKey = GlobalKey<NavigatorState>();
+          var underlyingTaps = 0;
+          await tester.pumpWidget(
+            MaterialApp(
+              navigatorKey: navigatorKey,
+              theme: ThemeData(
+                useMaterial3: true,
+                bottomSheetTheme: themed
+                    ? const BottomSheetThemeData(
+                        modalBackgroundColor: Colors.green,
+                        surfaceTintColor: Colors.red,
+                        modalElevation: 8,
+                      )
+                    : null,
+              ),
+              home: Scaffold(
+                body: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => underlyingTaps++,
+                  child: const SizedBox.expand(),
+                ),
+              ),
+            ),
+          );
+
+          final page = CCFlutterRouteFactory.createPage<void>(
+            child: const SizedBox(height: 200, width: 300),
+            presentation: CCModalBottomSheetPresentation(
+              transparent: transparent,
+            ),
+          );
+          final result = navigatorKey.currentState!.push<void>(
+            page.createRoute(navigatorKey.currentContext!),
+          );
+          await tester.pumpAndSettle();
+
+          final surface = tester.widget<PhysicalShape>(
+            find.descendant(
+              of: find.byType(BottomSheet),
+              matching: find.byType(PhysicalShape),
+            ),
+          );
+          if (transparent) {
+            expect(surface.color.a, 0);
+            expect(surface.elevation, 0);
+          } else {
+            expect(surface.color.a, 1);
+            expect(surface.elevation, themed ? 8 : 1);
+            if (themed) {
+              expect(
+                surface.color,
+                ElevationOverlay.applySurfaceTint(Colors.green, Colors.red, 8),
+              );
+            }
+          }
+
+          // The barrier dismisses the sheet instead of forwarding the tap to
+          // the underlying page, including when the surface is transparent.
+          await tester.tapAt(const Offset(20, 100));
+          await tester.pumpAndSettle();
+          await result;
+          expect(underlyingTaps, 0);
+          expect(find.byType(BottomSheet), findsNothing);
+          expect(navigatorKey.currentState!.canPop(), isFalse);
+        },
+      );
+    }
+  }
 
   testWidgets('creates Material and Cupertino dialog routes', (tester) async {
     final navigatorKey = GlobalKey<NavigatorState>();

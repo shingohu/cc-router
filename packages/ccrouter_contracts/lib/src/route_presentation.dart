@@ -164,6 +164,7 @@ final class CCModalBottomSheetPresentation extends CCRoutePresentation {
     this.isScrollControlled = false,
     this.showDragHandle,
     this.useSafeArea = false,
+    this.transparent = false,
   });
 
   /// Whether tapping the modal barrier may dismiss the sheet.
@@ -194,6 +195,17 @@ final class CCModalBottomSheetPresentation extends CCRoutePresentation {
   /// Enable this when edge content must remain clear of system UI. Adapters map
   /// the intent to the safe-area mechanism available in their backend.
   final bool useSafeArea;
+
+  /// Whether the sheet surface should use a transparent background.
+  ///
+  /// Enable this when the route content supplies its own surface, such as a
+  /// rounded card or an image-backed panel. The Flutter adapter also uses zero
+  /// elevation to prevent theme surface tint and shadows on the sheet wrapper;
+  /// the route content owns any desired shadow. False preserves theme defaults.
+  /// The modal barrier remains active, so the underlying route stays
+  /// non-interactive while the sheet is open.
+  /// This option does not change [isDismissible] or [enableDrag].
+  final bool transparent;
 }
 
 /// Presents route content as a modal dialog above the current route.

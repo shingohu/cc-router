@@ -1422,7 +1422,7 @@
     {
       "id": "demo_navigation_lab.presentation.sheet",
       "version": "0.1.0",
-      "shapeFingerprint": "9a996567fe68f558647e90a97fe90375bba315724d5a1fdf51289f112cbbfd77",
+      "shapeFingerprint": "e4d12a0a342d1dd03e6151335f341c7a86a8095c6f84f836e66f618a7f49467c",
       "componentId": "demo_navigation_lab_component",
       "exposure": "internal",
       "deepLink": "disabled",
@@ -1457,7 +1457,8 @@
         "enableDrag": true,
         "isScrollControlled": true,
         "showDragHandle": true,
-        "useSafeArea": true
+        "useSafeArea": true,
+        "transparent": false
       },
       "contracts": {
         "route": "_DemoBottomSheetPageRoute",

@@ -365,7 +365,7 @@ final class Probe {
       {
         'ccrouter_test|lib/src/modal_probe.dart': r'''
 import 'package:ccrouter/ccrouter.dart';
-@CCRoute<void>(id: 'probe.sheet', pattern: CCPathPattern('/sheet'), presentation: CCModalBottomSheetPresentation(isDismissible: false, enableDrag: false, isScrollControlled: true, showDragHandle: true, useSafeArea: true))
+@CCRoute<void>(id: 'probe.sheet', pattern: CCPathPattern('/sheet'), presentation: CCModalBottomSheetPresentation(isDismissible: false, enableDrag: false, isScrollControlled: true, showDragHandle: true, useSafeArea: true, transparent: true))
 final class SheetProbe { const SheetProbe(); }
 @CCRoute<void>(id: 'probe.dialog', pattern: CCPathPattern('/dialog'), presentation: CCDialogPresentation(routeType: CCDialogRouteType.cupertino, barrierDismissible: false, useSafeArea: false))
 final class DialogProbe { const DialogProbe(); }
@@ -397,6 +397,7 @@ final class DialogProbe { const DialogProbe(); }
       'isScrollControlled': true,
       'showDragHandle': true,
       'useSafeArea': true,
+      'transparent': true,
     });
     expect(dialog['presentation'], {
       'type': 'dialog',

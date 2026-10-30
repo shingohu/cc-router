@@ -132,6 +132,7 @@ void main() {
       isScrollControlled: true,
       showDragHandle: true,
       useSafeArea: true,
+      transparent: true,
     );
     final sheetRoute = CCRouteDefinition<String, void>(
       routeId: 'orders.filter',
@@ -140,6 +141,7 @@ void main() {
       presentation: sheetPresentation,
     );
     expect(sheetRoute.presentation, same(sheetPresentation));
+    expect(sheetPresentation.transparent, isTrue);
 
     const dialogPresentation = CCDialogPresentation(
       routeType: CCDialogRouteType.material,

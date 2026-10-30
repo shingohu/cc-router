@@ -370,6 +370,7 @@ String _constant(DartObject value) {
         'isScrollControlled',
         'showDragHandle',
         'useSafeArea',
+        'transparent',
       ],
     ),
     'CCDialogPresentation' => (

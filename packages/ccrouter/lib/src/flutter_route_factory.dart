@@ -72,6 +72,8 @@ abstract final class CCFlutterRouteFactory {
     ),
     final CCModalBottomSheetPresentation value => ModalBottomSheetRoute<T>(
       builder: (_) => child,
+      backgroundColor: value.transparent ? Colors.transparent : null,
+      elevation: value.transparent ? 0 : null,
       isDismissible: value.isDismissible,
       enableDrag: value.enableDrag,
       isScrollControlled: value.isScrollControlled,
@@ -286,7 +288,7 @@ base class CCFlutterBottomSheetPage<T> extends Page<T> {
   /// Widget displayed in the sheet.
   final Widget child;
 
-  /// Sheet dismissal, drag and layout options.
+  /// Sheet dismissal, surface, and layout options.
   final CCModalBottomSheetPresentation presentation;
 
   @override

@@ -294,7 +294,7 @@ Diagnostics 页展示 Failure/Fallback/Pending/InitTask 和健康状态；旧 Pr
 | 启动期组件装配 | 已支持 | 依赖排序、重复 ID、缺失依赖和循环依赖校验 |
 | 注解路由与类型安全 Intent | 已支持 | Path、URI、custom scheme、Regex、多 Pattern、Query、Extra、typed result |
 | 页面展示 | 已支持 | 平台默认、Material、Cupertino、fade、scale、bottom-up、透明全屏 |
-| Modal Route | 已支持 | Dialog、modal bottom sheet，可选择是否纳入 CCRouter 契约与生命周期 |
+| Modal Route | 已支持 | Dialog、modal bottom sheet（支持透明 sheet surface），可选择是否纳入 CCRouter 契约与生命周期 |
 | 导航操作 | 已支持 | `push`、`replace`、`go`、`reset`、`open`、`pop`、`maybePop`、`canPop`、实例级 `close`（可选 Adapter 能力） |
 | Managed Router Backend | 已支持 | CCRouter Runtime 统一管理 Host/Outlet 分区 Stack、Entry/result/Scope，`RouterDelegate + Navigator.pages` 负责 Flutter 投影 |
 | Shell / StatefulShell / Outlet | 已支持 | Managed Shell binding、分区 Stack、分支 lazy-init/状态保留、多 Outlet 与调用级 Context 定位 |
@@ -1075,9 +1075,12 @@ CupertinoTheme 不代表 Cupertino 宿主，不应导致 Android 页面额外挂
 - fade / scale / 从底部滑入
 - 透明全屏 Page
 - Dialog Route
-- Modal Bottom Sheet Route
+- Modal Bottom Sheet Route（可通过 `transparent: true` 让 sheet surface 透明）
 
-普通页面可以使用从底部滑入与透明背景，例如海报分享页。Dialog/BottomSheet 只有在需要跨组件类型安全契约、Interceptor、Trace、Route Scope 或统一返回值时才应建模为 CCRouter Route；单页面局部提示继续用 Flutter API，避免把所有 Overlay 都升级成全局路由。
+透明 BottomSheet 同时使用零 elevation，避免主题 surface tint 和默认阴影影响透明效果；
+卡片阴影由页面内容提供。`transparent: false` 保留背景与 elevation 的主题默认值。
+
+普通页面可以使用从底部滑入与透明背景，例如海报分享页。需要拖拽关闭、遮罩或底部高度约束时，可以使用 `CCModalBottomSheetPresentation(transparent: true)`，并由页面内容提供自己的卡片或图片 surface；透明只影响 sheet surface，modal barrier 仍按 `isDismissible` 参与交互。Dialog/BottomSheet 只有在需要跨组件类型安全契约、Interceptor、Trace、Route Scope 或统一返回值时才应建模为 CCRouter Route；单页面局部提示继续用 Flutter API，避免把所有 Overlay 都升级成全局路由。
 
 ## Deep Link
 

@@ -47,6 +47,15 @@ Use a CCRouter Dialog or BottomSheet Route only when it needs one or more of:
 - Trace/Aspect attribution;
 - Route Scope and exact disposal.
 
+When a managed BottomSheet needs a custom card or image surface, set
+`CCModalBottomSheetPresentation(transparent: true)`. This changes only the
+sheet surface, using zero elevation in Flutter to prevent theme tint and wrapper
+shadows. The destination widget owns any desired shadow. With `transparent: false`,
+the theme background and elevation defaults apply. The modal barrier and its
+`isDismissible` behavior remain in force. Keep the surface widget-owned rather
+than adding Flutter `Color` or
+shape types to the Pure Dart route contract.
+
 For local confirmation, menus, transient BottomSheet, `OverlayEntry`, `MenuAnchor`, or a third-party popup, use the native Flutter/package API. Treat it as foreign UI and do not register a fake route.
 
 ## Service
