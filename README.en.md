@@ -103,6 +103,16 @@ creates fresh handwritten inputs; it is not an Assembly copy operation.
 `active` guards Action forwarding only: retained business callbacks must read
 current State activity before side effects and fence asynchronous results.
 
+UI Fragments are not limited to Tabs. They also cover page sections, dashboard
+or feed modules, repeated list/grid cards, split-pane panels, and business
+content inside a Route, Dialog, BottomSheet, or drawer. Generated Clients use
+`CCUIFragmentUpdatePolicy.always` by default. A consumer may opt one instance
+into `CCUIFragmentUpdatePolicy.reuseIdenticalProps` when it retains the same
+immutable Props instance; callback-only updates then refresh the Action Sink
+without invoking the Renderer, while a new Props identity or `active` change
+invokes it again. This is an instance-local reuse boundary, not a global Widget
+cache or a guarantee to skip descendant build, layout, or paint work.
+
 Use an ordinary Flutter package for presentation-only reuse and Route for a
 complete routed page. See the [UI Fragment design](docs/CCRouter-ui-fragment-design.md).
 
