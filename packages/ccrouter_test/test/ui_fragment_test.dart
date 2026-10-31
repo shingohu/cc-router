@@ -129,10 +129,14 @@ String _unionLabel(_UnionAction action) => switch (action) {
 
 int _created = 0;
 int _disposed = 0;
+int _rendererCalls = 0;
+int _cardBuilds = 0;
 final _actions = <void Function()>[];
 
-Widget _renderer(CCUIFragmentRenderInput<_Props, _Action> input) =>
-    _Card(input);
+Widget _renderer(CCUIFragmentRenderInput<_Props, _Action> input) {
+  _rendererCalls++;
+  return _Card(input);
+}
 
 final class _Card extends StatefulWidget {
   const _Card(this.input);
@@ -146,6 +150,7 @@ final class _CardState extends State<_Card> {
   final controller = TextEditingController();
   @override
   Widget build(BuildContext context) {
+    _cardBuilds++;
     _actions.add(() => widget.input.onAction(_Action.select));
     return Text(
       'instance:$identity props:${widget.input.props.id} active:${widget.input.active}',
@@ -216,6 +221,8 @@ void main() {
   setUp(() {
     _created = 0;
     _disposed = 0;
+    _rendererCalls = 0;
+    _cardBuilds = 0;
     _actions.clear();
   });
   tearDown(CCRouterHost.shutdown);
@@ -640,6 +647,60 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     expect(_disposed, 2);
   });
+
+  testWidgets(
+    'default updates rebuild the Renderer while retaining the same State',
+    (tester) async {
+      CCRouterHost.initialize(hostAssembly: _assembly());
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: _fragment(key: const ValueKey('stable')),
+        ),
+      );
+      expect(_rendererCalls, 1);
+      expect(_cardBuilds, 1);
+      expect(_created, 1);
+
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: _fragment(key: const ValueKey('stable'), onAction: (_) {}),
+        ),
+      );
+      expect(_rendererCalls, 2, reason: 'callback-only updates keep defaults');
+      expect(_cardBuilds, 2);
+      expect(_created, 1);
+
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: _fragment(key: const ValueKey('stable'), active: false),
+        ),
+      );
+      expect(
+        _rendererCalls,
+        3,
+        reason: 'active is part of the render snapshot',
+      );
+      expect(_cardBuilds, 3);
+      expect(_created, 1);
+
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: _fragment(key: const ValueKey('stable'), id: 2),
+        ),
+      );
+      expect(_rendererCalls, 4);
+      expect(_cardBuilds, 4);
+      expect(_created, 1);
+      expect(_disposed, 0);
+
+      await tester.pumpWidget(const SizedBox());
+      expect(_disposed, 1);
+    },
+  );
 
   testWidgets(
     'two instances remain independent and inactive KeepAlive suppresses actions',
