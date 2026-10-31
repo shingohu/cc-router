@@ -42,6 +42,8 @@ v1 范围：
 - Props 和 Action 使用明确的 Pure Dart 类型；局部交互通过类型化 callback 返回 A。
 - 静态 Host Assembly、版本范围与 shape fingerprint 校验。
 - 复用 Flutter inherited 环境、State 生命周期与现有 App/Session Service。
+- 每个 Fragment 实例可选择 `CCUIFragmentUpdatePolicy.reuseIdenticalProps`，仅在 Props
+  实例和 `active` 未变化时复用上一次 Renderer 结果；默认 `always` 保持原有更新行为。
 
 v1 不提供动态 install/uninstall、运行时替换 Renderer、多贡献者 Slot、排序规则、
 通用 UI 沙箱、自动曝光、状态恢复、跨进程或原生视图容器。Android/iOS/OHOS/Web
@@ -187,6 +189,13 @@ v1 不生成 BuildContext 参数，不将实例挂到全局 registry。
 `onAction` 是 UI 层的类型化 callback，不属于 Service Contract；现有 Service 对
 callback、Stream 和 Flutter 类型的限制保持不变。
 
+Consumer 可以显式传递 `updatePolicy: CCUIFragmentUpdatePolicy.reuseIdenticalProps`。
+该策略只按 `identical(oldProps, newProps)` 和 `active` 是否相同决定是否复用 Renderer
+返回的 Widget；它不调用 DTO `==`，也不进行自动深度比较。只替换 `onAction` 时，实例局部
+Action Sink 会更新到最新 callback，Renderer 不必重新调用。Props 身份或 `active` 变化时，
+Renderer 重新调用并继续沿用 Flutter 的 State/Key 更新语义。缓存只属于一个挂载实例，在
+契约身份、Runtime generation、Key 或卸载边界清空；不提供全局 Widget/State 缓存。
+
 ## 4. 生成与 Host 静态装配
 
 ### 4.1 生成路径
@@ -233,6 +242,14 @@ Catalog 版本来源。禁止替换已有组件身份；新增生成能力需重
 - 替换实现仍属于同一 Owner 的部署选择；不能注册两个实现后“取第一个”。
 
 ## 5. 生命周期、并发与资源归属
+
+### 渲染更新边界
+
+复用 Renderer 结果只减少工厂调用和不必要的子树 Widget 替换，不承诺跳过所有 Flutter
+build、layout 或 paint。子树依赖的 Theme、Locale、MediaQuery 和其他 InheritedWidget 仍按
+Flutter 正常规则更新。当前 `active` 变化会强制重新调用 Renderer，以保持视觉状态和交互许可
+一致；如果未来需要在不重调 Renderer 的情况下通知活动状态，应增加独立的显式响应式通道，
+不能把当前快照静默变成实时 getter。
 
 ### 5.1 实例身份与更新
 

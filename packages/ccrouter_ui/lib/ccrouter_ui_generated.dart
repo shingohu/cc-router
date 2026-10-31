@@ -7,4 +7,5 @@ export 'src/ui_fragment.dart'
         CCUIFragmentRequirement,
         CCUIRenderer,
         CCUIFragmentContribution,
-        CCUIGeneratedFragment;
+        CCUIGeneratedFragment,
+        CCUIFragmentUpdatePolicy;

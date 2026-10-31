@@ -86,6 +86,10 @@ UI Fragment 不限于 Tab。它适合页面中的订单摘要、推荐列表、�
 中的业务区块，List/Grid 中的多个独立卡片，平板或桌面的主从分栏，以及 Route、Dialog、
 BottomSheet 或抽屉内部的一块业务内容。A 决定布局、尺寸、排列、Key 和 `active`，B 负责局部
 Widget、State、异步工作和资源释放；Tab/IndexedStack/Offstage/KeepAlive 只是其中一类保活场景。
+生成 Client 默认每次更新都重新调用 Renderer；需要减少宿主无关更新时，可对单个实例显式传入
+`CCUIFragmentUpdatePolicy.reuseIdenticalProps`。该模式只复用 Props 实例和 `active` 均未变化
+的 Renderer 结果，callback-only 更新仍会切换到最新 Action Sink；它不自动比较 DTO 值，也不
+冻结隐藏页面的业务状态。
 
 实际消费 UI 的 Host、消费组件和 Renderer Package 直接依赖 `ccrouter_ui` 后，现有 `generate <host>`
 会校验并包装原 Host Assembly，启动仍只传一个 `ccrouterGeneratedHostAssembly`。

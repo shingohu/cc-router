@@ -295,6 +295,12 @@ const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
 ''', metadata: false);
     expect(result.output, contains('class AccountFragments'));
     expect(result.output, contains('CCUIGeneratedFragment<'));
+    expect(
+      result.output,
+      contains(
+        'CCUIFragmentUpdatePolicy updatePolicy = CCUIFragmentUpdatePolicy.always',
+      ),
+    );
     expect(result.output, isNot(contains('CCRouterRuntime')));
     expect(result.output, isNot(contains('registerRoute')));
   });
