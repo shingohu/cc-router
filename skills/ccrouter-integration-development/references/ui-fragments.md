@@ -1,9 +1,17 @@
 # Typed UI Fragments
 
 Use the optional `ccrouter_ui` package when B owns a complete local UI region
-and A must consume it through a contract. Use ordinary public Flutter widgets
-for simple presentation reuse, Service for data-only reuse, and Route for full
-destinations. A Fragment has no RouteEntry, result Future, Scope or Deep Link.
+and A must consume it through a contract. Typical regions include page sections,
+dashboard/feed cards, repeated list or grid items, split-pane panels, retained
+Tab/IndexedStack/Offstage/KeepAlive content, and business content inside a
+Route, Dialog, BottomSheet or drawer. Tab is only one lifecycle example.
+
+Use ordinary public Flutter widgets for simple presentation reuse, Service for
+data-only reuse, and Route for full destinations. A Fragment has no RouteEntry,
+result Future, Scope or Deep Link. Choose Route when the surface needs its own
+URL, back stack, navigation policy, Route Scope or typed result; choose a
+Service when the consumer needs data or capability without UI; choose a normal
+Widget when there is no cross-component business Owner.
 
 ## Check the business interaction first
 

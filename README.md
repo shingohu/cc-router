@@ -82,6 +82,11 @@ Package 声明 `@CCUIFragmentContract<Props, Action>`，在实现 Package 提供
 依赖、版本范围和方法 alias，并保持 Owner 在 `dependencies` 中。A 只导入公开契约与自身
 生成的 `<componentId>.ui.api.g.dart`，不导入 B 的 Widget 或 Renderer。
 
+UI Fragment 不限于 Tab。它适合页面中的订单摘要、推荐列表、支付或会员面板，Dashboard/Feed
+中的业务区块，List/Grid 中的多个独立卡片，平板或桌面的主从分栏，以及 Route、Dialog、
+BottomSheet 或抽屉内部的一块业务内容。A 决定布局、尺寸、排列、Key 和 `active`，B 负责局部
+Widget、State、异步工作和资源释放；Tab/IndexedStack/Offstage/KeepAlive 只是其中一类保活场景。
+
 实际消费 UI 的 Host、消费组件和 Renderer Package 直接依赖 `ccrouter_ui` 后，现有 `generate <host>`
 会校验并包装原 Host Assembly，启动仍只传一个 `ccrouterGeneratedHostAssembly`。
 仅安装 Renderer 而无 UI 消费声明的旧 Host 不启用 UI 装配，也无需新增直接依赖。
@@ -113,7 +118,9 @@ Host 测试追加组件或修改路由目录时，使用 `CCHostAssembly.extend(
 已有身份；新增生成能力仍需重新生成。`fromComponents` 用于全新手写装配，不是复制入口。
 `runtimeUnavailable` 会提示检查完整 Assembly 和测试接线。
 
-普通无业务 UI 仍用公共 Flutter Package；完整路由页面使用 Route。详见
+没有跨组件业务 Owner 的普通视觉复用仍用公共 Flutter Package；需要 URL、Deep Link、返回栈、
+Route Scope、导航策略或 typed result 的完整目的地使用 Route；只共享数据和能力时使用 Service。
+详见
 [UI Fragment 设计与实施](docs/CCRouter-ui-fragment-design.md)。Demo 首页“展示”中的
 “类型化 UI Fragment”演示多实例、Tab 保活、Props 更新、模拟账号重建和业务错误。
 

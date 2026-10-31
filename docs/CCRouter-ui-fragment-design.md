@@ -4,6 +4,32 @@
 
 首次接入按[UI 接入指南](../skills/ccrouter-integration-development/references/ui-fragments.md)操作。实施过程、早期取舍与当时的验证数字保留在[合并前快照](archive/20261024-consolidation/CCRouter-ui-fragment-design.md)和[归档索引](archive/20261024-consolidation/README.md)；当前证据统一由[验证索引](validation/README.md)导航。本文不表示 API 已冻结或正式发布门禁已关闭。
 
+## 适用场景与选型边界
+
+当 B 组件拥有一块完整的局部业务 UI，而 A 组件需要把它嵌入自己的 Widget 树时，使用 UI
+Fragment。A 负责放置位置、布局约束、尺寸、排列、Key、可见性和收到 Action 后的业务决策；B
+负责局部 Widget、内部 State、异步请求和需要释放的资源。两者通过 Pure Dart Props/Action
+契约连接，Fragment 本身仍然只是一个普通 Flutter Widget。
+
+典型场景包括：
+
+- 页面中的业务区块，例如订单摘要、推荐列表、支付方式、会员权益、资料或权限面板；
+- Dashboard、Feed、详情页或结算页中的跨组件卡片和功能模块；
+- List/Grid 中的重复业务实例，例如多个订单卡或商品卡，每个实例由 A 提供稳定 Key；
+- Tab、IndexedStack、Offstage、KeepAlive 或桌面分栏中的保活局部区域；Tab 只是其中一种
+  `active` 生命周期场景，不是 Fragment 的专用模型；
+- Route、Dialog、BottomSheet 或抽屉内部的一块业务内容，其中外层目的地仍由应用或 Route
+  管理；
+- 手机、平板和桌面布局中复用同一业务 UI，由 A 在不同容器中决定排列和约束。
+
+选择 Fragment 前，应确认这块 UI 不需要独立的 URL、Deep Link、返回栈、Route Scope、导航
+拦截或 typed result。需要这些导航语义时使用 Route；没有跨组件业务 Owner、只做视觉复用时
+使用公共 Flutter Widget；只共享数据和能力时使用 Service；只发起一次有明确完成结果的操作
+时使用 Command。
+
+Fragment 不负责动态安装/卸载、运行时替换 Renderer、多贡献者 Slot 或跨原生 View 容器。它
+也不自动判断像素曝光、前后台或可见比例；A 需要根据业务语义显式传递 `active`。
+
 ## 1. 目标与 v1 非目标
 
 目标是让 A 通过生成的类型化 Client 构建普通 Widget，B 通过 Renderer 提供实现，
