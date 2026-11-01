@@ -53,8 +53,7 @@ final class _ConflictingActivationAdapter
     required String hostId,
     required String navigatorOutlet,
     required List<String> expectedRemovalNavigationIds,
-  }) async =>
-      const CCRouteActivationOutcome(CCRouteActivationStatus.conflict);
+  }) async => const CCRouteActivationOutcome(CCRouteActivationStatus.conflict);
 
   @override
   Future<bool> maybePop({Object? result}) => delegate.maybePop(result: result);
@@ -289,6 +288,37 @@ void main() {
       expect(await targetResult, isNull);
     },
   );
+
+  test('typed Intent selection returns the exact target handle', () async {
+    final runtime = _runtime();
+    final targetResult = runtime.pushRoute(_intent('1'));
+    await Future<void>.delayed(Duration.zero);
+    final target = runtime.activeRouteEntries.single;
+    final coveringResult = runtime.pushRoute(_intent('2'));
+    await Future<void>.delayed(Duration.zero);
+
+    final outcome = await runtime.activateExistingIntent(_intent('1'));
+
+    expect(outcome.status, CCRouteActivationStatus.activated);
+    expect(outcome.targetHandle, same(_handle(runtime, target)));
+    expect(runtime.activeRouteEntries.single.routeEntryId, target.routeEntryId);
+    expect(await coveringResult, isNull);
+    runtime.popRoute();
+    expect(await targetResult, isNull);
+
+    final duplicateRuntime = _runtime();
+    final first = duplicateRuntime.pushRoute(_intent('1'));
+    await Future<void>.delayed(Duration.zero);
+    final second = duplicateRuntime.pushRoute(_intent('1'));
+    await Future<void>.delayed(Duration.zero);
+    final ambiguous = await duplicateRuntime.activateExistingIntent(
+      _intent('1'),
+    );
+    expect(ambiguous.status, CCRouteActivationStatus.ambiguous);
+    await duplicateRuntime.dispose();
+    await first;
+    await second;
+  });
 
   test(
     'duplicate route instances close only selected result and Scope once',

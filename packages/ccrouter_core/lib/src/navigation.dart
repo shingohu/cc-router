@@ -46,6 +46,7 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         return CCRouteActivationOutcome(
           CCRouteActivationStatus.guardDenied,
           guardDeniedCode: decision.code,
+          targetHandle: target.handle,
         );
       }
     }
@@ -54,8 +55,9 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     }
     final adapter = _requiredNavigationAdapter;
     if (adapter is! CCNavigationActivateExistingAdapter) {
-      return const CCRouteActivationOutcome(
+      return CCRouteActivationOutcome(
         CCRouteActivationStatus.unsupported,
+        targetHandle: target.handle,
       );
     }
     final request = target.request;
@@ -92,7 +94,46 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         Error.throwWithStackTrace(firstError, firstStack!);
       }
     }
-    return outcome;
+    return CCRouteActivationOutcome(
+      outcome.status,
+      guardDeniedCode: outcome.guardDeniedCode,
+      targetHandle: target.handle,
+    );
+  }
+
+  /// Selects one existing Entry by the canonical URI produced by [intent].
+  ///
+  /// Matching is restricted to the resolved Host and Navigator Outlet. A
+  /// repeated route with the same canonical URI returns `ambiguous` rather than
+  /// selecting by recency or stack position. The successful receipt carries
+  /// the exact handle for a subsequent typed request delivery.
+  Future<CCRouteActivationOutcome> activateExistingIntent<R>(
+    CCRouteIntent<R> intent, {
+    CCRoutePlacement? placementOverride,
+  }) async {
+    _ensureNavigationCanStart();
+    _ensureInitialized();
+    final prepared = _routeRegistry.prepareIntent(
+      intent,
+      placementOverride: placementOverride,
+    );
+    final hostId = _resolveNavigationHostId(prepared.placement);
+    final matches = _routeEntries
+        .where((entry) {
+          return entry.request.routeId == prepared.routeId &&
+              entry.request.uri == prepared.uri &&
+              entry.request.hostId == hostId &&
+              entry.request.placement.navigatorOutlet ==
+                  prepared.placement.navigatorOutlet;
+        })
+        .toList(growable: false);
+    if (matches.isEmpty) {
+      return const CCRouteActivationOutcome(CCRouteActivationStatus.notFound);
+    }
+    if (matches.length > 1) {
+      return const CCRouteActivationOutcome(CCRouteActivationStatus.ambiguous);
+    }
+    return activateExistingRoute(matches.single.handle);
   }
 
   /// Pushes a typed [intent] and completes with its eventual Pop result.

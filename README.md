@@ -302,7 +302,7 @@ Diagnostics 页展示 Failure/Fallback/Pending/InitTask 和健康状态；旧 Pr
 | 注解路由与类型安全 Intent | 已支持 | Path、URI、custom scheme、Regex、多 Pattern、Query、Extra、typed result |
 | 页面展示 | 已支持 | 平台默认、Material、Cupertino、fade、scale、bottom-up、透明全屏 |
 | Modal Route | 已支持 | Dialog、modal bottom sheet（支持透明 sheet surface），可选择是否纳入 CCRouter 契约与生命周期 |
-| 导航操作 | 已支持 | `push`、`replace`、`go`、`reset`、`open`、`pop`、`maybePop`、`canPop`、实例级 `close`、`activateExisting`、`deliverToExisting` |
+| 导航操作 | 已支持 | `push`、`replace`、`go`、`reset`、`open`、`pop`、`maybePop`、`canPop`、实例级 `close`、`activateExisting`、`activateExistingIntent`、`deliverToExisting` |
 | Managed Router Backend | 已支持 | CCRouter Runtime 统一管理 Host/Outlet 分区 Stack、Entry/result/Scope，`RouterDelegate + Navigator.pages` 负责 Flutter 投影 |
 | Shell / StatefulShell / Outlet | 已支持 | Managed Shell binding、分区 Stack、分支 lazy-init/状态保留、多 Outlet 与调用级 Context 定位 |
 | Deep Link | 已支持 | Platform、Notification、QR 入口，Host allowlist 与 Route policy 双重校验 |
@@ -330,7 +330,7 @@ Diagnostics 页展示 Failure/Fallback/Pending/InitTask 和健康状态；旧 Pr
 | Event 注解生成 | 已支持 | Contract、静态 Subscription、Owner Publication Client、稳定 ID、metadata 与 Catalog 自动生成 |
 | InitTask 注解生成 | 已支持 | Task Contract、Handler、类型化依赖、自动注册、DAG/Catalog 与 Workspace 校验 |
 
-CCRouter 不公开原始栈索引或 Flutter Route 移除 API。精确退出使用 `close(handle)`；返回并保留已有页面实例使用 `activateExisting(handle)`。该操作只清理同一 Host/Outlet 中目标上方的 Entry，不重建目标；调用方必须检查 `activated`、`notFound`、`unsupported`、`guardDenied` 或 `conflict` 结果。向已有页面交付新的类型化业务请求使用 `deliverToExisting(handle, request)`，页面通过自身的 `routeRequestReceiverOf<T>(context)` 注册 receiver；`accepted` 只表示 receiver 已接纳，不表示 Widget 或业务加载已经完成。跳转与策略撤销分别使用 typed navigation 和 `revalidateActiveRoutes`。
+CCRouter 不公开原始栈索引或 Flutter Route 移除 API。精确退出使用 `close(handle)`；已有 handle 时使用 `activateExisting(handle)`，外部入口可使用 `activateExistingIntent(intent)` 按同一 Host/Outlet 的 canonical URI 选择目标。重复实例返回 `ambiguous`，成功结果携带 `targetHandle`，不会按栈位置猜测。激活只清理目标上方的 Entry，不重建目标；调用方必须检查 `activated`、`notFound`、`unsupported`、`guardDenied`、`conflict` 或 `ambiguous` 结果。向已有页面交付新的类型化业务请求使用 `deliverToExisting(handle, request)`，页面通过自身的 `routeRequestReceiverOf<T>(context)` 注册 receiver；`accepted` 只表示 receiver 已接纳，不表示 Widget 或业务加载已经完成。跳转与策略撤销分别使用 typed navigation 和 `revalidateActiveRoutes`。
 
 ## 环境要求
 

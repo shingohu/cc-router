@@ -55,18 +55,28 @@ enum CCRouteActivationStatus {
 
   /// The backend observed a concurrent stack change and made no removal.
   conflict,
+
+  /// More than one active Entry matched the typed target in one partition.
+  ambiguous,
 }
 
 /// Reports activation of one exact existing Entry without recreating it.
 final class CCRouteActivationOutcome {
   /// Creates an immutable activation receipt.
-  const CCRouteActivationOutcome(this.status, {this.guardDeniedCode});
+  const CCRouteActivationOutcome(
+    this.status, {
+    this.guardDeniedCode,
+    this.targetHandle,
+  });
 
   /// Whether the target was activated, rejected, or unavailable.
   final CCRouteActivationStatus status;
 
   /// Stable managed guard denial code for [CCRouteActivationStatus.guardDenied].
   final String? guardDeniedCode;
+
+  /// Exact target handle when the Runtime resolved one active Entry.
+  final CCRouteEntryHandle? targetHandle;
 }
 
 /// Terminal status returned when a typed request is offered to an Entry.

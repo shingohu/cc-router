@@ -129,6 +129,14 @@ and Popups block activation rather than being removed or silently bypassed.
 Older/custom Adapters without `CCNavigationActivateExistingAdapter` report
 `unsupported`.
 
+An external or notification entry that has no borrowed page handle can select a
+retained target with `CCRouter.navigator.activateExistingIntent(intent)`. The
+generated Intent is encoded through its normal Route Codec; matching is exact
+for route ID, canonical URI, Host and Outlet. No match returns `notFound`, while
+duplicate active matches return `ambiguous` without changing the stack. A
+successful receipt contains `targetHandle`, which the application can pass to
+the separate typed delivery operation.
+
 To deliver a new typed request after activation, the target page registers one
 `CCRouter.routeRequestReceiverOf<T>(context)` handler from its own lifecycle.
 The caller then invokes `CCRouter.navigator.deliverToExisting<T>(handle, request)`.

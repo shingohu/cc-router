@@ -19,6 +19,17 @@ abstract interface class CCNavigator {
   /// recreate the target with [go] or [reset].
   Future<CCRouteActivationOutcome> activateExisting(CCRouteEntryHandle handle);
 
+  /// Selects one existing Entry from a canonical typed Intent and activates it.
+  ///
+  /// The match is limited to the resolved Host/Outlet. Repeated identical
+  /// Entries return `ambiguous`; a successful receipt exposes [targetHandle]
+  /// for a separate [deliverToExisting] call.
+  Future<CCRouteActivationOutcome> activateExistingIntent<R>(
+    CCRouteIntent<R> intent, {
+    CCNavigationSource? source,
+    BuildContext? context,
+  });
+
   /// Delivers a typed request to an existing Entry's registered receiver.
   ///
   /// `accepted` means the receiver synchronously accepted the handoff; it does
@@ -133,6 +144,17 @@ final class _CCNavigator implements CCNavigator {
   Future<CCRouteActivationOutcome> activateExisting(
     CCRouteEntryHandle handle,
   ) => _runtime.activateExistingRoute(handle);
+
+  /// Selects and activates an existing Entry through the owning Runtime.
+  @override
+  Future<CCRouteActivationOutcome> activateExistingIntent<R>(
+    CCRouteIntent<R> intent, {
+    CCNavigationSource? source,
+    BuildContext? context,
+  }) => _runtime.activateExistingIntent(
+    intent,
+    placementOverride: _resolvePlacement(context),
+  );
 
   /// Delivers a typed request through the owning Runtime.
   @override
