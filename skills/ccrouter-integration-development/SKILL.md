@@ -641,6 +641,15 @@ the Service Contract.
   `CCRouteActivationOutcome.status`; `unsupported` and `conflict` never fall
   back to `go`, `reset`, or positional Pop. A target with no covering Entry is
   a successful no-op and keeps its result channel pending.
+- For a new typed request to that retained page, obtain
+  `CCRouter.routeRequestReceiverOf<T>(context)` from the page's own managed
+  binding, register one synchronous handler with `listen`, and call
+  `CCRouter.navigator.deliverToExisting<T>(handle, request)`. The receiver is
+  exact-Entry and exact-Dart-type scoped; it is released when the Entry retires.
+  `accepted` means the handler accepted the handoff, not that a Widget or
+  business operation has completed. Check `notFound`, `notReady`, `conflict`,
+  and `failed`; never use a global callback registry or rewrite the Entry's
+  original arguments to simulate delivery.
 - Check `CCRouteCloseOutcome.status`: `closed`, `notFound`, `unsupported`, or
   `guardDenied`. Close runs the target's managed PopGuards and validates its
   original result type before mutation. It is an explicit business exit; do not

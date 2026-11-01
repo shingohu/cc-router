@@ -69,6 +69,36 @@ final class CCRouteActivationOutcome {
   final String? guardDeniedCode;
 }
 
+/// Terminal status returned when a typed request is offered to an Entry.
+enum CCRouteRequestDeliveryStatus {
+  /// The target Entry's typed receiver accepted the request synchronously.
+  accepted,
+
+  /// The target handle is no longer active in the current Runtime.
+  notFound,
+
+  /// The target has no receiver registered for the request's exact type.
+  notReady,
+
+  /// A receiver registration or Runtime generation made the request unsafe.
+  conflict,
+
+  /// The receiver threw while accepting the request.
+  failed,
+}
+
+/// Reports typed request handoff to one exact existing Entry.
+final class CCRouteRequestDeliveryOutcome {
+  /// Creates an immutable request delivery receipt.
+  const CCRouteRequestDeliveryOutcome(this.status, {this.errorType});
+
+  /// Whether the request was accepted or why it could not be handed off.
+  final CCRouteRequestDeliveryStatus status;
+
+  /// Sanitized receiver error type for [CCRouteRequestDeliveryStatus.failed].
+  final String? errorType;
+}
+
 /// Optional Host/Adapter SPI for removing one exact managed opening.
 ///
 /// Runtime validates handle identity, target PopGuard, and result type first.

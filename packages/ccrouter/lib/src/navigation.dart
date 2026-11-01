@@ -19,6 +19,16 @@ abstract interface class CCNavigator {
   /// recreate the target with [go] or [reset].
   Future<CCRouteActivationOutcome> activateExisting(CCRouteEntryHandle handle);
 
+  /// Delivers a typed request to an existing Entry's registered receiver.
+  ///
+  /// `accepted` means the receiver synchronously accepted the handoff; it does
+  /// not mean that a Widget has rendered or that the business operation has
+  /// completed. The target Entry and its original arguments remain unchanged.
+  Future<CCRouteRequestDeliveryOutcome> deliverToExisting<T>(
+    CCRouteEntryHandle handle,
+    T request,
+  );
+
   /// Pushes [intent] and completes with the route's typed Pop result.
   ///
   /// When [context] is supplied, the nearest registered Host Outlet is used
@@ -123,6 +133,13 @@ final class _CCNavigator implements CCNavigator {
   Future<CCRouteActivationOutcome> activateExisting(
     CCRouteEntryHandle handle,
   ) => _runtime.activateExistingRoute(handle);
+
+  /// Delivers a typed request through the owning Runtime.
+  @override
+  Future<CCRouteRequestDeliveryOutcome> deliverToExisting<T>(
+    CCRouteEntryHandle handle,
+    T request,
+  ) async => _runtime.deliverRouteRequest(handle, request);
 
   /// Rejects a retired scoped client before consulting a replacement Runtime.
   CCRouterRuntime get _runtime {

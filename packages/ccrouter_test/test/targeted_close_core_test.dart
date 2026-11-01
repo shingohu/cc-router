@@ -184,6 +184,52 @@ void main() {
     },
   );
 
+  test('typed request delivery is isolated to one active Entry', () async {
+    final runtime = _runtime();
+    final result = runtime.pushRoute(_intent('1'));
+    await Future<void>.delayed(Duration.zero);
+    final entry = runtime.activeRouteEntries.single;
+    final received = <String>[];
+    final remove = runtime.registerRouteRequestHandler<String>(
+      navigationId: entry.navigationId,
+      handler: received.add,
+    );
+
+    final accepted = runtime.deliverRouteRequest<String>(
+      _handle(runtime, entry),
+      'goods/42',
+    );
+    final wrongType = runtime.deliverRouteRequest<int>(
+      _handle(runtime, entry),
+      42,
+    );
+
+    expect(accepted.status, CCRouteRequestDeliveryStatus.accepted);
+    expect(wrongType.status, CCRouteRequestDeliveryStatus.notReady);
+    expect(received, ['goods/42']);
+    expect(runtime.activeRouteEntries.single.routeEntryId, entry.routeEntryId);
+    final replace = runtime.registerRouteRequestHandler<String>(
+      navigationId: entry.navigationId,
+      handler: (_) => throw StateError('receiver failed'),
+    );
+    final failed = runtime.deliverRouteRequest<String>(
+      _handle(runtime, entry),
+      'broken',
+    );
+    expect(failed.status, CCRouteRequestDeliveryStatus.failed);
+    expect(failed.errorType, 'StateError');
+    replace();
+    remove();
+    expect(
+      runtime
+          .deliverRouteRequest<String>(_handle(runtime, entry), 'again')
+          .status,
+      CCRouteRequestDeliveryStatus.notReady,
+    );
+    runtime.popRoute(result: 'done');
+    expect(await result, 'done');
+  });
+
   test(
     'duplicate route instances close only selected result and Scope once',
     () async {

@@ -129,6 +129,16 @@ and Popups block activation rather than being removed or silently bypassed.
 Older/custom Adapters without `CCNavigationActivateExistingAdapter` report
 `unsupported`.
 
+To deliver a new typed request after activation, the target page registers one
+`CCRouter.routeRequestReceiverOf<T>(context)` handler from its own lifecycle.
+The caller then invokes `CCRouter.navigator.deliverToExisting<T>(handle, request)`.
+The receiver is owned by the exact Entry and is removed when that Entry retires;
+an old mounted page, an outgoing Scope, or a replacement Runtime cannot receive
+late requests. `accepted` reports synchronous handoff only, while `failed`
+contains a sanitized error type; it does not claim that UI rendering or the
+business load has finished. Repeated equal requests are delivered independently
+and are not deduplicated by the framework.
+
 Regression evidence must include A covered by B, close A then push/pop C and
 return from B without A resurrection; repeated same-route instances; foreign
 Popup retention; concrete Host/Outlet isolation; denied guards, wrong result,

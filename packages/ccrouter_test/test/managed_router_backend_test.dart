@@ -274,6 +274,40 @@ void main() {
     expect(await second, isNull);
   });
 
+  testWidgets('deliverToExisting reaches only the registered Home receiver', (
+    tester,
+  ) async {
+    final harness = await _mount(tester);
+    final homeContext = harness.contexts['home']!;
+    final homeHandle = harness.handle('home');
+    final homeResource = harness.resources['home']!;
+    final requests = <String>[];
+    final receiver = CCRouter.routeRequestReceiverOf<String>(homeContext)!;
+    final remove = receiver.listen(requests.add);
+    final covering = CCRouter.navigator.push(const _Intent('A'));
+    await tester.pumpAndSettle();
+
+    final outcome = await CCRouter.navigator.deliverToExisting(
+      homeHandle,
+      'goods/42',
+    );
+
+    expect(outcome.status, CCRouteRequestDeliveryStatus.accepted);
+    expect(requests, ['goods/42']);
+    expect(
+      CCRouter.routeEntryHandleOf(harness.contexts['home']!),
+      same(homeHandle),
+    );
+    expect(harness.resources['home'], same(homeResource));
+    remove();
+    expect(
+      (await CCRouter.navigator.deliverToExisting(homeHandle, 'again')).status,
+      CCRouteRequestDeliveryStatus.notReady,
+    );
+    CCRouter.navigator.pop(result: 'done');
+    expect(await covering, 'done');
+  });
+
   testWidgets('Managed Router App requires an initialized Host', (
     tester,
   ) async {

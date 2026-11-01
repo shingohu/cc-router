@@ -72,6 +72,45 @@ final class _CCRouteServiceBinding extends InheritedWidget {
       oldWidget.navigationId != navigationId;
 }
 
+/// Handles typed requests owned by one exact managed Route Entry.
+///
+/// The receiver retains only the Runtime generation token and navigation ID;
+/// it does not retain the BuildContext or Widget. Register it from the owning
+/// page's lifecycle and dispose the returned remover with that owner.
+final class CCRouteRequestReceiver<T> {
+  /// Creates a receiver bound to one managed navigation identity.
+  const CCRouteRequestReceiver({
+    required this.navigationId,
+    required this.runtimeIdentity,
+  });
+
+  /// Exact Entry identity that owns the receiver.
+  final String navigationId;
+
+  /// Runtime generation that admitted the Entry.
+  final Object runtimeIdentity;
+
+  /// Registers [handler] and returns an idempotent remover.
+  ///
+  /// One active receiver is retained per request type and Entry. Registering
+  /// again replaces the previous receiver; an older remover cannot clear the
+  /// newer registration. A retired Runtime or Entry throws a cancellation
+  /// error instead of attaching to a replacement identity.
+  void Function() listen(void Function(T request) handler) {
+    final runtime = _runtimeResolver.activeOrNull;
+    if (runtime == null ||
+        !identical(runtimeIdentity, _runtimeResolver.activeIdentity) ||
+        !runtime.isInitialized ||
+        runtime.routeEntryHandleForNavigation(navigationId) == null) {
+      throw const CCRouteCancelledError('route_request_receiver_unavailable');
+    }
+    return runtime.registerRouteRequestHandler<T>(
+      navigationId: navigationId,
+      handler: handler,
+    );
+  }
+}
+
 /// Static business-facing entry point for all CCRouter capabilities.
 ///
 /// Business code uses this facade for component services, messages, Sessions,
@@ -390,6 +429,22 @@ abstract final class CCRouter {
     if (binding == null) return null;
     return _runtimeResolver.activeOrNull!.routeEntryHandleForNavigation(
       binding.navigationId,
+    );
+  }
+
+  /// Returns a typed receiver bound to the managed Entry inherited by [context].
+  ///
+  /// Contexts without an active Managed Entry return null, including Foreign
+  /// Routes and local Outlet bases. The receiver must be registered by the page
+  /// owner; it does not infer a target from the visible navigation stack.
+  static CCRouteRequestReceiver<T>? routeRequestReceiverOf<T>(
+    BuildContext context,
+  ) {
+    final binding = _validatedRouteServiceBinding(context);
+    if (binding == null) return null;
+    return CCRouteRequestReceiver<T>(
+      navigationId: binding.navigationId,
+      runtimeIdentity: binding.runtimeIdentity!,
     );
   }
 
