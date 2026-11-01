@@ -25,6 +25,7 @@ const _adapterSpiNames = <String>{
   'CCNavigationPopCoordinator',
   'CCNavigationScopedPopCoordinator',
   'CCNavigationTargetedCloseAdapter',
+  'CCNavigationActivateExistingAdapter',
   'CCNavigationPopGuardBinding',
   'CCNavigationScopedPopGuardBinding',
   'CCNavigationPopTarget',
@@ -46,6 +47,8 @@ const _hostContractNames = <String>{
   ..._adapterSpiNames,
   'CCRouteCloseOutcome',
   'CCRouteCloseStatus',
+  'CCRouteActivationOutcome',
+  'CCRouteActivationStatus',
   'CCContractBundleDescriptor',
   'CCContractCompatibilityCode',
   'CCContractCompatibilityError',
@@ -82,8 +85,11 @@ const _hostSpiTypes = <Type>[
   host.CCNavigationPopCoordinator,
   host.CCNavigationScopedPopCoordinator,
   host.CCNavigationTargetedCloseAdapter,
+  host.CCNavigationActivateExistingAdapter,
   host.CCRouteCloseOutcome,
   host.CCRouteCloseStatus,
+  host.CCRouteActivationOutcome,
+  host.CCRouteActivationStatus,
   host.CCNavigationPopGuardBinding,
   host.CCNavigationScopedPopGuardBinding,
   host.CCNavigationPopTarget,
@@ -272,7 +278,7 @@ Future<void> probe() async {
     ).readAsStringSync();
 
     expect(_contractCombinatorNames(hostBarrel, 'show'), _hostContractNames);
-    expect(_hostSpiTypes, hasLength(47));
+    expect(_hostSpiTypes, hasLength(50));
     expect(
       _HostTargetedCloseAdapter(),
       isA<host.CCNavigationTargetedCloseAdapter>(),
