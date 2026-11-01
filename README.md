@@ -332,6 +332,57 @@ Diagnostics 页展示 Failure/Fallback/Pending/InitTask 和健康状态；旧 Pr
 
 CCRouter 不公开原始栈索引或 Flutter Route 移除 API。精确退出使用 `close(handle)`；已有 handle 时使用 `activateExisting(handle)`，外部入口可使用 `activateExistingIntent(intent)` 按同一 Host/Outlet 的 canonical URI 选择目标。重复实例返回 `ambiguous`，成功结果携带 `targetHandle`，不会按栈位置猜测。激活只清理目标上方的 Entry，不重建目标；调用方必须检查 `activated`、`notFound`、`unsupported`、`guardDenied`、`conflict` 或 `ambiguous` 结果。向已有页面交付新的类型化业务请求使用 `deliverToExisting(handle, request)`，页面通过自身的 `routeRequestReceiverOf<T>(context)` 注册 receiver；`accepted` 只表示 receiver 已接纳，不表示 Widget 或业务加载已经完成。跳转与策略撤销分别使用 typed navigation 和 `revalidateActiveRoutes`。
 
+### 返回既有页面并交付新请求
+
+这个能力适用于一个外部入口需要回到已经存在的业务页面的场景。例如页面栈是：
+
+```text
+Home(H1, 商城实例 M1) → Settings(S1) → Web(W1)
+```
+
+W1 中的 H5 或通知回传“打开商品 goods/42”，但 W1 没有逐层持有 Home 的回调。应用希望清理 S1/W1，复用原来的 H1、Route Scope、Widget State 和 M1，再把商品请求交给 H1。`go(HomeRoute.intent())` 或 `reset(HomeRoute.intent())` 会创建新的 Home Entry，普通 `pop` 只能逐层返回，直接操作 Flutter `Navigator` 又会绕过 Runtime 的 Entry 账本。
+
+目标页面在自己的生命周期注册 typed receiver：
+
+```dart
+CCRouteEntryHandle? homeHandle;
+void Function()? removeReceiver;
+
+@override
+void didChangeDependencies() {
+  super.didChangeDependencies();
+  homeHandle ??= CCRouter.routeEntryHandleOf(context);
+  removeReceiver ??= CCRouter
+      .routeRequestReceiverOf<MallDestination>(context)
+      ?.listen((request) {
+    mallController.loadProduct(request.goodsId);
+  });
+}
+
+@override
+void dispose() {
+  removeReceiver?.call();
+  super.dispose();
+}
+```
+
+通知或 H5 回包由应用先完成来源、认证、授权和 callback 校验，再选择并激活已有 Entry：
+
+```dart
+final activation = await CCRouter.navigator.activateExistingIntent(
+  HomeRoute.intent(),
+);
+
+if (activation.status == CCRouteActivationStatus.activated) {
+  await CCRouter.navigator.deliverToExisting(
+    activation.targetHandle!,
+    const MallDestination(goodsId: '42'),
+  );
+}
+```
+
+`activated` 表示 Managed 栈已经复用目标并清理上层 Entry；`accepted` 表示 typed receiver 已接纳请求，不代表商品加载或 Widget 展示已经完成。`ambiguous`、`conflict`、`guardDenied`、`unsupported` 和 `notFound` 都必须由应用显式处理，不能退化为普通 Pop 或按位置猜测页面。完整边界、Foreign Popup 和 Adapter 规则见[生产场景参考](skills/ccrouter-integration-development/references/production-scenarios.md#activate-an-existing-entry)。
+
 ## 环境要求
 
 - Dart SDK `^3.10.0`

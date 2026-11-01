@@ -113,6 +113,8 @@ Custom Adapters opt into the Host-only targeted-close SPI separately.
 
 ## Activate an existing Entry
 
+典型场景是 `Home(H1) → Settings(S1) → Web(W1)`：W1 的 H5、通知或其他外部入口回传一个商城目标，但调用方没有逐层持有 H1 的 callback。应用需要退出 S1/W1、保留 H1 的 Entry/Scope/State/商城实例 M1，再向 H1 交付新请求。此能力由“复用已有 Entry”和“typed request delivery”两步组成，不能用 `go/reset` 重建 Home，也不能用原生 Navigator 绕过 Runtime。
+
 When an external or out-of-band entry must return to an already mounted managed
 page, capture that page's `CCRouteEntryHandle` while it is mounted and call
 `CCRouter.navigator.activateExisting(handle)`. This preserves the exact Entry,

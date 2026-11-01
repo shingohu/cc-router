@@ -642,6 +642,11 @@ the Service Contract.
   back to `go`, `reset`, or positional Pop. A target with no covering Entry is
   a successful no-op only when the Adapter implements the activation SPI;
   legacy Adapters without that SPI return `unsupported`.
+- The canonical production shape is `Home(H1) → Settings(S1) → Web(W1)`,
+  where W1 or a notification requests new data for the existing Home. The
+  expected flow is to remove S1/W1, retain H1's Entry/Scope/State and then
+  deliver a typed request to H1. `go/reset` recreate the target and raw Flutter
+  Navigator operations bypass Runtime ownership; use the two-step flow below.
 - For a new typed request to that retained page, obtain
   `CCRouter.routeRequestReceiverOf<T>(context)` from the page's own managed
   binding, register one synchronous handler with `listen`, and call
