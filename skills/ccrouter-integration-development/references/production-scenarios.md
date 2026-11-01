@@ -135,7 +135,10 @@ generated Intent is encoded through its normal Route Codec; matching is exact
 for route ID, canonical URI, Host and Outlet. No match returns `notFound`, while
 duplicate active matches return `ambiguous` without changing the stack. A
 successful receipt contains `targetHandle`, which the application can pass to
-the separate typed delivery operation.
+the separate typed delivery operation. The application owns external authority,
+authentication, authorization and H5 callback validation before this handoff;
+this operation selects an already active Entry and does not run external Deep
+Link admission or replace normal navigation Interceptor admission.
 
 To deliver a new typed request after activation, the target page registers one
 `CCRouter.routeRequestReceiverOf<T>(context)` handler from its own lifecycle.

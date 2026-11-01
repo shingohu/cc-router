@@ -10,36 +10,6 @@ part of 'facade.dart';
 /// Bound clients reject use after their registration or Runtime ends. Their
 /// optional per-call Context must resolve to that same Host/Outlet.
 abstract interface class CCNavigator {
-  /// Activates one exact existing Entry and removes its covering siblings.
-  ///
-  /// The target Entry, Route Scope and page identity remain intact. Only
-  /// Entries opened later in the same Host and Navigator Outlet are eligible
-  /// for removal, and every covering PopGuard is evaluated before mutation.
-  /// Check the explicit outcome; unsupported adapters never fall back to Pop or
-  /// recreate the target with [go] or [reset].
-  Future<CCRouteActivationOutcome> activateExisting(CCRouteEntryHandle handle);
-
-  /// Selects one existing Entry from a canonical typed Intent and activates it.
-  ///
-  /// The match is limited to the resolved Host/Outlet. Repeated identical
-  /// Entries return `ambiguous`; a successful receipt exposes [targetHandle]
-  /// for a separate [deliverToExisting] call.
-  Future<CCRouteActivationOutcome> activateExistingIntent<R>(
-    CCRouteIntent<R> intent, {
-    CCNavigationSource? source,
-    BuildContext? context,
-  });
-
-  /// Delivers a typed request to an existing Entry's registered receiver.
-  ///
-  /// `accepted` means the receiver synchronously accepted the handoff; it does
-  /// not mean that a Widget has rendered or that the business operation has
-  /// completed. The target Entry and its original arguments remain unchanged.
-  Future<CCRouteRequestDeliveryOutcome> deliverToExisting<T>(
-    CCRouteEntryHandle handle,
-    T request,
-  );
-
   /// Pushes [intent] and completes with the route's typed Pop result.
   ///
   /// When [context] is supplied, the nearest registered Host Outlet is used
@@ -131,6 +101,54 @@ abstract interface class CCNavigator {
   bool canPop({BuildContext? context});
 }
 
+/// Optional existing-Entry operations layered onto the stable Navigator API.
+///
+/// Keeping these methods as an extension preserves source compatibility for
+/// custom `CCNavigator` test doubles and application adapters written before
+/// existing-Entry activation was introduced.
+extension CCNavigatorExistingEntryOperations on CCNavigator {
+  /// Activates one exact existing Entry and removes its covering siblings.
+  Future<CCRouteActivationOutcome> activateExisting(CCRouteEntryHandle handle) {
+    final navigator = this;
+    if (navigator is _CCNavigator) {
+      return navigator.activateExisting(handle);
+    }
+    return Future.value(
+      const CCRouteActivationOutcome(CCRouteActivationStatus.unsupported),
+    );
+  }
+
+  /// Selects one existing Entry from a canonical typed Intent and activates it.
+  Future<CCRouteActivationOutcome> activateExistingIntent<R>(
+    CCRouteIntent<R> intent, {
+    BuildContext? context,
+  }) {
+    final navigator = this;
+    if (navigator is _CCNavigator) {
+      return navigator.activateExistingIntent(intent, context: context);
+    }
+    return Future.value(
+      const CCRouteActivationOutcome(CCRouteActivationStatus.unsupported),
+    );
+  }
+
+  /// Delivers a typed request to an existing Entry's registered receiver.
+  Future<CCRouteRequestDeliveryOutcome> deliverToExisting<T>(
+    CCRouteEntryHandle handle,
+    T request,
+  ) {
+    final navigator = this;
+    if (navigator is _CCNavigator) {
+      return navigator.deliverToExisting(handle, request);
+    }
+    return Future.value(
+      const CCRouteRequestDeliveryOutcome(
+        CCRouteRequestDeliveryStatus.notReady,
+      ),
+    );
+  }
+}
+
 /// Runtime-backed implementation retained privately by [CCRouter].
 final class _CCNavigator implements CCNavigator {
   /// Creates either the global facade or an explicitly scoped client.
@@ -140,16 +158,13 @@ final class _CCNavigator implements CCNavigator {
   final _CCNavigationBinding? binding;
 
   /// Activates an exact existing Entry through the owning Runtime.
-  @override
   Future<CCRouteActivationOutcome> activateExisting(
     CCRouteEntryHandle handle,
   ) => _runtime.activateExistingRoute(handle);
 
   /// Selects and activates an existing Entry through the owning Runtime.
-  @override
   Future<CCRouteActivationOutcome> activateExistingIntent<R>(
     CCRouteIntent<R> intent, {
-    CCNavigationSource? source,
     BuildContext? context,
   }) => _runtime.activateExistingIntent(
     intent,
@@ -157,7 +172,6 @@ final class _CCNavigator implements CCNavigator {
   );
 
   /// Delivers a typed request through the owning Runtime.
-  @override
   Future<CCRouteRequestDeliveryOutcome> deliverToExisting<T>(
     CCRouteEntryHandle handle,
     T request,

@@ -656,7 +656,10 @@ the Service Contract.
   Host/Outlet, and returns `ambiguous` for duplicate matches instead of using
   recency or stack position. On `activated`, use the returned `targetHandle`
   for the separate typed delivery step; `targetHandle` is an exact identity and
-  does not retain a Runtime, Context, Scope, or payload.
+  does not retain a Runtime, Context, Scope, or payload. The application must
+  complete external authority, authentication, authorization, and H5 callback
+  validation before calling this internal handoff; the operation does not run
+  external Deep Link admission for the already active target.
 - Check `CCRouteCloseOutcome.status`: `closed`, `notFound`, `unsupported`, or
   `guardDenied`. Close runs the target's managed PopGuards and validates its
   original result type before mutation. It is an explicit business exit; do not

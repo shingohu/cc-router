@@ -321,6 +321,24 @@ void main() {
   });
 
   test(
+    'activation without covering Entries is a successful no-op on legacy adapters',
+    () async {
+      final runtime = _runtime(adapter: _LegacyAdapter());
+      final result = runtime.pushRoute(_intent('1'));
+      await Future<void>.delayed(Duration.zero);
+      final entry = runtime.activeRouteEntries.single;
+
+      final outcome = await runtime.activateExistingRoute(
+        _handle(runtime, entry),
+      );
+
+      expect(outcome.status, CCRouteActivationStatus.activated);
+      runtime.popRoute(result: 'done');
+      expect(await result, 'done');
+    },
+  );
+
+  test(
     'duplicate route instances close only selected result and Scope once',
     () async {
       final adapter = CCMemoryNavigationAdapter();
