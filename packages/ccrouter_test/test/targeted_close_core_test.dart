@@ -321,7 +321,7 @@ void main() {
   });
 
   test(
-    'activation without covering Entries is a successful no-op on legacy adapters',
+    'legacy adapters report unsupported activation without covering Entries',
     () async {
       final runtime = _runtime(adapter: _LegacyAdapter());
       final result = runtime.pushRoute(_intent('1'));
@@ -332,7 +332,7 @@ void main() {
         _handle(runtime, entry),
       );
 
-      expect(outcome.status, CCRouteActivationStatus.activated);
+      expect(outcome.status, CCRouteActivationStatus.unsupported);
       runtime.popRoute(result: 'done');
       expect(await result, 'done');
     },

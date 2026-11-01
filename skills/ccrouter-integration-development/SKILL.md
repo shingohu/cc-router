@@ -640,7 +640,8 @@ the Service Contract.
   removes only the expected covering Entries. Check
   `CCRouteActivationOutcome.status`; `unsupported` and `conflict` never fall
   back to `go`, `reset`, or positional Pop. A target with no covering Entry is
-  a successful no-op and keeps its result channel pending.
+  a successful no-op only when the Adapter implements the activation SPI;
+  legacy Adapters without that SPI return `unsupported`.
 - For a new typed request to that retained page, obtain
   `CCRouter.routeRequestReceiverOf<T>(context)` from the page's own managed
   binding, register one synchronous handler with `listen`, and call

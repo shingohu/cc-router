@@ -54,12 +54,6 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
       return const CCRouteActivationOutcome(CCRouteActivationStatus.notFound);
     }
     final adapter = _requiredNavigationAdapter;
-    if (covering.isEmpty && adapter is! CCNavigationActivateExistingAdapter) {
-      return CCRouteActivationOutcome(
-        CCRouteActivationStatus.activated,
-        targetHandle: target.handle,
-      );
-    }
     if (adapter is! CCNavigationActivateExistingAdapter) {
       return CCRouteActivationOutcome(
         CCRouteActivationStatus.unsupported,
