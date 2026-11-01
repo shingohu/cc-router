@@ -8,6 +8,7 @@ export 'package:ccrouter_contracts/ccrouter_contracts.dart'
     hide
         CCNavigationAdapter,
         CCNavigationTargetedCloseAdapter,
+        CCNavigationActivateExistingAdapter,
         CCNavigationDispatch,
         CCNavigationDispatchAdapter,
         CCNavigationParentStackAdapter,

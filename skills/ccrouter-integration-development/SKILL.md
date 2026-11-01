@@ -633,6 +633,14 @@ the Service Contract.
   retain no Context/Route/payload and expire with their exact Runtime entry.
   Active Entry, lifecycle and visibility snapshots are diagnostic observations
   only; they never expose an actionable close handle.
+- To return to an existing managed page without recreating its Entry or Route
+  Scope, capture that page's handle and call
+  `CCRouter.navigator.activateExisting(handle)`. The operation is restricted to
+  the same concrete Host/Outlet, preflights covering synchronous PopGuards, and
+  removes only the expected covering Entries. Check
+  `CCRouteActivationOutcome.status`; `unsupported` and `conflict` never fall
+  back to `go`, `reset`, or positional Pop. A target with no covering Entry is
+  a successful no-op and keeps its result channel pending.
 - Check `CCRouteCloseOutcome.status`: `closed`, `notFound`, `unsupported`, or
   `guardDenied`. Close runs the target's managed PopGuards and validates its
   original result type before mutation. It is an explicit business exit; do not

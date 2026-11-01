@@ -10,6 +10,15 @@ part of 'facade.dart';
 /// Bound clients reject use after their registration or Runtime ends. Their
 /// optional per-call Context must resolve to that same Host/Outlet.
 abstract interface class CCNavigator {
+  /// Activates one exact existing Entry and removes its covering siblings.
+  ///
+  /// The target Entry, Route Scope and page identity remain intact. Only
+  /// Entries opened later in the same Host and Navigator Outlet are eligible
+  /// for removal, and every covering PopGuard is evaluated before mutation.
+  /// Check the explicit outcome; unsupported adapters never fall back to Pop or
+  /// recreate the target with [go] or [reset].
+  Future<CCRouteActivationOutcome> activateExisting(CCRouteEntryHandle handle);
+
   /// Pushes [intent] and completes with the route's typed Pop result.
   ///
   /// When [context] is supplied, the nearest registered Host Outlet is used
@@ -108,6 +117,12 @@ final class _CCNavigator implements CCNavigator {
 
   /// Immutable location and non-owning lifetime, absent for global navigation.
   final _CCNavigationBinding? binding;
+
+  /// Activates an exact existing Entry through the owning Runtime.
+  @override
+  Future<CCRouteActivationOutcome> activateExisting(
+    CCRouteEntryHandle handle,
+  ) => _runtime.activateExistingRoute(handle);
 
   /// Rejects a retired scoped client before consulting a replacement Runtime.
   CCRouterRuntime get _runtime {

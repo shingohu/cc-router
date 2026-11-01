@@ -26,6 +26,7 @@ final class CCMemoryNavigationAdapter
         CCNavigationAdapter,
         CCNavigationDispatchAdapter,
         CCNavigationTargetedCloseAdapter,
+        CCNavigationActivateExistingAdapter,
         CCNavigationPopCoordinator,
         CCNavigationPopTargetSource,
         CCNavigationAdapterCapabilitySource,
@@ -180,6 +181,48 @@ final class CCMemoryNavigationAdapter
     return const CCRouteCloseOutcome(CCRouteCloseStatus.notFound);
   }
 
+  @override
+  /// Removes exact covering Entries while retaining the selected request.
+  Future<CCRouteActivationOutcome> activateExistingNavigation({
+    required String targetNavigationId,
+    required String hostId,
+    required String navigatorOutlet,
+    required List<String> expectedRemovalNavigationIds,
+  }) async {
+    _ensureAvailable();
+    final targetIndex = _entries.indexWhere(
+      (entry) =>
+          entry.request.navigationId == targetNavigationId &&
+          entry.request.hostId == hostId &&
+          entry.request.placement.navigatorOutlet == navigatorOutlet,
+    );
+    if (targetIndex == -1) {
+      return const CCRouteActivationOutcome(CCRouteActivationStatus.notFound);
+    }
+    final actualRemoval = [
+      for (var index = targetIndex + 1; index < _entries.length; index++)
+        if (_samePartition(
+          _entries[index].request,
+          _entries[targetIndex].request,
+        ))
+          _entries[index].request.navigationId,
+    ];
+    if (!_sameIds(actualRemoval, expectedRemovalNavigationIds)) {
+      return const CCRouteActivationOutcome(CCRouteActivationStatus.conflict);
+    }
+    if (actualRemoval.isEmpty) {
+      return const CCRouteActivationOutcome(CCRouteActivationStatus.activated);
+    }
+    final removalIds = actualRemoval.toSet();
+    for (var index = _entries.length - 1; index > targetIndex; index--) {
+      final entry = _entries[index];
+      if (!removalIds.contains(entry.request.navigationId)) continue;
+      _entries.removeAt(index);
+      entry.result?.complete();
+    }
+    return const CCRouteActivationOutcome(CCRouteActivationStatus.activated);
+  }
+
   /// Pops the current entry when the in-memory stack permits it.
   @override
   Future<bool> maybePop({Object? result}) async {
@@ -291,6 +334,15 @@ final class CCMemoryNavigationAdapter
   bool _samePartition(CCNavigationRequest first, CCNavigationRequest second) =>
       first.hostId == second.hostId &&
       first.placement.navigatorOutlet == second.placement.navigatorOutlet;
+
+  /// Compares expected backend identities without accepting reordered entries.
+  bool _sameIds(List<String> actual, List<String> expected) {
+    if (actual.length != expected.length) return false;
+    for (var index = 0; index < actual.length; index++) {
+      if (actual[index] != expected[index]) return false;
+    }
+    return true;
+  }
 
   /// Clears all entries while safely completing pending result Futures.
   void _clearEntries() {

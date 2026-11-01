@@ -6,6 +6,85 @@ part of 'runtime.dart';
 /// tests may call them directly; application business code must not retain or
 /// invoke a Runtime instance.
 extension CCRouterRuntimeNavigation on CCRouterRuntime {
+  /// Activates one exact existing Entry without recreating its Route Scope.
+  ///
+  /// Only Entries in the target's concrete Host and Navigator Outlet that were
+  /// opened after it are considered covering Entries. Their synchronous
+  /// PopGuards are preflighted before the optional backend transaction runs.
+  /// The target's own Guard is not evaluated because it remains active. A
+  /// backend without atomic identity-based activation returns
+  /// [CCRouteActivationStatus.unsupported].
+  Future<CCRouteActivationOutcome> activateExistingRoute(
+    CCRouteEntryHandle handle,
+  ) async {
+    _ensureNavigationCanStart();
+    _ensureInitialized();
+    _RouteEntryRecord? target;
+    for (final candidate in _routeEntries) {
+      if (identical(candidate.handle, handle)) {
+        target = candidate;
+        break;
+      }
+    }
+    if (target == null) {
+      return const CCRouteActivationOutcome(CCRouteActivationStatus.notFound);
+    }
+
+    final covering = <_RouteEntryRecord>[];
+    final targetIndex = _routeEntries.indexOf(target);
+    for (var index = targetIndex + 1; index < _routeEntries.length; index++) {
+      final candidate = _routeEntries[index];
+      if (candidate.request.hostId == target.request.hostId &&
+          candidate.request.placement.navigatorOutlet ==
+              target.request.placement.navigatorOutlet) {
+        covering.add(candidate);
+      }
+    }
+    for (final entry in covering.reversed) {
+      final decision = _evaluatePopGuardsForEntry(entry, CCPopTrigger.business);
+      if (decision is CCPopDeny) {
+        return CCRouteActivationOutcome(
+          CCRouteActivationStatus.guardDenied,
+          guardDeniedCode: decision.code,
+        );
+      }
+    }
+    if (!_routeEntries.contains(target) || _disposed) {
+      return const CCRouteActivationOutcome(CCRouteActivationStatus.notFound);
+    }
+    final adapter = _requiredNavigationAdapter;
+    if (adapter is! CCNavigationActivateExistingAdapter) {
+      return const CCRouteActivationOutcome(
+        CCRouteActivationStatus.unsupported,
+      );
+    }
+    final request = target.request;
+    final registration = _popRegistrationForHost(request.hostId);
+    final outcome = await _awaitNavigationBackend(
+      () => (adapter as CCNavigationActivateExistingAdapter)
+          .activateExistingNavigation(
+            targetNavigationId: request.navigationId,
+            hostId: request.hostId,
+            navigatorOutlet: request.placement.navigatorOutlet,
+            expectedRemovalNavigationIds: [
+              for (final entry in covering) entry.request.navigationId,
+            ],
+          ),
+      registration: registration,
+      retired: const CCRouteActivationOutcome(CCRouteActivationStatus.notFound),
+    );
+    if (outcome.status == CCRouteActivationStatus.activated &&
+        !_disposed &&
+        !registration.isCancelled) {
+      for (final entry in covering) {
+        if (_routeEntries.contains(entry)) {
+          _removeRouteEntry(entry, reason: 'activateExisting');
+        }
+      }
+    }
+    return outcome;
+  }
+
   /// Pushes a typed [intent] and completes with its eventual Pop result.
   ///
   /// A Host-only Flutter facade may pass [placementOverride] after resolving a

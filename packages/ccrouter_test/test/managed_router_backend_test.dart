@@ -245,6 +245,35 @@ Future<void> _predictiveBackEvent(WidgetTester tester, String method) async {
 void main() {
   tearDown(CCRouterHost.shutdown);
 
+  testWidgets('activateExisting preserves the Managed Home identity', (
+    tester,
+  ) async {
+    final harness = await _mount(tester);
+    final homeContext = harness.contexts['home']!;
+    final homeHandle = harness.handle('home');
+    final homeResource = harness.resources['home']!;
+    final first = CCRouter.navigator.push(const _Intent('A'));
+    await tester.pumpAndSettle();
+    final second = CCRouter.navigator.push(const _Intent('B'));
+    await tester.pumpAndSettle();
+
+    final outcome = await CCRouter.navigator.activateExisting(homeHandle);
+    await tester.pumpAndSettle();
+
+    expect(outcome.status, CCRouteActivationStatus.activated);
+    expect(CCRouter.activeRouteEntries, hasLength(1));
+    expect(
+      CCRouter.routeEntryHandleOf(harness.contexts['home']!),
+      same(homeHandle),
+    );
+    expect(harness.contexts['home']!.mounted, isTrue);
+    expect(harness.resources['home'], same(homeResource));
+    expect(homeContext.mounted, isTrue);
+    expect(find.text('managed-home'), findsOneWidget);
+    expect(await first, isNull);
+    expect(await second, isNull);
+  });
+
   testWidgets('Managed Router App requires an initialized Host', (
     tester,
   ) async {

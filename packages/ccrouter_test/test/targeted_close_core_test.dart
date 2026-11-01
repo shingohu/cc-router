@@ -114,6 +114,77 @@ CCRouteEntryHandle _handle(
 
 void main() {
   test(
+    'activateExisting preserves the target identity and completes coverings',
+    () async {
+      final adapter = CCMemoryNavigationAdapter();
+      final runtime = _runtime(adapter: adapter);
+      final targetResult = runtime.pushRoute(_intent('1'));
+      await Future<void>.delayed(Duration.zero);
+      final target = runtime.activeRouteEntries.single;
+      final coveringResult = runtime.pushRoute(_intent('2'));
+      await Future<void>.delayed(Duration.zero);
+      final secondCoveringResult = runtime.pushRoute(_intent('3'));
+      await Future<void>.delayed(Duration.zero);
+
+      final outcome = await runtime.activateExistingRoute(
+        _handle(runtime, target),
+      );
+
+      expect(outcome.status, CCRouteActivationStatus.activated);
+      expect(runtime.activeRouteEntries, hasLength(1));
+      expect(
+        runtime.activeRouteEntries.single.routeEntryId,
+        target.routeEntryId,
+      );
+      expect(adapter.stack.single.navigationId, target.navigationId);
+      expect(await coveringResult, isNull);
+      expect(await secondCoveringResult, isNull);
+      var targetCompleted = false;
+      unawaited(targetResult.then((_) => targetCompleted = true));
+      await Future<void>.delayed(Duration.zero);
+      expect(targetCompleted, isFalse);
+      runtime.popRoute(result: 'target-result');
+      expect(await targetResult, 'target-result');
+    },
+  );
+
+  test(
+    'activateExisting preflights covering guards without changing the stack',
+    () async {
+      final calls = <String>[];
+      final runtime = _runtime(
+        guards: [
+          CCGlobalPopGuard(
+            id: 'activation.guard',
+            guard: fixture.TestPopGuard(
+              'activation.guard',
+              calls,
+              (_) => const CCPopDeny(code: 'covering_dirty'),
+            ),
+          ),
+        ],
+      );
+      final targetResult = runtime.pushRoute(_intent('1'));
+      await Future<void>.delayed(Duration.zero);
+      final target = runtime.activeRouteEntries.single;
+      final coveringResult = runtime.pushRoute(_intent('2'));
+      await Future<void>.delayed(Duration.zero);
+
+      final outcome = await runtime.activateExistingRoute(
+        _handle(runtime, target),
+      );
+
+      expect(outcome.status, CCRouteActivationStatus.guardDenied);
+      expect(outcome.guardDeniedCode, 'covering_dirty');
+      expect(calls, hasLength(1));
+      expect(runtime.activeRouteEntries, hasLength(2));
+      await runtime.dispose();
+      expect(await coveringResult, isNull);
+      expect(await targetResult, isNull);
+    },
+  );
+
+  test(
     'duplicate route instances close only selected result and Scope once',
     () async {
       final adapter = CCMemoryNavigationAdapter();

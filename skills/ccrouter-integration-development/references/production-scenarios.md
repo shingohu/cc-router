@@ -111,6 +111,24 @@ Native close preserves foreign popups even when removing the last root or Shell
 Entry: only an empty structural boundary survives until those popups end.
 Custom Adapters opt into the Host-only targeted-close SPI separately.
 
+## Activate an existing Entry
+
+When an external or out-of-band entry must return to an already mounted managed
+page, capture that page's `CCRouteEntryHandle` while it is mounted and call
+`CCRouter.navigator.activateExisting(handle)`. This preserves the exact Entry,
+Route Scope and page identity, then removes only later Entries in the same
+Host/Outlet. It does not change the target's original route arguments or
+deliver a new business payload; request delivery is a separate application or
+framework contract.
+
+The operation preflights covering synchronous PopGuards and uses an optional
+identity-based backend transaction. Check `CCRouteActivationOutcome.status`:
+`activated` is the only successful removal result; `notFound`, `unsupported`,
+`guardDenied`, and `conflict` leave the active stack unchanged. Foreign Routes
+and Popups block activation rather than being removed or silently bypassed.
+Older/custom Adapters without `CCNavigationActivateExistingAdapter` report
+`unsupported`.
+
 Regression evidence must include A covered by B, close A then push/pop C and
 return from B without A resurrection; repeated same-route instances; foreign
 Popup retention; concrete Host/Outlet isolation; denied guards, wrong result,

@@ -39,6 +39,36 @@ final class CCRouteCloseOutcome {
   final String? guardDeniedCode;
 }
 
+/// Terminal status returned when an existing managed Entry is activated.
+enum CCRouteActivationStatus {
+  /// The target remained active and matching covering Entries were removed.
+  activated,
+
+  /// The exact target or one of the expected covering Entries is no longer active.
+  notFound,
+
+  /// The backend cannot remove the selected covering Entries atomically.
+  unsupported,
+
+  /// A PopGuard on a covering Entry rejected the activation.
+  guardDenied,
+
+  /// The backend observed a concurrent stack change and made no removal.
+  conflict,
+}
+
+/// Reports activation of one exact existing Entry without recreating it.
+final class CCRouteActivationOutcome {
+  /// Creates an immutable activation receipt.
+  const CCRouteActivationOutcome(this.status, {this.guardDeniedCode});
+
+  /// Whether the target was activated, rejected, or unavailable.
+  final CCRouteActivationStatus status;
+
+  /// Stable managed guard denial code for [CCRouteActivationStatus.guardDenied].
+  final String? guardDeniedCode;
+}
+
 /// Optional Host/Adapter SPI for removing one exact managed opening.
 ///
 /// Runtime validates handle identity, target PopGuard, and result type first.
@@ -58,5 +88,24 @@ abstract interface class CCNavigationTargetedCloseAdapter {
     required String hostId,
     required String navigatorOutlet,
     Object? result,
+  });
+}
+
+/// Optional Host SPI for returning to one exact managed Entry.
+///
+/// Runtime supplies the exact covering identities after preflighting their
+/// PopGuards. Implementations must verify that the target and every expected
+/// covering identity still form the same partition, then remove exactly those
+/// coverings as one backend transaction. They must not recreate the target,
+/// infer a route by ID or stack position, or remove a concurrently inserted
+/// Entry. Older adapters return [CCRouteActivationStatus.unsupported] through
+/// Runtime.
+abstract interface class CCNavigationActivateExistingAdapter {
+  /// Removes the expected covering Entries while retaining the target Entry.
+  Future<CCRouteActivationOutcome> activateExistingNavigation({
+    required String targetNavigationId,
+    required String hostId,
+    required String navigatorOutlet,
+    required List<String> expectedRemovalNavigationIds,
   });
 }
