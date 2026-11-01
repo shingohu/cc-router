@@ -33,6 +33,42 @@ final class _LegacyAdapter implements CCNavigationAdapter {
   void dispose() => delegate.dispose();
 }
 
+final class _ConflictingActivationAdapter
+    implements CCNavigationAdapter, CCNavigationActivateExistingAdapter {
+  final delegate = CCMemoryNavigationAdapter();
+
+  @override
+  void initialize(
+    List<CCNavigationRoute> routes, {
+    List<CCNavigationShell> shells = const [],
+  }) => delegate.initialize(routes, shells: shells);
+
+  @override
+  Future<Object?> navigate(CCNavigationRequest request) =>
+      delegate.navigate(request);
+
+  @override
+  Future<CCRouteActivationOutcome> activateExistingNavigation({
+    required String targetNavigationId,
+    required String hostId,
+    required String navigatorOutlet,
+    required List<String> expectedRemovalNavigationIds,
+  }) async =>
+      const CCRouteActivationOutcome(CCRouteActivationStatus.conflict);
+
+  @override
+  Future<bool> maybePop({Object? result}) => delegate.maybePop(result: result);
+
+  @override
+  void pop({Object? result}) => delegate.pop(result: result);
+
+  @override
+  bool canPop() => delegate.canPop();
+
+  @override
+  void dispose() => delegate.dispose();
+}
+
 /// Models a backend that commits the exact removal before reporting failure.
 final class _MutatingThrowingTargetedAdapter
     implements CCNavigationAdapter, CCNavigationTargetedCloseAdapter {
@@ -229,6 +265,30 @@ void main() {
     runtime.popRoute(result: 'done');
     expect(await result, 'done');
   });
+
+  test(
+    'activateExisting preserves the stack when the backend reports conflict',
+    () async {
+      final runtime = _runtime(adapter: _ConflictingActivationAdapter());
+      final targetResult = runtime.pushRoute(_intent('1'));
+      await Future<void>.delayed(Duration.zero);
+      final target = runtime.activeRouteEntries.single;
+      final coveringResult = runtime.pushRoute(_intent('2'));
+      await Future<void>.delayed(Duration.zero);
+
+      final outcome = await runtime.activateExistingRoute(
+        _handle(runtime, target),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(outcome.status, CCRouteActivationStatus.conflict);
+      expect(runtime.activeRouteEntries, hasLength(2));
+      runtime.popRoute();
+      expect(await coveringResult, isNull);
+      runtime.popRoute();
+      expect(await targetResult, isNull);
+    },
+  );
 
   test(
     'duplicate route instances close only selected result and Scope once',

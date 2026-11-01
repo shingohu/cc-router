@@ -76,10 +76,20 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
     if (outcome.status == CCRouteActivationStatus.activated &&
         !_disposed &&
         !registration.isCancelled) {
+      Object? firstError;
+      StackTrace? firstStack;
       for (final entry in covering) {
         if (_routeEntries.contains(entry)) {
-          _removeRouteEntry(entry, reason: 'activateExisting');
+          try {
+            _removeRouteEntry(entry, reason: 'activateExisting');
+          } catch (error, stackTrace) {
+            firstError ??= error;
+            firstStack ??= stackTrace;
+          }
         }
+      }
+      if (firstError != null) {
+        Error.throwWithStackTrace(firstError, firstStack!);
       }
     }
     return outcome;
