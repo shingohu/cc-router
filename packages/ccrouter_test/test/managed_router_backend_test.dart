@@ -308,6 +308,27 @@ void main() {
     expect(await covering, 'done');
   });
 
+  testWidgets(
+    'activateExisting reports conflict when a Foreign Popup covers the target',
+    (tester) async {
+      final harness = await _mount(tester);
+      final homeContext = harness.contexts['home']!;
+      final homeHandle = harness.handle('home');
+      showDialog<void>(
+        context: homeContext,
+        builder: (_) => const AlertDialog(content: Text('activation-popup')),
+      );
+      await tester.pumpAndSettle();
+
+      final outcome = await CCRouter.navigator.activateExisting(homeHandle);
+
+      expect(outcome.status, CCRouteActivationStatus.conflict);
+      expect(find.text('activation-popup'), findsOneWidget);
+      Navigator.of(tester.element(find.text('activation-popup'))).pop();
+      await tester.pumpAndSettle();
+    },
+  );
+
   testWidgets('Managed Router App requires an initialized Host', (
     tester,
   ) async {
