@@ -3833,6 +3833,9 @@ Future<bool> _runBuildRunner(
           targets: targets,
         ),
         workingDirectory: context.resolutionRoot.path,
+        environment: ccrouterProcessEnvironment(
+          dartExecutable: command.executable,
+        ),
       ),
     );
     processExitCode = await trace.measure('build-runner-execution', () async {
@@ -3858,6 +3861,9 @@ Future<bool> _runBuildRunner(
           targets: targets,
         ),
         workingDirectory: context.resolutionRoot.path,
+        environment: ccrouterProcessEnvironment(
+          dartExecutable: command.executable,
+        ),
       );
       completion = await _forwardBuildRunnerProcess(process);
       return completion.exitCode;

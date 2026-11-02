@@ -98,7 +98,7 @@ final class CCPubHookManager {
   static const _originalDartPosixName = 'dart.ccrouter-original';
   static const _originalDartWindowsName = 'dart.ccrouter-original.bat';
   static const _markerName = '.ccrouter_pub_hook.json';
-  static const _markerSchema = 6;
+  static const _markerSchema = 7;
 
   /// Resolves the current Flutter SDK root from an explicit path, environment,
   /// the nearest FVM link, or the `flutter` executable on PATH, in that order.
@@ -248,7 +248,7 @@ final class CCPubHookManager {
     }
     final markerSchema = _readMarkerSchema(marker);
     final managesDartEntrypoints =
-        markerSchema == 5 || markerSchema == _markerSchema;
+        markerSchema == 5 || markerSchema == 6 || markerSchema == _markerSchema;
     if (markerSchema != 4 && !managesDartEntrypoints) {
       throw const FileSystemException(
         'CCRouter pub hook marker is invalid; refusing to modify SDK entrypoints.',
@@ -645,6 +645,49 @@ final class CCPubHookManager {
   }
 }
 
+/// Returns the environment used by CCRouter-owned Dart child processes.
+///
+/// Flutter's own wrapper normally exports `FLUTTER_ROOT` before it starts the
+/// Dart tool. CCRouter can also be entered directly through a Flutter SDK Dart
+/// executable, so infer the same SDK root when the caller did not provide it.
+/// An explicitly supplied value remains authoritative for direct CLI use;
+/// installed SDK wrappers override it before reaching this helper.
+Map<String, String> ccrouterProcessEnvironment({
+  String? dartExecutable,
+  Map<String, String>? inheritedEnvironment,
+}) {
+  final environment = <String, String>{
+    ...inheritedEnvironment ?? Platform.environment,
+  };
+  final existing = environment['FLUTTER_ROOT'];
+  if (existing == null || existing.trim().isEmpty) {
+    final inferred = _flutterRootFromDartExecutable(
+      dartExecutable ?? Platform.resolvedExecutable,
+    );
+    if (inferred != null) environment['FLUTTER_ROOT'] = inferred;
+  }
+  return environment;
+}
+
+String? _flutterRootFromDartExecutable(String executable) {
+  try {
+    final resolved = File(executable).absolute.resolveSymbolicLinksSync();
+    final dartBin = Directory(path.dirname(resolved));
+    final candidate = Directory(
+      path.normalize(path.join(dartBin.path, '..', '..', '..', '..')),
+    );
+    if (!File(path.join(candidate.path, 'bin', 'flutter')).existsSync() ||
+        !Directory(
+          path.join(candidate.path, 'bin', 'cache', 'dart-sdk'),
+        ).existsSync()) {
+      return null;
+    }
+    return candidate.resolveSymbolicLinksSync();
+  } on Object {
+    return null;
+  }
+}
+
 /// Runs generation after a successful Pub command or before run/build.
 ///
 /// Non-CCRouter projects are intentionally a low-cost no-op once their resolved
@@ -714,7 +757,11 @@ Future<bool> runCCPubHook({
           'CCRouter ${operation.label} failed for ${operation.target}: '
           '${watch.message}, elapsed=${stopwatch.elapsedMilliseconds}ms.',
         );
-        _writePubHookProjectContext(context, projectRole.role);
+        _writePubHookProjectContext(
+          context,
+          projectRole.role,
+          environment: ccrouterProcessEnvironment(),
+        );
         if (watch.diagnostics case final diagnostics?) {
           stderr.writeln('Generator diagnostics:');
           stderr.writeln(diagnostics);
@@ -751,13 +798,19 @@ Future<bool> runCCPubHook({
       return watch.succeeded;
     }
   }
-  final process = await Process.start(Platform.resolvedExecutable, [
-    '--packages=${packageConfig.path}',
-    'run',
-    'ccrouter_generator:ccrouter',
-    'generate',
-    root.path,
-  ], workingDirectory: root.path);
+  final processEnvironment = ccrouterProcessEnvironment();
+  final process = await Process.start(
+    Platform.resolvedExecutable,
+    [
+      '--packages=${packageConfig.path}',
+      'run',
+      'ccrouter_generator:ccrouter',
+      'generate',
+      root.path,
+    ],
+    workingDirectory: root.path,
+    environment: processEnvironment,
+  );
   final output = _CCPubHookOutput();
   final stdoutDone = process.stdout
       .transform(utf8.decoder)
@@ -783,19 +836,31 @@ Future<bool> runCCPubHook({
       'CCRouter ${operation.label} failed for ${operation.target}: '
       'exitCode=$exitCode, elapsed=${stopwatch.elapsedMilliseconds}ms.',
     );
-    _writePubHookProjectContext(context, projectRole.role);
+    _writePubHookProjectContext(
+      context,
+      projectRole.role,
+      environment: processEnvironment,
+    );
     output.writeFailureTail();
   }
   return exitCode == 0;
 }
 
 /// Adds exact requested/resolution roots only when post-Pub generation fails.
-void _writePubHookProjectContext(CCProjectContext context, CCProjectRole role) {
+void _writePubHookProjectContext(
+  CCProjectContext context,
+  CCProjectRole role, {
+  required Map<String, String> environment,
+}) {
   stderr.writeln(
     '${role == CCProjectRole.host ? 'Host' : 'Package'}: '
     '${context.requestedRoot.path}',
   );
   stderr.writeln('Resolution root: ${context.resolutionRoot.path}');
+  stderr.writeln('Dart executable: ${Platform.resolvedExecutable}');
+  stderr.writeln(
+    'Flutter SDK: ${environment['FLUTTER_ROOT'] ?? '<unresolved>'}',
+  );
 }
 
 /// Waits for exact Package inputs and outputs from a shared Host watch.
@@ -1678,10 +1743,11 @@ set -u
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 ORIGINAL="$SCRIPT_DIR/flutter.ccrouter-original"
 DART="$SCRIPT_DIR/dart"
-
 if [ "${CCROUTER_PUB_HOOK_DISABLE:-0}" = "1" ]; then
   exec "$ORIGINAL" "$@"
 fi
+FLUTTER_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd -P)" || exit 1
+export FLUTTER_ROOT
 
 parse_pub_invocation() {
   PUB_COMMAND=""
@@ -1859,6 +1925,7 @@ if [ "$FLUTTER_COMMAND" = "run" ] || [ "$FLUTTER_COMMAND" = "build" ]; then
   HOOK_EXIT=$?
   if [ "$HOOK_EXIT" -ne 0 ]; then
     echo "CCRouter preflight hook failed before flutter $FLUTTER_COMMAND (exit $HOOK_EXIT)." >&2
+    echo "Stage: preflight Dart entrypoint or generation; Flutter SDK: $FLUTTER_ROOT; Dart: $DART; project: ${PROJECT_ROOT:-unknown}." >&2
     exit "$HOOK_EXIT"
   fi
   if [ "$FLUTTER_COMMAND" = "build" ] || [ "${CCROUTER_DISABLE_BUILD_WATCH:-0}" = "1" ]; then
@@ -1910,6 +1977,7 @@ run_generator_hook "$PUB_COMMAND" "$@"
 HOOK_EXIT=$?
 if [ "$HOOK_EXIT" -ne 0 ]; then
   echo "CCRouter pub hook failed after successful flutter pub (exit $HOOK_EXIT)." >&2
+  echo "Stage: post-pub Dart entrypoint or generation; Flutter SDK: $FLUTTER_ROOT; Dart: $DART; project: ${PROJECT_ROOT:-unknown}." >&2
 fi
 exit "$HOOK_EXIT"
 ''';
@@ -1921,7 +1989,6 @@ set -u
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 ORIGINAL="$SCRIPT_DIR/dart.ccrouter-original"
-
 if [ "${CCROUTER_PUB_HOOK_DISABLE:-0}" = "1" ]; then
   exec "$ORIGINAL" "$@"
 fi
@@ -2049,6 +2116,9 @@ if [ "$SKIP_PUB_HOOK" -eq 1 ]; then
   exit 0
 fi
 
+FLUTTER_ROOT="$(cd -- "$SCRIPT_DIR/../../../.." && pwd -P)" || exit 1
+export FLUTTER_ROOT
+
 HOOK_DIR="${PROJECT_DIRECTORY:-$PWD}"
 if [[ "$HOOK_DIR" != /* ]]; then
   HOOK_DIR="$PWD/$HOOK_DIR"
@@ -2080,6 +2150,7 @@ fi
 HOOK_EXIT=$?
 if [ "$HOOK_EXIT" -ne 0 ]; then
   echo "CCRouter pub hook failed after successful dart pub (exit $HOOK_EXIT)." >&2
+  echo "Stage: post-pub Dart entrypoint or generation; Flutter SDK: $FLUTTER_ROOT; Dart: $ORIGINAL; project: $PROJECT_ROOT." >&2
 fi
 exit "$HOOK_EXIT"
 ''';
@@ -2089,6 +2160,7 @@ exit "$HOOK_EXIT"
 /// IDEs that execute `cache/dart-sdk/bin/dart.exe` directly do not traverse a
 /// batch entrypoint; status and documentation report that platform boundary.
 const _dartWindowsWrapper = r'''@echo off
+setlocal
 rem CCRouter Dart pub hook wrapper. The original Dart entrypoint is kept beside this file.
 set "SCRIPT_DIR=%~dp0"
 set "ORIGINAL=%SCRIPT_DIR%dart.ccrouter-original.bat"
@@ -2104,6 +2176,7 @@ if "%SKIP_PUB_HOOK%"=="1" exit /b 0
 set "RUN_PUB_HOOK=0"
 for %%C in (get upgrade downgrade add remove) do if /I "%PUB_COMMAND%"=="%%C" set "RUN_PUB_HOOK=1"
 if not "%RUN_PUB_HOOK%"=="1" exit /b 0
+for %%i in ("%SCRIPT_DIR%..") do set "FLUTTER_ROOT=%%~fi"
 call :resolve_project_root
 if not "%ERRORLEVEL%"=="0" exit /b 0
 set "HOOK_DIR=%PROJECT_ROOT%"
@@ -2122,6 +2195,7 @@ call "%ORIGINAL%" --packages="%PACKAGE_CONFIG%" run --verbosity=error ccrouter_g
 set "HOOK_EXIT=%ERRORLEVEL%"
 popd
 if not "%HOOK_EXIT%"=="0" echo CCRouter pub hook failed after successful dart pub ^(exit %HOOK_EXIT%^). 1>&2
+if not "%HOOK_EXIT%"=="0" echo Stage: post-pub Dart entrypoint or generation; Flutter SDK: %FLUTTER_ROOT%; Dart: %ORIGINAL%; project: %PROJECT_ROOT%. 1>&2
 exit /b %HOOK_EXIT%
 
 :invoke_original
@@ -2224,11 +2298,13 @@ goto resolve_project_root_parent
 
 /// Windows wrapper installed as `bin/flutter.bat`.
 const _windowsWrapper = r'''@echo off
+setlocal
 rem CCRouter pub hook wrapper. The original Flutter entrypoint is kept beside this file.
 rem CCRouter preflight hook: run/build generation is deliberately fail-closed.
 set "SCRIPT_DIR=%~dp0"
 set "ORIGINAL=%SCRIPT_DIR%flutter.ccrouter-original.bat"
 if "%CCROUTER_PUB_HOOK_DISABLE%"=="1" goto invoke_original
+for %%i in ("%SCRIPT_DIR%..") do set "FLUTTER_ROOT=%%~fi"
 
 call :parse_flutter_invocation %*
 if /I "%FLUTTER_COMMAND%"=="clean" goto clean_guard
@@ -2329,6 +2405,7 @@ exit /b %ERRORLEVEL%
 
 :hook_failed_with_exit
 echo CCRouter hook failed for flutter %HOOK_COMMAND%. 1>&2
+echo Stage: Flutter hook Dart entrypoint or generation; Flutter SDK: %FLUTTER_ROOT%; Dart: %SCRIPT_DIR%dart.bat; project: %PROJECT_ROOT%. 1>&2
 exit /b %HOOK_EXIT%
 
 :invoke_original

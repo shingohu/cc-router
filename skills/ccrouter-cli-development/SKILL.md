@@ -412,6 +412,12 @@ watch daemon, startup handshake, and reload gate paths, must use the verified
 Package config via `--packages`. A bare internal `dart run` can attempt
 Dart-only dependency resolution and fail before generator startup when the Host
 contains Flutter SDK dependencies.
+The SDK wrapper exports its own Flutter root to Hook-owned processes, even if
+the caller supplied a different root. Direct generator child processes infer a
+paired Flutter SDK from the Dart executable only when `FLUTTER_ROOT` is absent.
+This cannot fix Pub resolution before the generator itself starts. Schema 7
+requires uninstalling older wrappers before reinstalling. Failure diagnostics
+include the phase and SDK context.
 
 Successful run/build output is labeled `preflight`; successful Pub-triggered
 output is labeled `post-pub generation`. Success prints only the generator fast
@@ -426,8 +432,9 @@ summary, and then lets the original Flutter build continue.
 DevEco/Hvigor direct builds do not enter the Flutter wrapper. An OHOS Host must
 register a task before the Flutter Hvigor `FlutterTask` that invokes
 `pub-hook run --project-root <host-root> --pub-command build` with the Dart
-executable from its resolved Flutter SDK. This runs one-shot generation when no
-watch is active and reuses exact watch evidence otherwise. Do not use
+executable from its resolved Flutter SDK. Set `FLUTTER_ROOT` to that same SDK
+before starting Dart so initial Pub resolution sees Flutter. This runs one-shot
+generation when no watch is active and reuses exact watch evidence otherwise. Do not use
 `--no-cache`, `--profile`, or custom output in that task. A Host may expose an
 isolated bypass such as `CCROUTER_DISABLE_HVIGOR_PREFLIGHT=1` only for recovery
 or A/B, with an explicit generation check performed separately.

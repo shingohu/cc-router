@@ -31,8 +31,7 @@ function resolveFlutterSdk(flutterProjectPath) {
   return decodePropertyValue(sdkLine.slice(sdkLine.indexOf('=') + 1).trim())
 }
 
-function resolveDartExecutable(flutterProjectPath) {
-  const flutterSdk = resolveFlutterSdk(flutterProjectPath)
+function resolveDartExecutable(flutterProjectPath, flutterSdk = resolveFlutterSdk(flutterProjectPath)) {
   const executable = path.join(
     flutterSdk,
     'bin',
@@ -57,7 +56,8 @@ function ccrouterBuildPreflight(flutterProjectPath) {
     return
   }
   const projectRoot = path.resolve(flutterProjectPath)
-  const dart = resolveDartExecutable(projectRoot)
+  const flutterSdk = fs.realpathSync(resolveFlutterSdk(projectRoot))
+  const dart = resolveDartExecutable(projectRoot, flutterSdk)
   const args = [
     'run',
     '--verbosity=error',
@@ -72,14 +72,17 @@ function ccrouterBuildPreflight(flutterProjectPath) {
   try {
     execFileSync(dart, args, {
       cwd: projectRoot,
-      env: process.env,
+      env: { ...process.env, FLUTTER_ROOT: flutterSdk },
       stdio: 'inherit'
     })
   } catch (error) {
     const status = error && Number.isInteger(error.status)
       ? ` (exit ${error.status})`
       : ''
-    throw new Error(`CCRouter Hvigor preflight failed${status}.`)
+    throw new Error(
+      `CCRouter Hvigor preflight failed${status}; ` +
+      `Flutter SDK: ${flutterSdk}; Dart: ${dart}; project: ${projectRoot}.`
+    )
   }
 }
 

@@ -54,6 +54,37 @@ void main() {
     ]);
   });
 
+  test('infers only the Dart executable paired Flutter SDK', () async {
+    final sdk = await Directory.systemTemp.createTemp('ccrouter_sdk_');
+    addTearDown(() => sdk.delete(recursive: true));
+    final bin = Directory(path.join(sdk.path, 'bin'))..createSync();
+    File(path.join(bin.path, 'flutter')).writeAsStringSync('');
+    final dart = await _writeFakeInnerDart(sdk, '#!/bin/sh\nexit 0\n');
+    final link = Link(path.join(sdk.path, 'dart-link'));
+    await link.create(dart.path);
+    expect(
+      ccrouterProcessEnvironment(
+        dartExecutable: link.path,
+        inheritedEnvironment: {},
+      )['FLUTTER_ROOT'],
+      sdk.resolveSymbolicLinksSync(),
+    );
+    expect(
+      ccrouterProcessEnvironment(
+        dartExecutable: dart.path,
+        inheritedEnvironment: {'FLUTTER_ROOT': '/explicit/sdk'},
+      )['FLUTTER_ROOT'],
+      '/explicit/sdk',
+    );
+    expect(
+      ccrouterProcessEnvironment(
+        dartExecutable: path.join(bin.path, 'flutter'),
+        inheritedEnvironment: {},
+      ).containsKey('FLUTTER_ROOT'),
+      isFalse,
+    );
+  });
+
   test(
     'failure rendering preserves complete output before Builder success',
     () {
@@ -269,39 +300,54 @@ void main() {
     },
   );
 
-  test('schema 5 install is stale but remains safely uninstallable', () async {
-    final sdk = await Directory.systemTemp.createTemp(
-      'ccrouter_pub_hook_schema_5_',
-    );
-    addTearDown(() => sdk.delete(recursive: true));
-    final bin = Directory(path.join(sdk.path, 'bin'))..createSync();
-    final flutter = File(path.join(bin.path, 'flutter'))
-      ..writeAsStringSync('#!/usr/bin/env bash\nexit 0\n');
-    File(
-      path.join(bin.path, 'flutter.bat'),
-    ).writeAsStringSync('@echo off\r\nexit /b 0\r\n');
-    final innerDart = await _writeFakeInnerDart(
-      sdk,
-      '#!/usr/bin/env bash\nexit 0\n',
-    );
-    final installed = await _run(['pub-hook', 'install', '--sdk', sdk.path]);
-    expect(installed.exitCode, 0, reason: '${installed.stderr}');
+  for (final schema in [5, 6]) {
+    test(
+      'schema $schema install is stale but remains safely uninstallable',
+      () async {
+        final sdk = await Directory.systemTemp.createTemp(
+          'ccrouter_pub_hook_schema_5_',
+        );
+        addTearDown(() => sdk.delete(recursive: true));
+        final bin = Directory(path.join(sdk.path, 'bin'))..createSync();
+        final flutter = File(path.join(bin.path, 'flutter'))
+          ..writeAsStringSync('#!/usr/bin/env bash\nexit 0\n');
+        File(
+          path.join(bin.path, 'flutter.bat'),
+        ).writeAsStringSync('@echo off\r\nexit /b 0\r\n');
+        final innerDart = await _writeFakeInnerDart(
+          sdk,
+          '#!/usr/bin/env bash\nexit 0\n',
+        );
+        final installed = await _run([
+          'pub-hook',
+          'install',
+          '--sdk',
+          sdk.path,
+        ]);
+        expect(installed.exitCode, 0, reason: '${installed.stderr}');
 
-    File(path.join(bin.path, '.ccrouter_pub_hook.json')).writeAsStringSync(
-      jsonEncode(<String, Object>{
-        'schema': 5,
-        'entrypoints': <String>['flutter', 'dart'],
-        'generator': 'ccrouter_generator',
-      }),
-    );
+        File(path.join(bin.path, '.ccrouter_pub_hook.json')).writeAsStringSync(
+          jsonEncode(<String, Object>{
+            'schema': schema,
+            'entrypoints': <String>['flutter', 'dart'],
+            'generator': 'ccrouter_generator',
+          }),
+        );
 
-    final status = await _run(['pub-hook', 'status', '--sdk', sdk.path]);
-    expect(status.exitCode, 1);
-    final removed = await _run(['pub-hook', 'uninstall', '--sdk', sdk.path]);
-    expect(removed.exitCode, 0, reason: '${removed.stderr}');
-    expect(flutter.readAsStringSync(), contains('exit 0'));
-    expect(innerDart.readAsStringSync(), contains('exit 0'));
-  });
+        final status = await _run(['pub-hook', 'status', '--sdk', sdk.path]);
+        expect(status.exitCode, 1);
+        final removed = await _run([
+          'pub-hook',
+          'uninstall',
+          '--sdk',
+          sdk.path,
+        ]);
+        expect(removed.exitCode, 0, reason: '${removed.stderr}');
+        expect(flutter.readAsStringSync(), contains('exit 0'));
+        expect(innerDart.readAsStringSync(), contains('exit 0'));
+      },
+    );
+  }
 
   test('schema 4 uninstall rejects unowned Dart backups', () async {
     final sdk = await Directory.systemTemp.createTemp(
@@ -1733,6 +1779,10 @@ exit 0
     final dart = File(path.join(bin.path, 'dart'))
       ..writeAsStringSync('''#!/usr/bin/env bash
 printf "dart:%s\\n" "\$*" >> "\$CCROUTER_TRACE"
+if [[ "\${FLUTTER_ROOT:-}" != "\$CCROUTER_EXPECTED_SDK" ]]; then
+  echo "wrong FLUTTER_ROOT: \${FLUTTER_ROOT:-missing}" >&2
+  exit 88
+fi
 if [[ "\$*" == *"ccrouter_generator:ccrouter_flutter_run_supervisor"* ]]; then
   if [[ "\${CCROUTER_DISABLE_WATCH_STARTUP_HANDSHAKE:-0}" != "1" ]] && \
      [[ "\${CCROUTER_WATCH_HANDSHAKE_EXIT:-0}" != "0" ]]; then
@@ -1772,16 +1822,19 @@ exit "\${CCROUTER_DART_EXIT:-0}"
   {"name":"ccrouter"},
   {"name":"ccrouter_generator"}
 ]}''');
-    final environment = <String, String>{
-      ...Platform.environment,
+    final environment = <String, String>{...Platform.environment}
+      ..remove('FLUTTER_ROOT');
+    environment.addAll(<String, String>{
       'CCROUTER_TRACE': trace,
-    };
+      'CCROUTER_EXPECTED_SDK': sdk.resolveSymbolicLinksSync(),
+    });
 
     final run = await Process.run(
       flutter.path,
       ['--no-color', 'run', '-d', 'macos'],
       workingDirectory: project.path,
       environment: environment,
+      includeParentEnvironment: false,
     );
     expect(run.exitCode, 0, reason: '${run.stderr}');
     expect('${run.stdout}', contains('CCRouter watch starting'));
@@ -1796,6 +1849,17 @@ exit "\${CCROUTER_DART_EXIT:-0}"
       ),
     );
     expect(runTrace.last, 'flutter:--no-color run -d macos');
+
+    File(trace).writeAsStringSync('');
+    final successfulBuild = await Process.run(
+      flutter.path,
+      ['build', 'macos'],
+      workingDirectory: project.path,
+      environment: {...environment, 'FLUTTER_ROOT': '/wrong/sdk'},
+      includeParentEnvironment: false,
+    );
+    expect(successfulBuild.exitCode, 0, reason: '${successfulBuild.stderr}');
+    expect(File(trace).readAsLinesSync().last, 'flutter:build macos');
 
     File(trace).writeAsStringSync('');
     final machineRun = await Process.run(
@@ -1891,6 +1955,10 @@ exit 7
       environment: {...environment, 'CCROUTER_DART_EXIT': '7'},
     );
     expect(build.exitCode, 7);
+    expect(
+      '${build.stderr}',
+      contains('Flutter SDK: ${sdk.resolveSymbolicLinksSync()}'),
+    );
     expect(File(trace).readAsLinesSync(), hasLength(1));
     expect(File(trace).readAsStringSync(), startsWith('dart:'));
   });

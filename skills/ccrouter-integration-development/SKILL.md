@@ -934,6 +934,8 @@ DevEco/Hvigor builds bypass the Flutter wrapper: an OHOS Host must register a
 pre-Flutter Hvigor task that runs
 `ccrouter pub-hook run --project-root <host-root> --pub-command build` through
 the Dart executable belonging to the SDK resolved by `ohos/local.properties`.
+Set `FLUTTER_ROOT` to the same SDK before starting Dart, including its initial
+Pub resolution.
 With no watch it performs one-shot generation; with a watch it reuses exact
 current evidence. Do not attach `--no-cache`, profiling, or custom-output
 semantics to that task, and keep any bypass isolated to recovery/A/B.
@@ -949,8 +951,6 @@ Every Hook-owned Dart entrypoint must explicitly bind the successful Pub
 resolution's `.dart_tool/package_config.json` through `--packages`. Never use a
 bare internal `dart run`: Dart-only dependency resolution can fail before the
 generator starts when a Host contains Flutter SDK dependencies.
-Schema 6 marks this execution contract; uninstall schema 4/5 installations
-before reinstalling the current wrappers.
 The per-SDK Hook covers successful `flutter pub` and direct `dart pub` dependency
 commands. On macOS/Linux it wraps Flutter's inner Dart executable, including the
 path commonly launched by IDE Pub actions. On Windows only `bin/dart.bat` is
@@ -958,6 +958,9 @@ covered; direct IDE execution of `cache/dart-sdk/bin/dart.exe` remains outside
 the boundary and is reported by `pub-hook status`. Flutter Tool's own implicit
 Pub resolution is not a Hook event. Use `CCROUTER_PUB_HOOK_DISABLE=1` only for
 an explicit one-shot bypass, then run the appropriate generation check.
+Schema 7 supplies the wrapper's own Flutter SDK to Hook processes; uninstall and
+reinstall older wrappers. Direct generation infers the paired SDK for its Dart
+children when `FLUTTER_ROOT` is absent, but cannot affect Pub before CLI startup.
 Wrapper command detection consumes only known global options and their declared
 values before selecting the first real top-level command and Pub subcommand.
 Tokens inside option values, Dart script arguments, or business arguments never

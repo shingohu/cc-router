@@ -638,17 +638,24 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
       command,
       buildContext.resolutionRoot,
     );
-    process = await Process.start(command.executable, <String>[
-      ...command.arguments,
-      if (parsed.profile) '--verbose-durations',
-      if (buildContext.isWorkspace) '--workspace',
-      for (final package in topology.targets) ...[
-        '--build-filter',
-        'asset:$package/lib/**',
-        '--build-filter',
-        'asset:$package/ccrouter_generated/**',
+    process = await Process.start(
+      command.executable,
+      <String>[
+        ...command.arguments,
+        if (parsed.profile) '--verbose-durations',
+        if (buildContext.isWorkspace) '--workspace',
+        for (final package in topology.targets) ...[
+          '--build-filter',
+          'asset:$package/lib/**',
+          '--build-filter',
+          'asset:$package/ccrouter_generated/**',
+        ],
       ],
-    ], workingDirectory: buildContext.resolutionRoot.path);
+      workingDirectory: buildContext.resolutionRoot.path,
+      environment: ccrouterProcessEnvironment(
+        dartExecutable: command.executable,
+      ),
+    );
   } on Object catch (error) {
     await events.emit(
       'failed',
@@ -1235,10 +1242,12 @@ Future<CCBuildRunnerCommand> _recoverWrongBuildRunnerSnapshotBeforeWatch(
   if (!await snapshot.exists()) {
     return _buildRunnerCommand(buildRoot, 'watch');
   }
-  final probe = await Process.run(command.executable, [
-    snapshot.path,
-    '--help',
-  ], workingDirectory: buildRoot.path);
+  final probe = await Process.run(
+    command.executable,
+    [snapshot.path, '--help'],
+    workingDirectory: buildRoot.path,
+    environment: ccrouterProcessEnvironment(dartExecutable: command.executable),
+  );
   final diagnostics = '${probe.stdout}\n${probe.stderr}';
   if (!await command.invalidateIfWrongSnapshotVersion(diagnostics)) {
     return command;
@@ -1270,7 +1279,7 @@ Future<_GenerationCycleResult> _runWatchGenerationSubprocess({
   required bool profile,
 }) async {
   final stopwatch = Stopwatch()..start();
-  final environment = <String, String>{...Platform.environment};
+  final environment = ccrouterProcessEnvironment();
   if (watchCycle) environment[_watchCycleEnvironment] = '1';
   if (lockHeld) environment[_watchLockEnvironment] = '1';
   final script = Platform.script;

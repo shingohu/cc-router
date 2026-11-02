@@ -393,15 +393,19 @@ Every Hook-owned Dart entrypoint, including preflight, post-pub, supervisor,
 and watch daemon processes, must pass the package config produced by the
 successful Pub command through `--packages`. Never allow a bare internal
 `dart run` to perform Dart-only resolution for a Flutter Host.
-Schema 6 identifies wrappers with this contract. Upgrade schema 4/5 by
-uninstalling the old wrapper before installing the current one.
+Schema 7 also supplies the wrapper's own Flutter SDK as `FLUTTER_ROOT` to Hook
+processes when Pub needs to resolve again. Upgrade schema 4/5/6 by uninstalling
+the old wrapper before installing the current one. Direct generation infers a
+paired Flutter SDK for child processes only when `FLUTTER_ROOT` is absent; Pub
+resolution before the CLI starts remains the caller's responsibility.
 
 Flutter build preflight uses ordinary generation. If the same root already has
 an active watch, it validates and reuses exact current cycle evidence before
 continuing Android, iOS, or `flutter build hap`; watch ownership alone is not a
 build failure. DevEco/Hvigor direct builds bypass this wrapper. Register a Host-
 owned Hvigor task before the Flutter plugin's `FlutterTask`, resolve Dart from
-`ohos/local.properties`' Flutter SDK, and invoke
+`ohos/local.properties`' Flutter SDK, set `FLUTTER_ROOT` to that SDK before
+starting Dart, and invoke
 `ccrouter_generator:ccrouter pub-hook run --project-root <host> --pub-command
 build`. This performs one-shot generation while idle or exact watch reuse while
 active. Do not request `--no-cache`, profiling, or custom output from this task.

@@ -49,8 +49,13 @@ bin/.ccrouter_pub_hook.json
 ```
 
 不会修改 Flutter 的 `shared.sh`、Dart snapshot 或 Flutter 工具源码。
-schema 4 只管理 Flutter wrapper；升级时先用当前 CLI 执行一次 `uninstall`，再执行 `install`，
+旧 schema 4/5/6 升级时先用当前 CLI 执行一次 `uninstall`，再执行 `install`，
 不得直接覆盖旧 marker 或备份。
+
+schema 7 的 wrapper 将其所属 Flutter SDK 作为 `FLUTTER_ROOT` 传给 Hook 子进程，
+即使调用环境未设置或设置了另一个 SDK；直接生成时，CLI 仅在变量缺失时为自身子进程
+从 Dart executable 推导配对 SDK。CLI 启动之前的 Pub 解析仍由调用方负责。
+Hook 失败时输出阶段、项目、Flutter SDK 和 Dart 路径。
 
 ## 状态与卸载
 
@@ -199,6 +204,9 @@ watch”后放行。推荐 task 使用 `ohos/local.properties` 解析到的 Flut
 dart run --verbosity=error ccrouter_generator:ccrouter pub-hook run \
   --project-root <host-root> --pub-command build
 ```
+
+启动 Dart 前，将 `FLUTTER_ROOT` 设为同一个 `flutter.sdk` 的真实路径，确保 CLI 启动前
+触发 Pub 解析时也能找到 Flutter SDK；失败信息应保留 SDK、Dart 和 Host 路径。
 
 该公开入口与 Flutter build preflight 语义一致：watch 不活跃时运行普通 one-shot，watch 活跃
 时由普通 `generate` 等待并复用精确 cycle；只有生成、校验、watch 失败或证据不可用时才阻止

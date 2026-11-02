@@ -32,6 +32,7 @@ void main() {
       final succeeded = await _runHelper(fixture, trace);
       expect(succeeded.exitCode, 0, reason: '${succeeded.stderr}');
       expect(trace.readAsLinesSync(), [
+        fixture.sdk.resolveSymbolicLinksSync(),
         'run',
         '--verbosity=error',
         'ccrouter_generator:ccrouter',
@@ -49,6 +50,7 @@ exit 7
       final failed = await _runHelper(fixture, trace);
       expect(failed.exitCode, isNot(0));
       expect('${failed.stderr}', contains('exit 7'));
+      expect('${failed.stderr}', contains(fixture.sdk.path));
     },
     skip: nodeAvailable ? false : 'Node.js is required for Hvigor glue tests.',
   );
@@ -86,12 +88,14 @@ final class _HvigorFixture {
   const _HvigorFixture({
     required this.root,
     required this.project,
+    required this.sdk,
     required this.dartExecutable,
     required this.runner,
   });
 
   final Directory root;
   final Directory project;
+  final Directory sdk;
   final File dartExecutable;
   final File runner;
 }
@@ -107,7 +111,8 @@ Future<_HvigorFixture> _createFixture() async {
     path.join(sdk.path, 'bin', 'cache', 'dart-sdk', 'bin', 'dart'),
   )..parent.createSync(recursive: true);
   dartExecutable.writeAsStringSync('''#!/usr/bin/env bash
-printf '%s\\n' "\$@" > "\$CCROUTER_TEST_TRACE"
+printf '%s\\n' "\$FLUTTER_ROOT" > "\$CCROUTER_TEST_TRACE"
+printf '%s\\n' "\$@" >> "\$CCROUTER_TEST_TRACE"
 ''');
   await Process.run('chmod', ['+x', dartExecutable.path]);
   final ohos = Directory(path.join(project.path, 'ohos'))..createSync();
@@ -128,6 +133,7 @@ ccrouterBuildPreflight(process.argv[2])
   return _HvigorFixture(
     root: root,
     project: project,
+    sdk: sdk,
     dartExecutable: dartExecutable,
     runner: runner,
   );
@@ -143,6 +149,7 @@ Future<ProcessResult> _runHelper(
   environment: {
     ...Platform.environment,
     'CCROUTER_TEST_TRACE': trace.path,
+    'FLUTTER_ROOT': '/wrong/sdk',
     ...?environment,
   },
 );
