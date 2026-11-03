@@ -681,6 +681,11 @@ dev_dependencies:
       ).writeAsStringSync('@echo off\r\nexit /b 0\r\n');
       final trace = path.join(sdk.path, 'dart-trace.txt');
       final innerDart = await _writeFakeInnerDart(sdk, '''#!/usr/bin/env bash
+if [[ "\$*" == pub\\ * ]] && [[ "\${CCROUTER_PUB_HOOK_DISABLE:-0}" != "1" ]] && \
+  [[ "\${FLUTTER_ROOT:-}" != "\$CCROUTER_EXPECTED_SDK" ]]; then
+  echo "wrong FLUTTER_ROOT: \${FLUTTER_ROOT:-missing}" >&2
+  exit 88
+fi
 printf "%s\\n" "\$*" >> "\$CCROUTER_TRACE"
 exit "\${CCROUTER_FAKE_DART_EXIT:-0}"
 ''');
@@ -704,6 +709,7 @@ dev_dependencies:
       final environment = <String, String>{
         ...Platform.environment,
         'CCROUTER_TRACE': trace,
+        'CCROUTER_EXPECTED_SDK': sdk.resolveSymbolicLinksSync(),
       };
 
       final generated = await Process.run(

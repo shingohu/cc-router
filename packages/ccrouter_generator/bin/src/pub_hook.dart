@@ -1995,6 +1995,12 @@ fi
 if [ "${CCROUTER_PUB_HOOK_NESTED_FLUTTER:-0}" = "1" ]; then
   exec "$ORIGINAL" "$@"
 fi
+# Flutter Tool may invoke this Dart entrypoint directly while resolving a
+# Flutter application. Bind Pub to the SDK that owns this wrapper before the
+# original executable starts; otherwise Dart Pub rejects Flutter SDK packages
+# such as `liberlive_platform_info` as if it were a pure Dart dependency.
+FLUTTER_ROOT="$(cd -- "$SCRIPT_DIR/../../../.." && pwd -P)" || exit 1
+export FLUTTER_ROOT
 
 parse_pub_invocation() {
   PUB_COMMAND=""
@@ -2116,9 +2122,6 @@ if [ "$SKIP_PUB_HOOK" -eq 1 ]; then
   exit 0
 fi
 
-FLUTTER_ROOT="$(cd -- "$SCRIPT_DIR/../../../.." && pwd -P)" || exit 1
-export FLUTTER_ROOT
-
 HOOK_DIR="${PROJECT_DIRECTORY:-$PWD}"
 if [[ "$HOOK_DIR" != /* ]]; then
   HOOK_DIR="$PWD/$HOOK_DIR"
@@ -2166,6 +2169,9 @@ set "SCRIPT_DIR=%~dp0"
 set "ORIGINAL=%SCRIPT_DIR%dart.ccrouter-original.bat"
 if "%CCROUTER_PUB_HOOK_DISABLE%"=="1" goto invoke_original
 if "%CCROUTER_PUB_HOOK_NESTED_FLUTTER%"=="1" goto invoke_original
+rem Bind direct Dart Pub resolution to the SDK that owns this wrapper before
+rem the original executable starts, including Flutter Tool's implicit Pub run.
+for %%i in ("%SCRIPT_DIR%..") do set "FLUTTER_ROOT=%%~fi"
 
 call :parse_dart_invocation %*
 if /I not "%DART_COMMAND%"=="pub" goto invoke_original
@@ -2176,7 +2182,6 @@ if "%SKIP_PUB_HOOK%"=="1" exit /b 0
 set "RUN_PUB_HOOK=0"
 for %%C in (get upgrade downgrade add remove) do if /I "%PUB_COMMAND%"=="%%C" set "RUN_PUB_HOOK=1"
 if not "%RUN_PUB_HOOK%"=="1" exit /b 0
-for %%i in ("%SCRIPT_DIR%..") do set "FLUTTER_ROOT=%%~fi"
 call :resolve_project_root
 if not "%ERRORLEVEL%"=="0" exit /b 0
 set "HOOK_DIR=%PROJECT_ROOT%"
