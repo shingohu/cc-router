@@ -1004,8 +1004,16 @@ void main() {
         ..writeAsStringSync('''#!/usr/bin/env bash
 printf '%s\\n' "\$@" > "\$CCROUTER_TEST_TRACE"
 ''');
+      final realFlutterRoot = ccrouterProcessEnvironment(
+        inheritedEnvironment: const {},
+      )['FLUTTER_ROOT'];
+      expect(realFlutterRoot, isNotNull);
+      // The installed wrapper correctly exports the temporary SDK root. This
+      // fixture delegates to a real Dart executable, so its Pub resolution must
+      // use that executable's paired Flutter SDK instead of the incomplete fake.
       final dart = File(path.join(bin.path, 'dart'))
         ..writeAsStringSync('''#!/usr/bin/env bash
+export FLUTTER_ROOT=${_shellQuote(realFlutterRoot!)}
 exec ${_shellQuote(Platform.resolvedExecutable)} "\$@"
 ''');
       final innerDart = File(
