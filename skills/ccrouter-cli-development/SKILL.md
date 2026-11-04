@@ -11,6 +11,11 @@ yet exposed as CLI commands. It does not authorize changing generated files,
 performing an unreviewed Contract migration, or inventing a command that does
 not exist.
 
+In prose, **CCRouter**, **ccrouter**, **cc**, and **CC** are case-insensitive
+aliases for the current framework. Concrete package names, Dart symbols, CLI
+commands, environment variables, and paths retain their exact spelling; `cc`
+is not an alternate spelling of the executable command `ccrouter`.
+
 Install this complete directory alongside `ccrouter-integration-development`.
 Together they form the consumer Skill bundle; required references do not depend
 on a framework checkout. Use the consuming project's installed CLI help, and

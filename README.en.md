@@ -14,6 +14,11 @@ reproduction and sanitized diagnostics. See the
 
 CCRouter is a component runtime and type-safe routing framework for large Flutter applications. It unifies component assembly, route contracts, navigation policies, lifecycles, cross-component capability calls, and diagnostics around a stable Core Contract, using native Flutter RouterDelegate + Navigator.pages with backend-neutral Host SPI.
 
+**Terminology:** In prose, `CCRouter`, `ccrouter`, `cc`, and `CC` (case-insensitive)
+all refer to the current CCRouter framework. Package names, Dart type names, CLI
+commands, environment variables, and file paths still use their exact spellings;
+for example, package `ccrouter`, type `CCRouter`, and command `ccrouter generate`.
+
 In this documentation, **Managed** means that the CCRouter Runtime owns the navigation state and route lifecycle: route resolution, policies, Route Entries, Route Scopes, results, and Host/Outlet stacks. The Managed Backend projects that state through Flutter Navigator. It does not mean that CCRouter owns the whole application or implicitly initializes or shuts down the Runtime. Flutter or third-party Navigator pages remain Foreign Routes and do not receive Managed Entry, Scope, or typed-result semantics.
 
 The current version is `0.1.0`, intended for validation in this repository's Workspace, Demo, and controlled application pilots. All packages currently declare `publish_to: none`; none have been published to pub.dev or a private hosted registry. Before integrating an external project, complete a formal release or use controlled Git dependencies. Do not copy this repository's Workspace dependency declarations directly into another repository.

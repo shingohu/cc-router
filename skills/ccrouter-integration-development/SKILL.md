@@ -7,6 +7,14 @@ description: Implement, migrate, or review Flutter application and component fea
 
 Use CCRouter as the application component boundary. Prefer its generated contracts and lifecycle ownership over direct navigation, global service locators, or ad hoc cross-package imports.
 
+## Framework naming
+
+In prose, **CCRouter**, **ccrouter**, **cc**, and **CC** are case-insensitive
+aliases for the current CCRouter framework. This is a documentation convention;
+keep package names, Dart symbols, CLI commands, environment variables, and paths
+in their exact spelling. For example, write package `ccrouter`, type `CCRouter`,
+and command `ccrouter generate` when referring to those concrete identifiers.
+
 ## Managed terminology
 
 In this Skill, **Managed** means that the CCRouter Runtime owns the navigation

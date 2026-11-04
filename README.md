@@ -8,6 +8,10 @@
 
 CCRouter 是一个面向 Flutter 大型应用的组件化运行时与类型安全路由框架。它把组件装配、路由契约、导航策略、生命周期、跨组件能力调用和诊断统一到稳定的 Core Contract。默认 Managed Backend 使用 Flutter `RouterDelegate + Navigator.pages`，不再依赖 GoRouter。
 
+**术语约定**：本文中的 `CCRouter`、`ccrouter`、`cc` 和 `CC`（不区分大小写）都指当前
+CCRouter 框架。代码包名、Dart 类型名、CLI 命令、环境变量和文件路径仍必须按实际拼写使用，
+例如包名 `ccrouter`、类型 `CCRouter`、命令 `ccrouter generate`。
+
 本文中的 **Managed** 指“由 CCRouter Runtime 统一管理的路由”：Runtime 负责路由解析、策略、Route Entry、Route Scope、结果和 Host/Outlet 栈，Managed Backend 将这份状态投影到 Flutter Navigator。Managed 描述的是路由所有权，不表示 CCRouter 会托管整个 App，也不改变 `CCRouterHost.initialize` 与 `CCRouterHost.shutdown` 由应用显式调用的 Runtime 生命周期。Flutter 或第三方 Navigator 创建的页面属于 Foreign Route，不能获得 Managed Route 的 Entry、Scope 和 typed result 语义。
 
 第一次接入或验证真实业务时，先阅读[首次接入指南](skills/ccrouter-integration-development/references/first-integration.md)，

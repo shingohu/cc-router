@@ -1,5 +1,9 @@
 # 第一次接入：完成一个可验证的业务闭环
 
+本文中的 `CCRouter`、`ccrouter`、`cc` 和 `CC`（不区分大小写）都指当前框架。涉及包名、Dart
+类型、CLI 命令、环境变量或文件路径时，仍按实际标识使用，例如 `ccrouter` 包、`CCRouter`
+类型和 `ccrouter generate` 命令；`cc` 只是文档中的简称，不是另一个 CLI 命令。
+
 先用现有 Route 完成“声明 → 生成 → 打开 → 返回或失败 → 释放”，再按实际场景增加
 Service、Command、Event、InitTask 或 UI Fragment。已经有业务工程时，选一条真实调用链，
 不为接入 CCRouter 重建业务分层或给所有对象注册 Service。
