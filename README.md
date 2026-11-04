@@ -24,6 +24,25 @@ CCRouter 框架。代码包名、Dart 类型名、CLI 命令、环境变量和�
 
 当前版本为 `0.1.0`，适合在本仓库 Workspace、Demo 和受控业务试点中验证。所有 Package 目前均为 `publish_to: none`，尚未发布到 pub.dev 或私有 Hosted；接入外部工程前需要先完成正式发布，或使用受控 Git 依赖。不要把本仓库的 Workspace 依赖写法直接复制到另一个仓库。
 
+团队可以不依赖 pub.dev，通过 Git tag 或完整 commit SHA 安装 CLI。Git 仓库根目录包含
+`ccrouter_generator` 时，使用 `--git-path`：
+
+```sh
+dart pub global activate \
+  --source git \
+  https://github.com/shingohu/cc-router.git \
+  --git-ref v0.1.0 \
+  --git-path packages/ccrouter_generator
+```
+
+`v0.1.0` 仅为示例，必须替换为远端实际存在且已验证的 tag 或完整 SHA。
+`--git-ref` 可以是 tag、branch 或 commit；开发者安装可使用固定 tag，CI 和团队锁定建议使用远端可解析的完整 SHA。
+安装后执行的命令名仍是 `ccrouter`。当前仓库仍使用 Workspace 解析，且 Generator 依赖同仓库的
+Contracts Package；上述命令说明 Git source 的语法，不代表当前开发期仓库已经具备独立 Git 消费条件。
+全局安装不替代项目的 `ccrouter_generator` 开发依赖；CI 优先运行项目解析出的 CLI，避免全局版本漂移。
+在此之前，优先使用完整仓库 checkout、固定 FVM SDK 和 `fvm dart run ... ccrouter`。详见
+[CLI 工作流](skills/ccrouter-cli-development/SKILL.md)和[首次接入指南](skills/ccrouter-integration-development/references/first-integration.md)。
+
 当前仓库**尚未达到正式发布条件**。License、历史凭据治理、Package 发布集合、Package 级
 README/CHANGELOG、Hosted 分发和干净消费者回归等阻塞项见
 [`docs/CCRouter-release-readiness.md`](docs/CCRouter-release-readiness.md)。不要仅根据某份设计

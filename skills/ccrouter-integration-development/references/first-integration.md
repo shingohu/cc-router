@@ -14,6 +14,22 @@ Service、Command、Event、InitTask 或 UI Fragment。已经有业务工程时�
 - 当前框架仓库仍是 `0.1.0` 开发版本、`publish_to: none`，不能假设这个版本已在 Hosted 发布。
   外部工程先使用团队明确配置的固定 Git 完整 SHA 或本地联调来源；正式安装说明必须对应
   实际可解析的发布来源。不要把框架 Workspace 的 `resolution: workspace` 抄入独立 App。
+- 如果 CLI Package 已整理为可独立 Git 消费，可以通过 tag 或完整 SHA 安装全局 executable：
+
+  ```sh
+  dart pub global activate \
+    --source git \
+    https://github.com/shingohu/cc-router.git \
+    --git-ref v0.1.0 \
+    --git-path packages/ccrouter_generator
+  ```
+
+  `v0.1.0` 仅为示例，需替换为远端实际存在且已验证的 tag 或完整 SHA。
+  `--git-ref` 也接受 branch，但团队和 CI 建议锁定远端完整 SHA。安装后命令名为
+  `ccrouter`。当前仓库仍是 Workspace，Generator 依赖同仓库 Contracts，因此在独立消费条件
+  完成前，优先从完整 checkout 使用固定 FVM 和 `fvm dart run ... ccrouter`；不能只凭全局
+  executable 安装成功就视为 Host 可用，仍需执行真实 Host 的生成和 `generate --check`。
+  全局安装不替代项目的 `ccrouter_generator` 开发依赖；CI 优先使用项目解析出的 CLI。
 - 本地 `pubspec_overrides.yaml` 可以覆盖配套框架包做受控联调；它不替代团队/CI 的固定来源。
   测试前查看实际 `.dart_tool/package_config.json`，确认没有混用不配套的 Generator/Runtime。
 - Host 直接依赖 `ccrouter`，通过 `CCManagedRouterApp` 或 Managed Backend 接入，开发依赖包含 `ccrouter_generator` 和 `build_runner`；

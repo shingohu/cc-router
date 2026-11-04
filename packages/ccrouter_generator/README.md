@@ -132,6 +132,30 @@ Builder/Workspace Validator 校验。AST 预检按 Library 的直接/相对导�
 `ccrouter find --usage` 可基于当前已生成 Index 为一个现有
 消费组件输出只读接入建议，但不会编辑依赖或替代最终校验。
 
+## 从 Git 安装 CLI
+
+CLI executable 由本 Package 的 `executables.ccrouter` 暴露。若 Package 已具备独立 Git 消费条件，
+可以不发布到 pub.dev，直接按 tag 或完整 commit SHA 安装：
+
+```sh
+dart pub global activate \
+  --source git \
+  https://github.com/shingohu/cc-router.git \
+  --git-ref v0.1.0 \
+  --git-path packages/ccrouter_generator
+```
+
+CI 和团队锁定使用远端完整 SHA；branch 只适合临时验证。安装后执行 `ccrouter generate ...`。
+`v0.1.0` 仅为示例，必须替换为实际存在且已验证的远端 tag 或完整 SHA。全局安装不替代项目
+自身的 `ccrouter_generator` 开发依赖，CI 优先使用项目解析出的 CLI。
+当前仓库仍使用 Workspace 解析，且本 Package 依赖同仓库的 `ccrouter_contracts`，所以开发期优先
+使用完整仓库 checkout、固定 FVM SDK 和 `fvm dart run ... ccrouter`。无论采用哪种入口，都要在
+真实 Host 上完成生成并运行 `generate --check`。
+
+安装与 SDK、依赖版本选择见 [CLI 安装指导](../../skills/ccrouter-cli-development/SKILL.md#install-without-pubdev)。
+
+## 契约与依赖约定
+
 不同消费组件如需统一 Service/Command Client 成员名，可在 Contract 上设置 lower-camel
 `alias`，消费组件仍可在 `CCServiceDependency<T>` 或 `CCCommandDependency<T>` 上覆盖。命名优先级
 为 Dependency alias、Contract alias、类型名推导。默认推导只移除末尾 `Service`/`Command` 并

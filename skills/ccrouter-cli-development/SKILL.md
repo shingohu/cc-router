@@ -43,6 +43,42 @@ Classify the request as one of these operations:
 Do not use a deferred workflow when an existing command already expresses the
 operation. Prefer the command, then inspect its result.
 
+## Install without pub.dev
+
+The CLI is the Dart executable exposed by `ccrouter_generator`; publishing to
+pub.dev is not required when the package is consumable from Git. For a monorepo
+package, install a tag with:
+
+```bash
+dart pub global activate \
+  --source git \
+  https://github.com/shingohu/cc-router.git \
+  --git-ref v0.1.0 \
+  --git-path packages/ccrouter_generator
+```
+
+`v0.1.0` is illustrative, not a claim that this remote tag exists or is ready
+for installation. Replace it with an existing, verified tag or full SHA.
+`--git-ref` accepts a tag, branch, or commit. Use a tag for a human-managed
+developer install and a remotely resolvable full SHA for CI or a team lock. The
+executable remains `ccrouter`; ensure Pub's executable directory is on `PATH`.
+A private repository can use an authenticated SSH Git URL. Git activation does
+not replace the project's `ccrouter_generator` dev dependency or its matching
+Runtime, Contracts, Flutter/Dart SDK and `build_runner` dependencies. Prefer the
+project-resolved CLI in CI; a global CLI can otherwise drift from the Generator
+used by Builder. Activate through the project's FVM Dart SDK when applicable;
+an unrelated system Dart can select a different toolchain.
+
+The current repository is still a Workspace: `ccrouter_generator` uses
+Workspace resolution and depends on the sibling `ccrouter_contracts` package.
+`publish_to: none` prevents Hosted publishing, not Git installation; all required
+dependencies must still resolve in the activation environment. Therefore, the
+command above records the supported Pub Git syntax, while a full
+checkout with a pinned FVM SDK and `fvm dart run ... ccrouter` remains the
+development fallback until standalone Git consumption is verified. Do not claim
+that CLI installation proves Host integration; validate the chosen ref with a
+real Host generation and `generate --check` before distributing it to the team.
+
 ## Implemented Commands
 
 Run commands from the workspace root with the project's FVM toolchain:

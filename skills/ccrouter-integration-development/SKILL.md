@@ -66,6 +66,15 @@ For a first Host or a production adoption check, start with
 Route and its failure/ownership loop before adding optional capabilities or
 tooling; keep local-source validation distinct from distribution readiness.
 
+For team CLI distribution without pub.dev, follow
+[Git installation guidance](../ccrouter-cli-development/SKILL.md#install-without-pubdev).
+Pub Git activation supports `--git-ref` (tag or full SHA) and `--git-path` for a
+monorepo package. Verify standalone dependency resolution for the selected ref;
+the current Workspace checkout has not been certified for global Git activation.
+Global activation does not replace the Host/component `ccrouter_generator`
+dev dependency. Keep the CLI, project Generator, Contracts, Runtime and FVM SDK
+compatible; prefer the project-local executable for CI and reproducibility.
+
 1. Identify the current package role before editing:
    - **Host**: application composition root, Backend, Shell, platform ingress.
    - **Component implementation**: pages, private capabilities, Registrar.

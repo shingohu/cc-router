@@ -23,6 +23,30 @@ In this documentation, **Managed** means that the CCRouter Runtime owns the navi
 
 The current version is `0.1.0`, intended for validation in this repository's Workspace, Demo, and controlled application pilots. All packages currently declare `publish_to: none`; none have been published to pub.dev or a private hosted registry. Before integrating an external project, complete a formal release or use controlled Git dependencies. Do not copy this repository's Workspace dependency declarations directly into another repository.
 
+Teams can install the CLI from Git without publishing to pub.dev. Because the
+repository is a monorepo, pass `--git-path` for `ccrouter_generator`:
+
+```sh
+dart pub global activate \
+  --source git \
+  https://github.com/shingohu/cc-router.git \
+  --git-ref v0.1.0 \
+  --git-path packages/ccrouter_generator
+```
+
+`v0.1.0` is illustrative; replace it with an existing, verified remote tag or
+full SHA. `--git-ref` accepts a tag, branch, or commit. Tags are convenient for developer
+installs; CI and team-wide reproducibility should use a remotely resolvable full
+SHA. The installed executable is still named `ccrouter`. The current repository
+uses Workspace resolution and the Generator depends on a sibling Contracts
+package, so this command documents the Git source syntax but does not claim that
+the development checkout is already independently consumable. Until standalone
+Git consumption is prepared, use a full checkout with a pinned FVM SDK and
+`fvm dart run ... ccrouter`. Global activation does not replace the project's
+`ccrouter_generator` dev dependency; CI should prefer the project-resolved CLI.
+See the [CLI workflow](skills/ccrouter-cli-development/SKILL.md)
+and [first integration guide](skills/ccrouter-integration-development/references/first-integration.md).
+
 This repository **is not yet ready for a formal release**. Blocking items include licensing, historical credential remediation, the package release set, package-level README/CHANGELOG files, hosted distribution, and clean-consumer regression checks. See [`docs/CCRouter-release-readiness.md`](docs/CCRouter-release-readiness.md). A design document marked “complete” does not make the current commit a stable `1.0.0` release.
 
 ## Why CCRouter
