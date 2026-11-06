@@ -322,7 +322,7 @@ Diagnostics 页展示 Failure/Fallback/Pending/InitTask 和健康状态；旧 Pr
 | 能力 | 状态 | 说明 |
 | --- | --- | --- |
 | 启动期组件装配 | 已支持 | 依赖排序、重复 ID、缺失依赖和循环依赖校验 |
-| 注解路由与类型安全 Intent | 已支持 | Path、URI、custom scheme、Regex、多 Pattern、Query、Extra、typed result |
+| 注解路由与类型安全 Intent | 已支持 | Path、URI、custom scheme、Regex、多 Pattern、Query、Extra、typed result；多个 typed Extra 字段由生成器收敛到一个进程内 envelope |
 | 页面展示 | 已支持 | 平台默认、Material、Cupertino、fade、scale、bottom-up、透明全屏 |
 | Modal Route | 已支持 | Dialog、modal bottom sheet（支持透明 sheet surface），可选择是否纳入 CCRouter 契约与生命周期 |
 | 导航操作 | 已支持 | `push`、`replace`、`go`、`reset`、`open`、`pop`、`maybePop`、`canPop`、实例级 `close`（可选 Adapter 能力） |

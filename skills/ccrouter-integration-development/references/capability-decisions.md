@@ -39,6 +39,14 @@ Choose Route when the user enters a destination. Prefer a generated Intent becau
 
 Use an internal `@CCRoute` when only the owning component calls the route. Promote to `@CCRouteContract` when another component needs it. Preserve route ID, wire parameter names, result type, and URI semantics during promotion.
 
+`CCRouteCodecValues` has one process-local `extra` slot. A route may declare
+multiple `@CCExtraParam` fields; the generator emits a private typed envelope
+inside that slot and keeps each field typed in the generated Intent, codec and
+page binding. The envelope is never serialized into a URI and is rejected when
+its runtime type does not match the route. Use this for flat process-local
+snapshots such as a score identity plus frozen score payload; use a public
+immutable DTO as one Extra when the fields form a stable cross-package model.
+
 Use a CCRouter Dialog or BottomSheet Route only when it needs one or more of:
 
 - cross-component invocation;

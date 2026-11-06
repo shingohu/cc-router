@@ -662,6 +662,191 @@ CCRouteDefinition<_GeneratedExtraPageRouteArguments, bool>
 ccrouterDescribeGeneratedExtraPageRoute() =>
     _GeneratedExtraPageRouteContractBinding.definition;
 
+/// Immutable arguments for route generated_route_fixture.flat-extra; URI values remain typed.
+final class _GeneratedFlatExtraPageRouteArguments {
+  /// Creates arguments without navigating or retaining a backend context.
+  const _GeneratedFlatExtraPageRouteArguments({
+    required this.scoreId,
+    required this.snapshot,
+    this.revision,
+  });
+
+  /// extra parameter scoreId for generated_route_fixture.flat-extra.
+  final String scoreId;
+
+  /// extra parameter snapshot for generated_route_fixture.flat-extra.
+  final route_type_0.GeneratedSnapshot snapshot;
+
+  /// extra parameter revision for generated_route_fixture.flat-extra.
+  final int? revision;
+}
+
+/// Typed contract for generated_route_fixture.flat-extra.
+abstract final class _GeneratedFlatExtraPageRoute {
+  /// Stable identity used by registration, diagnostics and typed navigation.
+  static const id = "generated_route_fixture.flat-extra";
+
+  /// Creates a typed Intent; navigate through CCRouter.navigator.
+  static CCRouteIntent<void> intent({
+    required String scoreId,
+    required route_type_0.GeneratedSnapshot snapshot,
+    int? revision,
+  }) => _GeneratedFlatExtraPageRouteIntent(
+    _GeneratedFlatExtraPageRouteArguments(
+      scoreId: scoreId,
+      snapshot: snapshot,
+      revision: revision,
+    ),
+  );
+}
+
+/// Generated definition bridge for registration and page binding.
+///
+/// This symbol is intentionally kept out of stable Consumer barrels.
+/// Business code creates [_GeneratedFlatExtraPageRoute] intents. Generated owner glue uses
+/// this binding to register and decode the route.
+abstract final class _GeneratedFlatExtraPageRouteContractBinding {
+  /// The typed route definition consumed by generated owner glue.
+  static final definition =
+      CCRouteDefinition<_GeneratedFlatExtraPageRouteArguments, void>(
+        routeId: _GeneratedFlatExtraPageRoute.id,
+        patterns: const [
+          const CCPathPattern(
+            "/generated/flat-extra",
+            primary: true,
+            constraints: const <String, String>{},
+          ),
+        ],
+        codec: const _GeneratedFlatExtraPageRouteCodec(),
+        deepLink: CCDeepLinkPolicy.disabled,
+        presentation: const CCPagePresentation(
+          routeType: CCPageRouteType.platformDefault,
+          transition: CCPageTransitionType.platformDefault,
+          opaque: true,
+          fullscreenDialog: false,
+        ),
+        placement: const CCRoutePlacement(
+          hostId: "default",
+          parentRouteId: null,
+          shellId: null,
+          navigatorOutlet: "root",
+        ),
+        interceptorIds: const [],
+        popGuardIds: const [],
+      );
+}
+
+/// Private data-only Intent carrying this route's typed result contract.
+final class _GeneratedFlatExtraPageRouteIntent implements CCRouteIntent<void> {
+  /// Captures immutable typed arguments for later Runtime validation.
+  const _GeneratedFlatExtraPageRouteIntent(this.arguments);
+
+  /// Stable identity of the owned destination.
+  @override
+  String get routeId => _GeneratedFlatExtraPageRoute.id;
+
+  /// Typed payload consumed only by the matching route codec.
+  @override
+  final _GeneratedFlatExtraPageRouteArguments arguments;
+}
+
+/// Private envelope for routes with multiple typed Extra fields.
+///
+/// CCRouteCodecValues intentionally retains one process-local Extra slot. The
+/// generated envelope keeps that runtime boundary while preserving each field's
+/// static type in the route arguments and page constructor.
+final class _GeneratedFlatExtraPageRouteCodecExtra {
+  const _GeneratedFlatExtraPageRouteCodecExtra({
+    required this.scoreId,
+    required this.snapshot,
+    required this.revision,
+  });
+
+  final String scoreId;
+  final route_type_0.GeneratedSnapshot snapshot;
+  final int? revision;
+}
+
+/// Private boundary conversion; raw input is never included in error messages.
+final class _GeneratedFlatExtraPageRouteCodec
+    implements CCRouteCodec<_GeneratedFlatExtraPageRouteArguments> {
+  /// Stateless codec shared by the component's route definition.
+  const _GeneratedFlatExtraPageRouteCodec();
+
+  /// Rejects missing, repeated or malformed values before creating arguments.
+  @override
+  _GeneratedFlatExtraPageRouteArguments decode(CCRouteCodecValues input) {
+    final _extra = switch (input.extra) {
+      null => null,
+      final _GeneratedFlatExtraPageRouteCodecExtra value => value,
+      _ => throw CCRouteParameterError(
+        "Route \"generated_route_fixture.flat-extra\" Extra envelope is invalid.",
+      ),
+    };
+    if (_extra == null)
+      throw CCRouteParameterError(
+        "Route \"generated_route_fixture.flat-extra\" requires its typed Extra envelope.",
+      );
+    final String _value_scoreId = _extra.scoreId;
+    final route_type_0.GeneratedSnapshot _value_snapshot = _extra.snapshot;
+    final int? _value_revision = _extra.revision;
+    return _GeneratedFlatExtraPageRouteArguments(
+      scoreId: _value_scoreId,
+      snapshot: _value_snapshot,
+      revision: _value_revision,
+    );
+  }
+
+  /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
+  @override
+  CCRouteCodecValues encode(_GeneratedFlatExtraPageRouteArguments arguments) {
+    return CCRouteCodecValues(
+      path: {},
+      query: {},
+      extra: _GeneratedFlatExtraPageRouteCodecExtra(
+        scoreId: arguments.scoreId,
+        snapshot: arguments.snapshot,
+        revision: arguments.revision,
+      ),
+    );
+  }
+}
+
+/// Package-internal typed factory surfaced by the generated component API.
+final class CCGeneratedGeneratedFlatExtraPageRouteFactory {
+  /// Creates the stateless factory used by generated static route members.
+  const CCGeneratedGeneratedFlatExtraPageRouteFactory();
+
+  /// Creates an immutable Intent without performing navigation.
+  CCRouteIntent<void> call({
+    required String scoreId,
+    required route_type_0.GeneratedSnapshot snapshot,
+    int? revision,
+  }) => _GeneratedFlatExtraPageRoute.intent(
+    scoreId: scoreId,
+    snapshot: snapshot,
+    revision: revision,
+  );
+}
+
+/// Package-internal bridge used by the generated component route index.
+///
+/// Keep this symbol out of public package barrels. It exists so a component
+/// registrar can register library-private routes without exposing owner APIs.
+void ccrouterRegisterGeneratedFlatExtraPageRoute(CCRegistry registry) =>
+    registry.registerRoute(
+      _GeneratedFlatExtraPageRouteContractBinding.definition,
+    );
+
+/// Typed route definition bridge shared by Host generation and page binding.
+///
+/// Retaining the generated argument type lets the isolated Flutter binding
+/// access decoded fields without dynamic calls. Host aggregation may erase the
+/// type only after page construction has been bound.
+CCRouteDefinition<_GeneratedFlatExtraPageRouteArguments, void>
+ccrouterDescribeGeneratedFlatExtraPageRoute() =>
+    _GeneratedFlatExtraPageRouteContractBinding.definition;
+
 /// Immutable arguments for route generated_route_fixture.prefixed; URI values remain typed.
 final class _GeneratedPrefixedPageRouteArguments {
   /// Creates arguments without navigating or retaining a backend context.

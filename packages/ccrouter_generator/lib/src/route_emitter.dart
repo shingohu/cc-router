@@ -272,6 +272,30 @@ void _emitRouteCodec(
   required _ParameterDefaultEmitter parameterDefault,
 }) {
   final params = route.parameters;
+  final extras = params
+      .where((parameter) => parameter.source == 'extra')
+      .toList();
+  final requiredEnvelope =
+      extras.length > 1 &&
+      extras.any(
+        (parameter) =>
+            !parameter.nullable && parameterDefault(parameter) == null,
+      );
+  if (extras.length > 1) {
+    out.writeln('''
+/// Private envelope for routes with multiple typed Extra fields.
+///
+/// CCRouteCodecValues intentionally retains one process-local Extra slot. The
+/// generated envelope keeps that runtime boundary while preserving each field's
+/// static type in the route arguments and page constructor.
+final class _${route.codec.substring(1)}Extra {
+  const _${route.codec.substring(1)}Extra({${extras.map((parameter) => 'required this.${parameter.name}').join(', ')}});
+''');
+    for (final parameter in extras) {
+      out.writeln('  final ${parameterType(parameter)} ${parameter.name};');
+    }
+    out.writeln('}\n');
+  }
   out.writeln('''
 /// Private boundary conversion; raw input is never included in error messages.
 final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
@@ -298,6 +322,16 @@ final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
     }
 ''');
   }
+  if (extras.length > 1) {
+    out.writeln(
+      'final _extra = switch (input.extra) { null => null, final _${route.codec.substring(1)}Extra value => value, _ => throw CCRouteParameterError(${_quote('Route "${route.id}" Extra envelope is invalid.')}), };',
+    );
+    if (requiredEnvelope) {
+      out.writeln(
+        'if (_extra == null) throw CCRouteParameterError(${_quote('Route "${route.id}" requires its typed Extra envelope.')});',
+      );
+    }
+  }
   for (final parameter in params) {
     final error = _quote(
       'Route "${route.id}" parameter "${parameter.wireName}" is invalid.',
@@ -306,12 +340,23 @@ final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
         parameterDefault(parameter) ??
         (parameter.nullable ? 'null' : 'throw CCRouteParameterError($error)');
     if (parameter.source == 'extra') {
-      out.writeln(
-        'final _value_${parameter.name} = input.extra == null ? $missing : input.extra;',
-      );
-      out.writeln(
-        'if (_value_${parameter.name} is! ${parameterType(parameter)}) throw CCRouteParameterError($error);',
-      );
+      if (extras.length <= 1) {
+        out.writeln(
+          'final _value_${parameter.name} = input.extra == null ? $missing : input.extra;',
+        );
+        out.writeln(
+          'if (_value_${parameter.name} is! ${parameterType(parameter)}) throw CCRouteParameterError($error);',
+        );
+      } else {
+        final valueExpression = requiredEnvelope
+            ? '_extra.${parameter.name}'
+            : parameter.nullable
+            ? '_extra?.${parameter.name}'
+            : '_extra!.${parameter.name}';
+        out.writeln(
+          'final ${parameterType(parameter)} _value_${parameter.name} = ${requiredEnvelope || parameterDefault(parameter) == null && parameter.nullable ? valueExpression : '_extra == null ? $missing : $valueExpression'};',
+        );
+      }
       continue;
     }
     if (parameter.source == 'query') {
@@ -420,9 +465,13 @@ final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
         : '';
     out.writeln('$inclusion${_quote(parameter.wireName)}: $encoded,');
   }
-  out.writeln(
-    '}, extra: ${params.where((parameter) => parameter.source == 'extra').isEmpty ? 'null' : 'arguments.${params.singleWhere((parameter) => parameter.source == 'extra').name}'});\n}\n}',
-  );
+  final extraExpression = switch (extras.length) {
+    0 => 'null',
+    1 => 'arguments.${extras.single.name}',
+    _ =>
+      '''_${route.codec.substring(1)}Extra(${extras.map((parameter) => '${parameter.name}: arguments.${parameter.name}').join(', ')})''',
+  };
+  out.writeln('}, extra: $extraExpression);\n}\n}');
 }
 
 /// Emits the normalized route patterns with one effective primary entry.

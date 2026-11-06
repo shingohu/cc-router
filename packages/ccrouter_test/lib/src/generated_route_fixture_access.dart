@@ -68,6 +68,25 @@ CCRouteCodec<dynamic> get extraCodec =>
 GeneratedExtraPage buildExtraPage(dynamic arguments) => route_binding
     .ccrouterBuildGeneratedExtraPageRoute(extraCodec.encode(arguments));
 
+/// Generated flattened Extra codec used by typed score regression tests.
+CCRouteCodec<dynamic> get flatExtraCodec =>
+    route_contract.ccrouterDescribeGeneratedFlatExtraPageRoute().codec;
+
+/// Builds the flattened Extra page through its encoded boundary.
+GeneratedFlatExtraPage buildFlatExtraPage(dynamic arguments) => route_binding
+    .ccrouterBuildGeneratedFlatExtraPageRoute(flatExtraCodec.encode(arguments));
+
+/// Creates flattened Extra arguments for direct codec tests.
+dynamic flatExtraArguments({
+  required String scoreId,
+  required GeneratedSnapshot snapshot,
+  int? revision,
+}) => const route_contract.CCGeneratedGeneratedFlatExtraPageRouteFactory()(
+  scoreId: scoreId,
+  snapshot: snapshot,
+  revision: revision,
+).arguments;
+
 /// Generated prefixed-type codec used by import-boundary tests.
 CCRouteCodec<dynamic> get prefixedCodec =>
     route_contract.ccrouterDescribeGeneratedPrefixedPageRoute().codec;

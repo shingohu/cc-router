@@ -331,7 +331,6 @@ final class _RouteModel {
     }
     final parameters = <_ParameterModel>[];
     final queryKeys = <String>{};
-    var extras = 0;
     for (final parameter in constructor.formalParameters) {
       final model = _ParameterModel.read(parameter, keys, id);
       if (model == null) continue;
@@ -342,9 +341,6 @@ final class _RouteModel {
         );
       }
       if (model.source == 'extra') {
-        extras++;
-        if (extras > 1)
-          _fail('A route may declare only one Extra parameter.', parameter);
         if (model.required &&
             _enumValue(
               annotation.read('deepLink').objectValue,

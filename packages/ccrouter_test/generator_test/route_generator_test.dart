@@ -956,6 +956,34 @@ final class Probe {
     },
   );
 
+  test('multiple typed Extra fields share one generated envelope', () async {
+    const declarations = r'''
+final class ScoreSnapshot {
+  const ScoreSnapshot(this.id);
+  final String id;
+}
+@CCRoute<void>(id: 'probe.flat-extra', pattern: CCPathPattern('/probe/flat-extra'))
+final class Probe {
+  const Probe({
+    @CCExtraParam() required this.songId,
+    @CCExtraParam() required this.snapshot,
+    @CCExtraParam() this.note,
+  });
+  final String songId;
+  final ScoreSnapshot snapshot;
+  final int? note;
+}
+''';
+    final code = await generate(declarations);
+
+    expect(code, contains('final class _ProbeRouteCodecExtra'));
+    expect(code, contains('final String songId;'));
+    expect(code, contains('final route_source.ScoreSnapshot snapshot;'));
+    expect(code, contains('final int? note;'));
+    expect(code, contains('Extra envelope is invalid.'));
+    expect(code, contains('extra: _ProbeRouteCodecExtra('));
+  });
+
   test('infers the sole reversible primary in a Pattern list', () async {
     final code = await generate(r'''
 @CCRoute<void>(id: 'probe', patterns: [CCRegexPattern(r'/legacy'), CCPathPattern('/probe')])
@@ -1603,10 +1631,6 @@ final class Probe { const Probe(); }
     'required external Extra': (
       "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe', primary: true)], deepLink: CCDeepLinkPolicy.enabled) final class Probe { const Probe({@CCExtraParam() required this.value}); final Object value; }",
       'cannot require in-memory Extra',
-    ),
-    'multiple Extras': (
-      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe', primary: true)]) final class Probe { const Probe({@CCExtraParam() this.a, @CCExtraParam() this.b}); final Object? a; final Object? b; }",
-      'only one Extra',
     ),
     'nullable path': (
       "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe/:id', primary: true)]) final class Probe { const Probe({required this.id}); final int? id; }",

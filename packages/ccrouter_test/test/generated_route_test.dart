@@ -136,6 +136,26 @@ void main() {
     },
   );
 
+  test('multiple typed Extra fields roundtrip through one envelope', () {
+    const snapshot = GeneratedSnapshot('flat');
+    final arguments = flatExtraArguments(
+      scoreId: 'score-1',
+      snapshot: snapshot,
+      revision: 3,
+    );
+    final page = buildFlatExtraPage(
+      flatExtraCodec.decode(flatExtraCodec.encode(arguments)),
+    );
+    expect(page.scoreId, 'score-1');
+    expect(page.snapshot, same(snapshot));
+    expect(page.revision, 3);
+
+    expect(
+      () => flatExtraCodec.decode(CCRouteCodecValues(extra: 'wrong')),
+      throwsA(isA<CCRouteParameterError>()),
+    );
+  });
+
   test(
     'prefixed enum, Extra and result types remain accessible in generated parts',
     () {

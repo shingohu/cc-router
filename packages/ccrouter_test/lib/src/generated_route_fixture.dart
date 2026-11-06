@@ -18,6 +18,7 @@ final class GeneratedRouteFixtureRegistrar implements CCComponentRegistrar {
     route_contract.ccrouterRegisterGeneratedInternalPageRoute(registry);
     route_contract.ccrouterRegisterGeneratedPositionalPageRoute(registry);
     route_contract.ccrouterRegisterGeneratedExtraPageRoute(registry);
+    route_contract.ccrouterRegisterGeneratedFlatExtraPageRoute(registry);
     route_contract.ccrouterRegisterGeneratedPrefixedPageRoute(registry);
     registry.registerRouteInterceptor(
       'generated_route_fixture.auth',
@@ -130,6 +131,30 @@ final class GeneratedExtraPage {
 
   /// Required snapshot retained by identity.
   final GeneratedSnapshot snapshot;
+}
+
+/// Route with several typed in-memory fields flattened into one generated
+/// Extra envelope.
+@CCRoute<void>(
+  id: 'generated_route_fixture.flat-extra',
+  pattern: CCPathPattern('/generated/flat-extra'),
+)
+final class GeneratedFlatExtraPage {
+  /// Creates the page with typed score identity and snapshot fields.
+  const GeneratedFlatExtraPage({
+    @CCExtraParam() required this.scoreId,
+    @CCExtraParam() required this.snapshot,
+    @CCExtraParam() this.revision,
+  });
+
+  /// Stable score identity.
+  final String scoreId;
+
+  /// Frozen score snapshot.
+  final GeneratedSnapshot snapshot;
+
+  /// Optional score revision.
+  final int? revision;
 }
 
 /// Route using imported enum, Extra, and result types.

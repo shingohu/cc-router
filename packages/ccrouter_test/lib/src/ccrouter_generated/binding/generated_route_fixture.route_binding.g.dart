@@ -58,6 +58,21 @@ route_page.GeneratedExtraPage ccrouterBuildGeneratedExtraPageRoute(
 }
 
 /// Package-internal page factory bridge used by generated Flutter catalogs.
+route_page.GeneratedFlatExtraPage ccrouterBuildGeneratedFlatExtraPageRoute(
+  CCRouteCodecValues arguments,
+) {
+  final decoded = route_contract
+      .ccrouterDescribeGeneratedFlatExtraPageRoute()
+      .codec
+      .decode(arguments);
+  return route_page.GeneratedFlatExtraPage(
+    scoreId: decoded.scoreId,
+    snapshot: decoded.snapshot,
+    revision: decoded.revision,
+  );
+}
+
+/// Package-internal page factory bridge used by generated Flutter catalogs.
 route_page.GeneratedPrefixedPage ccrouterBuildGeneratedPrefixedPageRoute(
   CCRouteCodecValues arguments,
 ) {

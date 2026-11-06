@@ -41,6 +41,18 @@ not require a framework redesign or a separate approval cycle.
    maintainers also update their README, Skill guidance, and design status.
    Distinguish implemented behavior from proposals and untested platforms.
 
+### Flat typed Extra scenario
+
+When a route needs several process-local typed values, the existing single
+`CCExtraParam` runtime slot is sufficient only if the application creates an
+envelope DTO itself. The generator now supports declaring several
+`@CCExtraParam` fields directly: it generates a private immutable envelope,
+preserves field types through encode/decode and page binding, rejects a wrong
+envelope, and never places those values in a deep-link URI. This is a reusable
+generator capability rather than a business-specific score API. The fixture is
+`generated_route_fixture.flat-extra`; its round-trip and wrong-envelope tests
+are in `packages/ccrouter_test/test/generated_route_test.dart`.
+
 Report the evidence, classification, chosen capability, ownership, verification,
 and any remaining limitation. A request to assess a scenario does not authorize
 implementing it, expanding public contracts, or sending an upstream report.
