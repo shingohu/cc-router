@@ -28,19 +28,44 @@ final class DemoStackPage extends StatefulWidget {
 
 final class _DemoStackPageState extends State<DemoStackPage> {
   String _status = '当前是第 ${0} 层';
+  String? _receivedRequest;
   CCRouteEntryHandle? _handle;
   Timer? _closeTimer;
+  void Function()? _requestRemover;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _handle ??= CCRouter.routeEntryHandleOf(context);
+    _requestRemover ??= CCRouter.routeRequestReceiverOf<String>(context)
+        ?.listen((request) {
+          if (!mounted) return;
+          setState(() {
+            _receivedRequest = request;
+            _status = 'Typed request accepted · $request';
+          });
+          demoNavigationLabStore.record('Typed request accepted · $request');
+        });
   }
 
   @override
   void dispose() {
     _closeTimer?.cancel();
+    _requestRemover?.call();
     super.dispose();
+  }
+
+  Future<void> _deliverTypedRequest() async {
+    final handle = _handle;
+    if (handle == null) return;
+    final request = 'stack/${widget.level}/goods-42';
+    final outcome = await CCRouter.navigator.deliverToExisting(handle, request);
+    demoNavigationLabStore.record(
+      'Typed request delivery · ${outcome.status.name}',
+    );
+    if (mounted && outcome.status != CCRouteRequestDeliveryStatus.accepted) {
+      setState(() => _status = 'Typed request · ${outcome.status.name}');
+    }
   }
 
   void _coverAndClose() {
@@ -137,6 +162,13 @@ final class _DemoStackPageState extends State<DemoStackPage> {
         padding: const EdgeInsets.all(24),
         children: [
           Text(_status, key: const ValueKey('stack-status')),
+          if (_receivedRequest != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              '最近请求：$_receivedRequest',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ],
           const SizedBox(height: 12),
           Text(
             'Managed Entries: ${entries.map((entry) => entry.routeId).join(' → ')}',
@@ -168,6 +200,11 @@ final class _DemoStackPageState extends State<DemoStackPage> {
                 context: context,
               ),
             ),
+          ),
+          _StackAction(
+            icon: Icons.forward_to_inbox_outlined,
+            title: '交付 typed request 到当前 Entry',
+            onPressed: _deliverTypedRequest,
           ),
           const SizedBox(height: 16),
           FilledButton.icon(

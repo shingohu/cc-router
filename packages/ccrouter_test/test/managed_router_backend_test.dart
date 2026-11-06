@@ -245,6 +245,90 @@ Future<void> _predictiveBackEvent(WidgetTester tester, String method) async {
 void main() {
   tearDown(CCRouterHost.shutdown);
 
+  testWidgets('activateExisting preserves the Managed Home identity', (
+    tester,
+  ) async {
+    final harness = await _mount(tester);
+    final homeContext = harness.contexts['home']!;
+    final homeHandle = harness.handle('home');
+    final homeResource = harness.resources['home']!;
+    final first = CCRouter.navigator.push(const _Intent('A'));
+    await tester.pumpAndSettle();
+    final second = CCRouter.navigator.push(const _Intent('B'));
+    await tester.pumpAndSettle();
+
+    final outcome = await CCRouter.navigator.activateExisting(homeHandle);
+    await tester.pumpAndSettle();
+
+    expect(outcome.status, CCRouteActivationStatus.activated);
+    expect(CCRouter.activeRouteEntries, hasLength(1));
+    expect(
+      CCRouter.routeEntryHandleOf(harness.contexts['home']!),
+      same(homeHandle),
+    );
+    expect(harness.contexts['home']!.mounted, isTrue);
+    expect(harness.resources['home'], same(homeResource));
+    expect(homeContext.mounted, isTrue);
+    expect(find.text('managed-home'), findsOneWidget);
+    expect(await first, isNull);
+    expect(await second, isNull);
+  });
+
+  testWidgets('deliverToExisting reaches only the registered Home receiver', (
+    tester,
+  ) async {
+    final harness = await _mount(tester);
+    final homeContext = harness.contexts['home']!;
+    final homeHandle = harness.handle('home');
+    final homeResource = harness.resources['home']!;
+    final requests = <String>[];
+    final receiver = CCRouter.routeRequestReceiverOf<String>(homeContext)!;
+    final remove = receiver.listen(requests.add);
+    final covering = CCRouter.navigator.push(const _Intent('A'));
+    await tester.pumpAndSettle();
+
+    final outcome = await CCRouter.navigator.deliverToExisting(
+      homeHandle,
+      'goods/42',
+    );
+
+    expect(outcome.status, CCRouteRequestDeliveryStatus.accepted);
+    expect(requests, ['goods/42']);
+    expect(
+      CCRouter.routeEntryHandleOf(harness.contexts['home']!),
+      same(homeHandle),
+    );
+    expect(harness.resources['home'], same(homeResource));
+    remove();
+    expect(
+      (await CCRouter.navigator.deliverToExisting(homeHandle, 'again')).status,
+      CCRouteRequestDeliveryStatus.notReady,
+    );
+    CCRouter.navigator.pop(result: 'done');
+    expect(await covering, 'done');
+  });
+
+  testWidgets(
+    'activateExisting reports conflict when a Foreign Popup covers the target',
+    (tester) async {
+      final harness = await _mount(tester);
+      final homeContext = harness.contexts['home']!;
+      final homeHandle = harness.handle('home');
+      showDialog<void>(
+        context: homeContext,
+        builder: (_) => const AlertDialog(content: Text('activation-popup')),
+      );
+      await tester.pumpAndSettle();
+
+      final outcome = await CCRouter.navigator.activateExisting(homeHandle);
+
+      expect(outcome.status, CCRouteActivationStatus.conflict);
+      expect(find.text('activation-popup'), findsOneWidget);
+      Navigator.of(tester.element(find.text('activation-popup'))).pop();
+      await tester.pumpAndSettle();
+    },
+  );
+
   testWidgets('Managed Router App requires an initialized Host', (
     tester,
   ) async {

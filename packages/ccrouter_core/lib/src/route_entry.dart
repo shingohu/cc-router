@@ -28,6 +28,9 @@ final class _RouteEntryRecord {
   /// Scope owning services and cancellation tied to this route opening.
   final CCScope scope;
 
+  /// Owns the one active typed request receiver for this Entry.
+  final _RouteRequestDispatcher requestDispatcher = _RouteRequestDispatcher();
+
   /// Logical removal signal, independent of the outgoing render Scope lifetime.
   ///
   /// Targeted-close waits end when this exact Entry leaves the active stack;
@@ -51,6 +54,52 @@ final class _RouteEntryRecord {
   );
 }
 
+/// Delivers one exact Dart type to the current owner of a Route Entry.
+final class _RouteRequestDispatcher {
+  final Map<Type, void Function(Object? request)> _handlers = {};
+  final Map<Type, Object> _registrations = {};
+
+  /// Installs one receiver and invalidates a previous receiver of the same Entry.
+  void Function() register<T>(void Function(T request) handler) {
+    final registration = Object();
+    _registrations[T] = registration;
+    _handlers[T] = (request) => handler(request as T);
+    return () {
+      if (identical(_registrations[T], registration)) {
+        _registrations.remove(T);
+        _handlers.remove(T);
+      }
+    };
+  }
+
+  /// Invokes the receiver only when its exact generic type matches [T].
+  CCRouteRequestDeliveryOutcome deliver<T>(T request) {
+    final handler = _handlers[T];
+    if (handler == null) {
+      return const CCRouteRequestDeliveryOutcome(
+        CCRouteRequestDeliveryStatus.notReady,
+      );
+    }
+    try {
+      handler(request);
+      return const CCRouteRequestDeliveryOutcome(
+        CCRouteRequestDeliveryStatus.accepted,
+      );
+    } catch (error) {
+      return CCRouteRequestDeliveryOutcome(
+        CCRouteRequestDeliveryStatus.failed,
+        errorType: error.runtimeType.toString(),
+      );
+    }
+  }
+
+  /// Releases the receiver and its callback reference at Entry retirement.
+  void dispose() {
+    _registrations.clear();
+    _handlers.clear();
+  }
+}
+
 /// Exposes Route Entry snapshots and lifecycle transitions from Runtime.
 extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
   /// Returns active Route Entries in current navigation order.
@@ -67,6 +116,36 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
   /// from a diagnostic snapshot or stack position.
   CCRouteEntryHandle? routeEntryHandleForNavigation(String navigationId) =>
       _routeEntryForNavigation(navigationId)?.handle;
+
+  /// Registers one typed receiver owned by the exact active Entry.
+  ///
+  /// The returned remover is idempotent and releases the callback reference
+  /// only if it still owns the current registration. Re-registering a type
+  /// replaces the previous receiver, which supports StatefulWidget remounts
+  /// without allowing a stale remover to clear the new callback.
+  void Function() registerRouteRequestHandler<T>({
+    required String navigationId,
+    required void Function(T request) handler,
+  }) {
+    final entry = _routeEntryForNavigation(navigationId);
+    if (entry == null) return () {};
+    return entry.requestDispatcher.register(handler);
+  }
+
+  /// Delivers one typed request to the exact Entry identified by [handle].
+  CCRouteRequestDeliveryOutcome deliverRouteRequest<T>(
+    CCRouteEntryHandle handle,
+    T request,
+  ) {
+    for (final entry in _routeEntries) {
+      if (identical(entry.handle, handle)) {
+        return entry.requestDispatcher.deliver(request);
+      }
+    }
+    return const CCRouteRequestDeliveryOutcome(
+      CCRouteRequestDeliveryStatus.notFound,
+    );
+  }
 
   /// Returns a bounded immutable snapshot of Route Entry lifecycle events.
   List<CCRouteEntryLifecycleEvent> get recentRouteEntryEvents =>
@@ -311,6 +390,7 @@ extension CCRouterRuntimeRouteEntries on CCRouterRuntime {
         entry.state == CCRouteEntryLifecycleState.removed) {
       return;
     }
+    entry.requestDispatcher.dispose();
     // Reserve the close before callbacks can synchronously start shutdown.
     // That shutdown must join this Scope even while removal is still on stack.
     // Observe failures in the producer's Zone and carry them as data. A

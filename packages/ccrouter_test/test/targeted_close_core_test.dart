@@ -33,6 +33,41 @@ final class _LegacyAdapter implements CCNavigationAdapter {
   void dispose() => delegate.dispose();
 }
 
+final class _ConflictingActivationAdapter
+    implements CCNavigationAdapter, CCNavigationActivateExistingAdapter {
+  final delegate = CCMemoryNavigationAdapter();
+
+  @override
+  void initialize(
+    List<CCNavigationRoute> routes, {
+    List<CCNavigationShell> shells = const [],
+  }) => delegate.initialize(routes, shells: shells);
+
+  @override
+  Future<Object?> navigate(CCNavigationRequest request) =>
+      delegate.navigate(request);
+
+  @override
+  Future<CCRouteActivationOutcome> activateExistingNavigation({
+    required String targetNavigationId,
+    required String hostId,
+    required String navigatorOutlet,
+    required List<String> expectedRemovalNavigationIds,
+  }) async => const CCRouteActivationOutcome(CCRouteActivationStatus.conflict);
+
+  @override
+  Future<bool> maybePop({Object? result}) => delegate.maybePop(result: result);
+
+  @override
+  void pop({Object? result}) => delegate.pop(result: result);
+
+  @override
+  bool canPop() => delegate.canPop();
+
+  @override
+  void dispose() => delegate.dispose();
+}
+
 /// Models a backend that commits the exact removal before reporting failure.
 final class _MutatingThrowingTargetedAdapter
     implements CCNavigationAdapter, CCNavigationTargetedCloseAdapter {
@@ -113,6 +148,196 @@ CCRouteEntryHandle _handle(
 ) => runtime.routeEntryHandleForNavigation(entry.navigationId)!;
 
 void main() {
+  test(
+    'activateExisting preserves the target identity and completes coverings',
+    () async {
+      final adapter = CCMemoryNavigationAdapter();
+      final runtime = _runtime(adapter: adapter);
+      final targetResult = runtime.pushRoute(_intent('1'));
+      await Future<void>.delayed(Duration.zero);
+      final target = runtime.activeRouteEntries.single;
+      final coveringResult = runtime.pushRoute(_intent('2'));
+      await Future<void>.delayed(Duration.zero);
+      final secondCoveringResult = runtime.pushRoute(_intent('3'));
+      await Future<void>.delayed(Duration.zero);
+
+      final outcome = await runtime.activateExistingRoute(
+        _handle(runtime, target),
+      );
+
+      expect(outcome.status, CCRouteActivationStatus.activated);
+      expect(runtime.activeRouteEntries, hasLength(1));
+      expect(
+        runtime.activeRouteEntries.single.routeEntryId,
+        target.routeEntryId,
+      );
+      expect(adapter.stack.single.navigationId, target.navigationId);
+      expect(await coveringResult, isNull);
+      expect(await secondCoveringResult, isNull);
+      var targetCompleted = false;
+      unawaited(targetResult.then((_) => targetCompleted = true));
+      await Future<void>.delayed(Duration.zero);
+      expect(targetCompleted, isFalse);
+      runtime.popRoute(result: 'target-result');
+      expect(await targetResult, 'target-result');
+    },
+  );
+
+  test(
+    'activateExisting preflights covering guards without changing the stack',
+    () async {
+      final calls = <String>[];
+      final runtime = _runtime(
+        guards: [
+          CCGlobalPopGuard(
+            id: 'activation.guard',
+            guard: fixture.TestPopGuard(
+              'activation.guard',
+              calls,
+              (_) => const CCPopDeny(code: 'covering_dirty'),
+            ),
+          ),
+        ],
+      );
+      final targetResult = runtime.pushRoute(_intent('1'));
+      await Future<void>.delayed(Duration.zero);
+      final target = runtime.activeRouteEntries.single;
+      final coveringResult = runtime.pushRoute(_intent('2'));
+      await Future<void>.delayed(Duration.zero);
+
+      final outcome = await runtime.activateExistingRoute(
+        _handle(runtime, target),
+      );
+
+      expect(outcome.status, CCRouteActivationStatus.guardDenied);
+      expect(outcome.guardDeniedCode, 'covering_dirty');
+      expect(calls, hasLength(1));
+      expect(runtime.activeRouteEntries, hasLength(2));
+      await runtime.dispose();
+      expect(await coveringResult, isNull);
+      expect(await targetResult, isNull);
+    },
+  );
+
+  test('typed request delivery is isolated to one active Entry', () async {
+    final runtime = _runtime();
+    final result = runtime.pushRoute(_intent('1'));
+    await Future<void>.delayed(Duration.zero);
+    final entry = runtime.activeRouteEntries.single;
+    final received = <String>[];
+    final remove = runtime.registerRouteRequestHandler<String>(
+      navigationId: entry.navigationId,
+      handler: received.add,
+    );
+
+    final accepted = runtime.deliverRouteRequest<String>(
+      _handle(runtime, entry),
+      'goods/42',
+    );
+    final wrongType = runtime.deliverRouteRequest<int>(
+      _handle(runtime, entry),
+      42,
+    );
+
+    expect(accepted.status, CCRouteRequestDeliveryStatus.accepted);
+    expect(wrongType.status, CCRouteRequestDeliveryStatus.notReady);
+    expect(received, ['goods/42']);
+    expect(runtime.activeRouteEntries.single.routeEntryId, entry.routeEntryId);
+    final replace = runtime.registerRouteRequestHandler<String>(
+      navigationId: entry.navigationId,
+      handler: (_) => throw StateError('receiver failed'),
+    );
+    final failed = runtime.deliverRouteRequest<String>(
+      _handle(runtime, entry),
+      'broken',
+    );
+    expect(failed.status, CCRouteRequestDeliveryStatus.failed);
+    expect(failed.errorType, 'StateError');
+    replace();
+    remove();
+    expect(
+      runtime
+          .deliverRouteRequest<String>(_handle(runtime, entry), 'again')
+          .status,
+      CCRouteRequestDeliveryStatus.notReady,
+    );
+    runtime.popRoute(result: 'done');
+    expect(await result, 'done');
+  });
+
+  test(
+    'activateExisting preserves the stack when the backend reports conflict',
+    () async {
+      final runtime = _runtime(adapter: _ConflictingActivationAdapter());
+      final targetResult = runtime.pushRoute(_intent('1'));
+      await Future<void>.delayed(Duration.zero);
+      final target = runtime.activeRouteEntries.single;
+      final coveringResult = runtime.pushRoute(_intent('2'));
+      await Future<void>.delayed(Duration.zero);
+
+      final outcome = await runtime.activateExistingRoute(
+        _handle(runtime, target),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(outcome.status, CCRouteActivationStatus.conflict);
+      expect(runtime.activeRouteEntries, hasLength(2));
+      runtime.popRoute();
+      expect(await coveringResult, isNull);
+      runtime.popRoute();
+      expect(await targetResult, isNull);
+    },
+  );
+
+  test('typed Intent selection returns the exact target handle', () async {
+    final runtime = _runtime();
+    final targetResult = runtime.pushRoute(_intent('1'));
+    await Future<void>.delayed(Duration.zero);
+    final target = runtime.activeRouteEntries.single;
+    final coveringResult = runtime.pushRoute(_intent('2'));
+    await Future<void>.delayed(Duration.zero);
+
+    final outcome = await runtime.activateExistingIntent(_intent('1'));
+
+    expect(outcome.status, CCRouteActivationStatus.activated);
+    expect(outcome.targetHandle, same(_handle(runtime, target)));
+    expect(runtime.activeRouteEntries.single.routeEntryId, target.routeEntryId);
+    expect(await coveringResult, isNull);
+    runtime.popRoute();
+    expect(await targetResult, isNull);
+
+    final duplicateRuntime = _runtime();
+    final first = duplicateRuntime.pushRoute(_intent('1'));
+    await Future<void>.delayed(Duration.zero);
+    final second = duplicateRuntime.pushRoute(_intent('1'));
+    await Future<void>.delayed(Duration.zero);
+    final ambiguous = await duplicateRuntime.activateExistingIntent(
+      _intent('1'),
+    );
+    expect(ambiguous.status, CCRouteActivationStatus.ambiguous);
+    await duplicateRuntime.dispose();
+    await first;
+    await second;
+  });
+
+  test(
+    'legacy adapters report unsupported activation without covering Entries',
+    () async {
+      final runtime = _runtime(adapter: _LegacyAdapter());
+      final result = runtime.pushRoute(_intent('1'));
+      await Future<void>.delayed(Duration.zero);
+      final entry = runtime.activeRouteEntries.single;
+
+      final outcome = await runtime.activateExistingRoute(
+        _handle(runtime, entry),
+      );
+
+      expect(outcome.status, CCRouteActivationStatus.unsupported);
+      runtime.popRoute(result: 'done');
+      expect(await result, 'done');
+    },
+  );
+
   test(
     'duplicate route instances close only selected result and Scope once',
     () async {

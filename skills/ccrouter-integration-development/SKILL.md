@@ -656,6 +656,39 @@ the Service Contract.
   retain no Context/Route/payload and expire with their exact Runtime entry.
   Active Entry, lifecycle and visibility snapshots are diagnostic observations
   only; they never expose an actionable close handle.
+- To return to an existing managed page without recreating its Entry or Route
+  Scope, capture that page's handle and call
+  `CCRouter.navigator.activateExisting(handle)`. The operation is restricted to
+  the same concrete Host/Outlet, preflights covering synchronous PopGuards, and
+  removes only the expected covering Entries. Check
+  `CCRouteActivationOutcome.status`; `unsupported` and `conflict` never fall
+  back to `go`, `reset`, or positional Pop. A target with no covering Entry is
+  a successful no-op only when the Adapter implements the activation SPI;
+  legacy Adapters without that SPI return `unsupported`.
+- The canonical production shape is `Home(H1) → Settings(S1) → Web(W1)`,
+  where W1 or a notification requests new data for the existing Home. The
+  expected flow is to remove S1/W1, retain H1's Entry/Scope/State and then
+  deliver a typed request to H1. `go/reset` recreate the target and raw Flutter
+  Navigator operations bypass Runtime ownership; use the two-step flow below.
+- For a new typed request to that retained page, obtain
+  `CCRouter.routeRequestReceiverOf<T>(context)` from the page's own managed
+  binding, register one synchronous handler with `listen`, and call
+  `CCRouter.navigator.deliverToExisting<T>(handle, request)`. The receiver is
+  exact-Entry and exact-Dart-type scoped; it is released when the Entry retires.
+  `accepted` means the handler accepted the handoff, not that a Widget or
+  business operation has completed. Check `notFound`, `notReady`, `conflict`,
+  and `failed`; never use a global callback registry or rewrite the Entry's
+  original arguments to simulate delivery.
+- External or notification entry points that do not own a handle may call
+  `CCRouter.navigator.activateExistingIntent(intent, context: context)`. Runtime
+  encodes the generated Intent, matches the canonical URI inside the selected
+  Host/Outlet, and returns `ambiguous` for duplicate matches instead of using
+  recency or stack position. On `activated`, use the returned `targetHandle`
+  for the separate typed delivery step; `targetHandle` is an exact identity and
+  does not retain a Runtime, Context, Scope, or payload. The application must
+  complete external authority, authentication, authorization, and H5 callback
+  validation before calling this internal handoff; the operation does not run
+  external Deep Link admission for the already active target.
 - Check `CCRouteCloseOutcome.status`: `closed`, `notFound`, `unsupported`, or
   `guardDenied`. Close runs the target's managed PopGuards and validates its
   original result type before mutation. It is an explicit business exit; do not

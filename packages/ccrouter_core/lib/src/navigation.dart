@@ -6,6 +6,136 @@ part of 'runtime.dart';
 /// tests may call them directly; application business code must not retain or
 /// invoke a Runtime instance.
 extension CCRouterRuntimeNavigation on CCRouterRuntime {
+  /// Activates one exact existing Entry without recreating its Route Scope.
+  ///
+  /// Only Entries in the target's concrete Host and Navigator Outlet that were
+  /// opened after it are considered covering Entries. Their synchronous
+  /// PopGuards are preflighted before the optional backend transaction runs.
+  /// The target's own Guard is not evaluated because it remains active. A
+  /// backend without atomic identity-based activation returns
+  /// [CCRouteActivationStatus.unsupported].
+  Future<CCRouteActivationOutcome> activateExistingRoute(
+    CCRouteEntryHandle handle,
+  ) async {
+    _ensureNavigationCanStart();
+    _ensureInitialized();
+    _RouteEntryRecord? target;
+    for (final candidate in _routeEntries) {
+      if (identical(candidate.handle, handle)) {
+        target = candidate;
+        break;
+      }
+    }
+    if (target == null) {
+      return const CCRouteActivationOutcome(CCRouteActivationStatus.notFound);
+    }
+
+    final covering = <_RouteEntryRecord>[];
+    final targetIndex = _routeEntries.indexOf(target);
+    for (var index = targetIndex + 1; index < _routeEntries.length; index++) {
+      final candidate = _routeEntries[index];
+      if (candidate.request.hostId == target.request.hostId &&
+          candidate.request.placement.navigatorOutlet ==
+              target.request.placement.navigatorOutlet) {
+        covering.add(candidate);
+      }
+    }
+    for (final entry in covering.reversed) {
+      final decision = _evaluatePopGuardsForEntry(entry, CCPopTrigger.business);
+      if (decision is CCPopDeny) {
+        return CCRouteActivationOutcome(
+          CCRouteActivationStatus.guardDenied,
+          guardDeniedCode: decision.code,
+          targetHandle: target.handle,
+        );
+      }
+    }
+    if (!_routeEntries.contains(target) || _disposed) {
+      return const CCRouteActivationOutcome(CCRouteActivationStatus.notFound);
+    }
+    final adapter = _requiredNavigationAdapter;
+    if (adapter is! CCNavigationActivateExistingAdapter) {
+      return CCRouteActivationOutcome(
+        CCRouteActivationStatus.unsupported,
+        targetHandle: target.handle,
+      );
+    }
+    final request = target.request;
+    final registration = _popRegistrationForHost(request.hostId);
+    final outcome = await _awaitNavigationBackend(
+      () => (adapter as CCNavigationActivateExistingAdapter)
+          .activateExistingNavigation(
+            targetNavigationId: request.navigationId,
+            hostId: request.hostId,
+            navigatorOutlet: request.placement.navigatorOutlet,
+            expectedRemovalNavigationIds: [
+              for (final entry in covering) entry.request.navigationId,
+            ],
+          ),
+      registration: registration,
+      retired: const CCRouteActivationOutcome(CCRouteActivationStatus.notFound),
+    );
+    if (outcome.status == CCRouteActivationStatus.activated &&
+        !_disposed &&
+        !registration.isCancelled) {
+      Object? firstError;
+      StackTrace? firstStack;
+      for (final entry in covering) {
+        if (_routeEntries.contains(entry)) {
+          try {
+            _removeRouteEntry(entry, reason: 'activateExisting');
+          } catch (error, stackTrace) {
+            firstError ??= error;
+            firstStack ??= stackTrace;
+          }
+        }
+      }
+      if (firstError != null) {
+        Error.throwWithStackTrace(firstError, firstStack!);
+      }
+    }
+    return CCRouteActivationOutcome(
+      outcome.status,
+      guardDeniedCode: outcome.guardDeniedCode,
+      targetHandle: target.handle,
+    );
+  }
+
+  /// Selects one existing Entry by the canonical URI produced by [intent].
+  ///
+  /// Matching is restricted to the resolved Host and Navigator Outlet. A
+  /// repeated route with the same canonical URI returns `ambiguous` rather than
+  /// selecting by recency or stack position. The successful receipt carries
+  /// the exact handle for a subsequent typed request delivery.
+  Future<CCRouteActivationOutcome> activateExistingIntent<R>(
+    CCRouteIntent<R> intent, {
+    CCRoutePlacement? placementOverride,
+  }) async {
+    _ensureNavigationCanStart();
+    _ensureInitialized();
+    final prepared = _routeRegistry.prepareIntent(
+      intent,
+      placementOverride: placementOverride,
+    );
+    final hostId = _resolveNavigationHostId(prepared.placement);
+    final matches = _routeEntries
+        .where((entry) {
+          return entry.request.routeId == prepared.routeId &&
+              entry.request.uri == prepared.uri &&
+              entry.request.hostId == hostId &&
+              entry.request.placement.navigatorOutlet ==
+                  prepared.placement.navigatorOutlet;
+        })
+        .toList(growable: false);
+    if (matches.isEmpty) {
+      return const CCRouteActivationOutcome(CCRouteActivationStatus.notFound);
+    }
+    if (matches.length > 1) {
+      return const CCRouteActivationOutcome(CCRouteActivationStatus.ambiguous);
+    }
+    return activateExistingRoute(matches.single.handle);
+  }
+
   /// Pushes a typed [intent] and completes with its eventual Pop result.
   ///
   /// A Host-only Flutter facade may pass [placementOverride] after resolving a

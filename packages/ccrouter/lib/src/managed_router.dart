@@ -294,6 +294,7 @@ final class CCManagedNavigationAdapter
         CCNavigationDispatchAdapter,
         CCNavigationParentStackAdapter,
         CCNavigationTargetedCloseAdapter,
+        CCNavigationActivateExistingAdapter,
         CCNavigationAdapterHostBinding,
         CCNavigationOutletVisibilityBinding,
         CCNavigationRouteExitBinding,
@@ -873,6 +874,63 @@ final class CCManagedNavigationAdapter
       );
     }
     return const CCRouteCloseOutcome(CCRouteCloseStatus.closed);
+  }
+
+  @override
+  /// Removes exact covering Entries while preserving the selected Page identity.
+  Future<CCRouteActivationOutcome> activateExistingNavigation({
+    required String targetNavigationId,
+    required String hostId,
+    required String navigatorOutlet,
+    required List<String> expectedRemovalNavigationIds,
+  }) async {
+    _ensureAvailable();
+    final target = _entryForNavigation(targetNavigationId);
+    if (target == null ||
+        target.request.hostId != hostId ||
+        target.request.placement.navigatorOutlet != navigatorOutlet) {
+      return const CCRouteActivationOutcome(CCRouteActivationStatus.notFound);
+    }
+    if (_coveringForeignRootRoute(navigatorOutlet) != null ||
+        _observerFor(navigatorOutlet).foreignEntries.isNotEmpty) {
+      return const CCRouteActivationOutcome(CCRouteActivationStatus.conflict);
+    }
+    final partition = _entriesForOutlet(
+      navigatorOutlet,
+    ).where((entry) => entry.request.hostId == hostId).toList(growable: false);
+    final targetIndex = partition.indexOf(target);
+    if (targetIndex == -1) {
+      return const CCRouteActivationOutcome(CCRouteActivationStatus.notFound);
+    }
+    final actualRemovalIds = [
+      for (final entry in partition.skip(targetIndex + 1))
+        entry.request.navigationId,
+    ];
+    if (!_sameIds(actualRemovalIds, expectedRemovalNavigationIds)) {
+      return const CCRouteActivationOutcome(CCRouteActivationStatus.conflict);
+    }
+    if (actualRemovalIds.isEmpty) {
+      return const CCRouteActivationOutcome(CCRouteActivationStatus.activated);
+    }
+
+    final removalIds = actualRemovalIds.toSet();
+    final removed = partition.skip(targetIndex + 1).toList(growable: false);
+    for (final entry in removed.reversed) {
+      _retainRouteExit(entry);
+    }
+    _state = _copyState(
+      entries: _state.entries
+          .where((entry) => !removalIds.contains(entry.request.navigationId))
+          .toList(growable: false),
+    );
+    for (final entry in removed.reversed) {
+      _renderedRoutes.remove(entry.backendEntryId);
+      _pendingRemovalResults.remove(entry.backendEntryId);
+      _completeResult(entry.request.navigationId, null);
+      _emitEntryEvent(CCNavigationBackendEventKind.remove, entry);
+    }
+    _notifyStateListeners();
+    return const CCRouteActivationOutcome(CCRouteActivationStatus.activated);
   }
 
   @override
@@ -1600,6 +1658,15 @@ final class CCManagedNavigationAdapter
     for (final listener in _stateListeners.toList()) {
       listener();
     }
+  }
+
+  /// Compares expected backend identities without accepting reordered entries.
+  bool _sameIds(List<String> actual, List<String> expected) {
+    if (actual.length != expected.length) return false;
+    for (var index = 0; index < actual.length; index++) {
+      if (actual[index] != expected[index]) return false;
+    }
+    return true;
   }
 
   /// Resolves structural ownership independently of a page's declared metadata.
