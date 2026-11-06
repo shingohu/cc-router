@@ -260,6 +260,12 @@ For UI Fragments, unmount/identity changes revoke Action forwarding and release
 consumer callback references; Renderer-owned work and retained Props remain the
 Renderer's responsibility. Contract ranges accept single comparators and all
 whitespace separators, and parsed SemVer prerelease identifiers are immutable.
+Generated Fragment Clients default to `CCUIFragmentUpdatePolicy.always`. A
+consumer may opt one instance into `reuseIdenticalProps` when it keeps the same
+immutable Props instance and wants callback-only or host-unrelated updates to
+reuse the last Renderer result. The policy compares Props with `identical`,
+still reruns the Renderer when `active` changes, and never creates a global
+Widget cache or skips descendant inherited-widget updates by contract.
 Adapt an existing Host Assembly with `CCHostAssembly.extend`, which preserves
 optional bindings while appending components or adjusting the route Catalog.
 For real Fragment Widget tests, use `CCUIFragmentTestHost` from the explicit

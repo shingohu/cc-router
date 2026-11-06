@@ -326,10 +326,21 @@ perform I/O or navigate in this factory. Stateful resources belong in State.
 
 A directly depends on `ccrouter_ui`, imports its own stable generated
 `src/ccrouter_generated/<componentId>.ui.api.g.dart` and calls the generated
-method with `key`, `props`, `onAction`, and optional `active` (default true).
+method with `key`, `props`, `onAction`, optional `active` (default true),
+and optional `updatePolicy` (default `CCUIFragmentUpdatePolicy.always`).
 The generated method returns a normal Widget. The public API does not require
 Context, registry lookup, Runtime construction or owner implementation imports.
 Generated `ui/*.ui.g.dart` files and `ccrouter_ui_generated.dart` remain SPI.
+
+Use `CCUIFragmentUpdatePolicy.reuseIdenticalProps` only when the consumer keeps
+the same immutable Props instance for semantically unchanged content. The
+policy compares Props with `identical`, does not invoke DTO `==` or perform
+automatic deep equality, and still re-runs the Renderer when `active` changes.
+Replacing only `onAction` updates the instance-local Action Sink without
+rebuilding the Renderer result. The cached Widget is scoped to that mounted
+Fragment State and is cleared on capability/Runtime identity changes and
+unmount. This is an opt-in factory/content reuse boundary, not a global Widget
+cache or a promise to skip descendant build, layout or paint work.
 
 When its resolved closure declares a UI consumer, Host directly depends on
 `ccrouter_ui`, runs normal generation, and passes the

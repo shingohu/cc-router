@@ -129,10 +129,21 @@ String _unionLabel(_UnionAction action) => switch (action) {
 
 int _created = 0;
 int _disposed = 0;
+int _rendererCalls = 0;
+int _cardBuilds = 0;
+int _themeRendererCalls = 0;
+int _themeBuilds = 0;
 final _actions = <void Function()>[];
 
-Widget _renderer(CCUIFragmentRenderInput<_Props, _Action> input) =>
-    _Card(input);
+Widget _renderer(CCUIFragmentRenderInput<_Props, _Action> input) {
+  _rendererCalls++;
+  return _Card(input);
+}
+
+Widget _themeRenderer(CCUIFragmentRenderInput<_Props, _Action> input) {
+  _themeRendererCalls++;
+  return _ThemeCard(input);
+}
 
 final class _Card extends StatefulWidget {
   const _Card(this.input);
@@ -146,6 +157,7 @@ final class _CardState extends State<_Card> {
   final controller = TextEditingController();
   @override
   Widget build(BuildContext context) {
+    _cardBuilds++;
     _actions.add(() => widget.input.onAction(_Action.select));
     return Text(
       'instance:$identity props:${widget.input.props.id} active:${widget.input.active}',
@@ -158,6 +170,18 @@ final class _CardState extends State<_Card> {
     _disposed++;
     controller.dispose();
     super.dispose();
+  }
+}
+
+final class _ThemeCard extends StatelessWidget {
+  const _ThemeCard(this.input);
+  final CCUIFragmentRenderInput<_Props, _Action> input;
+
+  @override
+  Widget build(BuildContext context) {
+    _themeBuilds++;
+    final brightness = Theme.of(context).brightness;
+    return Text(brightness.name, textDirection: TextDirection.ltr);
   }
 }
 
@@ -197,15 +221,18 @@ CCHostAssembly _assembly({
 
 Widget _fragment({
   int id = 1,
+  _Props? props,
   bool active = true,
   Key? key,
   ValueChanged<_Action>? onAction,
+  CCUIFragmentUpdatePolicy updatePolicy = CCUIFragmentUpdatePolicy.always,
   CCUIFragmentRequirement requirement = _requirement,
 }) => CCUIGeneratedFragment<_Props, _Action>(
   key: key,
-  props: _Props(id),
+  props: props ?? _Props(id),
   active: active,
   onAction: onAction ?? (_) {},
+  updatePolicy: updatePolicy,
   requirement: requirement,
 );
 
@@ -216,6 +243,10 @@ void main() {
   setUp(() {
     _created = 0;
     _disposed = 0;
+    _rendererCalls = 0;
+    _cardBuilds = 0;
+    _themeRendererCalls = 0;
+    _themeBuilds = 0;
     _actions.clear();
   });
   tearDown(CCRouterHost.shutdown);
@@ -640,6 +671,163 @@ void main() {
     await tester.pumpWidget(const SizedBox());
     expect(_disposed, 2);
   });
+
+  testWidgets(
+    'default updates rebuild the Renderer while retaining the same State',
+    (tester) async {
+      CCRouterHost.initialize(hostAssembly: _assembly());
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: _fragment(key: const ValueKey('stable')),
+        ),
+      );
+      expect(_rendererCalls, 1);
+      expect(_cardBuilds, 1);
+      expect(_created, 1);
+
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: _fragment(key: const ValueKey('stable'), onAction: (_) {}),
+        ),
+      );
+      expect(_rendererCalls, 2, reason: 'callback-only updates keep defaults');
+      expect(_cardBuilds, 2);
+      expect(_created, 1);
+
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: _fragment(key: const ValueKey('stable'), active: false),
+        ),
+      );
+      expect(
+        _rendererCalls,
+        3,
+        reason: 'active is part of the render snapshot',
+      );
+      expect(_cardBuilds, 3);
+      expect(_created, 1);
+
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: _fragment(key: const ValueKey('stable'), id: 2),
+        ),
+      );
+      expect(_rendererCalls, 4);
+      expect(_cardBuilds, 4);
+      expect(_created, 1);
+      expect(_disposed, 0);
+
+      await tester.pumpWidget(const SizedBox());
+      expect(_disposed, 1);
+    },
+  );
+
+  testWidgets(
+    'identity policy reuses callback-only updates and invalidates on Props',
+    (tester) async {
+      CCRouterHost.initialize(hostAssembly: _assembly());
+      const props = _Props(1);
+      var first = 0;
+      var latest = 0;
+      var useLatest = false;
+      Widget tree({bool active = true, _Props value = props}) => Directionality(
+        textDirection: TextDirection.ltr,
+        child: _fragment(
+          key: const ValueKey('stable'),
+          props: value,
+          active: active,
+          updatePolicy: CCUIFragmentUpdatePolicy.reuseIdenticalProps,
+          onAction: (_) {
+            if (useLatest) {
+              latest++;
+            } else {
+              first++;
+            }
+          },
+        ),
+      );
+
+      await tester.pumpWidget(tree());
+      expect(_rendererCalls, 1);
+      expect(_cardBuilds, 1);
+      final retainedAction = _actions.last;
+
+      useLatest = false;
+      await tester.pumpWidget(tree());
+      expect(_rendererCalls, 1);
+      expect(_cardBuilds, 1);
+      retainedAction();
+      expect(first, 1);
+
+      useLatest = true;
+      await tester.pumpWidget(tree());
+      expect(_rendererCalls, 1);
+      expect(_cardBuilds, 1);
+      retainedAction();
+      expect(latest, 1);
+
+      await tester.pumpWidget(tree(active: false));
+      expect(_rendererCalls, 2, reason: 'active changes preserve visual state');
+      expect(_cardBuilds, 2);
+      expect(_created, 1);
+      retainedAction();
+      expect(latest, 1, reason: 'inactive Actions remain revoked');
+
+      await tester.pumpWidget(tree(value: const _Props(1)));
+      expect(_rendererCalls, 3, reason: 'new Props identity invalidates reuse');
+      expect(_cardBuilds, 3);
+      expect(_created, 1);
+
+      await tester.pumpWidget(tree(value: const _Props(2), active: false));
+      expect(_rendererCalls, 4);
+      expect(_cardBuilds, 4);
+      await tester.pumpWidget(const SizedBox());
+      expect(_disposed, 1);
+    },
+  );
+
+  testWidgets(
+    'identity policy keeps inherited dependencies reactive without Renderer calls',
+    (tester) async {
+      final assembly = _assembly(
+        contributions: [
+          const CCUIRenderer<_Props, _Action>(
+            contract: _contract,
+            renderer: _themeRenderer,
+          ),
+        ],
+      );
+      CCRouterHost.initialize(hostAssembly: assembly);
+      const props = _Props(1);
+      Widget tree(ThemeData theme) => Theme(
+        data: theme,
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: _fragment(
+            props: props,
+            key: const ValueKey('theme'),
+            updatePolicy: CCUIFragmentUpdatePolicy.reuseIdenticalProps,
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(tree(ThemeData.light()));
+      expect(_themeRendererCalls, 1);
+      expect(_themeBuilds, 1);
+      expect(find.text(Brightness.light.name), findsOneWidget);
+
+      await tester.pumpWidget(tree(ThemeData.dark()));
+      expect(_themeRendererCalls, 1);
+      expect(_themeBuilds, 2);
+      expect(find.text(Brightness.dark.name), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox());
+    },
+  );
 
   testWidgets(
     'two instances remain independent and inactive KeepAlive suppresses actions',

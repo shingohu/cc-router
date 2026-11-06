@@ -7,6 +7,9 @@
 
 - Add optional typed static UI composition, required dependency validation and
   Host-owned lifecycle generations. Remount explicitly after Runtime restart.
+- Add opt-in per-instance `CCUIFragmentUpdatePolicy.reuseIdenticalProps` for
+  Renderer result reuse when Props identity and `active` remain unchanged;
+  default updates and lifecycle fences are unchanged.
 - Preserve Flutter Key/State ownership and reject late Actions after shutdown.
 - Reject enhanced enums, fingerprint effective DTO field defaults, and reject
   initializer-list assignments or redirects whose semantics are not modeled.

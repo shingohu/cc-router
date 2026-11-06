@@ -12,11 +12,13 @@ abstract final class DemoNavigationLabComponentFragments {
     required ui_1.OrderPanelProps props,
     required ValueChanged<ui_1.OrderPanelAction> onAction,
     bool active = true,
+    CCUIFragmentUpdatePolicy updatePolicy = CCUIFragmentUpdatePolicy.always,
   }) => CCUIGeneratedFragment<ui_1.OrderPanelProps, ui_1.OrderPanelAction>(
     key: key,
     props: props,
     onAction: onAction,
     active: active,
+    updatePolicy: updatePolicy,
     requirement: const CCUIFragmentRequirement(
       consumer: "demo_navigation_lab_component",
       contract: const CCUIFragmentDescriptor(
@@ -34,11 +36,13 @@ abstract final class DemoNavigationLabComponentFragments {
     required ui_2.OrderSummaryProps props,
     required ValueChanged<ui_2.OrderSummaryAction> onAction,
     bool active = true,
+    CCUIFragmentUpdatePolicy updatePolicy = CCUIFragmentUpdatePolicy.always,
   }) => CCUIGeneratedFragment<ui_2.OrderSummaryProps, ui_2.OrderSummaryAction>(
     key: key,
     props: props,
     onAction: onAction,
     active: active,
+    updatePolicy: updatePolicy,
     requirement: const CCUIFragmentRequirement(
       consumer: "demo_navigation_lab_component",
       contract: const CCUIFragmentDescriptor(
@@ -56,6 +60,7 @@ abstract final class DemoNavigationLabComponentFragments {
     required ui_2.OrderRecommendationsProps props,
     required ValueChanged<ui_2.OrderRecommendationsAction> onAction,
     bool active = true,
+    CCUIFragmentUpdatePolicy updatePolicy = CCUIFragmentUpdatePolicy.always,
   }) =>
       CCUIGeneratedFragment<
         ui_2.OrderRecommendationsProps,
@@ -65,6 +70,7 @@ abstract final class DemoNavigationLabComponentFragments {
         props: props,
         onAction: onAction,
         active: active,
+        updatePolicy: updatePolicy,
         requirement: const CCUIFragmentRequirement(
           consumer: "demo_navigation_lab_component",
           contract: const CCUIFragmentDescriptor(

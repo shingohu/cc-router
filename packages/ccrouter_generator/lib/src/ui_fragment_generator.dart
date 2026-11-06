@@ -637,7 +637,7 @@ final class _UIFragmentBuilder implements Builder {
         final props = imports.type(contract.props);
         final action = imports.type(contract.action);
         out.writeln(
-          'static Widget $alias({Key? key, required $props props, required ValueChanged<$action> onAction, bool active = true}) => CCUIGeneratedFragment<$props, $action>(key: key, props: props, onAction: onAction, active: active, requirement: $requirement);',
+          'static Widget $alias({Key? key, required $props props, required ValueChanged<$action> onAction, bool active = true, CCUIFragmentUpdatePolicy updatePolicy = CCUIFragmentUpdatePolicy.always}) => CCUIGeneratedFragment<$props, $action>(key: key, props: props, onAction: onAction, active: active, updatePolicy: updatePolicy, requirement: $requirement);',
         );
       }
       out.writeln('}');

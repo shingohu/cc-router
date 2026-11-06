@@ -14,7 +14,13 @@ Props remain DTO-only; scalar types are supported only as data fields.
 Union Actions require UI schema 3 / Package Index schema 5 with matching tooling.
 DTO Actions without unions need UI schema 2 / Package Index 4 compatible tooling. Flutter State owns instance
 resources; `active: false` suppresses Actions, while pausing work and Session
-reset remain application responsibilities. Runtime shutdown invalidates old
+reset remain application responsibilities. Generated Clients default to
+`CCUIFragmentUpdatePolicy.always`. An instance may explicitly select
+`reuseIdenticalProps`; this uses `identical` Props plus unchanged `active` to
+reuse the last Renderer result, while callback-only updates refresh the Action
+Sink. A new Props identity or an `active` change invokes the Renderer. No
+automatic DTO equality, global Widget cache or hidden-page state freeze is
+provided. Runtime shutdown invalidates old
 callbacks, and reinitialization requires an explicit UI subtree remount.
 Contract version snapshots must match exactly. Schema/version/range changes
 revoke retained sinks before rebuild validation; restoring valid glue creates

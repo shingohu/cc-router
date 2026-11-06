@@ -71,6 +71,20 @@ final class CCUIFragmentRenderInput<P extends Object, A extends Object> {
   final bool active;
 }
 
+/// Selects how an individual Fragment instance responds to Widget updates.
+enum CCUIFragmentUpdatePolicy {
+  /// Rebuilds the Renderer for every update, preserving the original behavior.
+  always,
+
+  /// Reuses the last Renderer result when Props and activity are identical.
+  ///
+  /// The comparison uses [identical], not DTO equality. A callback-only update
+  /// refreshes the Action Sink without invoking the Renderer. An [active]
+  /// change still invokes the Renderer so visual activity state cannot become
+  /// stale. The cached Widget belongs only to this mounted State instance.
+  reuseIdenticalProps,
+}
+
 /// Generated public schema identity; contains no Flutter or business instances.
 final class CCUIFragmentDescriptor {
   /// Captures a verified version and complete DTO/Action shape fingerprint.
@@ -307,6 +321,7 @@ final class CCUIGeneratedFragment<P extends Object, A extends Object>
     required this.requirement,
     required this.props,
     required this.onAction,
+    this.updatePolicy = CCUIFragmentUpdatePolicy.always,
     this.active = true,
     super.key,
   });
@@ -319,6 +334,9 @@ final class CCUIGeneratedFragment<P extends Object, A extends Object>
 
   /// Latest consumer callback; never put into the global catalog.
   final ValueChanged<A> onAction;
+
+  /// Optional per-instance Renderer reuse policy; defaults to [always].
+  final CCUIFragmentUpdatePolicy updatePolicy;
 
   /// Whether this instance is currently permitted to emit actions.
   final bool active;
@@ -383,6 +401,12 @@ final class _FragmentState<P extends Object, A extends Object>
   /// Current revocable identity, shared only by callbacks for this capability.
   _FragmentActionSink<A>? _actions;
 
+  /// Last Renderer result retained only for the opt-in identity policy.
+  Widget? _renderedChild;
+
+  /// Whether the current update may reuse [_renderedChild].
+  bool _reuseRenderedChild = false;
+
   /// Revokes callbacks before validating changed capability or schema snapshots.
   @override
   void didUpdateWidget(CCUIGeneratedFragment<P, A> oldWidget) {
@@ -397,8 +421,17 @@ final class _FragmentState<P extends Object, A extends Object>
         oldWidget.requirement.versionRange != widget.requirement.versionRange) {
       _actions?.revoke();
       _actions = null;
+      _renderedChild = null;
+      _reuseRenderedChild = false;
     } else {
       _actions?.update(widget.onAction, widget.active);
+      _reuseRenderedChild =
+          widget.updatePolicy == CCUIFragmentUpdatePolicy.reuseIdenticalProps &&
+          oldWidget.updatePolicy == widget.updatePolicy &&
+          identical(oldWidget.props, widget.props) &&
+          oldWidget.active == widget.active &&
+          _renderedChild != null;
+      if (!_reuseRenderedChild) _renderedChild = null;
     }
   }
 
@@ -433,15 +466,24 @@ final class _FragmentState<P extends Object, A extends Object>
     }
     final actions = _actions ??= _FragmentActionSink<A>(catalog, contract.id);
     actions.update(widget.onAction, widget.active);
+    final child = _reuseRenderedChild && _renderedChild != null
+        ? _renderedChild!
+        : renderer.build(
+            CCUIFragmentRenderInput<P, A>(
+              props: widget.props,
+              active: widget.active,
+              onAction: actions.emit,
+            ),
+          );
+    if (widget.updatePolicy == CCUIFragmentUpdatePolicy.reuseIdenticalProps) {
+      _renderedChild = child;
+    } else {
+      _renderedChild = null;
+    }
+    _reuseRenderedChild = false;
     return KeyedSubtree(
       key: ValueKey('${expected.consumer}/${contract.identity}'),
-      child: renderer.build(
-        CCUIFragmentRenderInput<P, A>(
-          props: widget.props,
-          active: widget.active,
-          onAction: actions.emit,
-        ),
-      ),
+      child: child,
     );
   }
 
@@ -451,6 +493,8 @@ final class _FragmentState<P extends Object, A extends Object>
     _record('unmounted', widget.requirement.contract.id);
     _actions?.revoke();
     _actions = null;
+    _renderedChild = null;
+    _reuseRenderedChild = false;
     _generation = null;
     super.dispose();
   }
