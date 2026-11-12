@@ -163,7 +163,7 @@ Command、Event、初始化任务与 Service 生命周期交互实验页。
 
 ### `demo_navigation_lab.extra`
 
-展示仅在进程内传递的类型安全 Extra 对象。
+展示多个类型安全 Extra 字段共享进程内封装。
 
 - Exposure: `internal`; deep link: `disabled`; result: `void`
 - Contract library: `demo_navigation_lab:lib/src/ccrouter_generated/route/shell_pages.route.g.dart`
@@ -179,6 +179,7 @@ Command、Event、初始化任务与 Service 生命周期交互实验页。
 | Name | Wire | Source | Type | Cardinality | Codec | Required | Description |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | `payload` | `payload` | `extra` | `DemoExtraPayload` | `-` | `-` | true |  |
+| `source` | `source` | `extra` | `String?` | `-` | `-` | false |  |
 
 ### `demo_navigation_lab.failure`
 

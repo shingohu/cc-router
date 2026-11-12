@@ -18,7 +18,7 @@ import 'package:ccrouter_demo/src/ccrouter_generated/host/ccrouter_demo_ccrouter
 final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
   capturedAt: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
   catalogFingerprint:
-      "571eefd73ce280035374357fc27bf5be3acaee800b3f66e7a2ef6b8d9ecfd5c7",
+      "afdd041811b8d02d140373c9c01041dda91ba5a044c4d0a6f07a1880a7f3d6ec",
   components: [
     CCDevToolsCatalogComponent(
       id: "demo_kv_storage_component",
@@ -331,7 +331,7 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
       id: "demo_navigation_lab.extra",
       ownerComponentId: "demo_navigation_lab_component",
       packageName: "demo_navigation_lab",
-      description: "展示仅在进程内传递的类型安全 Extra 对象。",
+      description: "展示多个类型安全 Extra 字段共享进程内封装。",
       source: CCDevToolsSourceLocation(
         packageName: "demo_navigation_lab",
         packageUri: "package:demo_navigation_lab/src/shell_pages.dart",

@@ -1130,7 +1130,9 @@ void main() {
     await _unmountDemo(tester);
   });
 
-  testWidgets('typed Extra remains an in-process typed value', (tester) async {
+  testWidgets('multiple typed Extras remain process-local values', (
+    tester,
+  ) async {
     await _pumpDemo(tester);
     await tester.tap(find.text('导航'));
     await tester.pumpAndSettle();
@@ -1147,6 +1149,7 @@ void main() {
       find.textContaining('owner=navigation_lab · revision=3'),
       findsOneWidget,
     );
+    expect(find.textContaining('source=navigation_lab_home'), findsOneWidget);
     expect(CCRouter.activeRouteEntries.last.address.routePattern, '/lab/extra');
     await tester.tap(find.text('关闭'));
     await tester.pumpAndSettle();

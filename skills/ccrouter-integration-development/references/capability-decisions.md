@@ -39,6 +39,16 @@ Choose Route when the user enters a destination. Prefer a generated Intent becau
 
 Use an internal `@CCRoute` when only the owning component calls the route. Promote to `@CCRouteContract` when another component needs it. Preserve route ID, wire parameter names, result type, and URI semantics during promotion.
 
+For independent process-local fields, declare multiple `@CCExtraParam` parameters.
+Generator keeps their static types in a private route-specific envelope while
+Runtime retains its single `extra` slot. A single Extra keeps its existing object
+transport. Both preserve object identity and resource ownership; neither serializes
+payloads into the URI. Use one public immutable DTO instead when those fields form
+a stable shared model. Envelope absence uses constructor defaults/null, whereas an
+explicit null inside an envelope remains null. Only all-null values with all-null
+defaults encode as absent, so optional empty Extras can be reconstructed as parents.
+Parents with non-null Extra defaults retain the existing reconstruction limitation.
+
 Use a CCRouter Dialog or BottomSheet Route only when it needs one or more of:
 
 - cross-component invocation;

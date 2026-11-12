@@ -272,6 +272,27 @@ void _emitRouteCodec(
   required _ParameterDefaultEmitter parameterDefault,
 }) {
   final params = route.parameters;
+  final extras = params
+      .where((parameter) => parameter.source == 'extra')
+      .toList();
+  final extraType = '${route.codec}Extra';
+  final requiresExtra = extras.any(
+    (parameter) => !parameter.nullable && parameterDefault(parameter) == null,
+  );
+  if (extras.length > 1) {
+    out.writeln('''
+/// Route-specific process-local envelope; never serialized into a URI.
+final class $extraType {
+  /// Retains typed field references without copying caller-owned objects.
+  const $extraType({${extras.map((parameter) => 'required this.${parameter.name}').join(', ')}});
+''');
+    for (final parameter in extras) {
+      out.writeln(
+        '/// Process-local ${parameter.name} supplied to route ${route.id}.\nfinal ${parameterType(parameter)} ${parameter.name};',
+      );
+    }
+    out.writeln('}\n');
+  }
   out.writeln('''
 /// Private boundary conversion; raw input is never included in error messages.
 final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
@@ -298,6 +319,16 @@ final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
     }
 ''');
   }
+  if (extras.length > 1) {
+    out.writeln(
+      'final _extra = switch (input.extra) { null => null, final $extraType value => value, _ => throw CCRouteParameterError(${_quote('Route "${route.id}" Extra envelope is invalid.')}), };',
+    );
+    if (requiresExtra) {
+      out.writeln(
+        'if (_extra == null) throw CCRouteParameterError(${_quote('Route "${route.id}" requires its typed Extra envelope.')});',
+      );
+    }
+  }
   for (final parameter in params) {
     final error = _quote(
       'Route "${route.id}" parameter "${parameter.wireName}" is invalid.',
@@ -306,6 +337,20 @@ final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
         parameterDefault(parameter) ??
         (parameter.nullable ? 'null' : 'throw CCRouteParameterError($error)');
     if (parameter.source == 'extra') {
+      if (extras.length > 1) {
+        final String value;
+        if (requiresExtra) {
+          value = '_extra.${parameter.name}';
+        } else {
+          value = missing == 'null'
+              ? '_extra?.${parameter.name}'
+              : '_extra == null ? $missing : _extra.${parameter.name}';
+        }
+        out.writeln(
+          'final ${parameterType(parameter)} _value_${parameter.name} = $value;',
+        );
+        continue;
+      }
       out.writeln(
         'final _value_${parameter.name} = input.extra == null ? $missing : input.extra;',
       );
@@ -420,9 +465,25 @@ final class ${route.codec} implements CCRouteCodec<${route.arguments}> {
         : '';
     out.writeln('$inclusion${_quote(parameter.wireName)}: $encoded,');
   }
-  out.writeln(
-    '}, extra: ${params.where((parameter) => parameter.source == 'extra').isEmpty ? 'null' : 'arguments.${params.singleWhere((parameter) => parameter.source == 'extra').name}'});\n}\n}',
-  );
+  var extraExpression = switch (extras.length) {
+    0 => 'null',
+    1 => 'arguments.${extras.single.name}',
+    _ =>
+      '$extraType(${extras.map((parameter) => '${parameter.name}: arguments.${parameter.name}').join(', ')})',
+  };
+  // Absence must preserve null defaults and URI-only parent reconstruction.
+  if (extras.length > 1 &&
+      extras.every(
+        (parameter) =>
+            parameter.nullable &&
+            (parameterDefault(parameter) ?? 'null') == 'null',
+      )) {
+    final allNull = extras
+        .map((parameter) => 'arguments.${parameter.name} == null')
+        .join(' && ');
+    extraExpression = '$allNull ? null : $extraExpression';
+  }
+  out.writeln('}, extra: $extraExpression);\n}\n}');
 }
 
 /// Emits the normalized route patterns with one effective primary entry.

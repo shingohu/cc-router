@@ -326,7 +326,7 @@ Diagnostics 页展示 Failure/Fallback/Pending/InitTask 和健康状态；旧 Pr
 | 能力 | 状态 | 说明 |
 | --- | --- | --- |
 | 启动期组件装配 | 已支持 | 依赖排序、重复 ID、缺失依赖和循环依赖校验 |
-| 注解路由与类型安全 Intent | 已支持 | Path、URI、custom scheme、Regex、多 Pattern、Query、Extra、typed result |
+| 注解路由与类型安全 Intent | 已支持 | Path、URI、custom scheme、Regex、多 Pattern、Query、一个或多个 typed Extra、typed result |
 | 页面展示 | 已支持 | 平台默认、Material、Cupertino、fade、scale、bottom-up、透明全屏 |
 | Modal Route | 已支持 | Dialog、modal bottom sheet（支持透明 sheet surface），可选择是否纳入 CCRouter 契约与生命周期 |
 | 导航操作 | 已支持 | `push`、`replace`、`go`、`reset`、`open`、`pop`、`maybePop`、`canPop`、实例级 `close`、`activateExisting`、`activateExistingIntent`、`deliverToExisting` |
@@ -1058,9 +1058,20 @@ await CCRouter.navigator.open(
 - 多 Pattern 指向同一页面
 - Path 参数自动转换
 - `@CCQueryParam` 标量、enum、`List<T>`、`Set<T>` 与自定义 Codec
-- `@CCExtraParam` 强类型进程内对象；生成的 binding 保留参数静态类型，并在 decode 边界校验对象类型
+- `@CCExtraParam` 一个或多个强类型进程内参数；生成的 binding 保留字段静态类型，并在 decode 边界校验传输类型
 
 外部可分享数据应进入 Path/Query；Token、Controller、大对象和不可序列化状态不得放入 URL。`Extra` 只适合进程内短生命周期数据，不写入 URI、生成文档或诊断；错误类型会抛出不包含原始值的 `CCRouteParameterError`。不能依赖 `Extra` 做 Deep Link、状态恢复或跨进程传递。
+
+多个 `@CCExtraParam` 由 Generator 放入每条 Route 私有的 typed envelope，Runtime 仍只有
+一个 `extra` 槽。字段保留原对象 identity，不复制嵌套 DTO，也不改变资源所有权。单 Extra
+沿用原有编码，现有调用无需迁移；升级 Generator 后首次生成会重新校验缓存，在相同 SDK
+和配置下既有单 Extra 的生成内容保持一致。
+
+缺失整个 envelope 时按字段默认值或 null 解码；缺失必需的非空值时失败。提供 envelope 后，
+显式 null 不会被非空默认值覆盖。仅当所有字段值及其缺省值都为 null 时省略 envelope，
+从而保留 `go` / `reset` 的父链重建能力；非空 Extra 默认值仍受既有父链限制。不要以
+`??` 把显式 null 替换成业务默认值。若字段共同构成稳定的跨组件模型，继续优先使用一个
+公共 immutable DTO。Demo 的“打开 Typed Extra”展示 DTO 与可选来源字段同时传递。
 
 ## 跨组件 Route Contract
 

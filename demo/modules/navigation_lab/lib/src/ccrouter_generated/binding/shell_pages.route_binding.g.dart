@@ -67,5 +67,5 @@ route_page.DemoExtraPage ccrouterBuildDemoExtraPageRoute(
       .ccrouterDescribeDemoExtraPageRoute()
       .codec
       .decode(arguments);
-  return route_page.DemoExtraPage(decoded.payload);
+  return route_page.DemoExtraPage(decoded.payload, source: decoded.source);
 }
