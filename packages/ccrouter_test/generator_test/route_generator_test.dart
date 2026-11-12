@@ -1191,6 +1191,25 @@ final class _ProbeCodec implements CCRouteCodec<ProbeDetailRouteArguments> {
     },
   );
 
+  test('page builders explain an unresolved contract type', () async {
+    const declarations = r'''
+@CCRouteImplementation(MissingRouteContract)
+final class ProbePage { const ProbePage(); }
+''';
+    for (final logs in [
+      await generateBinding(declarations, fails: true),
+      await generateRouteMetadata(declarations, fails: true),
+    ]) {
+      expect(
+        logs,
+        contains('CCRouteImplementation contract type could not be resolved'),
+      );
+      expect(logs, contains('imports'));
+      expect(logs, contains('ProbePage'));
+      expect(logs, isNot(contains('Not an instance of Type')));
+    }
+  });
+
   test('page builder rejects a Contract-first constructor mismatch', () async {
     final logs = await generateBinding(
       r'''

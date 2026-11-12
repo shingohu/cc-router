@@ -345,6 +345,10 @@ teardown. The unmount callback must complete and must not await its own disposal
   The component-author entry explicitly exports the authored Route Contract
   schema from its source for `@CCRouteImplementation`; the generated Consumer
   entry does not supply it. Re-export Consumer APIs there only when needed.
+  If that schema name is unresolved, native Dart analysis reports
+  `undefined_identifier` and may also report `const_with_non_constant_argument`.
+  Fix the authored-schema import/name/dependency first. Generator supplies a
+  source-located contract-resolution error; no extra Plugin rule is required.
 - Do not simulate unsupported Action Pipeline, dynamic component activation/deactivation, complete state restoration, or Navigator 1.0 Backend. Generated Command/Event/InitTask capabilities and Service Proxies support only their documented declaration and dependency models.
 - Use `@CCEventContract` plus public top-level `@CCEventSubscription` functions for static component Events, and publish annotated Events only through the generated Owner Client. Omit a Subscriber ID only when the component has exactly one Subscriber for that Event. Keep `CCEventSubscriberId<E>`, `CCEventSubscriber<E>`, and the legacy string overload for unannotated migration capabilities and low-level tests.
 - An Event's overall deadline fails publication with `CCInvocationTimeoutError` and cooperatively cancels Subscribers without recording shared-deadline timeouts as Subscriber failures. A shorter nested call timeout stays isolated to its Subscriber. Do not rely on microsecond timer precision.

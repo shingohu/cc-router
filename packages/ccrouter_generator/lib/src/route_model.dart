@@ -455,7 +455,15 @@ final class _RouteImplementationModel {
         element,
       );
     }
-    final contractType = annotation.read('contract').typeValue;
+    final contractReader = annotation.read('contract');
+    if (!contractReader.isType) {
+      _fail(
+        'CCRouteImplementation contract type could not be resolved. '
+        'Check the contract name, imports, and package dependencies.',
+        element,
+      );
+    }
+    final contractType = contractReader.typeValue;
     final contractElement = contractType.element;
     if (contractElement is! ClassElement) {
       _fail(

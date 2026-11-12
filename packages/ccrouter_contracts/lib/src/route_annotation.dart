@@ -185,6 +185,8 @@ final class CCRouteImplementation {
   ///
   /// The referenced type must carry [CCRouteContract], and workspace assembly
   /// rejects missing or duplicate implementations for the stable route ID.
+  /// Import the authored schema explicitly; unresolved contract names receive
+  /// a source-located generation error rather than a constant-reader exception.
   const CCRouteImplementation(this.contract);
 
   /// Abstract Contract-first schema implemented by the annotated page.

@@ -1,5 +1,15 @@
 # IDE / Analysis Server
 
+Native Dart analysis already reports an unresolved schema in
+`@CCRouteImplementation(MissingRouteContract)` as `undefined_identifier`, often
+with `const_with_non_constant_argument`. These errors are available without the
+optional CCRouter Plugin. Import the authored schema from its component-author
+entry, verify its name and package dependency, and reanalyze before generation.
+The generated Consumer barrel does not export that schema. Generator also
+rejects unresolved contract values at the page declaration with an actionable
+message instead of leaking `FormatException: Not an instance of Type` from
+constant reading. An unresolved name alone does not prove a particular missing
+import, so the Plugin does not add a speculative schema-import Quick Fix.
 
 UI Fragment checks use canonical framework symbols, including prefixed and
 transitive public exports. They report `ccrouter_ui_alias_invalid`,

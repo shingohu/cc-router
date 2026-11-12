@@ -1125,6 +1125,10 @@ export 'src/order_detail_route_contract.dart' show OrderDetailRouteContract;
 
 页面实现从该 Owner 入口取得 schema，用于 `@CCRouteImplementation`。生成的 Consumer 入口
 不包含该手写声明，不能用它替代；也不应为此导出 generated Arguments、Definition 或 Codec。
+若 schema 名称无法解析，Dart analyzer 会提前报告 `undefined_identifier`，并可能伴随
+`const_with_non_constant_argument`；先检查名称、Owner 入口 import 和依赖。Generator 也会
+在页面声明处提示契约类型无法解析，而非抛出 `FormatException: Not an instance of Type`。
+这类类型解析错误可以在不包含 DTO 的页面重现，不能归因于 Extra 内部的嵌套集合。
 
 该稳定入口只聚合公开 Route Consumer 的生成类型；`RouteArguments`、Definition 和 Codec 属于
 generated Owner SPI，不从业务 barrel 导出。authored Service、Command、Event 和 InitTask
