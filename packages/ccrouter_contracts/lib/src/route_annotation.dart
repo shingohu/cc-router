@@ -185,6 +185,8 @@ final class CCRouteImplementation {
   ///
   /// The referenced type must carry [CCRouteContract], and workspace assembly
   /// rejects missing or duplicate implementations for the stable route ID.
+  /// Import the authored schema explicitly; unresolved contract names receive
+  /// a source-located generation error rather than a constant-reader exception.
   const CCRouteImplementation(this.contract);
 
   /// Abstract Contract-first schema implemented by the annotated page.
@@ -214,11 +216,16 @@ final class CCQueryParam {
   final Type? codec;
 }
 
-/// Marks the one in-memory constructor parameter carried outside the URI.
+/// Marks a typed in-memory constructor parameter carried outside the URI.
 ///
-/// Use for optional snapshots or complex application objects. A required Extra
-/// cannot be combined with enabled deep links, and wrong Extra types produce
-/// a parameter error. Extra is not serialized or suitable for restoration.
+/// Multiple annotated parameters share a generated private, route-specific
+/// envelope; a single Extra retains its original object transport. Values keep
+/// their identity and remain caller-owned. An all-null envelope is omitted only
+/// when every field also decodes to null in its absence; explicit null never
+/// falls back to a non-null constructor default inside a supplied envelope.
+/// A required Extra cannot be combined with enabled deep links. Missing or
+/// mismatched values produce a parameter error. Extra is not serialized or
+/// suitable for restoration. Prefer one immutable DTO for a stable shared model.
 final class CCExtraParam {
   /// Declares a typed, process-local Extra value.
   const CCExtraParam();

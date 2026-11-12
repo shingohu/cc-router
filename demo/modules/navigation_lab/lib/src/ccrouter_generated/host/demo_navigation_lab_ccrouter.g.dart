@@ -24,7 +24,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'demo_navigation_lab',
   packageVersion: '0.1.0',
   contentFingerprint:
-      '5171b6824b1626beb8ced823ef6bb742cbde1adcdf80ff9dd4776132adb5d020',
+      '429521571e17972549c5254054d8147e05380aad3b7eb8bc5def78f71555d554',
   contractBundle: CCContractBundleDescriptor(
     packageName: 'demo_navigation_lab',
     packageVersion: '0.1.0',
@@ -91,7 +91,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
         ownerComponentId: "demo_navigation_lab_component",
         version: "0.1.0",
         shapeFingerprint:
-            "9a4da8c6d49c60b06ca36ba3d1288310ab9a899693557beb5f98269b2a796621",
+            "bc9ed242180152a45c2a8cae249d73b4266c269b4b4dccd8d34db7d7b7f9176a",
       ),
       CCContractDescriptor(
         kind: CCContractKind.command,

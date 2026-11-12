@@ -331,7 +331,6 @@ final class _RouteModel {
     }
     final parameters = <_ParameterModel>[];
     final queryKeys = <String>{};
-    var extras = 0;
     for (final parameter in constructor.formalParameters) {
       final model = _ParameterModel.read(parameter, keys, id);
       if (model == null) continue;
@@ -342,9 +341,6 @@ final class _RouteModel {
         );
       }
       if (model.source == 'extra') {
-        extras++;
-        if (extras > 1)
-          _fail('A route may declare only one Extra parameter.', parameter);
         if (model.required &&
             _enumValue(
               annotation.read('deepLink').objectValue,
@@ -459,7 +455,15 @@ final class _RouteImplementationModel {
         element,
       );
     }
-    final contractType = annotation.read('contract').typeValue;
+    final contractReader = annotation.read('contract');
+    if (!contractReader.isType) {
+      _fail(
+        'CCRouteImplementation contract type could not be resolved. '
+        'Check the contract name, imports, and package dependencies.',
+        element,
+      );
+    }
+    final contractType = contractReader.typeValue;
     final contractElement = contractType.element;
     if (contractElement is! ClassElement) {
       _fail(

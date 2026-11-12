@@ -233,12 +233,17 @@ final class DemoWorkspaceProfilePage extends StatelessWidget {
 @CCRoute<void>(
   id: 'demo_navigation_lab.extra',
   pattern: CCPathPattern('/lab/extra'),
-  description: '展示仅在进程内传递的类型安全 Extra 对象。',
+  description: '展示多个类型安全 Extra 字段共享进程内封装。',
 )
 final class DemoExtraPage extends StatelessWidget {
-  const DemoExtraPage(@CCExtraParam() this.payload, {super.key});
+  const DemoExtraPage(
+    @CCExtraParam() this.payload, {
+    @CCExtraParam() this.source,
+    super.key,
+  });
 
   final DemoExtraPayload payload;
+  final String? source;
 
   @override
   Widget build(BuildContext context) => _ShellPage(
@@ -246,6 +251,7 @@ final class DemoExtraPage extends StatelessWidget {
     icon: Icons.data_object,
     body:
         'owner=${payload.owner} · revision=${payload.revision}\n'
+        'source=${source ?? '未提供'}\n'
         'Extra 不进入 URL，不用于外部 Deep Link 或状态恢复。',
     actions: [
       FilledButton.icon(

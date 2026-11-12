@@ -956,6 +956,62 @@ final class Probe {
     },
   );
 
+  test('single Extra output matches the existing generated fixture', () async {
+    const sourcePath = 'lib/src/generated_route_fixture.dart';
+    const outputPath =
+        'lib/src/ccrouter_generated/route/generated_route_fixture.route.g.dart';
+    final code = await generate(
+      File('packages/ccrouter_test/$sourcePath').readAsStringSync(),
+      sourcePath: sourcePath,
+      outputPath: outputPath,
+    );
+    expect(code, File('packages/ccrouter_test/$outputPath').readAsStringSync());
+  });
+
+  test(
+    'multiple typed Extras retain their types through page binding',
+    () async {
+      const declarations = r'''
+final class Snapshot {
+  const Snapshot(this.notes);
+  final Map<String, List<int>> notes;
+}
+@CCRoute<void>(id: 'probe.extra', pattern: CCPathPattern('/probe/:id'))
+final class Probe {
+  const Probe({required this.id, @CCExtraParam() required this.snapshot,
+    @CCExtraParam() this.revision});
+  final String id;
+  final Snapshot snapshot;
+  final int? revision;
+}
+''';
+      final code = await generate(declarations);
+      final binding = await generateBinding(declarations);
+      expect(code, contains('final class _ProbeRouteCodecExtra'));
+      expect(code, contains('final route_source.Snapshot snapshot;'));
+      expect(code, contains('final int? revision;'));
+      expect(binding, contains('snapshot: decoded.snapshot'));
+      expect(binding, contains('revision: decoded.revision'));
+    },
+  );
+
+  test('public contracts support several process-local typed Extras', () async {
+    final code = await generateContract(r'''
+@CCRouteContract<void>(componentId: probeComponentId, id: 'probe.extra',
+  pattern: CCPathPattern('/probe'))
+abstract class ProbeRouteContract {
+  const ProbeRouteContract({@CCExtraParam() required this.snapshot,
+    @CCExtraParam() this.revision});
+  final List<String> snapshot;
+  final int? revision;
+}
+''');
+    expect(code, contains('final class _ProbeRouteCodecExtra'));
+    expect(code, contains('final List<String> snapshot;'));
+    expect(code, isNot(contains("package:ccrouter/")));
+    expect(code, isNot(contains('package:flutter/')));
+  });
+
   test('infers the sole reversible primary in a Pattern list', () async {
     final code = await generate(r'''
 @CCRoute<void>(id: 'probe', patterns: [CCRegexPattern(r'/legacy'), CCPathPattern('/probe')])
@@ -1134,6 +1190,25 @@ final class _ProbeCodec implements CCRouteCodec<ProbeDetailRouteArguments> {
       expect(code, isNot(contains('final class ProbeDetailRouteArguments')));
     },
   );
+
+  test('page builders explain an unresolved contract type', () async {
+    const declarations = r'''
+@CCRouteImplementation(MissingRouteContract)
+final class ProbePage { const ProbePage(); }
+''';
+    for (final logs in [
+      await generateBinding(declarations, fails: true),
+      await generateRouteMetadata(declarations, fails: true),
+    ]) {
+      expect(
+        logs,
+        contains('CCRouteImplementation contract type could not be resolved'),
+      );
+      expect(logs, contains('imports'));
+      expect(logs, contains('ProbePage'));
+      expect(logs, isNot(contains('Not an instance of Type')));
+    }
+  });
 
   test('page builder rejects a Contract-first constructor mismatch', () async {
     final logs = await generateBinding(
@@ -1604,9 +1679,9 @@ final class Probe { const Probe(); }
       "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe', primary: true)], deepLink: CCDeepLinkPolicy.enabled) final class Probe { const Probe({@CCExtraParam() required this.value}); final Object value; }",
       'cannot require in-memory Extra',
     ),
-    'multiple Extras': (
-      "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe', primary: true)]) final class Probe { const Probe({@CCExtraParam() this.a, @CCExtraParam() this.b}); final Object? a; final Object? b; }",
-      'only one Extra',
+    'required external Extra after optional Extra': (
+      "@CCRoute<void>(id: 'probe', pattern: CCPathPattern('/probe'), deepLink: CCDeepLinkPolicy.enabled) final class Probe { const Probe({@CCExtraParam() this.a, @CCExtraParam() required this.b}); final String? a; final int b; }",
+      'cannot require in-memory Extra',
     ),
     'nullable path': (
       "@CCRoute<void>(id: 'probe', patterns: [CCPathPattern('/probe/:id', primary: true)]) final class Probe { const Probe({required this.id}); final int? id; }",

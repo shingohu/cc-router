@@ -5,7 +5,7 @@
     "name": "demo_navigation_lab",
     "version": "0.1.0"
   },
-  "contentFingerprint": "5171b6824b1626beb8ced823ef6bb742cbde1adcdf80ff9dd4776132adb5d020",
+  "contentFingerprint": "429521571e17972549c5254054d8147e05380aad3b7eb8bc5def78f71555d554",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -3432,11 +3432,11 @@
         {
           "id": "demo_navigation_lab.extra",
           "version": "0.1.0",
-          "shapeFingerprint": "9a4da8c6d49c60b06ca36ba3d1288310ab9a899693557beb5f98269b2a796621",
+          "shapeFingerprint": "bc9ed242180152a45c2a8cae249d73b4266c269b4b4dccd8d34db7d7b7f9176a",
           "componentId": "demo_navigation_lab_component",
           "exposure": "internal",
           "deepLink": "disabled",
-          "description": "展示仅在进程内传递的类型安全 Extra 对象。",
+          "description": "展示多个类型安全 Extra 字段共享进程内封装。",
           "interceptorIds": [],
           "popGuardIds": [],
           "declaration": {
@@ -3511,6 +3511,15 @@
               "source": "extra",
               "type": "DemoExtraPayload",
               "required": true,
+              "default": null,
+              "description": null
+            },
+            {
+              "name": "source",
+              "wireName": "source",
+              "source": "extra",
+              "type": "String?",
+              "required": false,
               "default": null,
               "description": null
             }

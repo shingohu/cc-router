@@ -833,13 +833,16 @@ ccrouterDescribeDemoWorkspaceProfilePageRoute() =>
 /// Immutable arguments for route demo_navigation_lab.extra; URI values remain typed.
 final class _DemoExtraPageRouteArguments {
   /// Creates arguments without navigating or retaining a backend context.
-  const _DemoExtraPageRouteArguments({required this.payload});
+  const _DemoExtraPageRouteArguments({required this.payload, this.source});
 
   /// extra parameter payload for demo_navigation_lab.extra.
   final route_type_0.DemoExtraPayload payload;
+
+  /// extra parameter source for demo_navigation_lab.extra.
+  final String? source;
 }
 
-/// 展示仅在进程内传递的类型安全 Extra 对象。
+/// 展示多个类型安全 Extra 字段共享进程内封装。
 abstract final class _DemoExtraPageRoute {
   /// Stable identity used by registration, diagnostics and typed navigation.
   static const id = "demo_navigation_lab.extra";
@@ -847,8 +850,10 @@ abstract final class _DemoExtraPageRoute {
   /// Creates a typed Intent; navigate through CCRouter.navigator.
   static CCRouteIntent<void> intent({
     required route_type_0.DemoExtraPayload payload,
-  }) =>
-      _DemoExtraPageRouteIntent(_DemoExtraPageRouteArguments(payload: payload));
+    String? source,
+  }) => _DemoExtraPageRouteIntent(
+    _DemoExtraPageRouteArguments(payload: payload, source: source),
+  );
 }
 
 /// Generated definition bridge for registration and page binding.
@@ -901,6 +906,21 @@ final class _DemoExtraPageRouteIntent implements CCRouteIntent<void> {
   final _DemoExtraPageRouteArguments arguments;
 }
 
+/// Route-specific process-local envelope; never serialized into a URI.
+final class _DemoExtraPageRouteCodecExtra {
+  /// Retains typed field references without copying caller-owned objects.
+  const _DemoExtraPageRouteCodecExtra({
+    required this.payload,
+    required this.source,
+  });
+
+  /// Process-local payload supplied to route demo_navigation_lab.extra.
+  final route_type_0.DemoExtraPayload payload;
+
+  /// Process-local source supplied to route demo_navigation_lab.extra.
+  final String? source;
+}
+
 /// Private boundary conversion; raw input is never included in error messages.
 final class _DemoExtraPageRouteCodec
     implements CCRouteCodec<_DemoExtraPageRouteArguments> {
@@ -910,22 +930,36 @@ final class _DemoExtraPageRouteCodec
   /// Rejects missing, repeated or malformed values before creating arguments.
   @override
   _DemoExtraPageRouteArguments decode(CCRouteCodecValues input) {
-    final _value_payload = input.extra == null
-        ? throw CCRouteParameterError(
-            "Route \"demo_navigation_lab.extra\" parameter \"payload\" is invalid.",
-          )
-        : input.extra;
-    if (_value_payload is! route_type_0.DemoExtraPayload)
+    final _extra = switch (input.extra) {
+      null => null,
+      final _DemoExtraPageRouteCodecExtra value => value,
+      _ => throw CCRouteParameterError(
+        "Route \"demo_navigation_lab.extra\" Extra envelope is invalid.",
+      ),
+    };
+    if (_extra == null)
       throw CCRouteParameterError(
-        "Route \"demo_navigation_lab.extra\" parameter \"payload\" is invalid.",
+        "Route \"demo_navigation_lab.extra\" requires its typed Extra envelope.",
       );
-    return _DemoExtraPageRouteArguments(payload: _value_payload);
+    final route_type_0.DemoExtraPayload _value_payload = _extra.payload;
+    final String? _value_source = _extra.source;
+    return _DemoExtraPageRouteArguments(
+      payload: _value_payload,
+      source: _value_source,
+    );
   }
 
   /// Encodes unescaped scalar values; Runtime owns URI escaping exactly once.
   @override
   CCRouteCodecValues encode(_DemoExtraPageRouteArguments arguments) {
-    return CCRouteCodecValues(path: {}, query: {}, extra: arguments.payload);
+    return CCRouteCodecValues(
+      path: {},
+      query: {},
+      extra: _DemoExtraPageRouteCodecExtra(
+        payload: arguments.payload,
+        source: arguments.source,
+      ),
+    );
   }
 }
 
@@ -935,8 +969,10 @@ final class CCGeneratedDemoExtraPageRouteFactory {
   const CCGeneratedDemoExtraPageRouteFactory();
 
   /// Creates an immutable Intent without performing navigation.
-  CCRouteIntent<void> call({required route_type_0.DemoExtraPayload payload}) =>
-      _DemoExtraPageRoute.intent(payload: payload);
+  CCRouteIntent<void> call({
+    required route_type_0.DemoExtraPayload payload,
+    String? source,
+  }) => _DemoExtraPageRoute.intent(payload: payload, source: source);
 }
 
 /// Package-internal bridge used by the generated component route index.

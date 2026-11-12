@@ -41,6 +41,24 @@ not require a framework redesign or a separate approval cycle.
    maintainers also update their README, Skill guidance, and design status.
    Distinguish implemented behavior from proposals and untested platforms.
 
+### Multiple typed Extra fields
+
+Several independent process-local Route parameters are a Generator capability:
+declare multiple `@CCExtraParam` fields and keep the single Runtime slot behind
+a private typed envelope. Preserve object identity, explicit null, URI privacy,
+and URI-only parent reconstruction for empty nullable fields. A stable shared
+model can remain one immutable DTO. Do not infer that flattening parameters fixes
+an unrelated nested-DTO generation exception; reproduce that exception separately.
+One confirmed source of `FormatException: Not an instance of Type` is an
+unresolved `CCRouteImplementation` schema reference. It reproduces without any
+DTO and disappears when the correct schema is imported. Native Dart diagnostics
+cover the unresolved name; Generator rejects it with a source-located contract
+resolution message. This reproduction does not establish the cause of a
+historical report without its original source or stack trace.
+The generated fixtures and Managed parent checks are covered by
+`packages/ccrouter_test/test/generated_multiple_extra_test.dart`; the navigation
+Demo exercises a payload DTO plus optional source through the real Host.
+
 Report the evidence, classification, chosen capability, ownership, verification,
 and any remaining limitation. A request to assess a scenario does not authorize
 implementing it, expanding public contracts, or sending an upstream report.

@@ -908,10 +908,12 @@ final class ProductDraft {
 final class ProductEditorPage extends StatelessWidget {
   const ProductEditorPage({
     @CCExtraParam() required this.draft,
+    @CCExtraParam() this.source,
     super.key,
   });
 
   final ProductDraft draft;
+  final String? source;
 
   @override
   Widget build(BuildContext context) => Text(draft.id);
@@ -923,6 +925,26 @@ the runtime Extra before page construction. A mismatch throws a sanitized
 `CCRouteParameterError`. Keep shareable or externally supplied values in
 Path/Query; Extra is not available to Deep Links, restoration, persistence, or
 cross-process navigation.
+
+Several annotated fields share a generated private envelope, so `draft` and
+`source` remain typed without an application-owned wrapper or a dynamic Map.
+The DTO and its nested objects keep their identity; Generator does not clone or
+freeze them. Keep mutable resources with their existing owner. A stable shared
+business model can still be one public immutable DTO passed as a single Extra.
+
+Without an envelope, each field uses its constructor default or null; required
+non-null values fail. Inside an envelope, explicit null is preserved even when
+the constructor default is non-null. Generator omits the envelope only when all
+field values and their absence defaults are null. This allows empty optional
+Extras on parents rebuilt by Managed `go`, `reset`, or URI startup; non-null
+Extra defaults keep the existing parent reconstruction limitation. Existing
+single-Extra routes require no migration. Upgrade Generator, regenerate the
+Host, restart any active watch, and refresh Portable State when distributing
+Packages. Under an unchanged SDK/configuration, single-Extra route output stays
+identical; tool upgrades can still invalidate generation caches.
+
+The navigation Demo's “打开 Typed Extra” passes `DemoExtraPayload` and an optional
+`source` independently, exercising the generated envelope and page binding.
 
 ## Cross-Component Route
 

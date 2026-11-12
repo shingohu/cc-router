@@ -556,7 +556,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
     _ActionTile(
       icon: Icons.data_object,
       title: '打开 Typed Extra',
-      subtitle: '复杂对象只在进程内传递，不写入 URL 或诊断记录。',
+      subtitle: 'DTO 和来源字段作为多个 typed Extra 传递，不写入 URL 或诊断记录。',
       onTap: () => _run(
         'Typed Extra',
         () => CCRouter.navigator.push<void>(
@@ -565,6 +565,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
               owner: 'navigation_lab',
               revision: 3,
             ),
+            source: 'navigation_lab_home',
           ),
           context: context,
         ),
