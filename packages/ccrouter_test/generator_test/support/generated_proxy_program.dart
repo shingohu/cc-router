@@ -27,8 +27,19 @@ Future<ProcessResult> runGeneratedProxyProgram({
   write('main.dart', program);
   write('runtime.dart', '''
 Object? currentService;
+final class CCCancellationToken {}
+CCCancellationToken? inputCancellation;
+CCCancellationToken? linkedCancellation;
 final class CCServiceKey<T> { const CCServiceKey(this.name); final String name; }
 abstract final class CCRouterGeneratedServiceBinding {
+  static Stream<R> invokeStream<S, R>({CCServiceKey<S>? key, required String methodId,
+    required String callerComponentId, CCCancellationToken? cancellation,
+    required Stream<R> Function(S, InvocationContext) call}) {
+      inputCancellation = cancellation;
+      final context = InvocationContext();
+      linkedCancellation = context.cancellation;
+      return call(currentService as S, context);
+  }
   static R invokeSync<S, R>({CCServiceKey<S>? key, required String methodId,
     required String callerComponentId, required R Function(S, Object?) call}) =>
       call(currentService as S, null);
@@ -36,6 +47,7 @@ abstract final class CCRouterGeneratedServiceBinding {
     required String callerComponentId, required Future<R> Function(S, Object?) call}) =>
       call(currentService as S, null);
 }
+final class InvocationContext { final cancellation = CCCancellationToken(); }
 ''');
   return Process.run(Platform.resolvedExecutable, ['${root.path}/main.dart']);
 }

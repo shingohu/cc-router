@@ -86,4 +86,21 @@ final class _OrderSummaryServiceProxy
         callerComponentId: "demo_payment_component",
         call: (service, _) => service.unwrap<T>(value),
       );
+
+  /// Invokes `demo_order.summary.watchSummary`.
+  @override
+  service_type_0.Stream<String> watchSummary(
+    int orderId, {
+    required ccrouter_service_runtime.CCCancellationToken cancellation,
+  }) =>
+      ccrouter_service_runtime.CCRouterGeneratedServiceBinding.invokeStream<
+        service_type_1.OrderSummaryService,
+        String
+      >(
+        methodId: "watchSummary",
+        callerComponentId: "demo_payment_component",
+        cancellation: cancellation,
+        call: (service, context) =>
+            service.watchSummary(orderId, cancellation: context.cancellation),
+      );
 }

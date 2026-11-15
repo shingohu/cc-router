@@ -18,7 +18,7 @@ import 'package:ccrouter_demo/src/ccrouter_generated/host/ccrouter_demo_ccrouter
 final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
   capturedAt: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
   catalogFingerprint:
-      "afdd041811b8d02d140373c9c01041dda91ba5a044c4d0a6f07a1880a7f3d6ec",
+      "104afbf92407fd8c1d1d4de45a9845dffc8c64f78de9e89bc147eb531cf5569e",
   components: [
     CCDevToolsCatalogComponent(
       id: "demo_kv_storage_component",
@@ -749,7 +749,7 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
       source: CCDevToolsSourceLocation(
         packageName: "demo_order",
         packageUri: "package:demo_order/src/order_summary_service.dart",
-        line: 6,
+        line: 8,
         column: 13,
       ),
     ),

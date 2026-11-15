@@ -12,14 +12,18 @@ typedef _InvocationFrame = ({
 ///
 /// Completed invocations release cancellation listeners, but their detached
 /// continuations must still reject fresh calls after an original Scope ends.
-/// This record keeps only tokens, never a Scope, Service, or parent context.
+/// Scopes are referenced weakly so Stream cleanup can join concrete owners
+/// without retaining ended Scopes, Services, or parent contexts.
 final class _InvocationOwnership {
   /// Snapshots and deduplicates concrete lifetime and invocation signals.
-  _InvocationOwnership(Iterable<CCCancellationToken> tokens)
+  _InvocationOwnership(Iterable<CCCancellationToken> tokens, this.scopes)
     : _tokens = Set<CCCancellationToken>.unmodifiable(tokens);
 
   /// Signals from this invocation and every inherited concrete owner.
   final Set<CCCancellationToken> _tokens;
+
+  /// Concrete owners whose closure must join any child Stream cancellation.
+  final List<WeakReference<CCScope>> scopes;
 
   /// Whether any original owner or already-cancelled invocation has ended.
   bool get isCancelled => _tokens.any((token) => token.isCancelled);
@@ -56,12 +60,19 @@ extension _CCRouterRuntimeInvocationOwnership on CCRouterRuntime {
     CCRouterRuntime._invocationZoneKey: (
       runtimeIdentity: _zoneIdentity,
       context: context,
-      ownership: _InvocationOwnership({
-        appScope.cancellation,
-        context.cancellation,
-        if (ownerScope != null) ownerScope.cancellation,
-        if (inheritOwnership) ...?_currentInvocationOwnership?._tokens,
-      }),
+      ownership: _InvocationOwnership(
+        {
+          appScope.cancellation,
+          context.cancellation,
+          if (ownerScope != null) ownerScope.cancellation,
+          if (inheritOwnership) ...?_currentInvocationOwnership?._tokens,
+        },
+        [
+          WeakReference(appScope),
+          if (ownerScope != null) WeakReference(ownerScope),
+          if (inheritOwnership) ...?_currentInvocationOwnership?.scopes,
+        ],
+      ),
     ),
   };
 }

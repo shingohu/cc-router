@@ -55,6 +55,12 @@ const TypeChecker _serviceComponentChecker = TypeChecker.typeNamedLiterally(
   inPackage: 'ccrouter_contracts',
 );
 
+/// Identifies the optional cooperative signal of a Stream invocation.
+const TypeChecker _serviceCancellationChecker = TypeChecker.typeNamedLiterally(
+  'CCCancellationToken',
+  inPackage: 'ccrouter_contracts',
+);
+
 /// Creates typed Tokens reserved for generated and owner-only Service SPI.
 Generator ccServiceContractGenerator() => _ServiceContractGenerator();
 
@@ -236,7 +242,11 @@ final class _ServiceMetadataBuilder implements Builder {
                 <String, Object?>{
                   'memberKind': member.kind,
                   'methodId': member.methodId,
-                  'returnKind': member.isAsync ? 'future' : 'sync',
+                  'returnKind': member.isStream
+                      ? 'stream'
+                      : member.isAsync
+                      ? 'future'
+                      : 'sync',
                   'returnType': member.returnType.getDisplayString(),
                   'resultType': member.resultType.getDisplayString(),
                   'typeParameters': [
@@ -262,7 +272,8 @@ final class _ServiceMetadataBuilder implements Builder {
                     'typedArguments',
                     'callerIdentity',
                     'methodTrace',
-                    if (member.isAsync) 'scopeCancellation',
+                    if (member.isAsync || member.isStream) 'scopeCancellation',
+                    if (member.isStream) 'subscriptionOwnership',
                   ],
                   'unsupportedReason': null,
                   'declaration': _serviceSourceReference(member.element),
@@ -407,11 +418,24 @@ final class _ServiceMemberModel {
   /// Exact return type retained in the overriding Proxy member.
   final DartType returnType;
 
-  /// Synchronous result type, or the value inside `Future<T>`.
+  /// Synchronous result type, or the value inside `Future<T>` / `Stream<T>`.
   final DartType resultType;
 
   /// Whether Runtime must use its asynchronous invocation boundary.
   final bool isAsync;
+
+  /// Whether this member uses the separately owned streaming invocation path.
+  bool get isStream => returnType.isDartAsyncStream;
+
+  /// The single framework cancellation signal normalized by a Stream Proxy.
+  FormalParameterElement? get streamCancellation {
+    if (!isStream) return null;
+    for (final parameter in parameters) {
+      if (_serviceCancellationChecker.isExactlyType(parameter.type))
+        return parameter;
+    }
+    return null;
+  }
 
   /// Method-owned generic parameters reproduced by the generated Proxy.
   final List<TypeParameterElement> typeParameters;
@@ -837,10 +861,23 @@ _ServiceMemberModel _readServiceMember(
       member,
     );
   }
-  if (returnType.isDartAsyncStream) {
+  final isStream = returnType.isDartAsyncStream;
+  if (isStream &&
+      (kind != 'method' ||
+          returnType.nullabilitySuffix == NullabilitySuffix.question)) {
     _failService(
-      'Service contract member "${member.displayName}" returns Stream. '
-      'Subscription ownership is not supported by generated Service Proxies.',
+      'Service contract member "${member.displayName}" must use a '
+      'non-nullable Stream<T> method; Stream getters are unsupported.',
+      member,
+    );
+  }
+  if (isStream &&
+      parameters
+              .where((p) => _serviceCancellationChecker.isExactlyType(p.type))
+              .length >
+          1) {
+    _failService(
+      'Stream methods accept at most one CCCancellationToken parameter.',
       member,
     );
   }
@@ -852,7 +889,7 @@ _ServiceMemberModel _readServiceMember(
       member,
     );
   }
-  final resultType = isAsync
+  final resultType = isAsync || isStream
       ? (returnType as InterfaceType).typeArguments.single
       : returnType;
   _validateServiceProxyType(
@@ -925,9 +962,12 @@ void _validateServiceProxyType(
       owner,
     );
   }
-  if (type.isDartAsyncFutureOr || type.isDartAsyncStream) {
+  if (type.isDartAsyncFutureOr ||
+      type.isDartAsyncStream ||
+      type.allSupertypes.any((parent) => parent.isDartAsyncStream)) {
     _failService(
-      'Generated Service Proxies do not support FutureOr or Stream types.',
+      'Generated Service Proxies do not support nested, parameter, or custom '
+      'Stream types, or FutureOr. Return Stream<T> directly from a method.',
       owner,
     );
   }

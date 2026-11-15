@@ -19,7 +19,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'demo_payment',
   packageVersion: '0.1.0',
   contentFingerprint:
-      '6f180a7110a4e46aaf46f2010d8d58f60768bcf28ff7b1ccf93df4d2e85c7293',
+      '781367da3cc74c560edb9d9a6f38f14daa815dffa041d43556ea781d0aedced7',
   contractBundle: CCContractBundleDescriptor(
     packageName: 'demo_payment',
     packageVersion: '0.1.0',
@@ -32,7 +32,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
         ownerComponentId: "demo_order_component",
         requiredVersionRange: "0.1.0",
         requiredShapeFingerprint:
-            "5ae284d3c0990ac5c7edb8608e3bd3238bdd52c7241bb275f182c150913f891b",
+            "c7b41467fd53598a4cba11c746a0886a4132be3d91372a4dac642ec926bb8e46",
       ),
     ],
   ),

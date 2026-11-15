@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ccrouter/ccrouter.dart';
 import 'package:demo_order_contracts/demo_order_contracts.dart';
 
@@ -22,6 +24,28 @@ final class DemoOrderSummaryService implements OrderSummaryService {
   Future<String> loadSummary(int orderId) async {
     await Future<void>.delayed(const Duration(milliseconds: 120));
     return summaryFor(orderId);
+  }
+
+  /// Yields a usable first snapshot before the asynchronous replacement arrives.
+  @override
+  Stream<String> watchSummary(
+    int orderId, {
+    required CCCancellationToken cancellation,
+  }) async* {
+    if (cancellation.isCancelled) return;
+    yield summaryFor(orderId);
+    final ready = Completer<void>();
+    final timer = Timer(const Duration(milliseconds: 120), ready.complete);
+    final remove = cancellation.addListener(() {
+      if (!ready.isCompleted) ready.complete();
+    });
+    try {
+      await ready.future;
+    } finally {
+      timer.cancel();
+      remove();
+    }
+    if (!cancellation.isCancelled) yield '${summaryFor(orderId)} · 已加载';
   }
 
   /// Preserves the generic value type across the synchronous generated Proxy.

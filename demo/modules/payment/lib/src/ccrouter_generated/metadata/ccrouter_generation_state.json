@@ -5,10 +5,10 @@
     "name": "demo_payment",
     "version": "0.1.0"
   },
-  "toolFingerprint": "d785491cca9a31fd6de76a37b7f74eda763d3a9df805197ce00ea1c9ea6975dd",
+  "toolFingerprint": "43185b8d006864802addfbef67e620af12638a019c12d7d6d2c4d3ddba772df0",
   "authoredInputFingerprint": "bee437a6d61d62199eda8610b43650f13fe13104417f33e658cdfbe31e16180f",
-  "resolutionFingerprint": "ad5b958857db1c734b5a28675fb33c981b41ea026418f8d2f000b252f456bb42",
-  "metadataFingerprint": "364c152b1d1e21755b4fe457dfae7ccaae55ccfd010ea845b7fc2e5ea654351d",
-  "managedOutputFingerprint": "8ff7114ea73b87c78abe5f4ed103af6c25cc144a34764eca0c1e6defe2556071",
-  "contentFingerprint": "0b1e46400bccbe6a1666e4bc0ec71315851fd07fc18e4fd50bb806e60eb090af"
+  "resolutionFingerprint": "90c37518b707480ed922071e9fb303e24406ff7d2fb6441cb69aa1bba57a6f01",
+  "metadataFingerprint": "663949676d367de54b010a88cfdf66d2da550bb4cf64c30ddb19ac62bac509b4",
+  "managedOutputFingerprint": "f21506d08b9a57e22e264784bb779b8c940aa74d5aafaee520a816695329c580",
+  "contentFingerprint": "746a746f2d5bf1d318f98d0f0bfc9544cb33fc4409704e056493a8eda3814ac6"
 }

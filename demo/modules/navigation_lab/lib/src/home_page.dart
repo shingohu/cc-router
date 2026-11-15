@@ -31,6 +31,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
   int _section = 0;
   String _status = 'Ready · 选择一个场景开始验证';
   OverlayEntry? _overlayEntry;
+  CCCancellationToken? _summaryCancellation;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   static const _destinations = <_LabDestination>[
@@ -56,6 +57,7 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
 
   @override
   void dispose() {
+    _summaryCancellation?.cancel();
     _removeOverlay();
     super.dispose();
   }
@@ -72,6 +74,31 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
       _setStatus('$label · 完成${result == null ? '' : ' · $result'}');
     } on Object catch (error) {
       _setStatus('$label · ${error.runtimeType}');
+    }
+  }
+
+  Future<void> _watchOrderSummary() async {
+    _summaryCancellation?.cancel();
+    final cancellation = CCCancellationToken();
+    _summaryCancellation = cancellation;
+    try {
+      await for (final summary
+          in DemoNavigationLabServices.orderSummary.watchSummary(
+            2048,
+            cancellation: cancellation,
+          )) {
+        if (mounted && identical(_summaryCancellation, cancellation)) {
+          _setStatus('分阶段订单摘要 · $summary');
+        }
+      }
+    } on Object catch (error) {
+      if (mounted && identical(_summaryCancellation, cancellation)) {
+        _setStatus('分阶段订单摘要 · ${error.runtimeType}');
+      }
+    } finally {
+      if (identical(_summaryCancellation, cancellation)) {
+        _summaryCancellation = null;
+      }
     }
   }
 
@@ -361,6 +388,12 @@ final class _DemoNavigationHomePageState extends State<DemoNavigationHomePage>
           final count = DemoNavigationLabServices.orderSummary.invocationCount;
           return '$syncSummary · $asyncSummary · 调用 $count 次';
         }),
+      ),
+      _ActionTile(
+        icon: Icons.stream,
+        title: '分阶段读取订单摘要',
+        subtitle: '先展示首份快照，再展示加载结果；重试或退出时取消订阅。',
+        onTap: _watchOrderSummary,
       ),
       _ActionTile(
         icon: Icons.memory_outlined,

@@ -26,6 +26,38 @@ void main() {
 
   tearDown(CCRouterHost.shutdown);
 
+  testWidgets(
+    'Stream summary delivers early and cancels pending load on exit',
+    (tester) async {
+      await _pumpDemo(tester);
+      final action = find.text('分阶段读取订单摘要');
+      await tester.ensureVisible(action);
+      await tester.tap(action);
+      await tester.pump();
+      await tester.pump();
+      expect(find.textContaining('分阶段订单摘要 · 订单 #2048'), findsOneWidget);
+      expect(find.textContaining('已加载'), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
+      var closed = false;
+      final shutdown = CCRouterHost.shutdown().then((_) {
+        closed = true;
+      });
+      for (var tick = 0; !closed && tick < 20; tick++) {
+        await tester.pump();
+      }
+      try {
+        expect(
+          closed,
+          isTrue,
+          reason: 'Exiting must cancel the pending producer timer.',
+        );
+      } finally {
+        await tester.pump(const Duration(milliseconds: 200));
+        await shutdown;
+      }
+    },
+  );
+
   testWidgets('runs typed navigation, result and cross-component route', (
     tester,
   ) async {

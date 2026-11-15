@@ -38,6 +38,8 @@ part 'shared_result.dart';
 part 'shell.dart';
 part 'scope.dart';
 part 'service_initialization.dart';
+part 'service_stream.dart';
+part 'service_stream_subscription.dart';
 
 /// Maximum length accepted for framework-owned stable identifiers.
 const int _maxStableIdentifierLength = 128;

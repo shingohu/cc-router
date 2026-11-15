@@ -1026,7 +1026,7 @@ generic parameters when one operation must preserve a caller's static Pure Dart
 type. The generated Proxy reproduces every bound and explicitly forwards type
 arguments, including for zero-argument methods. This is a local typed component
 boundary, not a serialization mechanism; generic arguments must not be used to
-smuggle Flutter objects, callbacks, Streams, or private implementation types
+smuggle Flutter objects, callbacks, nested Streams, or private implementation types
 through a public Contract.
 
 Business parameter and generic names such as `service` remain valid: generated
@@ -1039,6 +1039,94 @@ the generator owns Dart interpolation escaping, not the component author.
 Dependency preflight resolves owners within actual Library import/export scopes,
 including show/hide. Unavailable external namespaces, parts and conditional edges
 defer to Builder; an early report can contain fewer owners than final validation.
+
+### Service Stream ownership
+
+Use a method directly returning non-nullable `Stream<Snapshot>` for incremental
+immutable results. The generated Client preserves the element type and generic
+method forwarding. Do not use Stream getters, nullable/nested/custom Stream
+shapes, callbacks, or DTO wrappers to bypass unsupported signatures. Declare at
+most one `CCCancellationToken` parameter, with any name; nullable/optional forms
+are accepted. The Proxy links that input to its invocation token and forwards the
+linked token to the implementation, so token identity changes intentionally.
+
+Each call captures the exact Provider Scope, inherited consumer ownership and
+deadline. First listen resolves readiness, invokes and subscribes once; no work
+or trace starts for an unlistened stream. A source may be single-subscription or
+broadcast, but the returned stream is always single-subscription. Repeated listen
+throws `StateError`; call the method again for another subscription. An old
+unlistened stream cannot migrate into a replacement Session.
+Scopes hold weak pending-call registrations, so a live Owner does not retain an
+abandoned stream. Owner/consumer close also clears the lazy startup callback and
+its call-time Zone before listen; retaining an old stream cannot keep a closed
+Runtime or caller payload alive. A later listen receives cancellation without
+starting business work or creating a method Trace.
+
+
+```dart
+final token = CCCancellationToken();
+final subscription = MyComponentServices.catalog
+    .read(cancellation: token)
+    .listen(showSnapshot, onError: showError);
+// On request replacement / consumer disposal:
+await subscription.cancel();
+```
+
+The consumer owns subscription cancellation. A Widget outside a scoped
+invocation has no inferred Route/Session consumer Scope: keep its token or
+subscription in State and cancel in dispose. The Demo's order summary button
+replaces the previous token and cancels on disposal; cancellation suppresses old
+updates while each delivered snapshot can update UI immediately.
+
+Source event order, original errors/stacks and done are preserved. Source errors
+remain nonterminal unless the consumer uses cancelOnError. Pause/resume (including
+resumeSignal) reaches the source; broadcast sources may buffer while paused as
+Dart normally does. Startup is asynchronous; later source/resume events can deliver
+synchronously, with serialized callbacks. CCRouter owns a clearable FIFO, so Scope
+interruption releases undelivered payloads, business errors and their Zones even
+when resume hooks emit synchronously. No opaque SDK delivery queue owns those
+objects. Pause still delegates backpressure to the source.
+
+Explicit cancel uses its caller error Zone with the original invocation identity;
+automatic Scope/token/deadline cancellation uses the source invocation Zone.
+Cooperative notification and source cancel share that chosen Zone, and cleanup
+outcomes cross to Host waits as data. Respect Dart's native producer error-Zone
+rule for external error Futures: returning an unrelated foreign-zone Future is
+not a normalized cleanup result. Concurrent/repeated cancel callers independently
+observe one original cleanup outcome in their own Zones.
+
+Handler replacement, nested pauses/resumeSignal and asFuture retain Dart behavior.
+A cancelOnError event waits for cleanup and reads the latest error handler;
+another explicit cancel suppresses that pending delivery. Already accepted errors
+are not undone by a later Scope close. Pause does not stop an unfinished invocation
+deadline. A source that finishes with no pending delivery commits its outcome;
+otherwise queued delivery retains its original Owner/deadline fences.
+Cleanup failures are separately reported as sanitized lifecycle diagnostics with
+operation serviceStreamCleanup, stable IDs and errorType only. Keep the primary
+source/cancellation error; do not lose cleanup failures after barrier removal.
+
+Explicit subscription.cancel immediately stops forwarding, cancels the linked
+token and awaits upstream asynchronous cancel; its Future propagates original
+cleanup failures. Input-token cancellation, concrete Owner/consumer Scope closure
+and Runtime shutdown fence queued/late data and errors immediately; after source
+cleanup, emit CCInvocationCancelledError then done. Deadline expiry similarly
+emits CCInvocationTimeoutError. A paused consumer must resume to observe the
+terminal notification. token.cancel is synchronous signalling; await subscription
+cancel or Scope close for cleanup completion. Never swallow the terminal error as
+an empty stream. Cleanup failure does not replace an earlier cancellation/error;
+explicit cancel and the closing Scope can observe the cleanup failure separately.
+
+Scopes join active stream cleanup before disposing Services, retaining existing
+per-resource disposal timeouts and disposalErrors. An uncooperative source can
+outlive that bound; CCRouter cannot forcibly free its resources. Its native
+subscription/producer Zone may remain until source cancel completes; framework
+waits use Host context and do not retain a terminated Runtime. Do not await an
+Owner Scope close inside its own source onCancel. Shared/broadcast Service state
+remains Provider-owned; cancelling one subscription does not dispose the Service.
+Acquire per-request resources on listen, release them in awaited onCancel, and
+keep HTTP, account-generation checks, retry/fallback and payload privacy inside
+the Service. Framework traces contain stable IDs/status/error type only and end
+once on done or cancellation cleanup; no business snapshots enter diagnostics.
 
 Export the interface and its public value types from the business contracts barrel. Bind a simple
 implementation by directly implementing exactly one contract:

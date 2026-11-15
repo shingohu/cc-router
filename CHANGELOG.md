@@ -8,6 +8,13 @@ published.
 
 ## Unreleased
 
+- Added generated Service methods returning `Stream<T>` with lazy subscription,
+  exact Scope ownership, cancellation/deadline propagation, and original
+  error/stack delivery. Clearable consumer queues release cancelled snapshots;
+  cleanup failures have separate sanitized diagnostics. Updated Demo, integration
+  guidance and lifecycle/GC regressions. Nullable/nested/custom Stream signatures
+  and Stream getters remain unsupported. See #7.
+
 - Upgraded all three `CCDeepLinkIngress` methods to return an immutable
   `CCDeepLinkAcceptanceReceipt` with invocation and actual destination Entry
   identities, including single-flight producer identity and redirected/recovered

@@ -36,8 +36,11 @@ final class CCServiceToken<T extends Object> {
 /// bounds. The generator emits a typed
 /// `CCServiceToken<T>` for generated/advanced registration plus metadata owned
 /// by [componentId]. A simple implementation binds automatically by directly
-/// implementing this interface; consumers resolve it through
-/// `CCRouter.service<T>()`.
+/// implementing this interface; cross-component consumers declare
+/// [CCServiceDependency] and use their generated typed Service Client.
+/// Methods may directly return a non-nullable `Stream<T>`: the generated Proxy
+/// creates one lazy owned subscription and links its optional single
+/// `CCCancellationToken` parameter to invocation and Scope cancellation.
 final class CCServiceContract {
   /// Creates a generated Service contract declaration.
   const CCServiceContract({

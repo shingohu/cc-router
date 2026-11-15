@@ -5,7 +5,7 @@
     "name": "demo_order_contracts",
     "version": "0.1.0"
   },
-  "contentFingerprint": "39b43549ac2f31f45f9f00a1eec85fbf603669a7ad1042277a9ce14801077ffa",
+  "contentFingerprint": "cccbd8aaf0d251074ec370a21a3b00398a29b1036663dabdebde5908244e6cfb",
   "bundle": null,
   "dependencies": [],
   "metadata": [
@@ -440,7 +440,7 @@
               "declaration": {
                 "symbol": "invocationCount",
                 "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
-                "line": 37,
+                "line": 43,
                 "column": 11
               }
             },
@@ -500,7 +500,7 @@
               "declaration": {
                 "symbol": "loadValue",
                 "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
-                "line": 34,
+                "line": 40,
                 "column": 13
               }
             },
@@ -558,12 +558,48 @@
               "declaration": {
                 "symbol": "unwrap",
                 "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
-                "line": 31,
+                "line": 37,
                 "column": 5
+              }
+            },
+            {
+              "memberKind": "method",
+              "methodId": "watchSummary",
+              "returnKind": "stream",
+              "returnType": "Stream<String>",
+              "resultType": "String",
+              "typeParameters": [],
+              "parameters": [
+                {
+                  "name": "orderId",
+                  "type": "int",
+                  "kind": "requiredPositional",
+                  "default": null
+                },
+                {
+                  "name": "cancellation",
+                  "type": "CCCancellationToken",
+                  "kind": "requiredNamed",
+                  "default": null
+                }
+              ],
+              "capabilities": [
+                "typedArguments",
+                "callerIdentity",
+                "methodTrace",
+                "scopeCancellation",
+                "subscriptionOwnership"
+              ],
+              "unsupportedReason": null,
+              "declaration": {
+                "symbol": "watchSummary",
+                "packageUri": "package:demo_order_contracts/src/order_summary_service.dart",
+                "line": 31,
+                "column": 18
               }
             }
           ],
-          "shapeFingerprint": "5ae284d3c0990ac5c7edb8608e3bd3238bdd52c7241bb275f182c150913f891b",
+          "shapeFingerprint": "c7b41467fd53598a4cba11c746a0886a4132be3d91372a4dac642ec926bb8e46",
           "token": {
             "symbol": "orderSummaryServiceToken",
             "library": "lib/src/ccrouter_generated/contract/order_summary_service.service.contract.g.dart",

@@ -1042,7 +1042,7 @@ Source locations use portable Package URIs. Line and column are 1-based when the
 
 - Declaring package: `demo_order_contracts`
 - Contract/declaration: `package:demo_order_contracts/src/order_summary_service.dart:23:26` (`OrderSummaryService`)
-- Implementation: `package:demo_order/src/order_summary_service.dart:6:13` (`DemoOrderSummaryService`)
+- Implementation: `package:demo_order/src/order_summary_service.dart:8:13` (`DemoOrderSummaryService`)
 - Generated artifacts:
   - `serviceClient`: `package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart` (`DemoNavigationLabServices.orderSummary`)
   - `serviceClient`: `package:demo_payment/src/ccrouter_generated/component/demo_payment_component.service_api.g.dart` (`DemoPaymentServices.orderSummary`)

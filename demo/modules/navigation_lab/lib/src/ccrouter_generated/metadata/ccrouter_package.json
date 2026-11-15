@@ -5,7 +5,7 @@
     "name": "demo_navigation_lab",
     "version": "0.1.0"
   },
-  "contentFingerprint": "429521571e17972549c5254054d8147e05380aad3b7eb8bc5def78f71555d554",
+  "contentFingerprint": "741b942b0aa4f64b513f6a3a9bdf20853c5cf6f63618034b47139c18d47c5faf",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -34,7 +34,7 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "39b43549ac2f31f45f9f00a1eec85fbf603669a7ad1042277a9ce14801077ffa"
+      "contentFingerprint": "cccbd8aaf0d251074ec370a21a3b00398a29b1036663dabdebde5908244e6cfb"
     },
     {
       "name": "demo_web_contracts",
@@ -1059,7 +1059,7 @@
                 "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart"
               },
               "requiredVersionRange": "0.1.0",
-              "requiredShapeFingerprint": "5ae284d3c0990ac5c7edb8608e3bd3238bdd52c7241bb275f182c150913f891b"
+              "requiredShapeFingerprint": "c7b41467fd53598a4cba11c746a0886a4132be3d91372a4dac642ec926bb8e46"
             }
           ],
           "commandDependencies": [

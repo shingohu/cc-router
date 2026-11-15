@@ -19,7 +19,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
   packageName: 'demo_order',
   packageVersion: '0.1.0',
   contentFingerprint:
-      '4b91061376b5953893e0c7941800f21d304622b423c511126bcc5e694838e1ff',
+      'eb7aede68c621c458080b4133992f778a058b5ad52da99d1433c6bd01612b59c',
   contractBundle: CCContractBundleDescriptor(
     packageName: 'demo_order',
     packageVersion: '0.1.0',
@@ -46,7 +46,7 @@ final ccrouterGeneratedPackageBundle = CCGeneratedPackageBundle(
         ownerComponentId: "demo_order_component",
         version: "0.1.0",
         shapeFingerprint:
-            "5ae284d3c0990ac5c7edb8608e3bd3238bdd52c7241bb275f182c150913f891b",
+            "c7b41467fd53598a4cba11c746a0886a4132be3d91372a4dac642ec926bb8e46",
       ),
       CCContractDescriptor(
         kind: CCContractKind.route,

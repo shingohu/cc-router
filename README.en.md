@@ -119,7 +119,8 @@ Enums cannot declare custom members, constructors, mixins, or interfaces.
 DTOs use `this.field` parameters or constant field declarations; both default
 forms enter the fingerprint. Initializer-list assignments and redirecting
 constructors are unsupported. Typed `onAction` callbacks do not relax Service
-restrictions on Widget, BuildContext, callbacks, or Streams. Flutter Key/State
+restrictions on Widget, BuildContext, or callbacks. Method-level Service
+`Stream<T>` support has separate subscription ownership and is not a UI schema type. Flutter Key/State
 owns instance identity, updates, and disposal; `active` is Host permission,
 not automatic exposure detection. Runtime shutdown invalidates old Actions;
 after reinitialization the Host must explicitly remount the UI subtree.
@@ -1179,7 +1180,74 @@ final summary = DemoPaymentServices.orderSummary.summaryFor(orderId);
 final loaded = await DemoPaymentServices.orderSummary.loadSummary(orderId);
 ```
 
-Generated Proxies do not retain Services; every method call resolves the current Scope. Synchronous methods remain synchronous and do not start async initializers; `Future<T>` methods await readiness. The Generator supports ordinary instance methods, getters, synchronous/Future returns, method-level generics, and common parameter forms. Generic method type parameters, public Pure Dart bounds, nullable results, and explicit type arguments are preserved. The Contract class itself must remain non-generic. Setters/operators, Streams, FutureOr, callbacks, Flutter types, Contract inheritance, and `src` types not exposed through public barrels fail generation.
+Generated Proxies do not retain Services; every method call resolves the current Scope. Synchronous methods remain synchronous and do not start async initializers; `Future<T>` methods await readiness. The Generator supports ordinary instance methods, getters, synchronous/Future returns, methods directly returning non-nullable `Stream<T>`, method-level generics, and common parameter forms. Generic method type parameters, public Pure Dart bounds, nullable results, and explicit type arguments are preserved. The Contract class itself must remain non-generic. Setters/operators, Stream getters, nullable/nested/custom Stream shapes, FutureOr, callbacks, Flutter types, Contract inheritance, and `src` types not exposed through public barrels fail generation.
+
+Each Service Stream call captures the exact Provider Scope, inherited consumer
+ownership and earliest deadline. First listen waits for readiness, invokes and
+subscribes once. The result is always single-subscription, even for a broadcast
+source; repeated listen throws `StateError`. Call the method again for a new
+subscription. Before listen, no Service is created and no method Trace is
+recorded. Scopes weakly register lazy calls: abandoned calls can be collected,
+and closing an original Owner/consumer releases an unlistened call's captured
+execution state. Listening afterwards reports `CCInvocationCancelledError`;
+it cannot adopt a replacement Session.
+
+```dart
+final cancellation = CCCancellationToken();
+final subscription = DemoPaymentServices.orderSummary
+    .watchSummary(orderId, cancellation: cancellation)
+    .listen(renderSummary, onError: reportError);
+await subscription.cancel(); // On request replacement or consumer disposal.
+```
+
+A Stream method accepts at most one framework `CCCancellationToken` parameter,
+with any name and optional/nullable forms. The Proxy forwards a linked context
+token; implementations must not rely on identity with the caller's token.
+Widgets outside a scoped invocation have no inferred consumer Route/Session
+Scope, so they must cancel their subscription/token on disposal or replacement.
+
+Data order, original errors/stacks, done, pause/resume, handler replacement,
+asFuture and cancelOnError follow Dart Stream semantics. Startup is asynchronous;
+later events may deliver synchronously, including from resume hooks, while event
+callbacks never overlap. A private subscription owns a clearable FIFO rather than
+placing business payloads in an opaque Controller/Transformer queue. Interruption
+immediately clears undelivered values, business errors and their Zones; pause also
+reaches the source. Errors already admitted to a callback or cancelOnError delivery
+keep native semantics. Another explicit cancel suppresses an error still waiting
+for asynchronous cleanup, and handler changes during that wait take effect.
+
+Explicit cancel preserves its caller's error Zone with the original invocation
+identity. Automatic Scope/token/deadline cancellation runs in the source invocation
+Zone. Both the cooperative signal and upstream cancel use that selected Zone,
+then transfer completion as data to Host waits. Sources must still obey Dart's
+native producer error-Zone rule for external error Futures; a bare Future owned by
+another error Zone is not a normalized cleanup result. Repeated cancel joins one
+cleanup outcome independently in each caller's Zone.
+
+Cleanup failure also emits a sanitized lifecycle diagnostic with operation
+`serviceStreamCleanup`, stable IDs and errorType only. It does not replace the
+primary cancellation/source error and is not silently lost when a token ends the
+request before its Scope later closes.
+
+Explicit subscription.cancel stops forwarding immediately and awaits upstream
+asynchronous cancel, preserving cleanup failures. Token/Scope/shutdown cancellation
+notifies the implementation, waits for source cleanup, then emits
+`CCInvocationCancelledError` and done. The deadline covers the whole invocation;
+timeout emits `CCInvocationTimeoutError`. Pause does not stop the deadline, and
+a paused consumer must resume to receive the terminal notification. Synchronous
+token.cancel only signals; await subscription.cancel or Scope close for cleanup.
+
+Scopes join active Stream cancellation before disposing Services, under the
+existing per-resource timeout/disposalErrors policy. An uncooperative source can
+outlive that bound; CCRouter cannot forcibly free it. Never await the same Owner
+Scope close inside its source onCancel. Shared Services remain Provider-owned;
+cancelling one subscription does not dispose the Service or its broadcast source.
+Acquire request resources on listen and release them in awaited source cleanup.
+HTTP, account-generation checks, retry/fallback and snapshots belong to the
+implementation. Source cleanup releases Provider references and Scope barriers. Traces contain
+stable IDs/status/error type only and end once on delivery completion or cancelled
+cleanup. An undelivered terminal error remains consumer-owned until resume or
+explicit cancel delivers or discards it.
 
 The Generator chooses internal callback/import names that avoid business parameter and generic names; names such as `service` are safe. Component-internal Services still use `CCRouter.service<T>()` directly and need no Proxy declaration/generation. Collection defaults in Route and Service Proxies preserve actual List/Set/Map types and generic arguments, including empty/nested collections under `Object` parameters. Enums and types used in defaults must also be publicly importable by generated libraries. Description `$` characters, quotes, and newlines are preserved as ordinary text; generated Host DevTools Catalogs never treat them as Dart interpolation.
 

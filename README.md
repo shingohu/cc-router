@@ -130,8 +130,8 @@ scalar 只能用于 DTO 字段，不能直接作为 Action 类型；每个 marke
 DTO（含 Props）须为真正的数据叶子，同库/part 子类或实现也会拒绝；`Object` 按 SDK 身份校验。
 旧 DTO 的展开校验限制为 16,384 节点 / 256 层，union 类型图仍为 512 节点 / 32 层，
 默认常量也有 16,384 节点 / 256 层保护，超复杂图明确报错。正常旧模型的指纹与版本不变。
-UI 层允许类型化 `onAction`，不放宽 Service 对 Widget、BuildContext、callback、Stream
-的限制。实例身份、更新和释放遵循 Flutter Key/State；`active` 是宿主许可，不是自动曝光。
+UI 层允许类型化 `onAction`，不放宽 Service 对 Widget、BuildContext、callback 的限制；Service 的方法级 `Stream<T>`
+有独立的订阅所有权，不属于 UI Props/Action schema。实例身份、更新和释放遵循 Flutter Key/State；`active` 是宿主许可，不是自动曝光。
 Host 的 Contract 版本快照须精确一致，SemVer 范围不替代过期检查。
 Runtime 关闭立即使旧 Action 失效；重新初始化后 Host 必须显式重挂 UI 子树。
 实例卸载、capability identity 或生成 schema/version/range 快照更新会撤销旧 Action，并解除其对消费方回调的引用；
@@ -1659,12 +1659,59 @@ final loaded = await DemoPaymentServices.orderSummary.loadSummary(orderId);
 ```
 
 生成 Proxy 不持有 Service，每次方法调用都解析当前 Scope。同步方法保持同步且不会启动 async
-initializer；`Future<T>` 方法会等待 readiness。生成器支持普通实例方法、getter、同步/Future
-返回值、方法级泛型和常用参数形态。泛型方法的类型参数、公共 Pure Dart bound、nullable
-结果和显式类型实参会完整保留；Contract 类本身仍必须非泛型。setter/operator、Stream、
+initializer；`Future<T>` 方法会等待 readiness。`Stream<T>` 方法首次 listen 才等待 readiness
+并调用实现。生成器支持普通实例方法、getter、同步/Future 返回值、直接返回非空 `Stream<T>`
+的方法、方法级泛型和常用参数形态。泛型方法的类型参数、公共 Pure Dart bound、nullable
+结果和显式类型实参会完整保留；Contract 类本身仍必须非泛型。setter/operator、Stream getter、可空/嵌套/自定义 Stream、
 FutureOr、callback、Flutter 类型、Contract 继承和未从公共 barrel 暴露的 `src` 类型会在生成期
 失败。生成器会避开业务参数和泛型名称，为内部回调和导入分配不冲突的名字；业务无需回避
 `service` 等名称。组件内部 Service 仍直接使用 `CCRouter.service<T>()`，不需要声明或生成 Proxy。
+
+Service Stream 每次方法调用返回一个 **single-subscription** 流，即使实现返回 broadcast 源也只
+订阅一次；第二次 listen 抛 `StateError`，需要重新调用方法获取独立流。方法调用时验证依赖并固定
+确切 Owner Scope、可证明的调用方 invocation 所有权及继承 deadline；延迟 listen 不会绑定新 Session。
+首次 listen 前不创建 Service、不执行方法、不订阅上游，也不记录已完成 Trace。
+Scope 以弱引用登记未订阅调用：丢弃流即可回收；原 Owner/consumer 关闭时释放其捕获的启动状态，
+随后 listen 明确报取消，不保留已关闭 Runtime、Scope 或调用方 Zone。
+
+```dart
+final cancellation = CCCancellationToken();
+final subscription = DemoPaymentServices.orderSummary
+    .watchSummary(orderId, cancellation: cancellation)
+    .listen(renderSummary, onError: reportError);
+// 页面退出或请求换代时：
+await subscription.cancel(); // 等待上游异步 cancel 完成
+```
+
+Stream Contract 可带至多一个 `CCCancellationToken` 参数（名称不限，可选/可空均可）。Proxy 将调用方
+信号与 Runtime、Owner、继承的 consumer Scope 信号合并，把 **context token** 传给实现；实现不得依赖
+与原 token 的对象同一性。UI 中没有隐式 consumer Scope 推断：页面需持有 subscription/token，在 dispose
+或请求换代时取消；不要把 App Service 生命周期当作页面生命周期。
+
+数据顺序、原始 error/stack、done、pause/resume、handler 更新、`asFuture` 和 `cancelOnError`
+沿用 Dart Stream 语义。首次进入业务方法仍为异步；之后事件可以同步交付，包括 resume 钩子，
+但消费回调不会彼此重叠。私有订阅拥有可清空的 FIFO，而不是把业务对象交给不可清理的
+Controller/Transformer 队列；中断立即清除未交付的值、业务错误及其 Zone。pause 同时传给上游。
+已经进入消费回调或 cancelOnError 交付流程的错误遵循 Dart 语义，不被后续 Scope 关闭撤销；
+消费者再次显式 cancel 可以抑制仍在等待清理的错误交付。
+显式 `subscription.cancel()` 沿用取消发起方的 error Zone，并注入原 invocation 身份；自动
+Scope/token/deadline 取消在源 invocation Zone 执行。取消信号和源 cancel 使用同一个选定 Zone，
+结果作为数据传给 Host 等待方。源实现仍须遵守 Dart 外部错误 Future 的原生 error Zone 约束，
+不能把其他错误区的裸 Future 当作已经归一化的清理结果。
+显式 cancel 的 Future 等待源清理并保留原始 error/stack；多次 cancel 在各调用方 Zone 加入同一结果。
+清理失败独立发出 `serviceStreamCleanup` 生命周期错误诊断，仅含 errorType 和稳定 ID，不替换主取消/
+源错误。即使 token 取消先结束、之后才关闭 Scope，清理失败也不会因 barrier 移除而静默消失。
+调用方 token、Owner/继承的 consumer Scope 关闭或 Runtime shutdown 会立即屏蔽迟到/积压数据与错误，
+通知实现取消，等源 cleanup 后发出 `CCInvocationCancelledError` 再 done；deadline 覆盖整个流存续期，
+超时以 `CCInvocationTimeoutError` 结束。暂停不暂停 deadline，消费者需 resume 才收到终止通知。
+取消 token 的同步 `cancel()` 只发出信号；需要等待 cleanup 时 await subscription.cancel 或 Scope 关闭。
+
+Scope 关闭在销毁 Service 前等待每个活动流的 cancel，沿用 Scope disposal 的逐项超时与错误收集机制；
+超时后继续 teardown，框架无法强制结束不合作的源；源自身的订阅/Zone 可能保留至 cancel 完成。不要在源 `onCancel` 内 await 自己所属 Scope 的关闭。
+源清理完成即释放 Scope barrier 和 Provider 引用；自然交付结束或取消清理完成只记一次脱敏 Trace，
+释放 timer 和取消监听。未交付的终态错误仍由消费者拥有，需 resume 或显式 cancel 才能交付或丢弃。
+源必须在 listen 后取得资源，并在异步 onCancel 中完成释放；Service 实例仍由原 Provider Scope 拥有，
+订阅取消不会销毁共享 Service。账号代次、HTTP、fallback、重试和业务快照内容由实现管理。
 
 异步 Proxy 在 readiness 返回后、进入业务方法前重新检查取消、所属 Scope 和 deadline。
 即使没有 initializer 或已完成初始化，调用方取消、Session 关闭或 Runtime shutdown 也不能

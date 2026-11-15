@@ -27,6 +27,12 @@ abstract interface class OrderSummaryService {
   /// Loads one summary through an asynchronous component boundary.
   Future<String> loadSummary(int orderId);
 
+  /// Delivers an initial summary and then its loaded replacement; cancel on exit.
+  Stream<String> watchSummary(
+    int orderId, {
+    required CCCancellationToken cancellation,
+  });
+
   /// Returns the typed value without weakening it to `Object` or `dynamic`.
   T unwrap<T extends Object>(OrderSummaryValue<T> value);
 

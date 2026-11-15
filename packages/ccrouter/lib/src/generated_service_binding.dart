@@ -7,6 +7,30 @@ part of 'facade.dart';
 /// `package:ccrouter/ccrouter.dart` and use the generated typed proxy instead of
 /// importing `ccrouter_generated.dart` or passing an arbitrary callback here.
 abstract final class CCRouterGeneratedServiceBinding {
+  /// Creates a lazy, single-subscription generated Service stream.
+  ///
+  /// Ownership and deadline are captured now; readiness and business work start
+  /// on listen. Generated code substitutes the linked context token into the
+  /// contract's optional cancellation parameter. Cancellation stops forwarding
+  /// immediately and its Future joins upstream cleanup; Scope close also joins.
+  static Stream<R> invokeStream<T extends Object, R>({
+    CCServiceKey<T>? key,
+    required String methodId,
+    String? callerComponentId,
+    String? navigationId,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+    required Stream<R> Function(T service, CCInvocationContext context) call,
+  }) => CCRouter._runtime.invokeServiceStream<T, R>(
+    key: key,
+    methodId: methodId,
+    callerComponentId: callerComponentId,
+    navigationId: navigationId,
+    timeout: timeout,
+    cancellation: cancellation,
+    call: call,
+  );
+
   /// Resolves a promoted Service and invokes one synchronous generated method.
   ///
   /// Generators use this form only when the contract method has a synchronous

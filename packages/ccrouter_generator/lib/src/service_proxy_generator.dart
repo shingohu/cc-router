@@ -271,18 +271,24 @@ void _emitServiceProxyMember(
     member.typeParameters,
   );
   final parameters = _serviceParameterSignature(member.parameters, imports);
-  final invocation = member.isAsync ? 'invoke' : 'invokeSync';
+  final invocation = member.isStream
+      ? 'invokeStream'
+      : member.isAsync
+      ? 'invoke'
+      : 'invokeSync';
   final reserved = {
     for (final parameter in member.parameters) parameter.displayName,
     for (final parameter in member.typeParameters) parameter.displayName,
   };
   final receiver = _serviceUnusedName('service', reserved);
+  final context = _serviceUnusedName('context', {...reserved, receiver});
+  final cancellation = member.streamCancellation;
   final key = dependency.key == null
       ? ''
       : '      key: const ${imports.frameworkPrefix}.CCServiceKey<$contractType>(${jsonEncode(dependency.key)}),\n';
   final call = member.kind == 'getter'
       ? '$receiver.${member.element.displayName}'
-      : '$receiver.${member.element.displayName}$forwardedTypeArguments(${_serviceForwardedArguments(member.parameters)})';
+      : '$receiver.${member.element.displayName}$forwardedTypeArguments(${_serviceForwardedArguments(member.parameters, cancellation: cancellation, context: context)})';
   out
     ..writeln('  /// Invokes `${dependency.contract.id}.${member.methodId}`.')
     ..writeln('  @override');
@@ -300,7 +306,14 @@ void _emitServiceProxyMember(
     ..write(key)
     ..writeln('        methodId: ${jsonEncode(member.methodId)},')
     ..writeln('        callerComponentId: ${jsonEncode(component.id)},')
-    ..writeln('        call: ($receiver, _) => $call,')
+    ..write(
+      cancellation == null
+          ? ''
+          : '        cancellation: ${cancellation.displayName},\n',
+    )
+    ..writeln(
+      '        call: ($receiver, ${cancellation == null ? '_' : context}) => $call,',
+    )
     ..writeln('      );')
     ..writeln();
 }
@@ -589,11 +602,14 @@ String _serviceParameterSignature(
 }
 
 /// Renders deterministic forwarded arguments without dynamic containers.
-String _serviceForwardedArguments(List<FormalParameterElement> parameters) => [
+String _serviceForwardedArguments(
+  List<FormalParameterElement> parameters, {
+  FormalParameterElement? cancellation,
+  String? context,
+}) => [
   for (final parameter in parameters)
-    parameter.isNamed
-        ? '${parameter.displayName}: ${parameter.displayName}'
-        : parameter.displayName,
+    '${parameter.isNamed ? '${parameter.displayName}: ' : ''}'
+        '${identical(parameter, cancellation) ? '$context.cancellation' : parameter.displayName}',
 ].join(', ');
 
 /// Renders supported primitive, enum, and collection defaults.

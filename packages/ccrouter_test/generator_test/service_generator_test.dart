@@ -784,6 +784,89 @@ final class OrderCache { const OrderCache(); }
     },
   );
 
+  test(
+    'stream methods generate typed cancellation-aware proxies and metadata',
+    () async {
+      const contract = '''
+import 'dart:async';
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+@CCServiceContract(componentId: CCComponentId('owner'), id: 'owner.audit')
+abstract interface class AuditService {
+  Stream<T?> watch<T extends Object>({required CCCancellationToken cancellation});
+  Stream<void> pulse();
+}
+''';
+      final output = await generateProxy(
+        '''
+const component = CCComponent(
+  id: CCComponentId('consumer'), version: '1.0.0',
+  dependencies: [CCComponentId('owner')],
+  serviceDependencies: [CCServiceDependency<AuditService>()],
+);
+''',
+        imports: "import 'package:ccrouter_test/audit_contract.dart';",
+        additionalAssets: {'ccrouter_test|lib/audit_contract.dart': contract},
+      );
+      expect(output, contains('CCRouterGeneratedServiceBinding.invokeStream<'));
+      expect(output, contains('cancellation: cancellation,'));
+      expect(output, contains('cancellation: context.cancellation'));
+      expect(output, contains('service.watch<T>('));
+      final executable = await runGeneratedProxyProgram(
+        output: output,
+        contract: '''
+import 'runtime.dart' show CCCancellationToken;
+abstract interface class AuditService {
+  Stream<T?> watch<T extends Object>({required CCCancellationToken cancellation});
+  Stream<void> pulse();
+}
+''',
+        program: '''
+import 'proxy.dart';
+import 'contract.dart';
+import 'runtime.dart';
+class Implementation implements AuditService {
+  @override
+  Stream<void> pulse() => const Stream<void>.empty();
+  @override
+  Stream<T?> watch<T extends Object>({required CCCancellationToken cancellation}) {
+    if (!identical(cancellation, linkedCancellation)) throw StateError('unlinked');
+    return Stream<T?>.value(null);
+  }
+}
+Future<void> main() async {
+  currentService = Implementation();
+  final token = CCCancellationToken();
+  await ConsumerServices.audit.pulse().drain<void>();
+  final Stream<String?> result = ConsumerServices.audit.watch<String>(cancellation: token);
+  if (!identical(inputCancellation, token) || identical(linkedCancellation, token) ||
+      (await result.toList()).single != null) throw StateError('forwarding');
+}
+''',
+      );
+      expect(
+        executable.exitCode,
+        0,
+        reason: '${executable.stdout}\n${executable.stderr}',
+      );
+      final metadata =
+          jsonDecode(
+                await generateMetadata('''
+const owner = CCComponentId('owner');
+@CCServiceContract(componentId: owner, id: 'owner.audit')
+abstract interface class AuditService { Stream<int> watch(); }
+''', imports: "import 'dart:async';"),
+              )
+              as Map;
+      final method =
+          ((metadata['serviceContracts'] as List).single['methods'] as List)
+                  .single
+              as Map;
+      expect(method['returnKind'], 'stream');
+      expect(method['resultType'], 'int');
+      expect(method['capabilities'], contains('scopeCancellation'));
+    },
+  );
+
   final invalidContracts = <String, (String, String)>{
     'keyword alias': (
       "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary', alias: 'class') abstract interface class Probe {}",
@@ -801,9 +884,29 @@ final class OrderCache { const OrderCache(); }
       "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary') abstract interface class Probe<T> { T read(); }",
       'public, abstract, non-generic interface',
     ),
-    'stream result': (
-      "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary') abstract interface class Probe { Stream<int> watch(); }",
-      'returns Stream',
+    'nullable stream': (
+      "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary') abstract interface class Probe { Stream<int>? watch(); }",
+      'non-nullable Stream<T> method',
+    ),
+    'stream getter': (
+      "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary') abstract interface class Probe { Stream<int> get changes; }",
+      'non-nullable Stream<T> method',
+    ),
+    'nested stream': (
+      "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary') abstract interface class Probe { Future<Stream<int>> watch(); }",
+      'Stream types',
+    ),
+    'stream element': (
+      "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary') abstract interface class Probe { Stream<Stream<int>> watch(); }",
+      'Stream types',
+    ),
+    'custom stream': (
+      "abstract class CustomStream extends Stream<int> {} const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary') abstract interface class Probe { CustomStream watch(); }",
+      'Stream types',
+    ),
+    'multiple stream cancellation tokens': (
+      "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary') abstract interface class Probe { Stream<int> watch(CCCancellationToken a, CCCancellationToken b); }",
+      'at most one CCCancellationToken',
     ),
     'future-or result': (
       "const owner = CCComponentId('orders'); @CCServiceContract(componentId: owner, id: 'orders.summary') abstract interface class Probe { FutureOr<int> read(); }",
@@ -829,7 +932,10 @@ final class OrderCache { const OrderCache(); }
   for (final entry in invalidContracts.entries) {
     test('contract builder rejects ${entry.key}', () async {
       final imports = switch (entry.key) {
-        'stream result' || 'future-or result' => "import 'dart:async';",
+        _
+            when entry.key.contains('stream') ||
+                entry.key == 'future-or result' =>
+          "import 'dart:async';",
         _ => '',
       };
       final logs = await _generate(

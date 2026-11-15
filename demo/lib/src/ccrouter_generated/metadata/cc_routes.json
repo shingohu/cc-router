@@ -84,7 +84,7 @@
             "packageUri": "package:demo_navigation_lab/src/ccrouter_generated/component/navigation_lab_component.service_api.g.dart"
           },
           "requiredVersionRange": "0.1.0",
-          "requiredShapeFingerprint": "5ae284d3c0990ac5c7edb8608e3bd3238bdd52c7241bb275f182c150913f891b"
+          "requiredShapeFingerprint": "c7b41467fd53598a4cba11c746a0886a4132be3d91372a4dac642ec926bb8e46"
         }
       ],
       "commandDependencies": [
@@ -120,7 +120,7 @@
             "packageUri": "package:demo_payment/src/ccrouter_generated/component/demo_payment_component.service_api.g.dart"
           },
           "requiredVersionRange": "0.1.0",
-          "requiredShapeFingerprint": "5ae284d3c0990ac5c7edb8608e3bd3238bdd52c7241bb275f182c150913f891b"
+          "requiredShapeFingerprint": "c7b41467fd53598a4cba11c746a0886a4132be3d91372a4dac642ec926bb8e46"
         }
       ],
       "commandDependencies": []

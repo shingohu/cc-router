@@ -5,7 +5,7 @@
     "name": "demo_order",
     "version": "0.1.0"
   },
-  "contentFingerprint": "4b91061376b5953893e0c7941800f21d304622b423c511126bcc5e694838e1ff",
+  "contentFingerprint": "eb7aede68c621c458080b4133992f778a058b5ad52da99d1433c6bd01612b59c",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_order_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -14,7 +14,7 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "39b43549ac2f31f45f9f00a1eec85fbf603669a7ad1042277a9ce14801077ffa"
+      "contentFingerprint": "cccbd8aaf0d251074ec370a21a3b00398a29b1036663dabdebde5908244e6cfb"
     }
   ],
   "metadata": [
@@ -387,7 +387,7 @@
           "implementation": {
             "symbol": "DemoOrderSummaryService",
             "packageUri": "package:demo_order/src/order_summary_service.dart",
-            "line": 6,
+            "line": 8,
             "column": 13
           },
           "contract": {
@@ -496,7 +496,7 @@
         "implementation": {
           "symbol": "DemoOrderSummaryService",
           "packageUri": "package:demo_order/src/order_summary_service.dart",
-          "line": 6,
+          "line": 8,
           "column": 13
         },
         "generatedArtifacts": [

@@ -99,7 +99,7 @@ compatibility 变更，必须按 Contract SemVer 处理并重新生成消费者�
 首版支持：
 
 - public 普通实例方法与 getter；
-- 同步 `R`、同步 `void`、`Future<R>`、`Future<void>`；
+- 同步 `R`、同步 `void`、`Future<R>`、`Future<void>`，以及方法直接返回非空 `Stream<T>`；
 - 非泛型 Contract 上的方法级泛型，包括公共 Pure Dart bound、nullable 结果、多个相互引用的
   类型参数和显式类型实参转发；
 - required/optional positional 与 named 参数；
@@ -111,7 +111,7 @@ compatibility 变更，必须按 Contract SemVer 处理并重新生成消费者�
 
 - 泛型 Contract、Contract 继承或 mixin；
 - setter、operator；
-- `Stream<T>`、`FutureOr<T>`、callback/function 参数；
+- Stream getter、可空/嵌套/自定义 Stream、多个取消 token 参数、`FutureOr<T>`、callback/function 参数；
 - private、Flutter、`dart:ui`、GoRouter 或未从公共 barrel 暴露的 `package:*/src/` 类型；
 - Route-scoped 跨组件 Proxy。
 
@@ -135,6 +135,43 @@ compatibility 变更，必须按 Contract SemVer 处理并重新生成消费者�
 “调用方可信”表示 caller ID 由本组件生成代码固定并可用于架构诊断，不表示 Dart Package 形成
 安全沙箱。业务 Facade 不开放 caller ID；CI 的 Analyzer 与生成内部 API 边界规则负责阻止普通
 源码绕过生成入口。
+
+### Stream 生命周期（Issue #7）
+
+分类：通用框架能力。业务侧多个 Future 会丢失自然的增量交付和统一订阅语义；仅在生成器放开
+检查不能维持 invocation，Adapter 也不能代替 Core 的 Scope 清理。采用独立 Stream SPI 路径，
+不改同步/Future 行为；如需回退，回退此路径并恢复生成期诊断。
+
+- 调用时固定 Owner Scope、继承的 consumer lineage 与最早 deadline，首次 listen 才 readiness、
+  方法执行和上游订阅；一个返回流只允许一次 listen，源可为 single-subscription 或 broadcast。
+- 未订阅调用在原 Scope 弱登记；流被丢弃时可回收，Owner/consumer 关闭释放启动闭包和调用 Zone，
+  后续 listen 报取消但不进入方法、不创建 Trace。登记与活动订阅 barrier 分开，Scope 不强持有懒调用。
+- 首次方法入场异步，后续源/resume 事件可同步交付，但回调不重叠；私有订阅拥有可清空 FIFO，
+  不把 payload 交给不可清理的 Controller/Transformer 队列。中断清空值、业务错误和 Zone，pause
+  同时传给上游。无积压的源完成可提交结果；有积压时保留原 Owner/deadline 隔离。
+- 显式 cancel 保留取消发起方 error Zone 并注入 invocation 身份；自动 Scope/token/deadline 取消
+  使用源 invocation Zone。协作信号和源 cancel 在同一选定 Zone 执行，以 `_SharedResult` 数据
+  加入 Host 等待。外部裸 Future 仍需遵守 Dart 原生 producer error Zone 约束。
+- handler 更新、asFuture、嵌套 pause/resumeSignal 保持 Dart 语义；cancelOnError 等待源清理后读取
+  最新错误 handler，再次显式 cancel 可抑制待交付错误。清理失败独立发出 `serviceStreamCleanup`
+  脱敏诊断，只记录 errorType/稳定 ID，不被主取消错误或 barrier 移除遮蔽。
+- 至多一个框架 CCCancellationToken 参数；Proxy 转发与 Scope/Runtime 关联的 context token。
+  Widget 不会被猜测为 consumer Scope，UI 必须显式取消 token/subscription。
+- 原始数据顺序、error/stack、done、pause/resume 与 cancelOnError 遵循 Dart Stream。源错误默认
+  非终止；显式 cancel 的 Future 等待源清理并传播原始清理错误。
+- Scope/token/shutdown 在同步终止边界屏蔽迟到和积压事件，取消 context，等待源 cancel 后发出
+  CCInvocationCancelledError 再 done；整个流存续期受 deadline 约束，超时为 CCInvocationTimeoutError。
+  暂停不暂停 deadline，暂停的消费者恢复后才能看到终止事件。
+- Scope 通过私有 cleanup barrier 在 Service dispose 前 join 流清理，继承现有逐资源 timeout 和
+  disposalErrors。consumer lineage 仅保存 Scope 弱引用；终止移除监听/timer/barrier/Provider 引用。
+  不合作的源可能超过清理界限，框架不承诺强制终止任意 Dart/网络操作。
+- 自然结束或取消清理完成只产生一次方法 Trace，自然结束前出现源错误记 failed，取消记 cancelled，超时记 timedOut；
+  不记录参数、快照、错误文本。并发调用独立，共享 Service 仍由 Provider Scope 拥有。
+- HTTP、账号代次、业务 fallback 和重试由实现负责；有限请求没有自动重放、缓存或隐式空流降级。
+  单个调用的开销为一套私有订阅、可清空事件队列、取消监听和可选 deadline timer。
+
+验证入口：`service_stream_test.dart`、Service Generator 测试，以及 payment 的真实生成 Proxy 测试。
+Demo 总览使用订单摘要展示首份/后续快照，重试和 dispose 取消旧请求；该能力不放宽 UI schema。
 
 ## 6. 生成与校验链
 

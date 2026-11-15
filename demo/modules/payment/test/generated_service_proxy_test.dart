@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_generated.dart' show CCServiceToken;
 import 'package:ccrouter_test/ccrouter_test.dart';
@@ -6,7 +8,20 @@ import 'package:demo_payment/src/ccrouter_generated/demo_payment_component.api.g
 import 'package:flutter_test/flutter_test.dart';
 
 final class _OrderSummaryServiceFake implements OrderSummaryService {
+  _OrderSummaryServiceFake([this.source]);
+
+  final Stream<String>? source;
+  CCCancellationToken? streamCancellation;
   int _invocationCount = 0;
+
+  @override
+  Stream<String> watchSummary(
+    int orderId, {
+    required CCCancellationToken cancellation,
+  }) {
+    streamCancellation = cancellation;
+    return source ?? Stream.value(summaryFor(orderId));
+  }
 
   @override
   int get invocationCount => _invocationCount;
@@ -30,7 +45,9 @@ final class _OrderSummaryServiceFake implements OrderSummaryService {
 }
 
 final class _OrderRegistrar implements CCComponentRegistrar {
-  const _OrderRegistrar();
+  const _OrderRegistrar([this.service]);
+
+  final _OrderSummaryServiceFake? service;
 
   @override
   void register(CCRegistry registry) {
@@ -40,7 +57,7 @@ final class _OrderRegistrar implements CCComponentRegistrar {
           'demo_order.summary',
         ),
         scope: CCServiceScope.session,
-        factory: (_) => _OrderSummaryServiceFake(),
+        factory: (_) => service ?? _OrderSummaryServiceFake(),
       ),
     );
   }
@@ -54,6 +71,81 @@ final class _EmptyRegistrar implements CCComponentRegistrar {
 }
 
 void main() {
+  test(
+    'real generated Stream Proxy delivers early snapshots and links cancellation',
+    () async {
+      final release = Completer<void>();
+      var cancels = 0;
+      final source = StreamController<String>(
+        onCancel: () {
+          cancels++;
+          return release.future;
+        },
+      );
+      final service = _OrderSummaryServiceFake(source.stream);
+      final host = CCRouterTestHost(
+        components: [
+          CCComponentManifest(
+            id: 'demo_order_component',
+            version: '1.0.0',
+            registrar: _OrderRegistrar(service),
+          ),
+          const CCComponentManifest(
+            id: 'demo_payment_component',
+            version: '1.0.0',
+            dependencies: ['demo_order_component'],
+            registrar: _EmptyRegistrar(),
+          ),
+        ],
+      );
+      addTearDown(host.dispose);
+      host.initialize();
+      await host.run(() async {
+        CCRouter.openSession(accountId: 'stream');
+        final cancellation = CCCancellationToken();
+        final stream = DemoPaymentServices.orderSummary.watchSummary(
+          1,
+          cancellation: cancellation,
+        );
+        expect(service.streamCancellation, isNull);
+        final events = <Object>[];
+        final done = Completer<void>();
+        stream.listen(events.add, onError: events.add, onDone: done.complete);
+        await Future<void>.delayed(Duration.zero);
+        source.add('first');
+        await Future<void>.delayed(Duration.zero);
+        expect(events, ['first']);
+        source.add('second');
+        await Future<void>.delayed(Duration.zero);
+        final original = StateError('original');
+        source.addError(original);
+        await Future<void>.delayed(Duration.zero);
+        expect(events, ['first', 'second', same(original)]);
+        cancellation.cancel();
+        expect(service.streamCancellation!.isCancelled, isTrue);
+        source.add('late');
+        var closed = false;
+        final closing = CCRouter.closeSession().then((_) {
+          closed = true;
+        });
+        await Future<void>.delayed(Duration.zero);
+        expect(closed, isFalse);
+        release.complete();
+        await closing;
+        await done.future;
+        expect(events, [
+          'first',
+          'second',
+          same(original),
+          isA<CCInvocationCancelledError>(),
+        ]);
+        expect(cancels, 1);
+        expect(CCRouter.recentTraces.single.status, 'cancelled');
+        await source.close();
+      });
+    },
+  );
+
   test(
     'generated component Proxy invokes sync, async, getter, and Trace',
     () async {

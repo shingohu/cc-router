@@ -1561,6 +1561,36 @@ final class CCRouterRuntime {
     );
   }
 
+  /// Creates a lazy, single-subscription Stream for a promoted Service method.
+  ///
+  /// Captures the exact Provider Scope, caller lineage and deadline at method
+  /// call; first listen waits for readiness and invokes/subscribes once. Even a
+  /// broadcast source is exposed as one owned subscription. Cancellation and
+  /// timeout fence queued events immediately, cancel the context token and
+  /// await upstream cancel. Scope closure joins cleanup before Service disposal.
+  /// Token/Scope cancellation emits [CCInvocationCancelledError] then done;
+  /// explicit subscription cancel emits nothing. Source errors preserve their
+  /// identity/stack and are nonterminal unless the consumer uses cancelOnError.
+  Stream<R> invokeServiceStream<T extends Object, R>({
+    CCServiceToken<T>? contractToken,
+    CCServiceKey<T>? key,
+    required String methodId,
+    String? callerComponentId,
+    String? navigationId,
+    Duration? timeout,
+    CCCancellationToken? cancellation,
+    required Stream<R> Function(T service, CCInvocationContext context) call,
+  }) => _createServiceStream<T, R>(
+    contractToken: contractToken,
+    key: key,
+    methodId: methodId,
+    callerComponentId: callerComponentId,
+    navigationId: navigationId,
+    timeout: timeout,
+    cancellation: cancellation,
+    call: call,
+  );
+
   /// Invokes one synchronous generated method on a promoted Service contract.
   ///
   /// Generated proxies use this boundary only for methods whose declared

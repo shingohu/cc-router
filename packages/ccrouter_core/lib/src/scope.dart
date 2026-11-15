@@ -155,6 +155,13 @@ final class CCScope {
   /// Disposable instances in construction order.
   final List<CCDisposable> _disposables = [];
 
+  /// Active Stream cleanup barriers, joined before disposing their Services.
+  final Set<_SharedResult<void>> _serviceStreams = {};
+
+  /// Weak lazy calls whose captured execution state must end with this Scope.
+  final Set<WeakReference<_ServiceStreamInvocation<dynamic>>>
+  _pendingServiceStreams = {};
+
   /// Provider keys currently being constructed for cycle detection.
   final Set<Object> _constructing = {};
 
@@ -267,12 +274,18 @@ final class CCScope {
   /// shutdown; callers must not use it merely because the App is backgrounded.
   /// Cancellation listeners and disposables may fail independently: errors
   /// enter [disposalErrors], while all remaining resources are still released.
+  /// Active Service Streams cancel first; their asynchronous cleanup is joined
+  /// with the same per-resource [timeout] before disposing Service instances.
   /// Reentrant closes join the operation established before callbacks run.
   Future<void> close({Duration timeout = const Duration(seconds: 5)}) {
     if (_closeFuture != null) return _closeFuture!;
     final completion = Completer<void>();
     _closeFuture = completion.future;
     _state = CCScopeState.closing;
+    for (final stream in _pendingServiceStreams.toList()) {
+      stream.target?._cancelUnlistened();
+    }
+    _pendingServiceStreams.clear();
     try {
       cancellation.cancel();
     } catch (error) {
@@ -284,6 +297,17 @@ final class CCScope {
 
   /// Runs isolated, timeout-bounded disposal for every owned instance.
   Future<void> _dispose(Duration timeout) async {
+    for (final stream in _serviceStreams.toList()) {
+      final waitCancellation = _ownerZone.run(CCCancellationToken.new);
+      try {
+        await stream.wait(cancellation: waitCancellation).timeout(timeout);
+      } catch (error) {
+        disposalErrors.add(error);
+      } finally {
+        waitCancellation.cancel();
+      }
+    }
+    _serviceStreams.clear();
     if (_constructing.isNotEmpty) {
       _constructionDrained ??= Completer<void>();
       await _constructionDrained!.future;

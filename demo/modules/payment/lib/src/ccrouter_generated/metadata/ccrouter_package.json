@@ -5,7 +5,7 @@
     "name": "demo_payment",
     "version": "0.1.0"
   },
-  "contentFingerprint": "6f180a7110a4e46aaf46f2010d8d58f60768bcf28ff7b1ccf93df4d2e85c7293",
+  "contentFingerprint": "781367da3cc74c560edb9d9a6f38f14daa815dffa041d43556ea781d0aedced7",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_payment_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -14,7 +14,7 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "39b43549ac2f31f45f9f00a1eec85fbf603669a7ad1042277a9ce14801077ffa"
+      "contentFingerprint": "cccbd8aaf0d251074ec370a21a3b00398a29b1036663dabdebde5908244e6cfb"
     }
   ],
   "metadata": [
@@ -52,7 +52,7 @@
                 "packageUri": "package:demo_payment/src/ccrouter_generated/component/demo_payment_component.service_api.g.dart"
               },
               "requiredVersionRange": "0.1.0",
-              "requiredShapeFingerprint": "5ae284d3c0990ac5c7edb8608e3bd3238bdd52c7241bb275f182c150913f891b"
+              "requiredShapeFingerprint": "c7b41467fd53598a4cba11c746a0886a4132be3d91372a4dac642ec926bb8e46"
             }
           ],
           "commandDependencies": []
