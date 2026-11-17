@@ -329,8 +329,19 @@ Exact Entry close is supported by Native Managed. General atomic `pushAndRemoveU
   SDK's meta pin conflicts with the Generator. Historical Fork results do not
   prove that this branch builds for OHOS.
 
-The following multi-SDK results are **historical snapshots from 2026-09-22, not renewed
-verification of the current source**:
+Current compatibility status:
+
+| Flutter SDK | Bundled Dart | Current status |
+| --- | --- | --- |
+| Standard **3.47.9** | **3.13.7** | Recommended and locally verified baseline; framework, Demo and Chrome regressions plus Android/iOS/macOS/Web Release builds pass (iOS unsigned) |
+| Old OHOS `oh-3.41.9-release` | `3.11.5` | Its `meta 1.17.0` pin conflicts with the Generator; incompatible with this toolchain |
+
+Verification of this version does not certify every `3.47.x` release or a continuous
+Flutter version range. Physical-device behavior, the current IDE session and OHOS
+remain separate acceptance work. See the [adaptation and fix record](docs/validation/20261117-flutter-3479-readiness/report.md#修复落地与复验).
+
+Other SDK results below are **historical snapshots from 2026-09-22, not compatibility
+commitments for the current source**:
 
 | Flutter SDK | Bundled Dart | Scope verified at that time |
 | --- | --- | --- |

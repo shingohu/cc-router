@@ -452,7 +452,17 @@ if (activation.status == CCRouteActivationStatus.activated) {
   运行前用 `fvm flutter --version --machine` 确认实际 SDK。旧 OHOS SDK 因 meta pin
   与新 Generator 不兼容；历史 Fork 版本与记录不代表本分支的 OHOS 构建已通过。
 
-已有多 SDK 测试记录如下，均为 **2026-09-22 的历史快照，不代表当前源码已重新验证**：
+当前兼容性状态：
+
+| Flutter SDK | 配套 Dart | 当前状态 |
+| --- | --- | --- |
+| 官方标准 **3.47.9** | **3.13.7** | 当前推荐与本地验证基线；框架、Demo、Chrome 回归及 Android/iOS/macOS/Web Release 构建通过（iOS 未签名） |
+| 旧 OHOS `oh-3.41.9-release` | `3.11.5` | 固定的 `meta 1.17.0` 与新 Generator 冲突，不兼容当前工具链 |
+
+已验证版本不扩展为整个 `3.47.x` 或连续 Flutter 版本范围。真机交互、IDE 当前会话及
+OHOS 等独立平台仍需验收；详见[适配与修复记录](docs/validation/20261117-flutter-3479-readiness/report.md#修复落地与复验)。
+
+以下其他 SDK 仅保留 **2026-09-22 的历史快照，不代表当前源码兼容性承诺**：
 
 | Flutter SDK | 配套 Dart | 当次验证范围 |
 | --- | --- | --- |
