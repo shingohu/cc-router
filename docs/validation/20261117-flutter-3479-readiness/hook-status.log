@@ -1,0 +1,12 @@
+CCRouter pub hook SDK: <flutter-sdk>
+  marker: <flutter-sdk>/bin/.ccrouter_pub_hook.json (missing or invalid)
+  POSIX wrapper: <flutter-sdk>/bin/flutter (missing or invalid)
+  POSIX backup: <flutter-sdk>/bin/flutter.ccrouter-original (missing)
+  Windows wrapper: <flutter-sdk>/bin/flutter.bat (missing or invalid)
+  Windows backup: <flutter-sdk>/bin/flutter.ccrouter-original.bat (missing)
+  Dart POSIX wrapper: <flutter-sdk>/bin/cache/dart-sdk/bin/dart (missing or invalid)
+  Dart POSIX backup: <flutter-sdk>/bin/cache/dart-sdk/bin/dart.ccrouter-original (missing)
+  Dart Windows wrapper: <flutter-sdk>/bin/dart.bat (missing or invalid)
+  Dart Windows backup: <flutter-sdk>/bin/dart.ccrouter-original.bat (missing)
+  run/build preflight: missing, run watch: missing, clean guard: missing, watch startup handshake: missing, run supervisor: missing, machine reload gate: missing, flutter pub post-hook: missing, dart pub post-hook: missing
+CCRouter pub hook result: not installed or inconsistent

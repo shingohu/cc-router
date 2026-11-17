@@ -2000,6 +2000,13 @@ component/contracts Package's `portable publish` entrypoint. Local Framework
 dependencies contribute the same authored identity even when the caller has
 no write ownership. Cross-toolchain or stale-source mismatches still fail.
 
+Web startup is covered by a Chrome regression for Host initialization, restart
+and existing-entry navigation. Run browser tests from `packages/ccrouter_test/`
+so the test loader uses the Flutter Package as its app root; run the VM suite
+from the repository root. Runtime identities use a JavaScript-safe literal for
+the secure 32-bit random bound. Release Web compilation does not replace this
+runtime check.
+
 Since 2.16, build_runner repairs modified outputs by default. CCRouter one-shot
 generation uses that default; watch explicitly uses `--keep-modified-outputs`
 to preserve the old policy. Otherwise the non-target output protection restore

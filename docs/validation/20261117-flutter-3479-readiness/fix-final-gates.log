@@ -1,0 +1,17 @@
+$ fvm dart analyze packages
+exit=0
+Analyzing packages...
+No issues found!
+
+$ fvm dart analyze tool
+exit=0
+Analyzing tool...
+No issues found!
+
+$ fvm dart tool/documentation_check.dart
+exit=0
+Documentation check passed for 191 Markdown files.
+
+$ fvm dart tool/release_sensitivity_check.dart --include-untracked
+exit=0
+Release sensitivity check passed.

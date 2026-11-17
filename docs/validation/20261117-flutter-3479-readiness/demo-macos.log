@@ -1,0 +1,25 @@
+[1/1] MacOS SDK
+  ├─ [1/8] darwin-x64/framework                                     6.4s
+  ├─ [2/8] darwin-x64/gen_snapshot                               1,398ms
+  ├─ [3/8] darwin-x64-profile/framework                          2,114ms
+  ├─ [4/8] darwin-x64-profile                                      765ms
+  ├─ [5/8] darwin-x64-profile/gen_snapshot                       1,486ms
+  ├─ [6/8] darwin-x64-release/framework                            36.9s
+  ├─ [7/8] darwin-x64-release                                      886ms
+  └─ [8/8] darwin-x64-release/gen_snapshot                       2,165ms
+Adding Swift Package Manager integration...                         7.5s
+All plugins found for macos are Swift Packages, but your project still has CocoaPods integration. Your project uses a non-standard Podfile and will need to be migrated to Swift Package Manager manually. Some steps you may need to complete include:
+  * In the macos/ directory run "pod deintegrate"
+  * Transition any Pod dependencies to Swift Package equivalents. See https://developer.apple.com/documentation/xcode/adding-package-dependencies-to-your-app
+  * Transition any custom logic
+  * Remove the include to "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig" in your macos/Flutter/Flutter-Debug.xcconfig
+  * Remove the include to "Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig" in your macos/Flutter/Flutter-Release.xcconfig
+
+Removing CocoaPods integration will improve the project's build time.
+Running pod install...                                             386ms
+Building macOS application...
+2026-11-17 16:00:59.011 xcodebuild[69645:26066561]  DVTDeviceOperation: Encountered a build number "" that is incompatible with DVTBuildVersion.
+2026-11-17 16:00:59.059 xcodebuild[69645:26066560] [MT] DVTDeviceOperation: Encountered a build number "" that is incompatible with DVTBuildVersion.
+2026-11-17 16:00:59.059 xcodebuild[69645:26066560] [MT] DVTDeviceOperation: Encountered a build number "" that is incompatible with DVTBuildVersion.
+warning: Run script build phase 'Run Script' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'Flutter Assemble' from project 'Runner')
+✓ Built build/macos/Build/Products/Debug/ccrouter_demo.app

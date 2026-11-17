@@ -1,0 +1,285 @@
+{
+  "base": "699c81ae6a0e0080f0f00475bfa0673aad0867ff",
+  "suites": [
+    {
+      "step": "framework",
+      "command": [
+        "fvm",
+        "flutter",
+        "test",
+        "--no-pub",
+        "packages/ccrouter_test/test"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "demo",
+      "command": [
+        "fvm",
+        "flutter",
+        "test",
+        "--no-pub",
+        "demo"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "tools",
+      "command": [
+        "fvm",
+        "dart",
+        "test",
+        "tool/test"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "portable",
+      "command": [
+        "fvm",
+        "dart",
+        "test",
+        "--concurrency=1",
+        "packages/ccrouter_test/generator_test/generation_command_test.dart",
+        "packages/ccrouter_test/generator_test/portable_distribution_test.dart",
+        "packages/ccrouter_test/generator_test/package_workspace_test.dart"
+      ],
+      "exit": 0
+    }
+  ],
+  "generation": [
+    {
+      "step": "prepare",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "prepare",
+        "demo"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "publish-demo",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "publish-demo-modules-kv_storage",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo/modules/kv_storage"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "publish-demo-modules-navigation_lab",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo/modules/navigation_lab"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "publish-demo-modules-network",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo/modules/network"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "publish-demo-modules-order",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo/modules/order"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "publish-demo-modules-order_contracts",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo/modules/order_contracts"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "publish-demo-modules-payment",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo/modules/payment"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "publish-demo-modules-web",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo/modules/web"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "publish-demo-modules-web_contracts",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo/modules/web_contracts"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "host-check",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "generate",
+        "demo",
+        "--no-cache",
+        "--check"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "example-check",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "generate",
+        "demo/modules/order/example",
+        "--no-cache",
+        "--check"
+      ],
+      "exit": 0
+    }
+  ],
+  "nativeBuilds": [
+    {
+      "step": "web",
+      "command": [
+        "flutter",
+        "build",
+        "web",
+        "--release",
+        "--no-pub"
+      ],
+      "workingDirectory": "demo",
+      "exit": 0,
+      "nativeConfigDrift": []
+    },
+    {
+      "step": "macos",
+      "command": [
+        "flutter",
+        "build",
+        "macos",
+        "--release",
+        "--no-pub"
+      ],
+      "workingDirectory": "demo",
+      "exit": 0,
+      "nativeConfigDrift": []
+    },
+    {
+      "step": "ios",
+      "command": [
+        "flutter",
+        "build",
+        "ios",
+        "--release",
+        "--no-codesign",
+        "--no-pub"
+      ],
+      "workingDirectory": "demo",
+      "exit": 0,
+      "nativeConfigDrift": []
+    },
+    {
+      "step": "android",
+      "command": [
+        "flutter",
+        "build",
+        "apk",
+        "--release",
+        "--no-pub"
+      ],
+      "workingDirectory": "demo",
+      "exit": 0,
+      "nativeConfigDrift": []
+    }
+  ],
+  "chromeTests": 4,
+  "chromeExit": 0,
+  "pluginPinnedSha": "699c81ae6a0e0080f0f00475bfa0673aad0867ff",
+  "pinCheckExit": 0,
+  "doctorExit": 0,
+  "focusedLspTests": 1,
+  "focusedLspExit": 0,
+  "liveIde": "unverified: Android Studio UI reads timed out repeatedly"
+}

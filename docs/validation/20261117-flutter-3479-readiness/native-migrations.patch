@@ -1,0 +1,217 @@
+diff --git a/demo/android/gradle.properties b/demo/android/gradle.properties
+index fbee1d8c..d5da7278 100644
+--- a/demo/android/gradle.properties
++++ b/demo/android/gradle.properties
+@@ -2,0 +3,4 @@ android.useAndroidX=true
++# This builtInKotlin flag was added automatically by Flutter migrator
++android.builtInKotlin=false
++# This newDsl flag was added automatically by Flutter migrator
++android.newDsl=false
+diff --git a/demo/ios/Podfile.lock b/demo/ios/Podfile.lock
+index 4ec9307e..6f0052a4 100644
+--- a/demo/ios/Podfile.lock
++++ b/demo/ios/Podfile.lock
+@@ -2,2 +1,0 @@ PODS:
+-  - app_links (7.0.0):
+-    - Flutter
+@@ -5,3 +2,0 @@ PODS:
+-  - webview_flutter_wkwebview (0.0.1):
+-    - Flutter
+-    - FlutterMacOS
+@@ -10 +4,0 @@ DEPENDENCIES:
+-  - app_links (from `.symlinks/plugins/app_links/ios`)
+@@ -12 +5,0 @@ DEPENDENCIES:
+-  - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/darwin`)
+@@ -15,2 +7,0 @@ EXTERNAL SOURCES:
+-  app_links:
+-    :path: ".symlinks/plugins/app_links/ios"
+@@ -19,2 +9,0 @@ EXTERNAL SOURCES:
+-  webview_flutter_wkwebview:
+-    :path: ".symlinks/plugins/webview_flutter_wkwebview/darwin"
+@@ -23,3 +12 @@ SPEC CHECKSUMS:
+-  app_links: 6d01271b3907b0ee7325c5297c75d697c4226c4d
+-  Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
+-  webview_flutter_wkwebview: 29eb20d43355b48fe7d07113835b9128f84e3af4
++  Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
+diff --git a/demo/ios/Runner.xcodeproj/project.pbxproj b/demo/ios/Runner.xcodeproj/project.pbxproj
+index 443071ff..256ec6c0 100644
+--- a/demo/ios/Runner.xcodeproj/project.pbxproj
++++ b/demo/ios/Runner.xcodeproj/project.pbxproj
+@@ -15,0 +16 @@
++		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
+@@ -58,0 +60 @@
++		78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FlutterGeneratedPluginSwiftPackage; path = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage; sourceTree = "<group>"; };
+@@ -76,0 +79 @@
++				78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */,
+@@ -124,0 +128 @@
++				78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */,
+@@ -203 +206,0 @@
+-				502B796A1824292FACDABA1A /* [CP] Embed Pods Frameworks */,
+@@ -209,0 +213,3 @@
++			packageProductDependencies = (
++				78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */,
++			);
+@@ -242,0 +249,3 @@
++			packageReferences = (
++				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */,
++			);
+@@ -291,17 +299,0 @@
+-		502B796A1824292FACDABA1A /* [CP] Embed Pods Frameworks */ = {
+-			isa = PBXShellScriptBuildPhase;
+-			buildActionMask = 2147483647;
+-			files = (
+-			);
+-			inputFileListPaths = (
+-				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+-			);
+-			name = "[CP] Embed Pods Frameworks";
+-			outputFileListPaths = (
+-				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+-			);
+-			runOnlyForDeploymentPostprocessing = 0;
+-			shellPath = /bin/sh;
+-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks.sh\"\n";
+-			showEnvVarsInLog = 0;
+-		};
+@@ -728,0 +721,14 @@
++
++/* Begin XCLocalSwiftPackageReference section */
++		781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */ = {
++			isa = XCLocalSwiftPackageReference;
++			relativePath = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage;
++		};
++/* End XCLocalSwiftPackageReference section */
++
++/* Begin XCSwiftPackageProductDependency section */
++		78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */ = {
++			isa = XCSwiftPackageProductDependency;
++			productName = FlutterGeneratedPluginSwiftPackage;
++		};
++/* End XCSwiftPackageProductDependency section */
+diff --git a/demo/ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme b/demo/ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
+index e3773d42..c3fedb29 100644
+--- a/demo/ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
++++ b/demo/ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
+@@ -7,0 +8,18 @@
++      <PreActions>
++         <ExecutionAction
++            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
++            <ActionContent
++               title = "Run Prepare Flutter Framework Script"
++               scriptText = "/bin/sh &quot;$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh&quot; prepare&#10;">
++               <EnvironmentBuildable>
++                  <BuildableReference
++                     BuildableIdentifier = "primary"
++                     BlueprintIdentifier = "97C146ED1CF9000F007C117D"
++                     BuildableName = "Runner.app"
++                     BlueprintName = "Runner"
++                     ReferencedContainer = "container:Runner.xcodeproj">
++                  </BuildableReference>
++               </EnvironmentBuildable>
++            </ActionContent>
++         </ExecutionAction>
++      </PreActions>
+diff --git a/demo/macos/Podfile.lock b/demo/macos/Podfile.lock
+index 51fa344d..5f0ef975 100644
+--- a/demo/macos/Podfile.lock
++++ b/demo/macos/Podfile.lock
+@@ -2,2 +1,0 @@ PODS:
+-  - app_links (6.4.1):
+-    - FlutterMacOS
+@@ -5,3 +2,0 @@ PODS:
+-  - webview_flutter_wkwebview (0.0.1):
+-    - Flutter
+-    - FlutterMacOS
+@@ -10 +4,0 @@ DEPENDENCIES:
+-  - app_links (from `Flutter/ephemeral/.symlinks/plugins/app_links/macos`)
+@@ -12 +5,0 @@ DEPENDENCIES:
+-  - webview_flutter_wkwebview (from `Flutter/ephemeral/.symlinks/plugins/webview_flutter_wkwebview/darwin`)
+@@ -15,2 +7,0 @@ EXTERNAL SOURCES:
+-  app_links:
+-    :path: Flutter/ephemeral/.symlinks/plugins/app_links/macos
+@@ -19,2 +9,0 @@ EXTERNAL SOURCES:
+-  webview_flutter_wkwebview:
+-    :path: Flutter/ephemeral/.symlinks/plugins/webview_flutter_wkwebview/darwin
+@@ -23,3 +12 @@ SPEC CHECKSUMS:
+-  app_links: c3185399a5cabc2e610ee5ad52fb7269b84ff869
+-  FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
+-  webview_flutter_wkwebview: 29eb20d43355b48fe7d07113835b9128f84e3af4
++  FlutterMacOS: c232990155153907050900a2e175c7773903ba4e
+diff --git a/demo/macos/Runner.xcodeproj/project.pbxproj b/demo/macos/Runner.xcodeproj/project.pbxproj
+index 01e1aee1..1dca62bf 100644
+--- a/demo/macos/Runner.xcodeproj/project.pbxproj
++++ b/demo/macos/Runner.xcodeproj/project.pbxproj
+@@ -30,0 +31 @@
++		78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */ = {isa = PBXBuildFile; productRef = 78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */; };
+@@ -84,0 +86 @@
++		78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = FlutterGeneratedPluginSwiftPackage; path = ephemeral/Packages/FlutterGeneratedPluginSwiftPackage; sourceTree = "<group>"; };
+@@ -105,0 +108 @@
++				78A318202AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage in Frameworks */,
+@@ -180,0 +184 @@
++				78E0A7A72DC9AD7400C4905E /* FlutterGeneratedPluginSwiftPackage */,
+@@ -243 +246,0 @@
+-				DB7DAD20AF6FAE4F129E0725 /* [CP] Embed Pods Frameworks */,
+@@ -250,0 +254,3 @@
++			packageProductDependencies = (
++				78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */,
++			);
+@@ -294,0 +301,3 @@
++			packageReferences = (
++				781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */,
++			);
+@@ -408,17 +416,0 @@
+-		DB7DAD20AF6FAE4F129E0725 /* [CP] Embed Pods Frameworks */ = {
+-			isa = PBXShellScriptBuildPhase;
+-			buildActionMask = 2147483647;
+-			files = (
+-			);
+-			inputFileListPaths = (
+-				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+-			);
+-			name = "[CP] Embed Pods Frameworks";
+-			outputFileListPaths = (
+-				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+-			);
+-			runOnlyForDeploymentPostprocessing = 0;
+-			shellPath = /bin/sh;
+-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks.sh\"\n";
+-			showEnvVarsInLog = 0;
+-		};
+@@ -798,0 +791,14 @@
++
++/* Begin XCLocalSwiftPackageReference section */
++		781AD8BC2B33823900A9FFBB /* XCLocalSwiftPackageReference "FlutterGeneratedPluginSwiftPackage" */ = {
++			isa = XCLocalSwiftPackageReference;
++			relativePath = Flutter/ephemeral/Packages/FlutterGeneratedPluginSwiftPackage;
++		};
++/* End XCLocalSwiftPackageReference section */
++
++/* Begin XCSwiftPackageProductDependency section */
++		78A3181F2AECB46A00862997 /* FlutterGeneratedPluginSwiftPackage */ = {
++			isa = XCSwiftPackageProductDependency;
++			productName = FlutterGeneratedPluginSwiftPackage;
++		};
++/* End XCSwiftPackageProductDependency section */
+diff --git a/demo/macos/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme b/demo/macos/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
+index fb2db7cd..730fefe7 100644
+--- a/demo/macos/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
++++ b/demo/macos/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme
+@@ -7,0 +8,18 @@
++      <PreActions>
++         <ExecutionAction
++            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
++            <ActionContent
++               title = "Run Prepare Flutter Framework Script"
++               scriptText = "&quot;$FLUTTER_ROOT&quot;/packages/flutter_tools/bin/macos_assemble.sh prepare&#10;">
++               <EnvironmentBuildable>
++                  <BuildableReference
++                     BuildableIdentifier = "primary"
++                     BlueprintIdentifier = "33CC10EC2044A3C60003C045"
++                     BuildableName = "ccrouter_demo.app"
++                     BlueprintName = "Runner"
++                     ReferencedContainer = "container:Runner.xcodeproj">
++                  </BuildableReference>
++               </EnvironmentBuildable>
++            </ActionContent>
++         </ExecutionAction>
++      </PreActions>

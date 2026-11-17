@@ -16,9 +16,10 @@ include UI-only Contract/Renderer files with imported Owner constants and UI SPI
 references. These markers request current session facts; they do not establish
 framework identity. Generator Analyzer 13 and Plugin Analyzer 8.4 remain isolated;
 the maintainer Demo integration test verifies generated metadata, Owner identity,
-diagnostic source spans and Quick Fixes across these graphs. The Demo remote pin
-remains unchanged until the Plugin is pushed and a separate pin update is verified
-with doctor and an actual IDE diagnostic/Quick Fix.
+diagnostic source spans and Quick Fixes across these graphs. The Demo manifest/lock
+pin the pushed fix; pin-check and temporary loader smoke pass. The current IDE
+session remains unverified. Further updates push the Plugin first and update the
+pin separately, then run doctor and verify an IDE diagnostic/Quick Fix.
 
 UI Fragment checks use canonical framework symbols, including prefixed and
 transitive public exports. They report `ccrouter_ui_alias_invalid`,

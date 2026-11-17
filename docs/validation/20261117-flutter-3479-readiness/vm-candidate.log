@@ -1,0 +1,5 @@
+00:00 +0: loading <snapshot>/packages/ccrouter_test/test/managed_router_backend_test.dart
+00:00 +0: activateExisting preserves the Managed Home identity
+00:00 +1: deliverToExisting reaches only the registered Home receiver
+00:00 +2: activateExisting reports conflict when a Foreign Popup covers the target
+00:00 +3: All tests passed!

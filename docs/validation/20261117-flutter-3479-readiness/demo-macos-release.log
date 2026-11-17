@@ -1,0 +1,13 @@
+All plugins found for macos are Swift Packages, but your project still has CocoaPods integration. Your project uses a non-standard Podfile and will need to be migrated to Swift Package Manager manually. Some steps you may need to complete include:
+  * In the macos/ directory run "pod deintegrate"
+  * Transition any Pod dependencies to Swift Package equivalents. See https://developer.apple.com/documentation/xcode/adding-package-dependencies-to-your-app
+  * Transition any custom logic
+  * Remove the include to "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig" in your macos/Flutter/Flutter-Debug.xcconfig
+  * Remove the include to "Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig" in your macos/Flutter/Flutter-Release.xcconfig
+
+Removing CocoaPods integration will improve the project's build time.
+Building macOS application...
+2026-11-17 16:06:48.275 xcodebuild[76898:26117320]  DVTDeviceOperation: Encountered a build number "" that is incompatible with DVTBuildVersion.
+2026-11-17 16:06:48.320 xcodebuild[76898:26117297] [MT] DVTDeviceOperation: Encountered a build number "" that is incompatible with DVTBuildVersion.
+2026-11-17 16:06:48.320 xcodebuild[76898:26117297] [MT] DVTDeviceOperation: Encountered a build number "" that is incompatible with DVTBuildVersion.
+✓ Built build/macos/Build/Products/Release/ccrouter_demo.app (49.3MB)

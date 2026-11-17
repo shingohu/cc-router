@@ -29,14 +29,20 @@ Managed navigation preserves the actual `Route.popped` result in either order.
 Each Managed Navigator owns a Semantics container for adaptive reparenting;
 this preserves accessibility content without recreating logical Entries/Scopes.
 
+Runtime identity generation preserves its secure 32-bit range on JavaScript.
+Maintainers run the focused Chrome regression from `packages/ccrouter_test/`;
+the browser loader needs that Package as its app root. The VM framework suite
+still runs from the repository root. A Web build alone does not verify startup.
+
 Plugin semantic-resolution triggers reuse the annotation identity table and
 include UI-only Contract/Renderer files with imported Owner constants and UI SPI
 references. These markers request current session facts; they do not establish
 framework identity. Generator Analyzer 13 and Plugin Analyzer 8.4 remain isolated;
 the maintainer Demo integration test verifies generated metadata, Owner identity,
-diagnostic source spans and Quick Fixes across these graphs. The Demo remote pin
-remains unchanged until the Plugin is pushed and a separate pin update is verified
-with doctor and an actual IDE diagnostic/Quick Fix.
+diagnostic source spans and Quick Fixes across these graphs. The Demo manifest/lock
+pin the pushed fix; pin-check and temporary loader smoke pass. The current IDE
+session remains unverified. Further updates push the Plugin first and update the
+pin separately, then run doctor and verify an IDE diagnostic/Quick Fix.
 
 ## Framework naming
 

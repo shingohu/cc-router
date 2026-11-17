@@ -1,0 +1,14 @@
+$ fvm flutter test --no-pub packages/ccrouter_test/test
+exit=0
+00:19 +1718: <worktree>/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through replace outgoing animation
+00:20 +1719: All tests passed!
+
+$ fvm flutter test --no-pub demo
+exit=0
+00:11 +187: <worktree>/demo/test/managed_parity_regression_test.dart: Managed: close covered Shell seed must keep context child
+00:11 +188: All tests passed!
+
+$ fvm dart test tool/test
+exit=0
+00:08 +52: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:12 +53: All tests passed!

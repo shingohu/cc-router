@@ -66,6 +66,11 @@ CCRouter watch 显式使用 `--keep-modified-outputs` 保持原输出策略，�
 Flutter 3.47 下两个原生 Pop 回调无论先后都以 `Route.popped` 的真实结果为准；每个 Managed
 Navigator 使用独立的 Semantics container，支持自适应重挂载并保留可访问性内容与 Entry/Scope 身份。
 
+Web Runtime 身份保留跨 VM／JavaScript 一致的安全随机范围，避免 Host 初始化时的位移溢出。
+Chrome 回归从 `packages/ccrouter_test/` 执行，覆盖初始化、重启和既有 Entry 导航；
+VM 全量仍从仓库根执行。适配范围与原生工程迁移证据见
+[3.47.9 完整性记录](docs/validation/20261117-flutter-3479-readiness/report.md)。
+
 ## 为什么使用 CCRouter
 
 - **组件边界明确**：组件只通过 Manifest、Route Contract、Service Contract、Command 和 Event 协作，不依赖其他组件页面实现。
@@ -206,8 +211,9 @@ Owner 按声明 Library 和符号区分；Renderer 必须声明在 Library 顶�
 本分支 Plugin 源码的语义解析触发与注解身份表保持同步，UI Contract/Renderer 文件即使只引用
 外部 Owner 常量，也会请求当前 Analysis Server session 的类型信息；拼写本身不构成框架身份。
 Generator Analyzer 13 与独立 Plugin Analyzer 8.4 通过 metadata 交换事实，新增回归核对真实生成
-索引、Owner、诊断位置和 Quick Fix。Demo 仍使用原远端 Plugin pin；本地源码测试通过不代表
-IDE 已加载此修复，发布需遵循先推送 Plugin、再单独更新 pin 的流程。
+索引、Owner、诊断位置和 Quick Fix。Demo manifest/lock 已固定到推送后的修复提交，
+pin-check 与临时 loader smoke 通过；IDE 当前会话仍待实际诊断验收。后续发布继续遵循
+先推送 Plugin、再单独更新 pin 的流程。
 
 生成的 Route API 已经提供类型补全和自动导包。需要编辑时实时检查跨组件内部生成物引用、
 同源 Route/Service/Command/Event/InitTask 生成物缺失和 required InitTask 声明时，可显式加入 `ccrouter_analyzer_plugin` 并在

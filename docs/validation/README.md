@@ -6,6 +6,11 @@
 
 ## 最新源码自动化证据
 
+[2026-11-17 Flutter 3.47.9 完整性评估](20261117-flutter-3479-readiness/report.md)：
+干净副本补齐 Android/iOS/macOS/Web 编译与 DevTools 构建；Chrome 实测发现 Runtime
+初始化的随机数上限阻断，保留临时最小修复的 RED/GREEN。原生工程自动迁移、旧 Plugin pin、
+实际 SDK Hook 与 OHOS 分别列出，未把构建成功视为完整运行验收。
+
 [2026-11-17 Generator / Plugin 语义补齐](20261117-generator-plugin-followup/report.md)：
 真实 LSP 复现 UI-only 文件的解析触发缺口，验证未保存修复和 Analyzer 13 → 8.4 的真实
 metadata/Owner/Quick Fix 边界；保留独立依赖图，Demo 远端 pin 与当前 IDE 加载另列发布待办。

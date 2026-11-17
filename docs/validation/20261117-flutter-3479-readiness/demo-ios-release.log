@@ -1,0 +1,13 @@
+Warning: Building for device with codesigning disabled. You will have to manually codesign before deploying to device.
+Building dev.ccrouter.demo for device (ios-release)...
+All plugins found for ios are Swift Packages, but your project still has CocoaPods integration. Your project uses a non-standard Podfile and will need to be migrated to Swift Package Manager manually. Some steps you may need to complete include:
+  * In the ios/ directory run "pod deintegrate"
+  * Transition any Pod dependencies to Swift Package equivalents. See https://developer.apple.com/documentation/xcode/adding-package-dependencies-to-your-app
+  * Transition any custom logic
+  * Remove the include to "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig" in your ios/Flutter/Debug.xcconfig
+  * Remove the include to "Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig" in your ios/Flutter/Release.xcconfig
+
+Removing CocoaPods integration will improve the project's build time.
+Running Xcode build...
+Xcode build done.                                           28.8s
+✓ Built build/ios/iphoneos/Runner.app (19.7MB)

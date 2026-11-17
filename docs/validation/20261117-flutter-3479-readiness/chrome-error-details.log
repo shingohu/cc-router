@@ -1,0 +1,81 @@
+00:00 +0: loading <snapshot>/packages/ccrouter_test/test/managed_router_backend_test.dart
+00:00 +0: activateExisting preserves the Managed Home identity
+ASSESSMENT_BROWSER_EXCEPTION: RangeError: max must be in range 0 < max ≤ 2^32, was 0
+ASSESSMENT_BROWSER_STACK: dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/errors.dart 274:3       throw_
+dart-sdk/lib/_internal/js_dev_runtime/patch/math_patch.dart 315:7                 nextInt
+package:ccrouter_core/src/runtime_host.dart 269:67                                __
+package:ccrouter_core/src/runtime_host.dart 85:25                                 forHost
+package:ccrouter/src/host_lifecycle.dart 103:56                                   initialize
+managed_router_backend_test.dart 132:16                                           <fn>
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 618:19               <fn>
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 643:23               <fn>
+package:stack_trace/src/stack_zone_specification.dart 138:43                      <fn>
+package:stack_trace/src/stack_zone_specification.dart 207:15                      [_run]
+package:stack_trace/src/stack_zone_specification.dart 138:31                      <fn>
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 537:3                _asyncStartSync
+managed_router_backend_test.dart 125:18                                           _mount
+managed_router_backend_test.dart 257:27                                           <fn>
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 618:19               <fn>
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 643:23               <fn>
+package:stack_trace/src/stack_zone_specification.dart 138:43                      <fn>
+package:stack_trace/src/stack_zone_specification.dart 207:15                      [_run]
+package:stack_trace/src/stack_zone_specification.dart 138:31                      <fn>
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 537:3                _asyncStartSync
+managed_router_backend_test.dart 280:5                                            <fn>
+package:flutter_test/src/widget_tester.dart 192:29                                <fn>
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 618:19               <fn>
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 643:23               <fn>
+package:stack_trace/src/stack_zone_specification.dart 138:43                      <fn>
+package:stack_trace/src/stack_zone_specification.dart 207:15                      [_run]
+package:stack_trace/src/stack_zone_specification.dart 138:31                      <fn>
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 589:19               <fn>
+dart-sdk/lib/async/zone_root.dart 48:47                                           _rootRunUnary
+dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/operations.dart 118:77  tear
+dart-sdk/lib/async/zone.dart 816:35                                               runUnary
+dart-sdk/lib/async/future_impl.dart 222:18                                        handleValue
+dart-sdk/lib/async/future_impl.dart 948:44                                        handleValueCallback
+dart-sdk/lib/async/future_impl.dart 977:13                                        _propagateToListeners
+dart-sdk/lib/async/future_impl.dart 720:5                                         [_completeWithValue]
+dart-sdk/lib/async/future_impl.dart 804:7                                         <fn>
+dart-sdk/lib/async/zone_root.dart 35:13                                           _rootRun
+dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/operations.dart 118:77  tear
+dart-sdk/lib/async/zone.dart 810:35                                               run
+dart-sdk/lib/async/zone.dart 702:7                                                runGuarded
+package:fake_async/fake_async.dart 189:17                                         <fn>
+package:fake_async/fake_async.dart 200:19                                         flushMicrotasks
+package:flutter_test/src/binding.dart 2507:16                                     <fn>
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 618:19               <fn>
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 643:23               <fn>
+package:stack_trace/src/stack_zone_specification.dart 138:43                      <fn>
+package:stack_trace/src/stack_zone_specification.dart 207:15                      [_run]
+package:stack_trace/src/stack_zone_specification.dart 138:31                      <fn>
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 537:3                _asyncStartSync
+package:flutter_test/src/binding.dart 2512:7                                      <fn>
+dart-sdk/lib/async/future.dart 287:40                                             <fn>
+package:stack_trace/src/stack_zone_specification.dart 207:15                      [_run]
+package:stack_trace/src/stack_zone_specification.dart 114:48                      <fn>
+dart-sdk/lib/async/zone_root.dart 27:47                                           _rootRun
+dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/operations.dart 118:77  tear
+dart-sdk/lib/async/zone.dart 810:35                                               run
+dart-sdk/lib/async/zone.dart 702:7                                                runGuarded
+dart-sdk/lib/async/zone.dart 743:23                                               <fn>
+package:stack_trace/src/stack_zone_specification.dart 207:15                      [_run]
+package:stack_trace/src/stack_zone_specification.dart 114:48                      <fn>
+dart-sdk/lib/async/zone_root.dart 35:13                                           _rootRun
+dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/operations.dart 118:77  tear
+dart-sdk/lib/async/zone.dart 810:35                                               run
+dart-sdk/lib/async/zone.dart 702:7                                                runGuarded
+dart-sdk/lib/async/zone.dart 743:23                                               <fn>
+dart-sdk/lib/async/schedule_microtask.dart 40:34                                  _microtaskLoop
+dart-sdk/lib/async/schedule_microtask.dart 49:5                                   _startMicrotaskLoop
+dart-sdk/lib/_internal/js_dev_runtime/private/ddc_runtime/operations.dart 118:77  tear
+dart-sdk/lib/_internal/js_dev_runtime/patch/async_patch.dart 183:69               <fn>
+
+00:00 +0 -1: activateExisting preserves the Managed Home identity [E]
+  Test failed. See exception logs above.
+  The test description was: activateExisting preserves the Managed Home identity
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  test/managed_router_backend_test.dart: activateExisting preserves the Managed Home identity

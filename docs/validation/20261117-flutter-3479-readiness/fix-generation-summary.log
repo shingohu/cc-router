@@ -1,0 +1,47 @@
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable prepare demo
+exit=0
+CCRouter generation finished: elapsed=2180ms.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo
+exit=0
+Portable Generation State is ready for 9 Package(s). External publishing remains a user-owned Pub/Git step.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo/modules/kv_storage
+exit=0
+Portable Generation State is ready for 1 Package(s). External publishing remains a user-owned Pub/Git step.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo/modules/navigation_lab
+exit=0
+Portable Generation State is ready for 1 Package(s). External publishing remains a user-owned Pub/Git step.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo/modules/network
+exit=0
+Portable Generation State is ready for 1 Package(s). External publishing remains a user-owned Pub/Git step.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo/modules/order
+exit=0
+Portable Generation State is ready for 1 Package(s). External publishing remains a user-owned Pub/Git step.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo/modules/order_contracts
+exit=0
+Portable Generation State is ready for 1 Package(s). External publishing remains a user-owned Pub/Git step.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo/modules/payment
+exit=0
+Portable Generation State is ready for 1 Package(s). External publishing remains a user-owned Pub/Git step.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo/modules/web
+exit=0
+Portable Generation State is ready for 1 Package(s). External publishing remains a user-owned Pub/Git step.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo/modules/web_contracts
+exit=0
+Portable Generation State is ready for 1 Package(s). External publishing remains a user-owned Pub/Git step.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --no-cache --check
+exit=0
+CCRouter generation finished: elapsed=1955ms.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo/modules/order/example --no-cache --check
+exit=0
+CCRouter generation finished: elapsed=3536ms.

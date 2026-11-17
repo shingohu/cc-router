@@ -1,0 +1,7 @@
+org-dartlang-app:///main.dart:3:8: Error: Error when reading 'org-dartlang-app:///packages/ccrouter_test/test/managed_router_backend_test.dart': File not found
+import 'org-dartlang-app:///../packages/ccrouter_test/test/managed_router_backend_test.dart' as test_0 show main;
+       ^
+org-dartlang-app:///main.dart:11:24: Error: Undefined name 'main'.
+    entryPoint: test_0.main,
+                       ^^^^
+Failed to compile

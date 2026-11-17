@@ -1,0 +1,9 @@
+00:00 +0: loading packages/ccrouter_devtools_protocol/test/runtime_diagnostics_test.dart
+00:00 +0: packages/ccrouter_devtools_protocol/test/runtime_diagnostics_test.dart: Host health names tracked lifetimes and accepts the former wire key
+00:00 +1: packages/ccrouter_devtools_protocol/test/protocol_test.dart: envelope round trips static catalog and runtime edges
+00:00 +2: packages/ccrouter_devtools_protocol/test/runtime_diagnostics_test.dart: optional diagnostics round-trip while version 1 remains compatible
+00:00 +3: packages/ccrouter_devtools_protocol/test/protocol_test.dart: decoder rejects malformed required fields
+00:00 +4: packages/ccrouter_devtools_protocol/test/runtime_diagnostics_test.dart: present malformed diagnostic extensions fail explicitly
+00:00 +5: packages/ccrouter_devtools_protocol/test/protocol_test.dart: decoder rejects unsupported protocol versions
+00:00 +6: packages/ccrouter_devtools_protocol/test/protocol_test.dart: protocol collections are immutable
+00:00 +7: All tests passed!

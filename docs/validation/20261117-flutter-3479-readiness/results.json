@@ -1,0 +1,289 @@
+{
+  "sourceCommit": "699c81ae6a0e0080f0f00475bfa0673aad0867ff",
+  "flutter": "3.47.9",
+  "dart": "3.13.7",
+  "results": [
+    {
+      "step": "root-pub",
+      "exit": 0,
+      "sourceVariant": "committed source"
+    },
+    {
+      "step": "demo-pub",
+      "exit": 0,
+      "sourceVariant": "committed source"
+    },
+    {
+      "step": "extension-pub",
+      "exit": 0,
+      "sourceVariant": "committed source"
+    },
+    {
+      "step": "protocol-tests",
+      "command": [
+        "dart",
+        "test",
+        "packages/ccrouter_devtools_protocol/test"
+      ],
+      "workingDirectory": ".",
+      "exit": 0,
+      "sourceVariant": "committed source"
+    },
+    {
+      "step": "panel-tests",
+      "command": [
+        "flutter",
+        "test",
+        "--no-pub",
+        "packages/ccrouter_devtools/test"
+      ],
+      "workingDirectory": ".",
+      "exit": 0,
+      "sourceVariant": "committed source"
+    },
+    {
+      "step": "extension-package",
+      "command": [
+        "dart",
+        "run",
+        "devtools_extensions",
+        "build_and_copy",
+        "--source=.",
+        "--dest=extension/devtools"
+      ],
+      "workingDirectory": "devtools/ccrouter_extension",
+      "exit": 0,
+      "sourceVariant": "committed source"
+    },
+    {
+      "step": "extension-validate",
+      "command": [
+        "dart",
+        "run",
+        "devtools_extensions",
+        "validate",
+        "--package=."
+      ],
+      "workingDirectory": "devtools/ccrouter_extension",
+      "exit": 0,
+      "sourceVariant": "committed source"
+    },
+    {
+      "step": "extension-web",
+      "command": [
+        "flutter",
+        "build",
+        "web",
+        "--release",
+        "--no-pub"
+      ],
+      "workingDirectory": "devtools/ccrouter_extension",
+      "exit": 0,
+      "sourceVariant": "committed source"
+    },
+    {
+      "step": "demo-web",
+      "command": [
+        "flutter",
+        "build",
+        "web",
+        "--release",
+        "--no-pub"
+      ],
+      "workingDirectory": "demo",
+      "exit": 0,
+      "sourceVariant": "committed source"
+    },
+    {
+      "step": "demo-macos",
+      "command": [
+        "flutter",
+        "build",
+        "macos",
+        "--debug",
+        "--no-pub"
+      ],
+      "workingDirectory": "demo",
+      "exit": 0,
+      "sourceVariant": "committed source"
+    },
+    {
+      "step": "demo-ios-simulator",
+      "command": [
+        "flutter",
+        "build",
+        "ios",
+        "--simulator",
+        "--debug",
+        "--no-pub"
+      ],
+      "workingDirectory": "demo",
+      "exit": 0,
+      "sourceVariant": "committed source"
+    },
+    {
+      "step": "demo-android",
+      "command": [
+        "flutter",
+        "build",
+        "apk",
+        "--debug",
+        "--no-pub"
+      ],
+      "workingDirectory": "demo",
+      "exit": 0,
+      "sourceVariant": "committed source"
+    },
+    {
+      "step": "demo-macos-release",
+      "command": [
+        "flutter",
+        "build",
+        "macos",
+        "--release",
+        "--no-pub"
+      ],
+      "workingDirectory": "demo",
+      "exit": 0,
+      "sourceVariant": "committed source"
+    },
+    {
+      "step": "demo-ios-release",
+      "command": [
+        "flutter",
+        "build",
+        "ios",
+        "--release",
+        "--no-codesign",
+        "--no-pub"
+      ],
+      "workingDirectory": "demo",
+      "exit": 0,
+      "sourceVariant": "committed source"
+    },
+    {
+      "step": "demo-android-release",
+      "command": [
+        "flutter",
+        "build",
+        "apk",
+        "--release",
+        "--no-pub"
+      ],
+      "workingDirectory": "demo",
+      "exit": 0,
+      "sourceVariant": "committed source"
+    },
+    {
+      "step": "example-web",
+      "command": [
+        "flutter",
+        "build",
+        "web",
+        "--release",
+        "--no-pub"
+      ],
+      "workingDirectory": "demo/modules/order/example",
+      "exit": 0,
+      "sourceVariant": "committed source"
+    },
+    {
+      "step": "chrome-candidate",
+      "command": [
+        "flutter",
+        "test",
+        "--no-pub",
+        "--platform",
+        "chrome",
+        "test/managed_router_backend_test.dart",
+        "--name",
+        "activateExisting|deliverToExisting"
+      ],
+      "workingDirectory": "packages/ccrouter_test",
+      "exit": 0,
+      "sourceVariant": "temporary nextInt bound literal candidate"
+    },
+    {
+      "step": "vm-candidate",
+      "command": [
+        "flutter",
+        "test",
+        "--no-pub",
+        "test/managed_router_backend_test.dart",
+        "--name",
+        "activateExisting|deliverToExisting"
+      ],
+      "workingDirectory": "packages/ccrouter_test",
+      "exit": 0,
+      "sourceVariant": "temporary nextInt bound literal candidate"
+    },
+    {
+      "command": [
+        "flutter",
+        "test",
+        "--no-pub",
+        "--platform",
+        "chrome",
+        "packages/ccrouter_test/test/managed_router_backend_test.dart",
+        "--name",
+        "activateExisting|deliverToExisting"
+      ],
+      "exit": 1,
+      "step": "chrome-navigation",
+      "sourceVariant": "committed source"
+    },
+    {
+      "command": [
+        "flutter",
+        "test",
+        "--no-pub",
+        "--platform",
+        "chrome",
+        "test/managed_router_backend_test.dart",
+        "--name",
+        "activateExisting|deliverToExisting"
+      ],
+      "workingDirectory": "packages/ccrouter_test",
+      "exit": 1,
+      "step": "chrome-package-navigation",
+      "sourceVariant": "committed source"
+    },
+    {
+      "step": "hook-status",
+      "command": [
+        "ccrouter",
+        "pub-hook",
+        "status",
+        "--sdk",
+        "<flutter-sdk>"
+      ],
+      "exit": 1,
+      "meaning": "SDK Hook not installed; optional integration remains unverified"
+    },
+    {
+      "step": "analyzer-status",
+      "exit": 0,
+      "meaning": "old Demo ref statically consistent"
+    },
+    {
+      "step": "analyzer-doctor",
+      "exit": 0,
+      "meaning": "old Demo ref loader smoke passes; live IDE unverified"
+    },
+    {
+      "step": "analyzer-pin-check",
+      "exit": 0,
+      "meaning": "remote ref resolvable; 2 production files pending pin bump"
+    },
+    {
+      "step": "runtime-long-run",
+      "command": [
+        "dart",
+        "run",
+        "packages/ccrouter_test/benchmark/runtime_long_run.dart",
+        "--cycles=10000"
+      ],
+      "exit": 0
+    }
+  ]
+}

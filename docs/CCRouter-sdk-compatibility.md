@@ -25,16 +25,22 @@ Runtime/Contracts 保持 Dart 3.10.0 约束；Generator 工具链有独立的 SD
 `build_runner 2.16.1`，Builder 测试配套 `build_test 3.5.20`。Analyzer 的 `meta ^1.18.3`
 与旧 OHOS `oh-3.41.9-release` 的固定 `meta 1.17.0` 冲突；不能仅凭 Dart 3.11.5 已满足
 SDK 条件就判定可解析。根与 Demo 的 FVM 现固定标准 Flutter `3.47.9 / Dart 3.13.7`。
-Quality workflow 的六个 Flutter Job 与根 FVM pin 同步使用 3.47.9；Plugin Job
+Quality workflow 的全部 Flutter Job 与根 FVM pin 同步使用 3.47.9；新增 Chrome Job
+从测试 Package 验证 Host 初始化、重启和既有 Entry 导航。Plugin Job
 单独安装 Dart 3.13.7 并在隔离 Package 内解析、分析与测试，不合并 Analyzer 依赖图。
 `tool/test/quality_workflow_test.dart` 检查所有 CI Flutter pin 与根 `.fvmrc` 一致。
 旧 OHOS SDK 在本分支不支持；兼容 OHOS SDK、最低版本独立消费者和真实平台验证仍需单独完成。
 下文较早的安装及 smoke 数字是历史证据；本轮范围见
 [build_runner 升级记录](validation/build_runner_upgrade_20261104.md)。
 
+2026-11-17 对提交 `699c81ae` 的[完整性评估](validation/20261117-flutter-3479-readiness/report.md)
+补齐了四个平台的编译 smoke 和 DevTools 验证，并发现 Web Runtime 初始化阻断。
+该问题现已用跨 JavaScript 的随机上限字面量修复，Chrome 初始化与导航回归通过；
+原生工程迁移和 Plugin 分发进展见报告后续修复记录。设备交互、OHOS 等仍需独立验收。
+
 ## 本机 SDK 矩阵
 
-截至 2026-09-22，本机 FVM 缓存包含：
+下表保留截至 2026-09-22 的历史 SDK 安装记录，并另列当前分支的 3.47.9 目标：
 
 | FVM 标识 | Flutter | Dart | 类型 |
 | --- | --- | --- | --- |
@@ -125,8 +131,13 @@ SDK 组合在当时通过，不代表当前测试套件总数：
 | OHOS `3.41.10-ohos-1.0.0` | 默认完整回归通过：Workspace analyze、Generator 130 项、Flutter 测试 244 项、Demo 22 项、生成 `--check` |
 | 标准 `3.41.9` | 执行独立 `pub get` 后，`ccrouter_test` Flutter 测试 244 项通过 |
 | 标准 `3.44.9` | 独立临时工作区执行 `pub get` 后，`ccrouter_test` Flutter 测试 244 项通过 |
-| 标准 `3.47.9` | 当前分支执行 Pub、框架 1650 项、Demo 117 项与生成门禁通过 |
 | 标准 `3.47.2` | 历史独立临时工作区验证，非当前目标 SDK |
+
+2026-11 工具链升级阶段的标准 3.47.9 记录为 Framework 1650 项、Demo 117 项与生成门禁
+通过，见[升级记录](validation/build_runner_upgrade_20261104.md)。合入主分支后的同源码
+回归为 Framework 1718 项、Demo 全目录 188 项，见[组合验证](validation/20261117-generator-plugin-followup/report.md#合入主分支后的组合验证)。
+这些 VM/Widget 结果不覆盖本轮 Chrome 发现的 Web 初始化阻断，当前完整范围以
+[2026-11-17 适配矩阵](validation/20261117-flutter-3479-readiness/report.md)为准。
 
 此前在同一工作区并行切换 SDK 时出现的 `ink_sparkle.frag` 失败发生在 Flutter Material
 shader 资源加载，不是 CCRouter 断言失败；隔离每个 SDK 的 `.dart_tool` 和 `build` 后，

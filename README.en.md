@@ -62,6 +62,12 @@ upstream repair default. Profile phases/totals may include optional
 `fixedOutputs`, counted in `executedInputs`. See the
 [upgrade evidence](docs/validation/build_runner_upgrade_20261104.md).
 
+Web Runtime identities preserve the same secure random range on VM and
+JavaScript. Chrome regression runs from `packages/ccrouter_test/` and covers Host
+initialization, restart and existing-entry navigation; the VM suite runs from
+the repository root. See the [3.47.9 assessment](docs/validation/20261117-flutter-3479-readiness/report.md)
+for evidence and native project migration boundaries.
+
 ## Why CCRouter
 
 - **Explicit component boundaries**: components collaborate through Manifests, Route Contracts, Service Contracts, Commands, and Events, without depending on other components' page implementations.
@@ -174,8 +180,9 @@ files, including imported Owner constants. The annotation identity table drives
 the resolution trigger; spelling alone never proves framework identity.
 A regression checks actual Generator Analyzer 13 metadata with the isolated
 Analyzer 8.4 Plugin, including Owner facts, locations and Quick Fixes. The Demo
-still uses its existing remote Plugin pin; local tests do not establish live IDE
-loading. Publish the Plugin before updating that pin in a separate commit.
+manifest/lock now pin the pushed fix; pin-check and temporary loader smoke pass.
+The current IDE session still needs diagnostic verification. Further updates
+publish the Plugin before changing the pin in a separate commit.
 
 The optional Analyzer Plugin checks UI aliases, repeated dependencies, clearly
 invalid ranges, enum/DTO Actions, Renderer signatures, and Host/Generated SPI

@@ -1,0 +1,18 @@
+[1/1] iOS SDK
+  ├─ [1/3] ios                                                     17.2s
+  ├─ [2/3] ios-profile                                             11.9s
+  └─ [3/3] ios-release                                             26.3s
+Building dev.ccrouter.demo for simulator (ios)...
+Adding Swift Package Manager integration...                         4.8s
+All plugins found for ios are Swift Packages, but your project still has CocoaPods integration. Your project uses a non-standard Podfile and will need to be migrated to Swift Package Manager manually. Some steps you may need to complete include:
+  * In the ios/ directory run "pod deintegrate"
+  * Transition any Pod dependencies to Swift Package equivalents. See https://developer.apple.com/documentation/xcode/adding-package-dependencies-to-your-app
+  * Transition any custom logic
+  * Remove the include to "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig" in your ios/Flutter/Debug.xcconfig
+  * Remove the include to "Pods/Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig" in your ios/Flutter/Release.xcconfig
+
+Removing CocoaPods integration will improve the project's build time.
+Running pod install...                                             420ms
+Running Xcode build...
+Xcode build done.                                           27.8s
+✓ Built build/ios/iphonesimulator/Runner.app

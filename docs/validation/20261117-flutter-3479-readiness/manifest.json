@@ -1,0 +1,93 @@
+{
+  "sourceCommit": "699c81ae6a0e0080f0f00475bfa0673aad0867ff",
+  "flutterRevision": "c197ca5199e9ee5661e865596c9c07294dfab51c",
+  "engineRevision": "89c39edfdfae2949f6806e4a315c0c08522238b7",
+  "dart": "3.13.7",
+  "devTools": "2.60.0",
+  "runtimeHostSha256": "07860bb40a92c76202b4a2b707d971e51943be654c99ccdaa3abc90d2b2ad66a",
+  "automaticNativeMigrations": [
+    {
+      "path": "demo/android/gradle.properties",
+      "beforeSha256": "5539cf5f17c53900a72cf0065e450f0a8ba5b929dd2b364724c1296d0285d9dc",
+      "afterSha256": "4922e39cd2ea910bd97156fd4320b0be9217df262fc45435ce408bad534a20d0"
+    },
+    {
+      "path": "demo/ios/Podfile.lock",
+      "beforeSha256": "d5e064978de50ec921a68ea5e6ba0b7aa71d6674faa26b8941e2552b1685c108",
+      "afterSha256": "932285c7b1375b2e3a5d895c2e402e2f2bb48f8c666f6d363062102c7fd1ee5e"
+    },
+    {
+      "path": "demo/ios/Runner.xcodeproj/project.pbxproj",
+      "beforeSha256": "ee466fbf625c0b97fe1ce77d366c6e69b254cf48bee2923ac13e6912dae848d8",
+      "afterSha256": "1b3e15d863d34e0decdf5a5fc7fe837f2ee2cfee82c102340c76a8c56a952c6a"
+    },
+    {
+      "path": "demo/ios/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme",
+      "beforeSha256": "2dd28b879e66081e28a3324cf2bee7ab2f70be9a3e50e08926b7366dadff7d6e",
+      "afterSha256": "9fbce429f56243561dd437a527136c9f9ed77165e3b271b923faf236cfcd0484"
+    },
+    {
+      "path": "demo/macos/Podfile.lock",
+      "beforeSha256": "3b0d27b80cceb29ba468771eafba96c04e612924cea00a9c7257bd8c4425a443",
+      "afterSha256": "760ee393e127cf9380a735c26adc63ffc09401bd7dbd6abdbecf02836a8e78c0"
+    },
+    {
+      "path": "demo/macos/Runner.xcodeproj/project.pbxproj",
+      "beforeSha256": "5cbbeef9865dd35b9d53f47e752753b8915149f54922a5b0b6f6ce9dc630062c",
+      "afterSha256": "2158ee8c9d30108feb077487426f55bce87264024300e240d0450c0244c372df"
+    },
+    {
+      "path": "demo/macos/Runner.xcodeproj/xcshareddata/xcschemes/Runner.xcscheme",
+      "beforeSha256": "22db1869588f7dd9d7efd27af71c688601fd73f5e0b14f2fec50d76970ce27bd",
+      "afterSha256": "d7bf2382efa3a47148f0bf35698124ccb2cbe4892190e919281b61c1f0be678a"
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "demo/build/web/main.dart.js",
+      "bytes": 3341211,
+      "sha256": "89235792effb880110d65177852f99b06bdccec1d350a9a6297b96ad21a2ce90"
+    },
+    {
+      "path": "devtools/ccrouter_extension/extension/devtools/build/main.dart.js",
+      "bytes": 2685022,
+      "sha256": "36e7c04af3f614b1e4ad79726fc1891e86095aa87c7a78a18d6e628fcc244c2b"
+    },
+    {
+      "path": "demo/build/macos/Build/Products/Release/ccrouter_demo.app/Contents/MacOS/ccrouter_demo",
+      "bytes": 2182192,
+      "sha256": "6a79730eaf86be8ac3fae8e7dcd2baf718370450cb45b631ec87e59315e79f30"
+    },
+    {
+      "path": "demo/build/ios/iphonesimulator/Runner.app/Runner",
+      "bytes": 123808,
+      "sha256": "b6ef78e4edd2c5ea46865be4ce70cc5ce0c6fbe314dfb68206260e7c54db979f"
+    },
+    {
+      "path": "demo/build/ios/iphoneos/Runner.app/Runner",
+      "bytes": 1166096,
+      "sha256": "c0143988157be609da1a2a92a8a64791057da266afa94eb54dfee8405daa1834"
+    },
+    {
+      "path": "demo/build/app/outputs/flutter-apk/app-debug.apk",
+      "bytes": 153304476,
+      "sha256": "938b06e5a91dd15bc4179a9dfcab89b1620e551e1adf8a078b501e5910c51ca7"
+    },
+    {
+      "path": "demo/build/app/outputs/flutter-apk/app-release.apk",
+      "bytes": 56693072,
+      "sha256": "68238bd3b306415c8f5828ceebe64ed5d91a6690f016e8a03ee5b6503cb166a0"
+    },
+    {
+      "path": "demo/modules/order/example/build/web/main.dart.js",
+      "bytes": 2144438,
+      "sha256": "f60b0869ae28e41b80e7f4275d4b007aacffb553c3862fa7548946147ecaaa46"
+    }
+  ],
+  "doctorSummary": {
+    "xcode": "26.6",
+    "androidSdk": "36.0.0",
+    "androidLicensesComplete": false,
+    "deviceInventory": "omitted"
+  }
+}
