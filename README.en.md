@@ -41,8 +41,10 @@ SHA. The installed executable is still named `ccrouter`. The current repository
 uses Workspace resolution and the Generator depends on a sibling Contracts
 package, so this command documents the Git source syntax but does not claim that
 the development checkout is already independently consumable. Until standalone
-Git consumption is prepared, use a full checkout with a pinned FVM SDK and
-`fvm dart run ... ccrouter`. Global activation does not replace the project's
+Git consumption is prepared, maintainers should use a full checkout with the
+repository's pinned SDK and `fvm dart run ... ccrouter`. This is a repository
+development convention; external integration projects do not need FVM and
+should use their own Flutter/Dart SDK wrapper. Global activation does not replace the project's
 `ccrouter_generator` dev dependency; CI should prefer the project-resolved CLI.
 See the [CLI workflow](skills/ccrouter-cli-development/SKILL.md)
 and [first integration guide](skills/ccrouter-integration-development/references/first-integration.md).

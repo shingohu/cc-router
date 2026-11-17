@@ -10,15 +10,17 @@ Service、Command、Event、InitTask 或 UI Fragment。已经有业务工程时�
 
 ## 1. 确认版本、来源和工程角色
 
-- 使用工程已选定的 FVM SDK，并确认当前安装的 CCRouter API 与本文一致。
+- 使用工程已选定的 Flutter/Dart SDK，并确认当前安装的 CCRouter API 与本文一致。
+  FVM 只是本仓库 Demo 的 SDK 管理方式；消费工程只有在自身采用 FVM 时才使用
+  `fvm flutter` / `fvm dart`，否则使用工程自己的 SDK wrapper 或 `flutter` / `dart`。
 - Runtime/Contracts 声明 Dart `^3.10.0`，Generator 与聚合根声明 `^3.11.0`，Demo 声明 `^3.11.5`；完整 Workspace
   不能用来证明 Dart 3.10 最低版本消费者兼容。当前没有独立的 Flutter 最低版本声明，
   也未完成 Dart 3.10 最低版本独立消费者认证。
 - 本分支根、Demo FVM 与标准 Flutter CI 配置为 `3.47.9` / Dart `3.13.7`；
   SDK pin 不能代替当前源码和目标平台的通过证据，也不要求消费工程自动切换 SDK。
   标准 Flutter `3.41.9 / 3.44.9 / 3.47.2` 的 2026-09-22 框架测试记录只是历史快照。
-  使用 `fvm flutter --version --machine` 核对实际 SDK，Flutter 使用其配套 Dart；不同 SDK
-  使用独立工作区与构建缓存，各自执行 Pub，不复制 `.dart_tool` 或 `build`。
+  使用工程对应的版本命令核对实际 SDK（本仓库可用 `fvm flutter --version --machine`）；Flutter
+  使用其配套 Dart。不同 SDK 使用独立工作区与构建缓存，各自执行 Pub，不复制 `.dart_tool` 或 `build`。
 - 使用本升级分支时，Generator 需要 Dart `>=3.11.0` 和允许 `meta ^1.18.3` 的 Flutter SDK；
   Host 使用 `build_runner 2.16.1`，Builder 测试使用 `build_test 3.5.20`。根与 Demo 选择
   标准 Flutter `3.47.9`；已在 3.47.9 上完成验证。旧 OHOS `oh-3.41.9-release` 固定 `meta 1.17.0`，无法解析；
@@ -42,7 +44,8 @@ Service、Command、Event、InitTask 或 UI Fragment。已经有业务工程时�
   `v0.1.0` 仅为示例，需替换为远端实际存在且已验证的 tag 或完整 SHA。
   `--git-ref` 也接受 branch，但团队和 CI 建议锁定远端完整 SHA。安装后命令名为
   `ccrouter`。当前仓库仍是 Workspace，Generator 依赖同仓库 Contracts，因此在独立消费条件
-  完成前，优先从完整 checkout 使用固定 FVM 和 `fvm dart run ... ccrouter`；不能只凭全局
+  完成前，本仓库优先从完整 checkout 使用固定 SDK 和 `fvm dart run ... ccrouter`；消费工程应使用
+  自己的 SDK wrapper；不能只凭全局
   executable 安装成功就视为 Host 可用，仍需执行真实 Host 的生成和 `generate --check`。
   全局安装不替代项目的 `ccrouter_generator` 开发依赖；CI 优先使用项目解析出的 CLI。
 - 本地 `pubspec_overrides.yaml` 可以覆盖配套框架包做受控联调；它不替代团队/CI 的固定来源。
@@ -115,8 +118,9 @@ final result = await navigator.push<String>(DetailRoute.intent(itemId: 7));
 先按工程约定执行 Pub。独立 Flutter Host 可以从自己的目录执行：
 
 ```sh
-fvm flutter pub get
-fvm dart run --verbosity=error ccrouter_generator:ccrouter generate .
+# 使用消费工程选定的 Flutter/Dart SDK；若工程使用 FVM，再加上 fvm 前缀。
+flutter pub get
+dart run --verbosity=error ccrouter_generator:ccrouter generate .
 ```
 
 第二条是明确的生成入口；如果已安装 Pub Hook，成功的 Pub 可能已经自动完成该步骤。
@@ -182,9 +186,10 @@ Host 生命周期数，不是 Adapter 的完整注册数；首次捕获前可以
 从实际 Host/所属测试包执行分析、定向测试与最终生成检查：
 
 ```sh
-fvm dart analyze
-fvm flutter test <相关测试>
-fvm dart run --verbosity=error ccrouter_generator:ccrouter generate . --no-cache --check
+# 以下命令从实际 Host/所属测试包运行；把 flutter/dart 替换为工程自己的 SDK wrapper。
+dart analyze
+flutter test <相关测试>
+dart run --verbosity=error ccrouter_generator:ccrouter generate . --no-cache --check
 ```
 
 至少验证 typed 参数和结果、取消、适用的业务失败，以及资源 Owner 的终态。

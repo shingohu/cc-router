@@ -103,6 +103,25 @@ coordinator, resume token or GoRouter compatibility API from an old proposal.
 
 ## Workflow
 
+### Command context and SDK selection
+
+The command examples in this bundle use two contexts. Examples that mention
+`demo/`, `packages/`, the repository Workspace root, or the `fvm` wrapper are
+maintainer commands for this CCRouter checkout. They describe how this
+repository is verified; they are not prerequisites for an external consumer.
+For an integration project, use that project's selected Flutter/Dart SDK and
+its own package or workspace root. FVM is optional; use `fvm flutter`/`fvm dart`
+only when that project manages its SDK with FVM, otherwise use the project's
+equivalent SDK wrapper or `flutter`/`dart`.
+
+`<host-root>`, `<project-root>`, and `<component-directory>` are command
+arguments, not required working directories. A command using `.` must run from
+the corresponding target root; a command with an explicit path may run from any
+directory as long as the path resolves. “Workspace root” means the consuming
+project's Dart Workspace root when the guidance is applied to an external
+project, and this repository's checkout root only in repository-specific
+examples.
+
 Check SDK declarations and dated verification separately. Runtime/Contracts declare
 Dart `^3.10.0`; Generator and the aggregator require `^3.11.0`, and the repository Demo requires `^3.11.5`. No explicit Flutter minimum
 or independent Dart 3.10 minimum-consumer certification is established. Standard
@@ -122,8 +141,9 @@ Pub Git activation supports `--git-ref` (tag or full SHA) and `--git-path` for a
 monorepo package. Verify standalone dependency resolution for the selected ref;
 the current Workspace checkout has not been certified for global Git activation.
 Global activation does not replace the Host/component `ccrouter_generator`
-dev dependency. Keep the CLI, project Generator, Contracts, Runtime and FVM SDK
-compatible; prefer the project-local executable for CI and reproducibility.
+dev dependency. Keep the CLI, project Generator, Contracts, Runtime and the
+project-selected Flutter/Dart SDK compatible; prefer the project-local
+executable for CI and reproducibility.
 
 1. Identify the current package role before editing:
    - **Host**: application composition root, Backend, Shell, platform ingress.
@@ -1014,7 +1034,7 @@ Treat the CLI's printed `Next steps` as non-mutating guidance. Confirm the actua
 Host and dependency owner before applying them; the scaffold does not infer or
 edit that ownership.
 
-After Route, Service, Command, Event, or InitTask annotation, component definition, contribution, or dependency changes, run from the workspace root:
+After Route, Service, Command, Event, or InitTask annotation, component definition, contribution, or dependency changes, run from the selected Host/Package root, or pass an explicit `<host-root>` path from another directory:
 
 ```bash
 fvm dart run ccrouter_generator:ccrouter generate <host-root>

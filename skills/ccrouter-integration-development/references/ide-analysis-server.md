@@ -355,8 +355,12 @@ void main(List<String> args, SendPort sendPort) {
 }
 ```
 
-Resolve the Host dependencies, then run `fvm dart pub get` from the inner loader
-directory and commit its lockfile. Resolve an aggregator with
+Resolve the Host dependencies, then run Pub from the inner loader directory
+because that directory owns the loader `pubspec.yaml`; this is a project-local
+bootstrap directory, not the framework repository root. The example uses
+`fvm dart pub get` for this repository; replace `fvm dart` with the consuming
+project's selected Dart SDK wrapper when FVM is not configured. Resolve an
+aggregator with
 `CCROUTER_PUB_HOOK_DISABLE=1` when its installed Hook cannot classify workspace
 roots correctly; run generation against the actual Host separately. Run the
 read-only checks below and restart Analysis Server after a bootstrap/ref change.

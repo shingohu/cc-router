@@ -40,7 +40,9 @@ dart pub global activate \
 安装后执行的命令名仍是 `ccrouter`。当前仓库仍使用 Workspace 解析，且 Generator 依赖同仓库的
 Contracts Package；上述命令说明 Git source 的语法，不代表当前开发期仓库已经具备独立 Git 消费条件。
 全局安装不替代项目的 `ccrouter_generator` 开发依赖；CI 优先运行项目解析出的 CLI，避免全局版本漂移。
-在此之前，优先使用完整仓库 checkout、固定 FVM SDK 和 `fvm dart run ... ccrouter`。详见
+在本仓库尚未完成独立消费验证前，维护者优先使用完整仓库 checkout、固定 SDK 和
+`fvm dart run ... ccrouter`。这只是本仓库开发约定，不要求外部集成项目安装 FVM；外部工程应使用
+自己的 Flutter/Dart SDK wrapper。详见
 [CLI 工作流](skills/ccrouter-cli-development/SKILL.md)和[首次接入指南](skills/ccrouter-integration-development/references/first-integration.md)。
 
 当前仓库**尚未达到正式发布条件**。License、历史凭据治理、Package 发布集合、Package 级
@@ -478,6 +480,9 @@ if (activation.status == CCRouteActivationStatus.activated) {
 完整命令、日期及平台边界见 [SDK 兼容性验证](docs/CCRouter-sdk-compatibility.md)，
 后续源码回归见[验证索引](docs/validation/README.md)。切换 SDK 时使用独立工作区与构建缓存，
 并在目标 SDK 下重新解析依赖，不复用其他 SDK 的 `.dart_tool` 或 `build`。
+
+以下命令是本仓库 Workspace 的维护者验证命令，必须从仓库根目录运行；外部集成工程不需要复制
+这组 `fvm` 命令，应按首次接入指南使用自身 Host/Package 目录和 SDK wrapper。
 
 首次运行：
 
