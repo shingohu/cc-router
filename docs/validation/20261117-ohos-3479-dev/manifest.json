@@ -1,0 +1,61 @@
+{
+  "sourceCommit": "156ff7cbe634ffbbad56f6b2d8c25c5bda393cd5",
+  "sdkAlias": "ohos/oh-3.47.9-dev",
+  "sdkRevision": "a9e95461918a678c15d8ba80cdddb85b274cf1ce",
+  "initialSdk": {
+    "frameworkVersion": "0.0.0-unknown",
+    "channel": "[user-branch]",
+    "repositoryUrl": "https://gitcode.com/CPF-Flutter/flutter_flutter.git",
+    "frameworkRevision": "a9e95461918a678c15d8ba80cdddb85b274cf1ce",
+    "frameworkCommitDate": "2026-11-17 09:39:55 +0800",
+    "engineRevision": "89c39edfdfae2949f6806e4a315c0c08522238b7",
+    "engineCommitDate": "2026-10-27 19:51:20.000Z",
+    "engineContentHash": "9e025265bef30b838c0c1b68cad19decf97048f2",
+    "engineBuildDate": "2026-10-28 04:22:45.983",
+    "dartSdkVersion": "3.13.5",
+    "devToolsVersion": "2.60.0",
+    "flutterVersion": "0.0.0-unknown"
+  },
+  "resolvedSdk": {
+    "frameworkVersion": "3.47.7+ohos-0.0.1-canary",
+    "channel": "[user-branch]",
+    "repositoryUrl": "https://gitcode.com/CPF-Flutter/flutter_flutter.git",
+    "frameworkRevision": "a9e95461918a678c15d8ba80cdddb85b274cf1ce",
+    "frameworkCommitDate": "2026-11-17 09:39:55 +0800",
+    "engineRevision": "89c39edfdfae2949f6806e4a315c0c08522238b7",
+    "engineCommitDate": "2026-10-27 19:51:20.000Z",
+    "engineContentHash": "9e025265bef30b838c0c1b68cad19decf97048f2",
+    "engineBuildDate": "2026-10-28 04:22:45.983",
+    "dartSdkVersion": "3.13.5",
+    "devToolsVersion": "2.60.0",
+    "flutterVersion": "3.47.7+ohos-0.0.1-canary"
+  },
+  "ohosEngineRevision": "aee5c121eb902bf3346d2efc9bf5abbe8afe41f6",
+  "ohosHarRevision": "8750288ade519f7456277d7dc94cf76b13f18739",
+  "metaConstraint": "^1.18.3",
+  "frameworkTests": 1719,
+  "demoTests": 188,
+  "focusedLspTests": 1,
+  "ohosNativePlugins": [],
+  "releaseHap": {
+    "bytes": 26372443,
+    "sha256": "fceab01ff2266c2630b8704aa04b9ed5a2219af4084edb87db705eb77428f434",
+    "nativeEntries": [
+      "libs/arm64-v8a/libflutter.so",
+      "libs/arm64-v8a/libapp.so"
+    ]
+  },
+  "trackedSnapshotChanges": [
+    "demo/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+    "demo/modules/kv_storage/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+    "demo/modules/navigation_lab/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+    "demo/modules/network/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+    "demo/modules/order/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+    "demo/modules/order_contracts/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+    "demo/modules/payment/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+    "demo/modules/web/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+    "demo/modules/web_contracts/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json"
+  ],
+  "harmonyToolchain": "DevEco SDK API 26 / hvigorw / ohpm available",
+  "harmonyDeviceAvailable": false
+}

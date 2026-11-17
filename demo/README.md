@@ -14,6 +14,12 @@ CCRouter 的 Flutter 开发工程，本升级分支与仓库根统一使用 FVM 
 `ohos/oh-3.41.9-release` 固定 `meta 1.17.0`，因此该 OHOS SDK 无法解析本分支。
 OHOS 需要配套兼容 SDK 并重新验证后才能恢复构建；不通过 overrides 覆盖 Flutter pin。
 
+开发快照 `oh-3.47.9-dev@a9e95461` 已通过隔离回归与未签名 Debug/Release HAP 构建，
+自报版本为 `3.47.7+ohos-0.0.1-canary` / Dart 3.13.5。使用独立工作区并重生成该 SDK 的
+Portable State；当前默认 FVM 仍为标准 3.47.9。Demo 所用 app_links / webview_flutter
+尚未注册 OHOS 原生实现，Deep Link、WebView 和真机行为需另验；见
+[OHOS 开发快照记录](../docs/validation/20261117-ohos-3479-dev/report.md)。
+
 3.47.9 的原生工程基线保留 SDK 生成的 Apple SPM project/scheme 引用、Pod lock 和 Android
 兼容标记。自定义 Podfile 继续保留最低部署版本配置；CocoaPods 清理与 AGP/Kotlin 大版本升级
 单独评估。迁移后重复 Release 构建应保持这些受管工程文件稳定，验证范围见

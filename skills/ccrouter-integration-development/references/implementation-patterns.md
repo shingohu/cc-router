@@ -1994,6 +1994,16 @@ input/output pairs. A compatible Dart version alone is insufficient: Analyzer
 requires `meta ^1.18.3`, conflicting with the old OHOS SDK's fixed `1.17.0`.
 The branch's root/Demo target pin is standard Flutter `3.47.9`; verified on Flutter 3.47.9 / Dart 3.13.7; OHOS needs a separately
 compatible SDK and platform validation. Never override Flutter's dependency pin.
+
+The fixed OHOS development revision `oh-3.47.9-dev@a9e95461` passed framework,
+Demo, generation and unsigned Debug/Release HAP checks with Dart 3.13.5. Its
+reported version is `3.47.7+ohos-0.0.1-canary`. A depth-one installation without
+version tags may report `0.0.0-unknown` and fail Flutter SDK constraints; restore
+official tags/history instead of fabricating version metadata. Resolve and
+prepare in an isolated Workspace for this SDK. Standard Dart 3.13.7 Portable State
+is rejected by its Dart 3.13.5 tool identity. Native plugin registration and
+device behavior require separate application validation.
+
 Regenerate Portable State and distribute components before updating consumers.
 Within the same Workspace, a Host-prepared state can be checked through the
 component/contracts Package's `portable publish` entrypoint. Local Framework

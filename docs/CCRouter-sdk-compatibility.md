@@ -38,6 +38,11 @@ Quality workflow 的全部 Flutter Job 与根 FVM pin 同步使用 3.47.9；新�
 该问题现已用跨 JavaScript 的随机上限字面量修复，Chrome 初始化与导航回归通过；
 原生工程迁移和 Plugin 分发进展见报告后续修复记录。设备交互、OHOS 等仍需独立验收。
 
+同日对本机 `ohos/oh-3.47.9-dev@a9e95461` 的[隔离验证](validation/20261117-ohos-3479-dev/report.md)
+已通过 Pub、Framework 1719 项、Demo 188 项、真实生成与未签名 Debug/Release HAP。
+该开发快照恢复版本识别后自报 `3.47.7+ohos-0.0.1-canary` / Dart 3.13.5，不能与标准
+Dart 3.13.7 的 Portable State 混用；原生插件与真机功能仍有独立边界。当前默认 FVM 不变。
+
 ## 本机 SDK 矩阵
 
 下表保留截至 2026-09-22 的历史 SDK 安装记录，并另列当前分支的 3.47.9 目标：
@@ -48,6 +53,7 @@ Quality workflow 的全部 Flutter Job 与根 FVM pin 同步使用 3.47.9；新�
 | `3.41.9` | `3.41.9` | `3.11.5` | 标准 Flutter，最低完整 Demo 基线 |
 | `3.44.9` | `3.44.9` | `3.12.2` | 标准 Flutter |
 | `3.47.9` | `3.47.9` | `3.13.7` | 官方 upstream，当前分支目标与验证 SDK |
+| `ohos/oh-3.47.9-dev` | `3.47.7+ohos-0.0.1-canary` | `3.13.5` | 本机固定修订 `a9e95461` 条件兼容验证，非稳定版认证 |
 | `3.47.2` | `3.47.2` | `3.13.2` | 标准 Flutter，历史验证 |
 
 版本信息使用以下命令确认：

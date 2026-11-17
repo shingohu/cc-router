@@ -334,11 +334,15 @@ Current compatibility status:
 | Flutter SDK | Bundled Dart | Current status |
 | --- | --- | --- |
 | Standard **3.47.9** | **3.13.7** | Recommended and locally verified baseline; framework, Demo and Chrome regressions plus Android/iOS/macOS/Web Release builds pass (iOS unsigned) |
+| OHOS `oh-3.47.9-dev` @ `a9e95461` | `3.13.5` | Conditionally verified development snapshot: framework, Demo, generation and unsigned Debug/Release HAP checks pass; restore SDK version detection and regenerate Portable State for this SDK |
 | Old OHOS `oh-3.41.9-release` | `3.11.5` | Its `meta 1.17.0` pin conflicts with the Generator; incompatible with this toolchain |
 
-Verification of this version does not certify every `3.47.x` release or a continuous
-Flutter version range. Physical-device behavior, the current IDE session and OHOS
-remain separate acceptance work. See the [adaptation and fix record](docs/validation/20261117-flutter-3479-readiness/report.md#修复落地与复验).
+Verification does not certify every `3.47.x` release or a continuous Flutter range.
+The OHOS development branch reports `3.47.7+ohos-0.0.1-canary`; this is not stable
+OHOS 3.47.9 certification. See the [OHOS record](docs/validation/20261117-ohos-3479-dev/report.md)
+for native plugin and device limits. Physical-device behavior and the current IDE
+session remain separate acceptance work. Standard SDK evidence is in the
+[adaptation and fix record](docs/validation/20261117-flutter-3479-readiness/report.md#修复落地与复验).
 
 Other SDK results below are **historical snapshots from 2026-09-22, not compatibility
 commitments for the current source**:

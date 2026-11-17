@@ -457,10 +457,13 @@ if (activation.status == CCRouteActivationStatus.activated) {
 | Flutter SDK | 配套 Dart | 当前状态 |
 | --- | --- | --- |
 | 官方标准 **3.47.9** | **3.13.7** | 当前推荐与本地验证基线；框架、Demo、Chrome 回归及 Android/iOS/macOS/Web Release 构建通过（iOS 未签名） |
+| OHOS `oh-3.47.9-dev` @ `a9e95461` | `3.13.5` | 开发快照条件兼容：框架、Demo、生成器与未签名 Debug/Release HAP 验证通过；需恢复 SDK 版本识别并单独重生成 Portable State |
 | 旧 OHOS `oh-3.41.9-release` | `3.11.5` | 固定的 `meta 1.17.0` 与新 Generator 冲突，不兼容当前工具链 |
 
-已验证版本不扩展为整个 `3.47.x` 或连续 Flutter 版本范围。真机交互、IDE 当前会话及
-OHOS 等独立平台仍需验收；详见[适配与修复记录](docs/validation/20261117-flutter-3479-readiness/report.md#修复落地与复验)。
+已验证版本不扩展为整个 `3.47.x` 或连续 Flutter 版本范围。上述 OHOS 开发分支实际自报
+`3.47.7+ohos-0.0.1-canary`，不作为稳定 OHOS 3.47.9 认证；原生插件与真机边界见
+[OHOS 验证记录](docs/validation/20261117-ohos-3479-dev/report.md)。真机交互和 IDE 当前会话
+仍需验收；标准 SDK 范围见[适配与修复记录](docs/validation/20261117-flutter-3479-readiness/report.md#修复落地与复验)。
 
 以下其他 SDK 仅保留 **2026-09-22 的历史快照，不代表当前源码兼容性承诺**：
 

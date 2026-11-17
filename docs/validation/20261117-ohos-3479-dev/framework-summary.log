@@ -1,0 +1,6 @@
+Output excerpt; full log retained outside the repository.
+00:18 +1715: <snapshot>/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through gesture outgoing animation
+00:19 +1716: <snapshot>/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through go outgoing animation
+00:19 +1717: <snapshot>/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through reset outgoing animation
+00:19 +1718: <snapshot>/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through replace outgoing animation
+00:19 +1719: All tests passed!

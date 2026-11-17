@@ -1,0 +1,21 @@
+[1/11] Material Fonts                                               4.0s
+[2/11] Gradle Wrapper                                              381ms
+[3/11] Flutter SDK
+  ├─ [1/4] sky_engine                                              558ms
+  ├─ [2/4] flutter_gpu                                             474ms
+  ├─ [3/4] flutter_patched_sdk                                     631ms
+  └─ [4/4] flutter_patched_sdk_product                             807ms
+[4/11] darwin-arm64                                                 7.3s
+[5/11] iOS USB Artifact: libimobiledevice                          432ms
+[6/11] iOS USB Artifact: libusbmuxd                                349ms
+[7/11] iOS USB Artifact: libplist                                  328ms
+[8/11] iOS USB Artifact: openssl                                 1,159ms
+[9/11] iOS USB Artifact: libimobiledeviceglue                      338ms
+[10/11] iOS USB Artifact: ios-deploy                               321ms
+[11/11] darwin-arm64/font-subset                                   668ms
+Resolving dependencies...
+The current Flutter SDK version is 0.0.0-unknown.
+
+Because webview_flutter 4.14.1 requires Flutter SDK version >=3.38.0 and no versions of webview_flutter match >4.14.1 <5.0.0, webview_flutter ^4.14.1 is forbidden.
+So, because demo_web depends on webview_flutter ^4.14.1, version solving failed.
+Failed to update packages.

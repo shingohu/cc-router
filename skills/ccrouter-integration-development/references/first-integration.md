@@ -23,6 +23,9 @@ Service、Command、Event、InitTask 或 UI Fragment。已经有业务工程时�
   Host 使用 `build_runner 2.16.1`，Builder 测试使用 `build_test 3.5.20`。根与 Demo 选择
   标准 Flutter `3.47.9`；已在 3.47.9 上完成验证。旧 OHOS `oh-3.41.9-release` 固定 `meta 1.17.0`，无法解析；
   不通过 overrides 覆盖 SDK pin，OHOS 平台仍需兼容 SDK 和独立验证。
+- OHOS 开发快照 `oh-3.47.9-dev@a9e95461` 已通过隔离框架、生成与未签名 HAP 检查，
+  自报 `3.47.7+ohos-0.0.1-canary` / Dart 3.13.5；它需要独立解算和 Portable State，
+  不作为稳定 OHOS 3.47.9 或完整原生插件/真机认证。
 - 当前框架仓库仍是 `0.1.0` 开发版本、`publish_to: none`，不能假设这个版本已在 Hosted 发布。
   外部工程先使用团队明确配置的固定 Git 完整 SHA 或本地联调来源；正式安装说明必须对应
   实际可解析的发布来源。不要把框架 Workspace 的 `resolution: workspace` 抄入独立 App。

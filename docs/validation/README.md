@@ -6,6 +6,11 @@
 
 ## 最新源码自动化证据
 
+[2026-11-17 OHOS oh-3.47.9-dev 验证](20261117-ohos-3479-dev/report.md)：
+固定官方开发分支修订 `a9e95461`，恢复浅克隆缺失的版本标签后，Pub、框架 1719、Demo 188、
+生成检查、Plugin LSP 与未签名 Debug/Release HAP 通过。实际自报 3.47.7 canary / Dart 3.13.5，
+独立 Portable State、原生插件缺口和真机待验单独列明，不能当作稳定版或完整应用认证。
+
 [2026-11-17 Flutter 3.47.9 完整性评估](20261117-flutter-3479-readiness/report.md)：
 干净副本补齐 Android/iOS/macOS/Web 编译与 DevTools 构建；Chrome 实测发现 Runtime
 初始化的随机数上限阻断，保留临时最小修复的 RED/GREEN。原生工程自动迁移、旧 Plugin pin、

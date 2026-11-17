@@ -1,0 +1,216 @@
+{
+  "sourceCommit": "156ff7cbe634ffbbad56f6b2d8c25c5bda393cd5",
+  "initialPubExit": 1,
+  "pubAfterOfficialHistoryFetchExit": 0,
+  "results": [
+    {
+      "step": "analyze",
+      "command": [
+        "dart",
+        "analyze",
+        "packages"
+      ],
+      "cwd": ".",
+      "exit": 0
+    },
+    {
+      "step": "framework",
+      "command": [
+        "flutter",
+        "test",
+        "--no-pub",
+        "packages/ccrouter_test/test"
+      ],
+      "cwd": ".",
+      "exit": 0
+    },
+    {
+      "step": "demo",
+      "command": [
+        "flutter",
+        "test",
+        "--no-pub",
+        "demo"
+      ],
+      "cwd": ".",
+      "exit": 0
+    },
+    {
+      "step": "old-state",
+      "command": [
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo"
+      ],
+      "cwd": ".",
+      "exit": 1
+    },
+    {
+      "step": "prepare",
+      "command": [
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "prepare",
+        "demo"
+      ],
+      "cwd": ".",
+      "exit": 0
+    },
+    {
+      "step": "example-generate",
+      "command": [
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "generate",
+        "demo/modules/order/example"
+      ],
+      "cwd": ".",
+      "exit": 0
+    },
+    {
+      "step": "host-check",
+      "command": [
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "generate",
+        "demo",
+        "--no-cache",
+        "--check"
+      ],
+      "cwd": ".",
+      "exit": 0
+    },
+    {
+      "step": "example-check",
+      "command": [
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "generate",
+        "demo/modules/order/example",
+        "--no-cache",
+        "--check"
+      ],
+      "cwd": ".",
+      "exit": 0
+    },
+    {
+      "step": "publish-host",
+      "command": [
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo"
+      ],
+      "cwd": ".",
+      "exit": 0
+    },
+    {
+      "step": "publish-package",
+      "command": [
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo/modules/order"
+      ],
+      "cwd": ".",
+      "exit": 0
+    },
+    {
+      "step": "demo-pub",
+      "command": [
+        "flutter",
+        "pub",
+        "get"
+      ],
+      "cwd": "demo",
+      "exit": 0
+    },
+    {
+      "step": "hap-debug",
+      "command": [
+        "flutter",
+        "build",
+        "hap",
+        "--debug",
+        "--no-codesign",
+        "--no-pub"
+      ],
+      "cwd": "demo",
+      "exit": 0
+    },
+    {
+      "step": "plugin-pub",
+      "command": [
+        "dart",
+        "pub",
+        "get"
+      ],
+      "cwd": "packages/ccrouter_analyzer_plugin",
+      "exit": 0
+    },
+    {
+      "step": "plugin-analyze",
+      "command": [
+        "dart",
+        "analyze"
+      ],
+      "cwd": "packages/ccrouter_analyzer_plugin",
+      "exit": 0
+    },
+    {
+      "step": "plugin-lsp",
+      "command": [
+        "dart",
+        "test",
+        "test/analysis_server_integration_test.dart",
+        "--plain-name",
+        "real LSP resolves UI-only annotations with an imported Owner constant"
+      ],
+      "cwd": "packages/ccrouter_analyzer_plugin",
+      "exit": 0
+    },
+    {
+      "step": "hvigor-preflight",
+      "command": [
+        "node",
+        "-e",
+        "require('./ccrouter-preflight').ccrouterBuildPreflight(process.argv[1])",
+        "<snapshot>/demo"
+      ],
+      "cwd": "demo/ohos",
+      "exit": 0
+    },
+    {
+      "step": "hap-release",
+      "command": [
+        "flutter",
+        "build",
+        "hap",
+        "--release",
+        "--no-codesign",
+        "--no-pub"
+      ],
+      "cwd": "demo",
+      "exit": 0
+    }
+  ]
+}

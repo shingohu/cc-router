@@ -1,0 +1,6 @@
+Output excerpt; full log retained outside the repository.
+00:12 +184: <snapshot>/demo/test/managed_parity_regression_test.dart: Managed: cancelled iOS swipe preserves Entry identity (variant: TargetPlatform.iOS)
+00:12 +185: <snapshot>/demo/test/managed_parity_regression_test.dart: Managed: shutdown retires mounted Shell and foreign popup safely
+00:12 +186: <snapshot>/demo/test/managed_parity_regression_test.dart: Managed: shutdown during a Shell edge swipe does not double remove (variant: TargetPlatform.iOS)
+00:12 +187: <snapshot>/demo/test/managed_parity_regression_test.dart: Managed: close covered Shell seed must keep context child
+00:12 +188: All tests passed!

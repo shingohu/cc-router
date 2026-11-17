@@ -19,6 +19,11 @@ State with the consuming toolchain. Platform directories do not establish OHOS
 support. See [generation guidance](references/implementation-patterns.md#sharing-build_runner-with-other-generators)
 for watch output policy and shared Builder validation.
 
+The OHOS development snapshot `oh-3.47.9-dev@a9e95461` is conditionally verified
+with Dart 3.13.5 after restoring official SDK tag/history metadata. It reports
+`3.47.7+ohos-0.0.1-canary`, not stable OHOS 3.47.9. Use isolated resolution and
+its own Portable State; native plugin/device support is a separate Host concern.
+
 Within one Workspace, Host-prepared Portable State must also validate from the
 component/contracts Package's `portable publish` entrypoint. Local dependency
 content identities are independent of write scope; changed tools/sources still

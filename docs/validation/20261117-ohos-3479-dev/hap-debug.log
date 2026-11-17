@@ -1,0 +1,16 @@
+[1/2] engine
+  ├─ [1/4] ohos-arm64-profile/darwin-x64                           697ms
+  ├─ [2/4] ohos-arm64-release/darwin-x64                           396ms
+  ├─ [3/4] ohos-x64-profile/darwin-x64                             591ms
+  └─ [4/4] ohos-x64-release/darwin-x64                             280ms
+[2/2] engine
+  ├─ [1/6] ohos-arm64                                               3.9s
+  ├─ [2/6] ohos-arm64-profile                                       3.1s
+  ├─ [3/6] ohos-arm64-release                                    2,986ms
+  ├─ [4/6] ohos-x64                                                 5.8s
+  ├─ [5/6] ohos-x64-profile                                      2,607ms
+  └─ [6/6] ohos-x64-release                                         3.9s
+[!] Warning: Building for device with codesigning disabled. You will have to manually codesign before deploying to device.
+start hap build...
+Running Hvigor task assembleHap...                                 12.0s
+✓ Built build/ohos/hap/entry-default-unsigned.hap.

@@ -1,0 +1,4 @@
+[!] Warning: Building for device with codesigning disabled. You will have to manually codesign before deploying to device.
+start hap build...
+Running Hvigor task assembleHap...                                 26.4s
+✓ Built build/ohos/hap/entry-default-unsigned.hap (26.4MB).
