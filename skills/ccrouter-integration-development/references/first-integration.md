@@ -11,6 +11,15 @@ Service、Command、Event、InitTask 或 UI Fragment。已经有业务工程时�
 ## 1. 确认版本、来源和工程角色
 
 - 使用工程已选定的 FVM SDK，并确认当前安装的 CCRouter API 与本文一致。
+- 框架 Package 声明 Dart `^3.10.0`，框架仓库 Demo 声明 `^3.11.5`；完整 Workspace
+  不能用来证明 Dart 3.10 最低版本消费者兼容。当前没有独立的 Flutter 最低版本声明，
+  也未完成 Dart 3.10 最低版本独立消费者认证。
+- 标准 Flutter CI 配置为 `3.41.9` / Dart `3.11.5`；Demo 的 FVM 标识
+  `ohos/oh-3.41.9-release` 实际报告 Flutter `3.41.10-ohos-1.0.0` / Dart `3.11.5`。
+  这些是工程基线，不能代替当前源码和目标平台的通过证据，也不要求消费工程自动切换 SDK。
+  标准 Flutter `3.41.9 / 3.44.9 / 3.47.2` 的 2026-09-22 框架测试记录只是历史快照。
+  使用 `fvm flutter --version --machine` 核对实际 SDK，Flutter 使用其配套 Dart；不同 SDK
+  使用独立工作区与构建缓存，各自执行 Pub，不复制 `.dart_tool` 或 `build`。
 - 当前框架仓库仍是 `0.1.0` 开发版本、`publish_to: none`，不能假设这个版本已在 Hosted 发布。
   外部工程先使用团队明确配置的固定 Git 完整 SHA 或本地联调来源；正式安装说明必须对应
   实际可解析的发布来源。不要把框架 Workspace 的 `resolution: workspace` 抄入独立 App。

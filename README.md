@@ -412,8 +412,29 @@ if (activation.status == CCRouteActivationStatus.activated) {
 
 ## 环境要求
 
-- Dart SDK `^3.10.0`
-- Flutter SDK：本仓库默认使用 FVM 配置的 Flutter/OHOS Flutter SDK
+- 框架 Package 声明 Dart SDK `^3.10.0`（`>=3.10.0 <4.0.0`）；Demo 声明 `^3.11.5`，
+  因此完整 Workspace / Demo 需要 Dart `>=3.11.5 <4.0.0`。
+- 当前未声明独立的 `environment.flutter` 最低版本；Dart 下限不等于已验证的 Flutter 下限。
+  Dart 3.10 最低版本的独立消费者尚未完成认证。
+- 标准 Flutter 的 CI 配置固定为 `3.41.9` / Dart `3.11.5`；这表示 CI 基线配置，
+  不表示当前提交的 CI 已通过。
+- Demo 的 FVM 标识为 `ohos/oh-3.41.9-release`，实际 SDK 报告为
+  Flutter `3.41.10-ohos-1.0.0` / Dart `3.11.5`；FVM 标识与 Fork 版本号不同。
+  根目录未提交 `.fvmrc`，运行前用 `fvm flutter --version --machine` 确认实际 SDK。
+
+已有多 SDK 测试记录如下，均为 **2026-09-22 的历史快照，不代表当前源码已重新验证**：
+
+| Flutter SDK | 配套 Dart | 当次验证范围 |
+| --- | --- | --- |
+| 标准 `3.41.9` | `3.11.5` | 框架 Flutter 测试通过 |
+| 标准 `3.44.9` | `3.12.2` | 框架 Flutter 测试通过 |
+| 标准 `3.47.2` | `3.13.2` | 框架 Flutter 测试通过 |
+| OHOS `3.41.10-ohos-1.0.0` | `3.11.5` | 当时的 Workspace analyze、Generator、框架 / Demo 测试与生成检查通过 |
+
+这些结果不构成连续版本区间或所有平台的兼容承诺；标准 Flutter 与 OHOS Fork 需要分别验证。
+完整命令、日期及平台边界见 [SDK 兼容性验证](docs/CCRouter-sdk-compatibility.md)，
+后续源码回归见[验证索引](docs/validation/README.md)。切换 SDK 时使用独立工作区与构建缓存，
+并在目标 SDK 下重新解析依赖，不复用其他 SDK 的 `.dart_tool` 或 `build`。
 
 首次运行：
 

@@ -61,6 +61,14 @@ coordinator, resume token or GoRouter compatibility API from an old proposal.
 
 ## Workflow
 
+Check SDK declarations and dated verification separately. Framework packages declare
+Dart `^3.10.0`; the repository Demo requires `^3.11.5`. No explicit Flutter minimum
+or independent Dart 3.10 minimum-consumer certification is established. Standard
+Flutter CI is configured for `3.41.9` / Dart `3.11.5`; Demo FVM selects
+`ohos/oh-3.41.9-release` (reported Flutter `3.41.10-ohos-1.0.0` / Dart `3.11.5`).
+Neither CI configuration nor historical SDK results certify the current source.
+See the bundled [first-integration SDK guidance](references/first-integration.md#1-确认版本来源和工程角色).
+
 For a first Host or a production adoption check, start with
 [first-integration.md](references/first-integration.md). Complete one typed
 Route and its failure/ownership loop before adding optional capabilities or

@@ -288,8 +288,33 @@ Exact Entry close is supported by Native Managed. General atomic `pushAndRemoveU
 
 ## Requirements
 
-- Dart SDK `^3.10.0`
-- Flutter SDK: the Flutter/OHOS Flutter SDK configured through FVM in this repository
+- Framework packages declare Dart SDK `^3.10.0` (`>=3.10.0 <4.0.0`); the Demo declares
+  `^3.11.5`, so the complete Workspace / Demo requires Dart `>=3.11.5 <4.0.0`.
+- No explicit minimum `environment.flutter` is declared. The Dart lower bound is not
+  a verified Flutter lower bound; an independent minimum-version Dart 3.10 consumer
+  has not yet been certified.
+- Standard Flutter CI is configured for `3.41.9` / Dart `3.11.5`. This identifies the
+  configured baseline, not a passing CI result for the current commit.
+- The Demo FVM identifier is `ohos/oh-3.41.9-release`; the SDK reports Flutter
+  `3.41.10-ohos-1.0.0` / Dart `3.11.5`. The FVM identifier differs from the Fork version.
+  No root `.fvmrc` is committed; confirm the actual SDK with `fvm flutter --version --machine`.
+
+The following multi-SDK results are **historical snapshots from 2026-09-22, not renewed
+verification of the current source**:
+
+| Flutter SDK | Bundled Dart | Scope verified at that time |
+| --- | --- | --- |
+| Standard `3.41.9` | `3.11.5` | Framework Flutter tests passed |
+| Standard `3.44.9` | `3.12.2` | Framework Flutter tests passed |
+| Standard `3.47.2` | `3.13.2` | Framework Flutter tests passed |
+| OHOS `3.41.10-ohos-1.0.0` | `3.11.5` | Workspace analysis, Generator, framework / Demo tests, and generation check passed at that time |
+
+These results do not certify a continuous version range or every platform. Standard
+Flutter and the OHOS Fork require separate verification. See [SDK compatibility
+verification](docs/CCRouter-sdk-compatibility.md) for commands, dates, and platform
+boundaries, and the [validation index](docs/validation/README.md) for later source
+regressions. Use separate workspaces and build caches when switching SDKs; resolve
+dependencies under the target SDK rather than reusing another SDK's `.dart_tool` or `build`.
 
 First run:
 
