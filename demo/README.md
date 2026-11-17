@@ -14,6 +14,11 @@ CCRouter 的 Flutter 开发工程，本升级分支与仓库根统一使用 FVM 
 `ohos/oh-3.41.9-release` 固定 `meta 1.17.0`，因此该 OHOS SDK 无法解析本分支。
 OHOS 需要配套兼容 SDK 并重新验证后才能恢复构建；不通过 overrides 覆盖 Flutter pin。
 
+3.47.9 的原生工程基线保留 SDK 生成的 Apple SPM project/scheme 引用、Pod lock 和 Android
+兼容标记。自定义 Podfile 继续保留最低部署版本配置；CocoaPods 清理与 AGP/Kotlin 大版本升级
+单独评估。迁移后重复 Release 构建应保持这些受管工程文件稳定，验证范围见
+[3.47.9 适配记录](../docs/validation/20261117-flutter-3479-readiness/report.md)。
+
 Demo 图标采用 CCRouter 双 C + 路由箭头设计；SVG 母版、平台导出命令及尺寸规范见
 [品牌资源说明](../docs/brand/ccrouter-icon-v1/README.md)。
 
