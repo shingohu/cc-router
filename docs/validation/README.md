@@ -1,10 +1,18 @@
 # CCRouter 验证证据索引
 
-更新日期：2026-10-26。这里集中导航验证记录，不替代[当前能力矩阵](../README.md)或
+更新日期：2026-11-17。这里集中导航验证记录，不替代[当前能力矩阵](../README.md)或
 [发布门禁](../CCRouter-release-readiness.md)。每份报告只证明其注明源码、命令、设备和范围；
 旧失败由后续修复报告闭环，不删除失败证据，也不改写历史测试数字。
 
 ## 最新源码自动化证据
+
+[2026-11-17 Generator / Plugin 语义补齐](20261117-generator-plugin-followup/report.md)：
+真实 LSP 复现 UI-only 文件的解析触发缺口，验证未保存修复和 Analyzer 13 → 8.4 的真实
+metadata/Owner/Quick Fix 边界；保留独立依赖图，Demo 远端 pin 与当前 IDE 加载另列发布待办。
+
+[2026-11-04 build_runner 2.16.1 升级](build_runner_upgrade_20261104.md)：上游 #5079
+stock A/B、Analyzer 13 / build 4 / formatter 迁移、watch 产物恢复与 Flutter 3.47 兼容回归。
+原诊断报告与新分支验证分开保存，旧 OHOS SDK 的 meta pin 冲突和未覆盖的发布范围单独列明。
 
 [2026-10-26 核心价值回归](20261026-core-value-regression/report.md)：13 项价值逐条核对，
 区分本轮新执行和同源码全量证据；补齐 CLI schema 规则，恢复历史快照，并执行 API

@@ -1,0 +1,6 @@
+00:29 +1645: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-pop-ohos-control-xhmhqg0g/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through system outgoing animation
+00:29 +1646: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-pop-ohos-control-xhmhqg0g/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through gesture outgoing animation
+00:29 +1647: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-pop-ohos-control-xhmhqg0g/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through go outgoing animation
+00:29 +1648: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-pop-ohos-control-xhmhqg0g/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through reset outgoing animation
+00:29 +1649: /private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-pop-ohos-control-xhmhqg0g/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through replace outgoing animation
+00:29 +1650: All tests passed!

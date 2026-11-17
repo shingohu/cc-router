@@ -18,6 +18,7 @@ import 'package:ccrouter_analyzer_plugin/src/quick_fixes.dart';
 import 'package:ccrouter_analyzer_plugin/src/source_analyzer.dart';
 import 'package:path/path.dart' as path;
 import 'package:pub_semver/pub_semver.dart';
+import 'resolved_symbols.dart';
 
 /// Opt-in A/B switch for distributing exact fallback scans across timer ticks.
 const String ccrouterAnalyzerTieredPollingEnable =
@@ -477,17 +478,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
     String path,
     String source,
   ) async {
-    if (!const [
-      'CCRouterHost',
-      'CCService',
-      'CCComponent',
-      'CCInitTask',
-      'CCEventSubscription',
-      'CCRoute',
-      'CCCommand',
-      'CCEventContract',
-    ].any(source.contains))
-      return null;
+    if (!CCRouterResolvedSymbols.mayNeedResolution(source)) return null;
     try {
       final result = await getResolvedUnitResult(path);
       // Errors elsewhere must not discard proven annotation/namespace identity.

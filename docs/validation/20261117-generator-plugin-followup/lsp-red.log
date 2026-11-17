@@ -1,0 +1,16 @@
+00:00 +0: loading test/analysis_server_integration_test.dart
+00:00 +0: real LSP resolves UI-only annotations with an imported Owner constant
+01:00 +0 -1: real LSP resolves UI-only annotations with an imported Owner constant [E]
+  Bad state: Diagnostics timed out for lib/src/ui_only.dart: null
+
+  test/support/analysis_server_session.dart 369:5   AnalysisServerSession.waitFor
+  ===== asynchronous gap ===========================
+  test/analysis_server_integration_test.dart 56:22  main.<fn>
+
+01:00 +0 -1: Some tests failed.
+
+Failing tests:
+  test/analysis_server_integration_test.dart: real LSP resolves UI-only annotations with an imported Owner constant
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

@@ -1,0 +1,6 @@
+00:18 +1645: <home>/.codex/worktrees/build-runner-2161/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through system outgoing animation
+00:18 +1646: <home>/.codex/worktrees/build-runner-2161/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through gesture outgoing animation
+00:18 +1647: <home>/.codex/worktrees/build-runner-2161/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through go outgoing animation
+00:18 +1648: <home>/.codex/worktrees/build-runner-2161/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through reset outgoing animation
+00:18 +1649: <home>/.codex/worktrees/build-runner-2161/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through replace outgoing animation
+00:18 +1650: All tests passed!

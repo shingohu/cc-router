@@ -71,8 +71,7 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
       description: "创建演示收据并返回稳定的收据编号。",
       source: CCDevToolsSourceLocation(
         packageName: "demo_navigation_lab",
-        packageUri:
-            "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+        packageUri: "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
         line: 178,
         column: 8,
       ),
@@ -85,8 +84,7 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
       description: "抛出业务异常以验证安全 Trace 和错误传播。",
       source: CCDevToolsSourceLocation(
         packageName: "demo_navigation_lab",
-        packageUri:
-            "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+        packageUri: "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
         line: 200,
         column: 6,
       ),
@@ -99,8 +97,7 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
       description: "刷新组件缓存并仅报告完成或失败。",
       source: CCDevToolsSourceLocation(
         packageName: "demo_navigation_lab",
-        packageUri:
-            "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+        packageUri: "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
         line: 183,
         column: 14,
       ),
@@ -113,8 +110,7 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
       description: "保持等待直到超时或调用方取消，用于验证协作取消。",
       source: CCDevToolsSourceLocation(
         packageName: "demo_navigation_lab",
-        packageUri:
-            "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+        packageUri: "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
         line: 190,
         column: 14,
       ),
@@ -178,8 +174,7 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
       packageName: "demo_navigation_lab",
       source: CCDevToolsSourceLocation(
         packageName: "demo_navigation_lab",
-        packageUri:
-            "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+        packageUri: "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
         line: 115,
         column: 6,
       ),
@@ -191,8 +186,7 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
       packageName: "demo_navigation_lab",
       source: CCDevToolsSourceLocation(
         packageName: "demo_navigation_lab",
-        packageUri:
-            "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+        packageUri: "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
         line: 82,
         column: 14,
       ),
@@ -204,8 +198,7 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
       packageName: "demo_navigation_lab",
       source: CCDevToolsSourceLocation(
         packageName: "demo_navigation_lab",
-        packageUri:
-            "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+        packageUri: "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
         line: 104,
         column: 6,
       ),
@@ -217,8 +210,7 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
       packageName: "demo_navigation_lab",
       source: CCDevToolsSourceLocation(
         packageName: "demo_navigation_lab",
-        packageUri:
-            "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+        packageUri: "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
         line: 93,
         column: 6,
       ),
@@ -230,8 +222,7 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
       packageName: "demo_navigation_lab",
       source: CCDevToolsSourceLocation(
         packageName: "demo_navigation_lab",
-        packageUri:
-            "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+        packageUri: "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
         line: 126,
         column: 14,
       ),
@@ -243,8 +234,7 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
       packageName: "demo_navigation_lab",
       source: CCDevToolsSourceLocation(
         packageName: "demo_navigation_lab",
-        packageUri:
-            "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+        packageUri: "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
         line: 138,
         column: 14,
       ),
@@ -256,8 +246,7 @@ final ccrouterGeneratedDevToolsCatalog = CCDevToolsStaticCatalogSnapshot(
       packageName: "demo_navigation_lab",
       source: CCDevToolsSourceLocation(
         packageName: "demo_navigation_lab",
-        packageUri:
-            "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
+        packageUri: "package:demo_navigation_lab/src/navigation_lab_component_registrar.dart",
         line: 150,
         column: 14,
       ),

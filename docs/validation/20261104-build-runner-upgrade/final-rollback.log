@@ -1,0 +1,17 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/generation_atomicity_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/generation_atomicity_test.dart: (setUpAll)
+00:00 +0: packages/ccrouter_test/generator_test/generation_atomicity_test.dart: failed generation restores the previous managed source outputs
+00:07 +1: packages/ccrouter_test/generator_test/generation_atomicity_test.dart: (tearDownAll)
+00:07 +1: loading packages/ccrouter_test/generator_test/custom_output_check_test.dart
+00:07 +1: packages/ccrouter_test/generator_test/custom_output_check_test.dart: (setUpAll)
+00:07 +1: packages/ccrouter_test/generator_test/custom_output_check_test.dart: custom catalogs are compared and restored in docs and build
+00:17 +2: packages/ccrouter_test/generator_test/custom_output_check_test.dart: custom catalog write failure restores earlier writes
+00:19 +3: packages/ccrouter_test/generator_test/custom_output_check_test.dart: (tearDownAll)
+00:19 +3: loading packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart
+00:19 +3: packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart: collects repaired outputs from build_runner 2.16 phases
+00:19 +4: packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart: collects only completed required phases
+00:19 +5: packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart: collects lazy phases and every execution outcome
+00:19 +6: packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart: retains malformed terminal lines without failing collection
+00:19 +7: packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart: reset isolates consecutive watch cycles
+00:19 +8: packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart: does not encode unavailable phase details as zero counters
+00:19 +9: All tests passed!

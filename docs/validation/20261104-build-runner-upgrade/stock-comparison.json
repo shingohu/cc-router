@@ -1,0 +1,15 @@
+{
+  "sdk": "Dart SDK version: 3.13.2 (stable) (Tue Aug 25 01:01:12 2026 -0700) on \"macos_arm64\"",
+  "cases": [
+    {
+      "build_runner": "2.15.1",
+      "first_exit": 0,
+      "incremental_exit": 255
+    },
+    {
+      "build_runner": "2.16.1",
+      "first_exit": 0,
+      "incremental_exit": 0
+    }
+  ]
+}

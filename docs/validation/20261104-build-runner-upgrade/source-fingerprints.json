@@ -1,0 +1,22 @@
+{
+  "base_commit": "b07d9313ba48c2a2b7ed1378116c58d6c2e9d9f8",
+  "branch": "codex/build-runner-2161",
+  "sha256": {
+    ".fvmrc": "737e433349b97a1961b900c15b921d20b34e3896ef76192abbf8788901a5ed81",
+    "demo/.fvmrc": "e786cee62ee9a4ba93d72741ae82e7e5ba6df4099c1b524118f594431ce9f90e",
+    "packages/ccrouter/lib/src/managed_router.dart": "8acb7d109e679bec6224aaf28e9152cd4fec096f1d86bfa7d850cbc4ca4afcac",
+    "packages/ccrouter_generator/bin/ccrouter_generator.dart": "c350b2d268f47271c3024ff1b5aa0879d6c03024d5f35523264ea1c407c795c0",
+    "packages/ccrouter_generator/bin/src/build_runner_phase_report.dart": "7e5e987118639b801e0c935f9d7a686065299080ccfb0e09f6d904a2edc98d5f",
+    "packages/ccrouter_generator/bin/src/generation_watch.dart": "19e4803d43c0b499a4823fbe4271e75660c2af2a153000db82bf19b956469341",
+    "packages/ccrouter_generator/lib/src/barrel_validator.dart": "f2e5648912374ef745ad2e035a9f1d0a5b098384b0a9fa10c314189810aeef8b",
+    "packages/ccrouter_generator/lib/src/command_generator.dart": "8dd61a382c05082f63e919844b10c72f5de18a06e708c31b54873d6825e0b033",
+    "packages/ccrouter_generator/lib/src/component_dependency_preflight.dart": "5a183e92d519d1044ece804a79c6a9d00fb8cb44fa86977cdf3bf39ef17a708a",
+    "packages/ccrouter_generator/lib/src/event_generator.dart": "6a0521799beb6b90b27392b2ccab7287796e300a7277f671fc5bd9e4adfb9c71",
+    "packages/ccrouter_generator/lib/src/init_task_generator.dart": "8e2abcf6f5aa8ae6010cc8d697a23dd7ab3e0f16dbf626e7abf4f92d6b368ed7",
+    "packages/ccrouter_generator/lib/src/service_generator.dart": "39c1a4268d9685a59d75fcfe51b8aa37a70bf08dda6935bbf8e74c49c7411675",
+    "packages/ccrouter_generator/pubspec.yaml": "0d75f4bbd218e72e944173c76aa5ba00c32773737ed70dbceb7a30dc6bdc3823",
+    "packages/ccrouter_test/pubspec.yaml": "74ce83d9f8f00bb9dff5f523e5238d691e9c14d80984e5808299cf596e0ce44c",
+    "pubspec.lock": "634825d160df686fd5eef32a2215c996316c02a686944b213c61fc83fe1bd382",
+    "pubspec.yaml": "1669e179d4dca44bf96c1152840773b387578761725e6e5dca2998fdfc2f4274"
+  }
+}

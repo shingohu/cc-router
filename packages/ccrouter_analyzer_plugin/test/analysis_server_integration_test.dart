@@ -20,6 +20,62 @@ bool _has(List<Map<String, dynamic>> errors, String code) =>
 
 void main() {
   test(
+    'real LSP resolves UI-only annotations with an imported Owner constant',
+    () async {
+      const file = 'lib/src/ui_only.dart';
+      const source = '''
+import 'package:ccrouter_contracts/ccrouter_ui_contracts.dart' as ui;
+import 'owner.dart' show owner;
+final class Props { const Props(); }
+class Action { const Action(); }
+@ui.CCUIFragmentContract<Props, Action>(componentId: owner, id: 'panel', version: '1.0.0')
+abstract final class Marker {}
+''';
+      // No unrelated annotation or inline Owner may accidentally enable resolve.
+      for (final oldTrigger in ['CCComponent', 'CCRoute', 'CCService']) {
+        expect(source, isNot(contains(oldTrigger)));
+      }
+      final server = await AnalysisServerSession.start({
+        file: source,
+        'lib/src/owner.dart': '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+const owner = CCComponentId('orders');
+''',
+      }, lsp: true);
+      addTearDown(server.close);
+      final uri = Uri.file(server.path(file)).toString();
+      server.notify('textDocument/didOpen', {
+        'textDocument': {
+          'uri': uri,
+          'languageId': 'dart',
+          'version': 1,
+          'text': source,
+        },
+      });
+      const code = 'ccrouter_ui_action_invalid';
+      final errors = await server.waitFor(file, (errors) => _has(errors, code));
+      final error = errors.singleWhere(
+        (error) => (error['code'] as String).toLowerCase() == code,
+      );
+      expect((error['range'] as Map)['start'], {'line': 4, 'character': 0});
+      final revision = server.revisions[server.path(file)]!;
+      server.notify('textDocument/didChange', {
+        'textDocument': {'uri': uri, 'version': 2},
+        'contentChanges': [
+          {'text': source.replaceFirst('class Action', 'final class Action')},
+        ],
+      });
+      await server.waitFor(
+        file,
+        (errors) => !_has(errors, code),
+        after: revision,
+      );
+      expect(File(server.path(file)).readAsStringSync(), source);
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test(
     'review real LSP refreshes terminal DTO facts after part-only edits',
     () async {
       const file = 'lib/src/dto_root.dart';

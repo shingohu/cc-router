@@ -1,0 +1,22 @@
+{
+  "base": "b07d9313ba48c2a2b7ed1378116c58d6c2e9d9f8",
+  "branch": "codex/build-runner-2161",
+  "sdk": "Flutter 3.47.9 / Dart 3.13.7",
+  "generatorAnalyzer": "13.3.0",
+  "pluginAnalyzer": "8.4.0",
+  "pluginFramework": "0.13.10",
+  "analysisExit": 0,
+  "pluginTests": 215,
+  "pluginTestExit": 0,
+  "hostCheckExit": 0,
+  "demoPinUnchanged": "f0bd3c2af3c3f6282f503e7182a41779beeb19f5",
+  "sha256": {
+    "packages/ccrouter_analyzer_plugin/lib/src/plugin.dart": "145845f4a47625540dcfa2853dd874913c36732544cdefef041b30a3d3daad02",
+    "packages/ccrouter_analyzer_plugin/lib/src/resolved_symbols.dart": "4d66a4be15b6afe938a67b776f8e04624a0ff64f7c48dad87afbaec37820905b",
+    "packages/ccrouter_analyzer_plugin/test/analysis_server_integration_test.dart": "2ac5a2182b91faeea8ed79f3769becb390952e4c13e0983b5c996e2a6a0efb05",
+    "packages/ccrouter_analyzer_plugin/test/demo_component_dependency_integration_test.dart": "e845922140e7e357537e3f77d84cd8cb91479afc917f55cdef55c2efc9115a1a",
+    "packages/ccrouter_analyzer_plugin/test/plugin_test.dart": "ac53960fecfed3acd38b848ed72a321e4e03f0a81bc8dc4d376c49794c371d79",
+    "packages/ccrouter_analyzer_plugin/pubspec.yaml": "f46adba8a08ec228f3023f4b4d780be9cc4131039088587a575ab1514b97df94",
+    "packages/ccrouter_analyzer_plugin/pubspec.lock": "d84ef6794be7a12019814451ab8b3cbeaed050252e0d5926760474e2cc86d6d8"
+  }
+}

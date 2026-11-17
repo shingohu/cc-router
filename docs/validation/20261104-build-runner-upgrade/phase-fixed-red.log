@@ -1,0 +1,16 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart
+00:00 +0: collects repaired outputs from build_runner 2.16 phases
+00:00 +0 -1: collects repaired outputs from build_runner 2.16 phases [E]
+  Expected: <1>
+    Actual: <0>
+
+  package:matcher                                                                 expect
+  packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart 16:5  main.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart: collects repaired outputs from build_runner 2.16 phases
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

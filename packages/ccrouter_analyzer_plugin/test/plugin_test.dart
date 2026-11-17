@@ -7,11 +7,30 @@ import 'package:analyzer_plugin/protocol/protocol.dart';
 import 'package:analyzer_plugin/protocol/protocol_common.dart';
 import 'package:analyzer_plugin/protocol/protocol_generated.dart';
 import 'package:ccrouter_analyzer_plugin/src/plugin.dart';
+import 'package:ccrouter_analyzer_plugin/src/resolved_symbols.dart';
 import 'package:path/path.dart' as path;
 import 'package:pub_semver/pub_semver.dart';
 import 'package:test/test.dart';
 
 void main() {
+  test(
+    'resolution selection preserves marker types and ignores ordinary Dart',
+    () {
+      expect(
+        CCRouterResolvedSymbols.mayNeedResolution('CCCommand<int> value;'),
+        isTrue,
+      );
+      expect(
+        CCRouterResolvedSymbols.mayNeedResolution('ui.CCUIHostAssembly value;'),
+        isTrue,
+      );
+      expect(
+        CCRouterResolvedSymbols.mayNeedResolution('const answer = 42;'),
+        isFalse,
+      );
+    },
+  );
+
   test('advertises a stable name and supported server boundary', () {
     final plugin = CCRouterAnalyzerPlugin(PhysicalResourceProvider.INSTANCE);
 

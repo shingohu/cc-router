@@ -7,3 +7,6 @@ pubspec_overrides.yaml
 # Android Studio / IntelliJ local project state
 .idea/
 *.iml
+
+# FVM creates local SDK links beside the checked-in version pin.
+.fvm/

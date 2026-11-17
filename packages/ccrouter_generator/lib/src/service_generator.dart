@@ -836,9 +836,7 @@ _ServiceMemberModel _readServiceMember(
     }
   }
   for (final parameter in parameters) {
-    if (parameter.formalParameters.isNotEmpty ||
-        parameter.typeParameters.isNotEmpty ||
-        parameter.type is FunctionType) {
+    if (parameter.type is FunctionType) {
       _failService(
         'Service contract member "${member.displayName}" contains callback '
         'parameter "${parameter.displayName}". Callback lifecycle cannot be '

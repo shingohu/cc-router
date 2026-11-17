@@ -8,7 +8,11 @@
 不属于框架依赖或发布能力。公开类型使用 `AppAnalytics…` / `AppNavigationAnalyticsBridge`；
 CCRouter 仅提供导航生命周期观察，PV/停留/滚动/曝光规则由应用决定。
 
-CCRouter 的 Flutter 开发工程，使用 FVM `ohos/oh-3.41.9-release` SDK，包含 Android、iOS、macOS、Web 和 OHOS 平台目录。
+CCRouter 的 Flutter 开发工程，本升级分支与仓库根统一使用 FVM `3.47.9`（Dart 3.13.7），
+包含 Android、iOS、macOS、Web 和 OHOS 平台目录。平台目录存在不代表当前工具链已经支持该平台。
+`build_runner 2.16.1` / Analyzer 13 要求 `meta >=1.18.3`，旧
+`ohos/oh-3.41.9-release` 固定 `meta 1.17.0`，因此该 OHOS SDK 无法解析本分支。
+OHOS 需要配套兼容 SDK 并重新验证后才能恢复构建；不通过 overrides 覆盖 Flutter pin。
 
 Demo 图标采用 CCRouter 双 C + 路由箭头设计；SVG 母版、平台导出命令及尺寸规范见
 [品牌资源说明](../docs/brand/ccrouter-icon-v1/README.md)。

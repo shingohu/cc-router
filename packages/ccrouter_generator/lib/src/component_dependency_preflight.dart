@@ -346,11 +346,11 @@ abstract final class CCComponentDependencyPreflight {
   static String? _componentIdLiteral(Expression? expression) {
     final arguments = _constructorArguments(expression, 'CCComponentId');
     if (arguments == null || arguments.length != 1) return null;
-    return _stringLiteral(arguments.single);
+    return _stringLiteral(arguments.single.argumentExpression);
   }
 
   /// Reads arguments from one direct constructor-shaped expression.
-  static NodeList<Expression>? _constructorArguments(
+  static NodeList<Argument>? _constructorArguments(
     Expression? expression,
     String typeName,
   ) => switch (expression) {
@@ -364,12 +364,9 @@ abstract final class CCComponentDependencyPreflight {
   };
 
   /// Reads one named argument from a direct argument list.
-  static Expression? _namedArgument(
-    NodeList<Expression> arguments,
-    String name,
-  ) {
-    for (final argument in arguments.whereType<NamedExpression>()) {
-      if (argument.name.label.name == name) return argument.expression;
+  static Expression? _namedArgument(NodeList<Argument> arguments, String name) {
+    for (final argument in arguments.whereType<NamedArgument>()) {
+      if (argument.name.lexeme == name) return argument.argumentExpression;
     }
     return null;
   }
@@ -382,7 +379,6 @@ abstract final class CCComponentDependencyPreflight {
   static String _terminalName(Identifier name) => switch (name) {
     SimpleIdentifier value => value.name,
     PrefixedIdentifier value => value.identifier.name,
-    _ => name.toSource().split('.').last,
   };
 }
 
@@ -437,7 +433,7 @@ final class _ParsedSource {
         ClassDeclaration d => [d.namePart.typeName.lexeme],
         EnumDeclaration d => [d.namePart.typeName.lexeme],
         MixinDeclaration d => [d.name.lexeme],
-        ExtensionTypeDeclaration d => [d.primaryConstructor.typeName.lexeme],
+        ExtensionTypeDeclaration d => [d.namePart.typeName.lexeme],
         ClassTypeAlias d => [d.name.lexeme],
         ExtensionDeclaration d => [if (d.name != null) d.name!.lexeme],
         FunctionDeclaration d => [d.name.lexeme],

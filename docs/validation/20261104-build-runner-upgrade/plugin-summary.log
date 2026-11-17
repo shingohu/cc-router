@@ -1,0 +1,6 @@
+03:18 +207: test/analysis_server_integration_test.dart: real watcher refreshes consumers across workspace Contract packages
+03:30 +208: test/analysis_server_integration_test.dart: real LSP diagnostics and codeAction fix the open document
+03:36 +209: test/analysis_server_integration_test.dart: real legacy disk watcher refreshes all five generated capability kinds
+04:05 +210: test/analysis_server_integration_test.dart: real LSP disk watcher refreshes all five generated capability kinds
+04:33 +211: test/analysis_server_integration_test.dart: real server: unsaved overlays and service Quick Fix round trip
+04:40 +212: All tests passed!

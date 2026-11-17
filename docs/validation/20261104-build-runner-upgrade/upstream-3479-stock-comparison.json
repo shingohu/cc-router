@@ -1,0 +1,17 @@
+{
+  "sdk": "Dart SDK version: 3.13.7 (stable) (Thu Oct 22 14:28:57 2026 -0700) on \"macos_arm64\"",
+  "cases": [
+    {
+      "build_runner": "2.15.1",
+      "directory": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-br-2.15.1-8xslsfkn",
+      "first_exit": 0,
+      "incremental_exit": 255
+    },
+    {
+      "build_runner": "2.16.1",
+      "directory": "/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-br-2.16.1-of9rq7tg",
+      "first_exit": 0,
+      "incremental_exit": 0
+    }
+  ]
+}

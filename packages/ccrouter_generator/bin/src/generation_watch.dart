@@ -629,6 +629,10 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
       ),
   ];
   protectionWatch.stop();
+  // Validate the rollback baseline before a child can delete or rewrite outputs.
+  var cycleSnapshot = await _GeneratedArtifactsSnapshot.capture(
+    buildContext.resolutionRoot,
+  );
 
   var command = await _buildRunnerCommand(buildContext.resolutionRoot, 'watch');
   final processWatch = Stopwatch()..start();
@@ -642,6 +646,10 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
       command.executable,
       <String>[
         ...command.arguments,
+        // Preserve pre-2.16 watch behavior: restoring protected non-target
+        // outputs must not trigger another repair/delete/restore cycle.
+        // #5079 input classification remains active with this output policy.
+        '--keep-modified-outputs',
         if (parsed.profile) '--verbose-durations',
         if (buildContext.isWorkspace) '--workspace',
         for (final package in topology.targets) ...[
@@ -675,7 +683,6 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
   Timer? resolutionTimer;
   Future<void>? activeResolutionCheck;
   String? sessionResolutionFingerprint;
-  late _GeneratedArtifactsSnapshot cycleSnapshot;
   final failureTail = <String>[];
   _GenerationWatchTopology? nextTopology;
   var invalidatedByClean = false;
@@ -801,9 +808,6 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
           activeResolutionCheck = null;
       });
     });
-    cycleSnapshot = await _GeneratedArtifactsSnapshot.capture(
-      buildContext.resolutionRoot,
-    );
     var buildWatch = Stopwatch()..start();
     final buildRunnerPhases = CCBuildRunnerPhaseCollector();
     var initialBuild = true;
@@ -1088,6 +1092,25 @@ Future<_GenerationWatchTopology?> _runGenerationWatchSession({
       await cleanUp(iterator.cancel);
       await cleanUp(signals.close);
       setActiveProcess(null);
+    }
+    // A child may have deleted outputs before its first completion line. Restore
+    // protected Packages even on startup failure or an early stop. A failed
+    // session also restores its last complete rollback baseline, while retaining
+    // the exact inaccessible file and the original terminal error.
+    if (shutdownError == null) {
+      final inaccessiblePath = sessionError is FileSystemException
+          ? sessionError.path
+          : null;
+      for (final snapshot in protectedOutputs) {
+        await cleanUp(
+          () => snapshot.restore(inaccessiblePath: inaccessiblePath),
+        );
+      }
+      if (sessionError != null) {
+        await cleanUp(
+          () => cycleSnapshot.restore(inaccessiblePath: inaccessiblePath),
+        );
+      }
     }
     // Publish the terminal failure after cleanup so queued observer callbacks
     // cannot turn the failed session active or restart mirror repair timers.

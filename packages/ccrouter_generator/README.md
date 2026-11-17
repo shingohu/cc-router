@@ -1,5 +1,12 @@
 # CCRouter 组件能力生成器
 
+本分支工具链要求 Dart `>=3.11.0`、Analyzer `^13.3.0`、`build ^4.0.9`、
+`dart_style ^3.1.14`，Host 使用含上游 #5079 修复的 `build_runner 2.16.1`；
+Builder 测试配套 `build_test 3.5.20`。仓库根和 Demo 目标固定标准 Flutter `3.47.9`；已在官方 Flutter 3.47.9 / Dart 3.13.7 上完成验证。
+Analyzer 要求 `meta ^1.18.3`，与旧 OHOS SDK 的固定 `meta 1.17.0` 不兼容，不能强加
+overrides。watch 使用公开 `--keep-modified-outputs` 保持旧输出策略，one-shot 保留新版
+默认修复行为；详细边界与验证见[升级记录](../../docs/validation/build_runner_upgrade_20261104.md)。
+
 组件的开发工具，不属于运行时依赖。每个实现 Package 声明一个顶层
 `const CCComponent`，内部 Route 和简单 Service 自动归属该 Owner：
 

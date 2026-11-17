@@ -518,7 +518,8 @@ final class _RawEventInvocationVisitor extends RecursiveAstVisitor<void> {
         method?.library?.uri.toString() != 'package:ccrouter/src/facade.dart') {
       return;
     }
-    final type = node.argumentList.arguments.first.staticType;
+    final type =
+        node.argumentList.arguments.first.argumentExpression.staticType;
     if (type is! InterfaceType || type.element is! ClassElement) return;
     if (_eventContractChecker.firstAnnotationOfExact(type.element) == null) {
       return;

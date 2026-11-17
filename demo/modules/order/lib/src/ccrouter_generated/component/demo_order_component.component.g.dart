@@ -4,6 +4,7 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
 import 'package:demo_order/src/demo_order_component.dart' as component_source;
+
 import '../binding/order_detail_page.route_binding.g.dart'
     as route_src_ccrouter_generated_binding_order_detail_page_route_binding_g_dart;
 import '../command/order_commands.command.g.dart'

@@ -49,6 +49,19 @@ and [first integration guide](skills/ccrouter-integration-development/references
 
 This repository **is not yet ready for a formal release**. Blocking items include licensing, historical credential remediation, the package release set, package-level README/CHANGELOG files, hosted distribution, and clean-consumer regression checks. See [`docs/CCRouter-release-readiness.md`](docs/CCRouter-release-readiness.md). A design document marked “complete” does not make the current commit a stable `1.0.0` release.
 
+This branch targets `build_runner 2.16.1` (upstream #5079), Generator Analyzer
+`^13.3.0`, `build ^4.0.9`, and `dart_style ^3.1.14` on Dart `>=3.11.0`.
+Builder tests use matching `build_test 3.5.20`. Root and Demo FVM select standard
+Flutter `3.47.9`; verified on Flutter 3.47.9 / Dart 3.13.7. The old OHOS SDK pins `meta 1.17.0`, incompatible with
+Analyzer's `meta ^1.18.3`; OHOS needs a compatible SDK and separate validation.
+Do not override SDK pins. Runtime/Contracts and the isolated IDE Plugin keep
+their existing SDK/version boundaries. Regenerate distributed Portable State.
+Watch uses public `--keep-modified-outputs` to retain its previous output policy
+and avoid non-target artifact restore loops; one-shot generation keeps the
+upstream repair default. Profile phases/totals may include optional
+`fixedOutputs`, counted in `executedInputs`. See the
+[upgrade evidence](docs/validation/build_runner_upgrade_20261104.md).
+
 ## Why CCRouter
 
 - **Explicit component boundaries**: components collaborate through Manifests, Route Contracts, Service Contracts, Commands, and Events, without depending on other components' page implementations.
@@ -155,6 +168,15 @@ schema 4; old generators reject it. The
 [UI Fragment specification](docs/CCRouter-ui-fragment-design.md) records current capabilities, integration boundaries, and remaining scope.
 The Demo's Showcase entry demonstrates multiple instances, Tab retention,
 Props updates, account-key recreation, and business errors.
+
+This branch's Plugin requests semantic resolution for UI-only Contract/Renderer
+files, including imported Owner constants. The annotation identity table drives
+the resolution trigger; spelling alone never proves framework identity.
+A regression checks actual Generator Analyzer 13 metadata with the isolated
+Analyzer 8.4 Plugin, including Owner facts, locations and Quick Fixes. The Demo
+still uses its existing remote Plugin pin; local tests do not establish live IDE
+loading. Publish the Plugin before updating that pin in a separate commit.
+
 The optional Analyzer Plugin checks UI aliases, repeated dependencies, clearly
 invalid ranges, enum/DTO Actions, Renderer signatures, and Host/Generated SPI
 boundaries. It offers a conservative missing required Owner fix only when the
@@ -288,16 +310,17 @@ Exact Entry close is supported by Native Managed. General atomic `pushAndRemoveU
 
 ## Requirements
 
-- Framework packages declare Dart SDK `^3.10.0` (`>=3.10.0 <4.0.0`); the Demo declares
+- Runtime/Contracts declare Dart SDK `^3.10.0`; Generator and the aggregator declare `^3.11.0`. The Demo declares
   `^3.11.5`, so the complete Workspace / Demo requires Dart `>=3.11.5 <4.0.0`.
 - No explicit minimum `environment.flutter` is declared. The Dart lower bound is not
   a verified Flutter lower bound; an independent minimum-version Dart 3.10 consumer
   has not yet been certified.
-- Standard Flutter CI is configured for `3.41.9` / Dart `3.11.5`. This identifies the
+- Standard Flutter CI is configured for `3.47.9` / Dart `3.13.7`. This identifies the
   configured baseline, not a passing CI result for the current commit.
-- The Demo FVM identifier is `ohos/oh-3.41.9-release`; the SDK reports Flutter
-  `3.41.10-ohos-1.0.0` / Dart `3.11.5`. The FVM identifier differs from the Fork version.
-  No root `.fvmrc` is committed; confirm the actual SDK with `fvm flutter --version --machine`.
+- Root and Demo `.fvmrc` files pin standard Flutter `3.47.9` / Dart `3.13.7`;
+  confirm the actual SDK with `fvm flutter --version --machine`. The old OHOS
+  SDK's meta pin conflicts with the Generator. Historical Fork results do not
+  prove that this branch builds for OHOS.
 
 The following multi-SDK results are **historical snapshots from 2026-09-22, not renewed
 verification of the current source**:

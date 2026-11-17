@@ -1987,6 +1987,37 @@ preserving unknown or handwritten files.
 
 ### Sharing build_runner with other generators
 
+Use this branch's `build_runner 2.16.1` with Generator Analyzer `^13.3.0`,
+`build ^4.0.9`, `dart_style ^3.1.14`, and Dart `>=3.11.0`; Builder tests use
+`build_test 3.5.20`. This fixes upstream #5079's classification of newly merged
+input/output pairs. A compatible Dart version alone is insufficient: Analyzer
+requires `meta ^1.18.3`, conflicting with the old OHOS SDK's fixed `1.17.0`.
+The branch's root/Demo target pin is standard Flutter `3.47.9`; verified on Flutter 3.47.9 / Dart 3.13.7; OHOS needs a separately
+compatible SDK and platform validation. Never override Flutter's dependency pin.
+Regenerate Portable State and distribute components before updating consumers.
+Within the same Workspace, a Host-prepared state can be checked through the
+component/contracts Package's `portable publish` entrypoint. Local Framework
+dependencies contribute the same authored identity even when the caller has
+no write ownership. Cross-toolchain or stale-source mismatches still fail.
+
+Since 2.16, build_runner repairs modified outputs by default. CCRouter one-shot
+generation uses that default; watch explicitly uses `--keep-modified-outputs`
+to preserve the old policy. Otherwise the non-target output protection restore
+can trigger an endless repair/delete/restore loop. The flag retains the #5079
+classification fix; it does not permit hand-editing generated code or bypass
+validation, rollback, or the stopped-watch `--no-cache --check`. Profile phase
+and total reports optionally include `fixedOutputs` when nonzero, separate from
+new `outputs` and `sameOutputs` and included in `executedInputs`. These are
+diagnostic counters, not generation or caching decisions.
+
+On Flutter 3.47, `onDidRemovePage` may precede `NavigatorObserver.didPop`.
+Managed navigation correlates both callbacks with the same native
+`Route.popped` result and completes the logical Entry once. Each Navigator also
+has its own Semantics container so adaptive reparenting preserves accessibility
+geometry and business Entry/Scope identities. Hosts still use the normal
+Managed Outlet APIs; do not suppress semantics or reset the Runtime to switch
+between compact and split layouts.
+
 FlutterGen and other Builders may share one build_runner graph with CCRouter,
 including at a Pub Workspace resolution root. Narrow `--build-filter` runs or
 changed Builder options can change the outputs build_runner keeps on disk; a

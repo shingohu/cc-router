@@ -1,0 +1,4 @@
+00:00 +0: loading test/demo_component_dependency_integration_test.dart
+00:00 +0: reports missing component owners from the resolved Demo graph
+00:00 +1: Analyzer 8 Plugin consumes Analyzer 13 metadata and fixes Owner
+00:06 +2: All tests passed!

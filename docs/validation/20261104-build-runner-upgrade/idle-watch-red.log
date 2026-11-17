@@ -1,0 +1,22 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/generation_watch_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: restored non-target outputs do not keep an idle watch rebuilding
+00:20 +0 -1: restored non-target outputs do not keep an idle watch rebuilding [E]
+  Expected: <6>
+    Actual: <8>
+
+  package:matcher                                                          expect
+  packages/ccrouter_test/generator_test/generation_watch_test.dart 227:11  main.<fn>.<fn>
+  ===== asynchronous gap ===========================
+  packages/ccrouter_test/generator_test/generation_watch_test.dart 2229:5  _runWatchUntilReady
+  ===== asynchronous gap ===========================
+  packages/ccrouter_test/generator_test/generation_watch_test.dart 217:7   main.<fn>
+
+00:20 +0 -1: (tearDownAll)
+00:20 +0 -1: Some tests failed.
+
+Failing tests:
+  packages/ccrouter_test/generator_test/generation_watch_test.dart: restored non-target outputs do not keep an idle watch rebuilding
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

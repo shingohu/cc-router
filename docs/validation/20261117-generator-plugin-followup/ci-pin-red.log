@@ -1,0 +1,30 @@
+00:00 +0: loading tool/test/quality_workflow_test.dart
+00:00 +0: all Quality Flutter jobs match the repository FVM pin
+00:00 +0 -1: all Quality Flutter jobs match the repository FVM pin [E]
+  Expected: every element('3.47.9')
+    Actual: MappedIterable<RegExpMatch, String?>:[
+              '3.41.9',
+              '3.41.9',
+              '3.41.9',
+              '3.41.9',
+              '3.41.9',
+              '3.41.9'
+            ]
+     Which: has value '3.41.9' which is different.
+            Expected: 3.47.9
+              Actual: 3.41.9
+                         ^
+             Differ at offset 3 at index 0
+  CI installs Flutter directly and does not run through FVM.
+
+  package:matcher                            expect
+  tool/test/quality_workflow_test.dart 15:5  main.<fn>
+
+00:00 +0 -1: workflow-level environment uses only workflow-available values
+00:00 +1 -1: Some tests failed.
+
+Failing tests:
+  tool/test/quality_workflow_test.dart: all Quality Flutter jobs match the repository FVM pin
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

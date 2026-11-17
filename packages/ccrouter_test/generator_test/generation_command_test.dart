@@ -16,6 +16,36 @@ void main() {
   _restorePortableGenerationStatesAfterSuite();
 
   test(
+    'Host-prepared portable state also validates from local Packages',
+    () async {
+      final prepared = await _preparePortableDemo();
+      expect(
+        prepared.exitCode,
+        0,
+        reason: '${prepared.stdout}\n${prepared.stderr}',
+      );
+      for (final root in [
+        'demo',
+        'demo/modules/order',
+        'demo/modules/order_contracts',
+      ]) {
+        final published = await Process.run(Platform.resolvedExecutable, [
+          'run',
+          'ccrouter_generator:ccrouter',
+          'portable',
+          'publish',
+          root,
+        ]);
+        expect(
+          published.exitCode,
+          0,
+          reason: '$root\n${published.stdout}\n${published.stderr}',
+        );
+      }
+    },
+  );
+
+  test(
     'framework dependency indexes do not change generated business identities',
     () async {
       final index = File(

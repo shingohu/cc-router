@@ -7,6 +7,37 @@ description: Implement, migrate, or review Flutter application and component fea
 
 Use CCRouter as the application component boundary. Prefer its generated contracts and lifecycle ownership over direct navigation, global service locators, or ad hoc cross-package imports.
 
+## Generator toolchain
+
+This branch targets `build_runner 2.16.1` (upstream #5079 fix), Generator
+Analyzer `^13.3.0`, `build ^4.0.9`, `dart_style ^3.1.14`, and Dart `>=3.11.0`.
+Builder tests use matching `build_test 3.5.20`. The root and Demo use standard
+Flutter `3.47.9`; verified on Flutter 3.47.9 / Dart 3.13.7. The old OHOS `oh-3.41.9-release` pins `meta 1.17.0` and cannot
+resolve Analyzer's `meta ^1.18.3`. Do not override Flutter pins. Keep the
+isolated IDE Plugin's Analyzer unchanged and regenerate distributed Portable
+State with the consuming toolchain. Platform directories do not establish OHOS
+support. See [generation guidance](references/implementation-patterns.md#sharing-build_runner-with-other-generators)
+for watch output policy and shared Builder validation.
+
+Within one Workspace, Host-prepared Portable State must also validate from the
+component/contracts Package's `portable publish` entrypoint. Local dependency
+content identities are independent of write scope; changed tools/sources still
+require explicit preparation and never permit bypassing `toolMismatch`.
+
+On Flutter 3.47, native Page removal may precede the Navigator observer callback.
+Managed navigation preserves the actual `Route.popped` result in either order.
+Each Managed Navigator owns a Semantics container for adaptive reparenting;
+this preserves accessibility content without recreating logical Entries/Scopes.
+
+Plugin semantic-resolution triggers reuse the annotation identity table and
+include UI-only Contract/Renderer files with imported Owner constants and UI SPI
+references. These markers request current session facts; they do not establish
+framework identity. Generator Analyzer 13 and Plugin Analyzer 8.4 remain isolated;
+the maintainer Demo integration test verifies generated metadata, Owner identity,
+diagnostic source spans and Quick Fixes across these graphs. The Demo remote pin
+remains unchanged until the Plugin is pushed and a separate pin update is verified
+with doctor and an actual IDE diagnostic/Quick Fix.
+
 ## Framework naming
 
 In prose, **CCRouter**, **ccrouter**, **cc**, and **CC** are case-insensitive
@@ -61,11 +92,11 @@ coordinator, resume token or GoRouter compatibility API from an old proposal.
 
 ## Workflow
 
-Check SDK declarations and dated verification separately. Framework packages declare
-Dart `^3.10.0`; the repository Demo requires `^3.11.5`. No explicit Flutter minimum
+Check SDK declarations and dated verification separately. Runtime/Contracts declare
+Dart `^3.10.0`; Generator and the aggregator require `^3.11.0`, and the repository Demo requires `^3.11.5`. No explicit Flutter minimum
 or independent Dart 3.10 minimum-consumer certification is established. Standard
-Flutter CI is configured for `3.41.9` / Dart `3.11.5`; Demo FVM selects
-`ohos/oh-3.41.9-release` (reported Flutter `3.41.10-ohos-1.0.0` / Dart `3.11.5`).
+Flutter CI and root/Demo FVM select standard `3.47.9` / Dart `3.13.7`.
+The old OHOS SDK cannot resolve the Generator's meta requirement.
 Neither CI configuration nor historical SDK results certify the current source.
 See the bundled [first-integration SDK guidance](references/first-integration.md#1-确认版本来源和工程角色).
 

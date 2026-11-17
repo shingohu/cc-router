@@ -1,0 +1,21 @@
+  0s incremental_probe_fixture:emit on 2 inputs; lib/a.seed
+  0s incremental_probe_fixture:emit on 2 inputs: 1 skipped, 1 output
+Unhandled exception:
+Null check operator used on a null value
+#0      BuildSeries._writeBuildOutput (package:build_runner/src/build/build_series.dart:333)
+#1      BuildSeries._runBuildAndWrite (package:build_runner/src/build/build_series.dart:257)
+<asynchronous suspension>
+#2      BuildSeries.run (package:build_runner/src/build/build_series.dart:249)
+<asynchronous suspension>
+#3      BuildCommand.build (package:build_runner/src/commands/build_command.dart:62)
+<asynchronous suspension>
+#4      BuildCommand._run (package:build_runner/src/commands/build_command.dart:35)
+<asynchronous suspension>
+#5      BuildRunner._runOrThrow (package:build_runner/src/build_runner.dart:205)
+<asynchronous suspension>
+#6      BuildRunner.run (package:build_runner/src/build_runner.dart:51)
+<asynchronous suspension>
+#7      ChildProcess.run (package:build_runner/src/bootstrap/processes.dart:234)
+<asynchronous suspension>
+#8      main (file:///private/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-br-2.15.1-qz0k0b01/.dart_tool/build/entrypoint/build.dart:17)
+<asynchronous suspension>

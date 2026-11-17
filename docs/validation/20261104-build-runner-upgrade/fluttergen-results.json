@@ -1,0 +1,75 @@
+[
+  {
+    "step": "fluttergen-pub",
+    "exit": 0,
+    "command": [
+      "fvm",
+      "flutter",
+      "pub",
+      "get"
+    ]
+  },
+  {
+    "step": "fluttergen-full",
+    "exit": 0,
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "build_runner",
+      "build",
+      "--workspace"
+    ]
+  },
+  {
+    "step": "fluttergen-incremental",
+    "exit": 0,
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "build_runner",
+      "build",
+      "--workspace"
+    ]
+  },
+  {
+    "step": "fluttergen-ccrouter",
+    "exit": 0,
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "ccrouter_generator:ccrouter",
+      "generate",
+      "demo",
+      "--no-cache"
+    ]
+  },
+  {
+    "step": "fluttergen-ccrouter-check",
+    "exit": 0,
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "ccrouter_generator:ccrouter",
+      "generate",
+      "demo",
+      "--no-cache",
+      "--check"
+    ]
+  },
+  {
+    "step": "fluttergen-repeat",
+    "exit": 0,
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "build_runner",
+      "build",
+      "--workspace"
+    ]
+  }
+]

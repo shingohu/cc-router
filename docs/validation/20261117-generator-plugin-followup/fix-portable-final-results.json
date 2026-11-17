@@ -1,0 +1,172 @@
+[
+  {
+    "step": "prepare",
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "--verbosity=error",
+      "ccrouter_generator:ccrouter",
+      "portable",
+      "prepare",
+      "demo"
+    ],
+    "exit": 0
+  },
+  {
+    "step": "publish-demo",
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "--verbosity=error",
+      "ccrouter_generator:ccrouter",
+      "portable",
+      "publish",
+      "demo"
+    ],
+    "exit": 0
+  },
+  {
+    "step": "publish-demo-modules-kv_storage",
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "--verbosity=error",
+      "ccrouter_generator:ccrouter",
+      "portable",
+      "publish",
+      "demo/modules/kv_storage"
+    ],
+    "exit": 0
+  },
+  {
+    "step": "publish-demo-modules-navigation_lab",
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "--verbosity=error",
+      "ccrouter_generator:ccrouter",
+      "portable",
+      "publish",
+      "demo/modules/navigation_lab"
+    ],
+    "exit": 0
+  },
+  {
+    "step": "publish-demo-modules-network",
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "--verbosity=error",
+      "ccrouter_generator:ccrouter",
+      "portable",
+      "publish",
+      "demo/modules/network"
+    ],
+    "exit": 0
+  },
+  {
+    "step": "publish-demo-modules-order",
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "--verbosity=error",
+      "ccrouter_generator:ccrouter",
+      "portable",
+      "publish",
+      "demo/modules/order"
+    ],
+    "exit": 0
+  },
+  {
+    "step": "publish-demo-modules-order_contracts",
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "--verbosity=error",
+      "ccrouter_generator:ccrouter",
+      "portable",
+      "publish",
+      "demo/modules/order_contracts"
+    ],
+    "exit": 0
+  },
+  {
+    "step": "publish-demo-modules-payment",
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "--verbosity=error",
+      "ccrouter_generator:ccrouter",
+      "portable",
+      "publish",
+      "demo/modules/payment"
+    ],
+    "exit": 0
+  },
+  {
+    "step": "publish-demo-modules-web",
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "--verbosity=error",
+      "ccrouter_generator:ccrouter",
+      "portable",
+      "publish",
+      "demo/modules/web"
+    ],
+    "exit": 0
+  },
+  {
+    "step": "publish-demo-modules-web_contracts",
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "--verbosity=error",
+      "ccrouter_generator:ccrouter",
+      "portable",
+      "publish",
+      "demo/modules/web_contracts"
+    ],
+    "exit": 0
+  },
+  {
+    "step": "host-check",
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "--verbosity=error",
+      "ccrouter_generator:ccrouter",
+      "generate",
+      "demo",
+      "--no-cache",
+      "--check"
+    ],
+    "exit": 0
+  },
+  {
+    "step": "example-check",
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "--verbosity=error",
+      "ccrouter_generator:ccrouter",
+      "generate",
+      "demo/modules/order/example",
+      "--no-cache",
+      "--check"
+    ],
+    "exit": 0
+  }
+]

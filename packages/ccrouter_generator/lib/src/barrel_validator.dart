@@ -432,9 +432,7 @@ final class _PackageBarrelExportIndex {
               ClassDeclaration d => [d.namePart.typeName.lexeme],
               EnumDeclaration d => [d.namePart.typeName.lexeme],
               MixinDeclaration d => [d.name.lexeme],
-              ExtensionTypeDeclaration d => [
-                d.primaryConstructor.typeName.lexeme,
-              ],
+              ExtensionTypeDeclaration d => [d.namePart.typeName.lexeme],
               ClassTypeAlias d => [d.name.lexeme],
               ExtensionDeclaration d => [if (d.name != null) d.name!.lexeme],
               FunctionDeclaration d => [d.name.lexeme],

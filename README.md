@@ -48,6 +48,24 @@ README/CHANGELOG、Hosted 分发和干净消费者回归等阻塞项见
 [`docs/CCRouter-release-readiness.md`](docs/CCRouter-release-readiness.md)。不要仅根据某份设计
 文档中的“已完成”将当前 commit 当作 `1.0.0` 稳定发布。
 
+本分支的生成工具链升级至 `build_runner 2.16.1`，修复上游 [#5079](https://github.com/dart-lang/build/issues/5079)
+所涉“新增源码与已提交生成物一起合入”的增量构建问题。Generator 需要 Dart `>=3.11.0`、
+Analyzer `^13.3.0`、`build ^4.0.9` 和 `dart_style ^3.1.14`；Host 应使用 `build_runner 2.16.1`，
+Builder 测试配套 `build_test 3.5.20`。分支目标为官方标准 Flutter `3.47.9`；已在官方 `3.47.9 / Dart 3.13.7` 上完成门禁。
+旧 OHOS `oh-3.41.9-release` 虽包含 Dart 3.11.5，但固定 `meta 1.17.0`，与 Analyzer 的
+`meta ^1.18.3` 冲突，本分支不能用该 SDK 构建。Runtime/Contracts 的 Dart 约束和独立
+Analyzer Plugin 的版本保持原边界；不使用 overrides 强压 SDK pin。
+升级后重新生成并分发 Portable State。验证范围见[本轮记录](docs/validation/build_runner_upgrade_20261104.md)。
+同一 Workspace 内，Host prepare 的状态也可从对应组件或 contracts Package 执行
+`portable publish` 验证；只读写入范围不改变本地依赖的内容身份，工具/源码变化仍须重新 prepare。
+
+CCRouter watch 显式使用 `--keep-modified-outputs` 保持原输出策略，避免恢复非目标 Package
+产物后反复触发 build_runner 修复；one-shot 仍使用新版默认修复行为。它不代替源码校验、
+产物保护或最终 `--no-cache --check`。Profile 的 phase/totals 可包含 `fixedOutputs`，计入
+`executedInputs`，表示修复了外部改动的生成物；该计数仅用于诊断。
+Flutter 3.47 下两个原生 Pop 回调无论先后都以 `Route.popped` 的真实结果为准；每个 Managed
+Navigator 使用独立的 Semantics container，支持自适应重挂载并保留可访问性内容与 Entry/Scope 身份。
+
 ## 为什么使用 CCRouter
 
 - **组件边界明确**：组件只通过 Manifest、Route Contract、Service Contract、Command 和 Event 协作，不依赖其他组件页面实现。
@@ -184,6 +202,12 @@ Owner 按声明 Library 和符号区分；Renderer 必须声明在 Library 顶�
 正式分发、真实平台矩阵和长期内存/性能仍待验证，公开 API 尚未最终冻结。
 
 ### IDE / Analysis Server 诊断
+
+本分支 Plugin 源码的语义解析触发与注解身份表保持同步，UI Contract/Renderer 文件即使只引用
+外部 Owner 常量，也会请求当前 Analysis Server session 的类型信息；拼写本身不构成框架身份。
+Generator Analyzer 13 与独立 Plugin Analyzer 8.4 通过 metadata 交换事实，新增回归核对真实生成
+索引、Owner、诊断位置和 Quick Fix。Demo 仍使用原远端 Plugin pin；本地源码测试通过不代表
+IDE 已加载此修复，发布需遵循先推送 Plugin、再单独更新 pin 的流程。
 
 生成的 Route API 已经提供类型补全和自动导包。需要编辑时实时检查跨组件内部生成物引用、
 同源 Route/Service/Command/Event/InitTask 生成物缺失和 required InitTask 声明时，可显式加入 `ccrouter_analyzer_plugin` 并在
@@ -412,15 +436,15 @@ if (activation.status == CCRouteActivationStatus.activated) {
 
 ## 环境要求
 
-- 框架 Package 声明 Dart SDK `^3.10.0`（`>=3.10.0 <4.0.0`）；Demo 声明 `^3.11.5`，
+- Runtime/Contracts 声明 Dart SDK `^3.10.0`，Generator 与聚合根声明 `^3.11.0`；Demo 声明 `^3.11.5`，
   因此完整 Workspace / Demo 需要 Dart `>=3.11.5 <4.0.0`。
 - 当前未声明独立的 `environment.flutter` 最低版本；Dart 下限不等于已验证的 Flutter 下限。
   Dart 3.10 最低版本的独立消费者尚未完成认证。
-- 标准 Flutter 的 CI 配置固定为 `3.41.9` / Dart `3.11.5`；这表示 CI 基线配置，
+- 标准 Flutter 的 CI 配置固定为 `3.47.9` / Dart `3.13.7`；这表示 CI 基线配置，
   不表示当前提交的 CI 已通过。
-- Demo 的 FVM 标识为 `ohos/oh-3.41.9-release`，实际 SDK 报告为
-  Flutter `3.41.10-ohos-1.0.0` / Dart `3.11.5`；FVM 标识与 Fork 版本号不同。
-  根目录未提交 `.fvmrc`，运行前用 `fvm flutter --version --machine` 确认实际 SDK。
+- 根与 Demo 的 `.fvmrc` 统一固定官方 Flutter `3.47.9` / Dart `3.13.7`，
+  运行前用 `fvm flutter --version --machine` 确认实际 SDK。旧 OHOS SDK 因 meta pin
+  与新 Generator 不兼容；历史 Fork 版本与记录不代表本分支的 OHOS 构建已通过。
 
 已有多 SDK 测试记录如下，均为 **2026-09-22 的历史快照，不代表当前源码已重新验证**：
 

@@ -21,6 +21,19 @@ Together they form the consumer Skill bundle; required references do not depend
 on a framework checkout. Use the consuming project's installed CLI help, and
 report version differences instead of silently upgrading its dependencies.
 
+## Generator toolchain
+
+This branch uses `build_runner 2.16.1`, Generator Analyzer `^13.3.0`,
+`build ^4.0.9`, and `dart_style ^3.1.14` on Dart `>=3.11.0`. Builder tests
+must use matching `build_test 3.5.20`. Root and Demo FVM select standard Flutter
+`3.47.9`; verified on Flutter 3.47.9 / Dart 3.13.7. The older OHOS SDK pins incompatible `meta 1.17.0`. Do not force
+Analyzer through SDK pins. Watch passes public `--keep-modified-outputs` to
+retain the previous output policy and prevent non-target artifact restoration
+from retriggering endless builds. One-shot generation keeps the upstream
+default repair policy. Profile schema 2 may add `fixedOutputs` to phases/totals;
+it counts actual repair executions and participates in `executedInputs`.
+The final stopped-watch `--no-cache --check` remains authoritative.
+
 ## First Decide the Operation
 
 For the first consumer Host, follow the bundled

@@ -2,6 +2,11 @@
 
 ## 1. 状态与目标
 
+2026-11-04 因上游 build_runner #5079 启动最小工具链升级，目标为 build_runner 2.16.1、
+Analyzer 13.3、build 4、dart_style 3.1.14，目标为官方标准 Flutter 3.47.9；已在 3.47.9 / Dart 3.13.7 上完成验证。旧 OHOS SDK
+因 meta pin 无法解析；本轮不宣称 OHOS 平台升级完成。当前执行证据与未覆盖项见
+[升级记录](validation/build_runner_upgrade_20261104.md)。下文 2026-10 基线及阶段计划保留历史语境。
+
 - 基线盘点日期：2026-10-04；2026-10-24 按 Managed-only 架构修订后续步骤。
 - 状态：升级候选计划；本次文档修订不选择目标 SDK、不升级依赖，也不证明旧版本矩阵在当前源码通过。
 - 范围：框架适配、生成正确性、IDE 插件、CLI/Hook、DevTools、平台验证及文档同步。

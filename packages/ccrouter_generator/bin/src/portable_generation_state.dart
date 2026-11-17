@@ -219,7 +219,9 @@ final class _CCPortableGenerationContext {
     final authored = <String, String>{};
     for (final package in workspace.packages.values) {
       final source = '${resolution.lock[package.name]?['source'] ?? ''}';
+      // Package-local write scope must not change local dependency identities.
       if (!package.writable &&
+          !workspace.isLocalWorkspaceMember(package) &&
           !package.requiresPackageIndex &&
           source != 'path') {
         continue;

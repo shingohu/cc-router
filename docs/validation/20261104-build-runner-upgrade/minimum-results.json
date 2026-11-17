@@ -1,0 +1,18 @@
+[
+  {
+    "step": "minimum-pub",
+    "exit": 0
+  },
+  {
+    "step": "minimum-generate",
+    "exit": 0
+  },
+  {
+    "step": "minimum-check",
+    "exit": 0
+  },
+  {
+    "step": "minimum-analyze",
+    "exit": 0
+  }
+]

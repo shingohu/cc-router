@@ -1,0 +1,147 @@
+{
+  "sdk": "Flutter 3.47.9 / Dart 3.13.7",
+  "portableRegressionTests": 54,
+  "portableRegressionExit": 0,
+  "sourceSha256": {
+    "packages/ccrouter_core/lib/src/navigation.dart": "9cdb22c10a56627e2880cd698cb7de51aa8155b39eae4e8e1b2ef9b63f1d96fb",
+    "packages/ccrouter_generator/bin/src/portable_generation_state.dart": "91dfcc3634d59b9cfd012b7d3958c0ddcc1e476a278381dbf946457a18e5d2d2",
+    "packages/ccrouter_test/generator_test/generation_command_test.dart": "02a1e7ac663f3b35d79866b6a8875efa5bdf4562e4e7ee6cf9495760ab9b3e7e"
+  },
+  "states": {
+    "demo/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json": {
+      "sha256": "b3a57edfc83b59fcab2360583f77d75bfb379f2180f32ba9ce0b31e7dca5a30d",
+      "schemaVersion": 1,
+      "generatorVersion": "0.1.5",
+      "package": {
+        "name": "ccrouter_demo",
+        "version": "0.1.0+1"
+      },
+      "toolFingerprint": "493510bf744e3fea11308cd4bfedff721579b5a66edb570a51f880fbb22afda1",
+      "authoredInputFingerprint": "9b82d3fed3bce5e851bad79298ea53403c44f43a3577ab081f910277d925d82e",
+      "resolutionFingerprint": "2bc41dfca541620df153d954f2393c5e0e54ca91fcdc0e0c4ad393527b70f577",
+      "metadataFingerprint": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "managedOutputFingerprint": "098de5c4be62d7db38a8a491a9ce8056cd53a287aa92d24164490bcfff6b080f",
+      "contentFingerprint": "db216c9bf6adaadce1377dd81ae028fb90cd40d725f1b4b80ff8fc224524394d"
+    },
+    "demo/modules/kv_storage/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json": {
+      "sha256": "2f9d987ccc3dbac9714a0b3ce9072c25f995909ebc9322417fb3821094c40f1d",
+      "schemaVersion": 1,
+      "generatorVersion": "0.1.5",
+      "package": {
+        "name": "demo_kv_storage",
+        "version": "0.1.0"
+      },
+      "toolFingerprint": "493510bf744e3fea11308cd4bfedff721579b5a66edb570a51f880fbb22afda1",
+      "authoredInputFingerprint": "b98c6fa87015c8591fd87e6d5ac660d82efc770ac2c9cd9d14c87aa5877b94db",
+      "resolutionFingerprint": "afb3151116268a5c7a198d665337093a354eb513d3ea098d93b89ee43ecc52e4",
+      "metadataFingerprint": "3cffffa83bd3c2906bdb394973fcb2fea19720cfcfb0a15757ae57daee64822f",
+      "managedOutputFingerprint": "e6a2cc0c8f0dc4e5a47ef81897e3002f688bb6b567c20861e34a2c11b50f3618",
+      "contentFingerprint": "22b097048740d0b01804ecf1bc4942213fd2ee5d1c75993a10e73e14611366c2"
+    },
+    "demo/modules/navigation_lab/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json": {
+      "sha256": "3fbe095584ca4a023b660a8086098a2541a5eb88d652faf574e1da8e1c9258d7",
+      "schemaVersion": 1,
+      "generatorVersion": "0.1.5",
+      "package": {
+        "name": "demo_navigation_lab",
+        "version": "0.1.0"
+      },
+      "toolFingerprint": "493510bf744e3fea11308cd4bfedff721579b5a66edb570a51f880fbb22afda1",
+      "authoredInputFingerprint": "25e13461afccaa645fd74fef0f28ae1bb7d5cce708f8fcecb9a0babe1fd70dd3",
+      "resolutionFingerprint": "b640af66f6830fa29e16ad1042fb941cba256e2c3a3a40efd69785640dcb7e19",
+      "metadataFingerprint": "1282a08005ff7c5a41550a7f89f28355e4759f7cfa216a1f1cffd8d0c317f680",
+      "managedOutputFingerprint": "733749ce2be2b4b6566f86904a59ec1643f21865b1c33cd62b032ee6c764bd20",
+      "contentFingerprint": "1fc919dd15f8665c4ddfa3f031e9c59781cebe0126f5926a14b70dc38dd19a5d"
+    },
+    "demo/modules/network/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json": {
+      "sha256": "19be7008283da98a26671cbcad37b52e2247544b5adeb459443cde95e1fd5327",
+      "schemaVersion": 1,
+      "generatorVersion": "0.1.5",
+      "package": {
+        "name": "demo_network",
+        "version": "0.1.0"
+      },
+      "toolFingerprint": "493510bf744e3fea11308cd4bfedff721579b5a66edb570a51f880fbb22afda1",
+      "authoredInputFingerprint": "0348b90c5adabc22e7f1a8fdc22cdd800ef58ff9c9edd07e2a3f6e63233cd382",
+      "resolutionFingerprint": "0e39614bbf41418233c6340053fdc2249a8f9447d935ad02ee9c6d32537b46c2",
+      "metadataFingerprint": "9bc2bf95cf57a83500f4f912320e7719f5d814d8f38d03031bdfd13e333b06e7",
+      "managedOutputFingerprint": "9a3578b3a0ca42188092f6e9910d7239d5cf2b667f57c4b9bd49646615c4a360",
+      "contentFingerprint": "fa33791ede4686f5785820569edaae62dbdc2cc4ae5b2c9aaa0d3e92456ccdb3"
+    },
+    "demo/modules/order/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json": {
+      "sha256": "8b90a63a8b24c09166b3d11f802e8fa4a047baaab13b5aeb554a6560452e0c82",
+      "schemaVersion": 1,
+      "generatorVersion": "0.1.5",
+      "package": {
+        "name": "demo_order",
+        "version": "0.1.0"
+      },
+      "toolFingerprint": "493510bf744e3fea11308cd4bfedff721579b5a66edb570a51f880fbb22afda1",
+      "authoredInputFingerprint": "1ff6125b7780e64d37b05bf8610fc9ab671e818eb9858904a72c905b7ce29665",
+      "resolutionFingerprint": "1c3d89a8fe143e7eeb579a7a3565e42e2a4a8a938c7e640b1ed603a0751d0f68",
+      "metadataFingerprint": "e93d9d236372d8513708913c404a8ce57bb87ac80b99205d6aed58940fa342e9",
+      "managedOutputFingerprint": "5a9b70199840e1b8533a71b07c0be2adeb5f5984ed10690e0ae33ece65428928",
+      "contentFingerprint": "187f4b41364ffc70c5b0aebfc7861db9a1b4c5be548e8571dfcd13fa9c24c611"
+    },
+    "demo/modules/order_contracts/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json": {
+      "sha256": "dbe128bbedcc97e6805fc24fa27c94445af22dfb55de4bd94c267b4dc86d479c",
+      "schemaVersion": 1,
+      "generatorVersion": "0.1.5",
+      "package": {
+        "name": "demo_order_contracts",
+        "version": "0.1.0"
+      },
+      "toolFingerprint": "493510bf744e3fea11308cd4bfedff721579b5a66edb570a51f880fbb22afda1",
+      "authoredInputFingerprint": "072a71a0e4ae623f085d0345176917a2b9979ba50d14c3542dd60ccd67da0573",
+      "resolutionFingerprint": "e31cb1bf35687df40105a3496e91c6a95d0bca7bb4fdad7433bfd0d8a4d886a4",
+      "metadataFingerprint": "98b1f80e89ff13dbe00cfc35568e5e7b5e7abb9dabb5309710b27f3e9dce2e0e",
+      "managedOutputFingerprint": "306132a6e3c609e726a852ca280223b7a106581714722eed0275da937cea7477",
+      "contentFingerprint": "9033994e157b01eb85243c5932bfcf38b3a42f643b7b58fbe80d444bac7a5ac5"
+    },
+    "demo/modules/payment/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json": {
+      "sha256": "92447a031ad93e6afb7f5809e7b02d9823ca74161dc3389853b3309ed8562a65",
+      "schemaVersion": 1,
+      "generatorVersion": "0.1.5",
+      "package": {
+        "name": "demo_payment",
+        "version": "0.1.0"
+      },
+      "toolFingerprint": "493510bf744e3fea11308cd4bfedff721579b5a66edb570a51f880fbb22afda1",
+      "authoredInputFingerprint": "bee437a6d61d62199eda8610b43650f13fe13104417f33e658cdfbe31e16180f",
+      "resolutionFingerprint": "4d307dc747eb0a9e9a59ac3c53e843c9c33f709e0557257f9d2a232ee3994f8f",
+      "metadataFingerprint": "364c152b1d1e21755b4fe457dfae7ccaae55ccfd010ea845b7fc2e5ea654351d",
+      "managedOutputFingerprint": "8ff7114ea73b87c78abe5f4ed103af6c25cc144a34764eca0c1e6defe2556071",
+      "contentFingerprint": "f8016cb27aab451adbdc64c0797d5a97245c90d4e6238c0eb523b2958ef54955"
+    },
+    "demo/modules/web/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json": {
+      "sha256": "d8e68d4febfbc0466258067142422a9dfcea9613d28efbf7760d5d15332d8118",
+      "schemaVersion": 1,
+      "generatorVersion": "0.1.5",
+      "package": {
+        "name": "demo_web",
+        "version": "0.1.0"
+      },
+      "toolFingerprint": "493510bf744e3fea11308cd4bfedff721579b5a66edb570a51f880fbb22afda1",
+      "authoredInputFingerprint": "060939aa10ed08ed018398f1314200bd2d125d0b50a9f85cd1c5cc41a3402699",
+      "resolutionFingerprint": "f463c0041e1e18fdca01505fe5241b366a900510f09633e862aeafd0b67fd5bf",
+      "metadataFingerprint": "e2eb0c6487502327dce750690b8d87e672859807b6fa5aae06a9772042ff9553",
+      "managedOutputFingerprint": "541868f60add9686519c6375f4e77dcc169e37a1134db112e3b9d935b1c8053c",
+      "contentFingerprint": "839de8ceacafbba267efcd90fe95b34b579163da05aa057decdf45c595a693b9"
+    },
+    "demo/modules/web_contracts/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json": {
+      "sha256": "8e377bfd97bf2d8c55864aafd318460f1cf3b2ad241259eaceccb23d0447982e",
+      "schemaVersion": 1,
+      "generatorVersion": "0.1.5",
+      "package": {
+        "name": "demo_web_contracts",
+        "version": "0.1.0"
+      },
+      "toolFingerprint": "493510bf744e3fea11308cd4bfedff721579b5a66edb570a51f880fbb22afda1",
+      "authoredInputFingerprint": "ca37eb6ee7e82c5bee220f650a6cd8e3c007dee5d490dc8115fb15b3ba428246",
+      "resolutionFingerprint": "cc867377699d103577b3127c4b3a04be9e1835af74d1e4001388ce32152c6727",
+      "metadataFingerprint": "392add810244b4384893c5ab15aef25fc202548c520595834c0dbc816cf08bd7",
+      "managedOutputFingerprint": "fafea3fc00aef6f3fe3f16c4f32af588f52fb80f79ab52c26912eac5543a35b3",
+      "contentFingerprint": "e3111d4901e354fffec9de18c64d176e409f94391adbd55afbf9d1537e366395"
+    }
+  }
+}

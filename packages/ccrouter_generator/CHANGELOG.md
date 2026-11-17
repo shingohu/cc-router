@@ -2,6 +2,18 @@
 
 ## 0.1.0 - Unreleased
 
+- Keep local Workspace dependency fingerprints independent of write ownership
+  when preparing or checking Portable State from Host and Package entrypoints.
+
+- Upgrade the Generator toolchain for the build_runner 2.16.1 upstream #5079
+  incremental input/output classification fix. Require Dart 3.11, Analyzer 13.3,
+  build 4.0.9, and dart_style 3.1.14; pair Builder tests with build_test 3.5.20.
+  Flutter SDKs pinning meta 1.17.0 cannot resolve this combination.
+- Migrate named arguments and ArgumentList types to Analyzer 13, accept both
+  Duration constant representations, and keep watch's previous output policy
+  through public --keep-modified-outputs to avoid non-target restore loops.
+  Include the upstream fixed counter in optional phase profiling.
+
 - Wire optional component examples to generated Host assembly, Managed app and
   an authored startup Route. Declare proven build tools and SDK test dependencies;
   prepare standalone parent Portable State before read-only example consumption.

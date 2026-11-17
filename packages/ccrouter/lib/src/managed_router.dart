@@ -1793,11 +1793,21 @@ final class CCManagedNavigationAdapter
     );
   }
 
-  /// Handles a Page-driven Pop or gesture after Flutter accepted it.
+  /// Handles accepted Page removal in either Flutter observer callback order.
+  ///
+  /// A live Route supplies its native result and outgoing render lifetime;
+  /// callbacks without a rendered Route use the already recorded removal.
   void _didRemovePage(Page<Object?> page) {
     if (page is! _CCManagedPage && page is! _CCManagedGuardedPage) return;
     final entry = _entryForPageKey(page.key);
     if (entry == null || _externalPops.contains(entry.backendEntryId)) return;
+    // Flutter may call onDidRemovePage before NavigatorObserver.didPop. Route
+    // completion remains the authority for the native result in either order.
+    final route = _renderedRoutes[entry.backendEntryId]?.target;
+    if (route != null) {
+      _didPopRoute(route);
+      return;
+    }
     _removeEntry(
       entry,
       result: _pendingRemovalResults.remove(entry.backendEntryId),
@@ -1875,7 +1885,7 @@ final class CCManagedNavigationAdapter
       return;
     }
     final entry = _entryForRoute(route);
-    if (entry == null) return;
+    if (entry == null || _externalPops.contains(entry.backendEntryId)) return;
     // Native Pop results arrive in a microtask, after observer unmount. Capture
     // the exit signal now so outgoing rebuilds retain their exact Scope.
     _retainRouteExit(entry);
@@ -2859,21 +2869,27 @@ final class _CCManagedNavigatorRendererState
   }
 
   @override
-  /// Builds Pages from the current logical revision with this generation.
-  Widget build(BuildContext context) => Navigator(
-    key: widget.adapter._host.navigatorKeyFor(widget.outlet),
-    pages:
-        widget.frozenPages ??
-        (widget.outlet == 'root'
-            ? widget.adapter._buildRootPages()
-            : widget.adapter._buildOutletPages(
-                widget.outlet,
-                baseBuilder: widget.baseBuilder,
-              )),
-    observers: widget.outlet == 'root'
-        ? widget.adapter._rootObservers
-        : [_observer],
-    onDidRemovePage: widget.adapter._didRemovePage,
+  /// Builds Pages with one semantic boundary per Navigator generation.
+  ///
+  /// The boundary keeps adaptive reparenting from reusing semantic geometry
+  /// merged into the previous parent, without replacing business Entries.
+  Widget build(BuildContext context) => Semantics(
+    container: true,
+    child: Navigator(
+      key: widget.adapter._host.navigatorKeyFor(widget.outlet),
+      pages:
+          widget.frozenPages ??
+          (widget.outlet == 'root'
+              ? widget.adapter._buildRootPages()
+              : widget.adapter._buildOutletPages(
+                  widget.outlet,
+                  baseBuilder: widget.baseBuilder,
+                )),
+      observers: widget.outlet == 'root'
+          ? widget.adapter._rootObservers
+          : [_observer],
+      onDidRemovePage: widget.adapter._didRemovePage,
+    ),
   );
 }
 

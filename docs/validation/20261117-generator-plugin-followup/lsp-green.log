@@ -1,0 +1,3 @@
+00:00 +0: loading test/analysis_server_integration_test.dart
+00:00 +0: real LSP resolves UI-only annotations with an imported Owner constant
+00:06 +1: All tests passed!

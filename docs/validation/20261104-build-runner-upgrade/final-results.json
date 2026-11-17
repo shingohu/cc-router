@@ -1,0 +1,175 @@
+[
+  {
+    "step": "final-pub",
+    "exit": 0,
+    "command": [
+      "fvm",
+      "flutter",
+      "pub",
+      "get"
+    ]
+  },
+  {
+    "step": "final-portable",
+    "exit": 0,
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "--verbosity=error",
+      "ccrouter_generator:ccrouter",
+      "portable",
+      "prepare",
+      "demo"
+    ]
+  },
+  {
+    "step": "final-example-generate",
+    "exit": 0,
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "--verbosity=error",
+      "ccrouter_generator:ccrouter",
+      "generate",
+      "demo/modules/order/example",
+      "--no-cache"
+    ]
+  },
+  {
+    "step": "final-analyze",
+    "exit": 2,
+    "command": [
+      "fvm",
+      "dart",
+      "analyze"
+    ]
+  },
+  {
+    "step": "final-generator-analyze",
+    "exit": 0,
+    "command": [
+      "fvm",
+      "dart",
+      "analyze",
+      "packages/ccrouter_generator"
+    ]
+  },
+  {
+    "step": "final-framework",
+    "exit": 0,
+    "command": [
+      "fvm",
+      "flutter",
+      "test",
+      "--no-pub",
+      "packages/ccrouter_test/test"
+    ]
+  },
+  {
+    "step": "final-demo-tests",
+    "exit": 0,
+    "command": [
+      "fvm",
+      "flutter",
+      "test",
+      "--no-pub",
+      "demo/test"
+    ]
+  },
+  {
+    "step": "final-watch-startup",
+    "exit": 0,
+    "command": [
+      "fvm",
+      "dart",
+      "test",
+      "--concurrency=1",
+      "packages/ccrouter_test/generator_test/generation_watch_test.dart",
+      "--name",
+      "initial snapshot failure|restored non-target outputs"
+    ]
+  },
+  {
+    "step": "final-scaffold",
+    "exit": 0,
+    "command": [
+      "fvm",
+      "dart",
+      "test",
+      "--concurrency=1",
+      "packages/ccrouter_test/generator_test/managed_scaffold_integration_test.dart"
+    ]
+  },
+  {
+    "step": "final-rollback",
+    "exit": 0,
+    "command": [
+      "fvm",
+      "dart",
+      "test",
+      "--concurrency=1",
+      "packages/ccrouter_test/generator_test/generation_atomicity_test.dart",
+      "packages/ccrouter_test/generator_test/custom_output_check_test.dart",
+      "packages/ccrouter_test/generator_test/build_runner_phase_report_test.dart"
+    ]
+  },
+  {
+    "step": "final-isolation",
+    "exit": 0,
+    "command": [
+      "fvm",
+      "dart",
+      "test",
+      "--concurrency=1",
+      "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "--plain-name",
+      "unified generation checks workspace outputs and restores stale probes"
+    ]
+  },
+  {
+    "step": "final-cached-check",
+    "exit": 0,
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "--verbosity=error",
+      "ccrouter_generator:ccrouter",
+      "generate",
+      "demo",
+      "--check"
+    ]
+  },
+  {
+    "step": "final-reference-check",
+    "exit": 0,
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "--verbosity=error",
+      "ccrouter_generator:ccrouter",
+      "generate",
+      "demo",
+      "--no-cache",
+      "--check"
+    ]
+  },
+  {
+    "step": "final-example-check",
+    "exit": 0,
+    "command": [
+      "fvm",
+      "dart",
+      "run",
+      "--verbosity=error",
+      "ccrouter_generator:ccrouter",
+      "generate",
+      "demo/modules/order/example",
+      "--no-cache",
+      "--check"
+    ]
+  }
+]

@@ -4088,9 +4088,15 @@ final class _GeneratedArtifactsSnapshot {
 
   /// Adds only existing regular files; a directory occupying a target is not
   /// removed or converted, and any write failure restores earlier file writes.
-  Future<void> _addExplicitFiles(Map<String, List<int>> target) async {
+  Future<void> _addExplicitFiles(
+    Map<String, List<int>> target, {
+    String? inaccessiblePath,
+  }) async {
     for (final relative in explicitPaths) {
       final file = File(_absolutePath(root, relative));
+      if (inaccessiblePath != null && path.equals(file.path, inaccessiblePath)) {
+        continue;
+      }
       if (await file.exists()) target[relative] = await file.readAsBytes();
     }
   }
@@ -4179,17 +4185,31 @@ final class _GeneratedArtifactsSnapshot {
   }
 
   /// Restores the guarded output set so `--check` remains read-only.
-  Future<void> restore() async {
+  ///
+  /// A failed watch may name its inaccessible file to restore all other outputs
+  /// after stopping the child. The original read failure stays terminal; the
+  /// unreadable file is preserved and never interpreted as a successful check.
+  Future<void> restore({String? inaccessiblePath}) async {
+    bool included(String relative) {
+      final absolute = _absolutePath(root, relative);
+      return (inaccessiblePath == null ||
+              !path.equals(absolute, inaccessiblePath)) &&
+          !excludedRoots.any(
+            (excluded) => _packageRootOwnsPath(excluded, absolute),
+          );
+    }
     final current = await _readManagedGeneratedFiles(
       root,
+      include: included,
       stopAtNestedPackages: stopAtNestedPackages,
     );
-    await _addExplicitFiles(current);
+    await _addExplicitFiles(current, inaccessiblePath: inaccessiblePath);
     _removeExcluded(current);
     for (final path in current.keys.where((path) => !files.containsKey(path))) {
       await File(_absolutePath(root, path)).delete();
     }
     for (final entry in files.entries) {
+      if (!included(entry.key)) continue;
       final currentBytes = current[entry.key];
       if (currentBytes != null && _bytesEqual(entry.value, currentBytes)) {
         continue;

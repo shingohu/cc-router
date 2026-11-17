@@ -1,0 +1,12 @@
+{
+  "flutter": "3.47.9",
+  "dart": "3.13.7",
+  "frameworkRevision": "c197ca5199e9ee5661e865596c9c07294dfab51c",
+  "engineRevision": "89c39edfdfae2949f6806e4a315c0c08522238b7",
+  "generatorFull": "725 passed, 1 skipped, 0 failed",
+  "framework": "1650 passed",
+  "demo": "117 passed",
+  "plugin": "212 passed, analyze passed after isolated pub get",
+  "stockA2B": "2.15.1 incremental 255; 2.16.1 incremental 0",
+  "checks": "cached demo, no-cache demo, no-cache example all passed"
+}

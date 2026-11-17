@@ -66,6 +66,8 @@ void main() {
   test(
     'initial snapshot failure stops the child before releasing ownership',
     () async {
+      await _prepareProtectedPackageFixture();
+      final before = await _managedArtifacts();
       final target = File(
         path.join(
           Directory.current.path,
@@ -150,6 +152,7 @@ void main() {
           await _stopFixtureProcess(childPid);
         }
       }
+      expect(await _managedArtifacts(), before);
       final retry = await _run(['generate', 'demo', '--check']);
       expect(retry.exitCode, 0, reason: '${retry.stdout}\n${retry.stderr}');
     },
@@ -201,6 +204,34 @@ void main() {
       expect(profiledEvents.last['profile'], isA<Map>());
     },
     timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  test(
+    'restored non-target outputs do not keep an idle watch rebuilding',
+    () async {
+      await _prepareProtectedPackageFixture();
+      final before = await _managedArtifacts();
+      var completedBuilds = 0;
+      await _runWatchUntilReady(
+        onEvent: (event) {
+          if (event['type'] == 'buildSucceeded') completedBuilds += 1;
+        },
+        onReady: () async {
+          // Allow a bounded follow-up for initial publication, then require
+          // quiescence while protected Package outputs remain on disk.
+          await Future<void>.delayed(const Duration(seconds: 3));
+          final settledBuilds = completedBuilds;
+          await Future<void>.delayed(const Duration(seconds: 3));
+          expect(completedBuilds, settledBuilds);
+        },
+      );
+      final after = await _managedArtifacts();
+      for (final entry in before.entries.where(
+        (entry) => path.isWithin(path.join('packages', 'ccrouter_test'), entry.key),
+      )) {
+        expect(after[entry.key], entry.value, reason: entry.key);
+      }
+    },
   );
 
   test(
@@ -2245,6 +2276,37 @@ Map<String, dynamic> _profileSpan(Map<String, dynamic> event, String name) =>
         .cast<Map>()
         .map((span) => span.cast<String, dynamic>())
         .singleWhere((span) => span['name'] == name);
+
+/// Seeds non-target Builder outputs and restores only that Package's fixtures.
+///
+/// Package-local generation also creates an index; it must not leak into later
+/// suites which verify that a Host leaves unrelated Package indexes absent.
+Future<void> _prepareProtectedPackageFixture() async {
+  final packageRoot = path.join('packages', 'ccrouter_test');
+  final original = {
+    for (final entry in (await _managedArtifacts()).entries)
+      if (path.isWithin(packageRoot, entry.key)) entry.key: entry.value,
+  };
+  addTearDown(() async {
+    final current = await _managedArtifacts();
+    for (final name in current.keys.where(
+      (name) => path.isWithin(packageRoot, name),
+    )) {
+      if (!original.containsKey(name)) await File(name).delete();
+    }
+    for (final entry in original.entries) {
+      final file = File(entry.key);
+      await file.parent.create(recursive: true);
+      await file.writeAsBytes(entry.value, flush: true);
+    }
+  });
+  final generated = await _run([
+    'generate',
+    'packages/ccrouter_test',
+    '--no-cache',
+  ]);
+  expect(generated.exitCode, 0, reason: '${generated.stderr}');
+}
 
 Future<Map<String, List<int>>> _managedArtifacts() async {
   final artifacts = <String, List<int>>{};

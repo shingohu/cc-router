@@ -77,8 +77,7 @@ abstract final class DemoNavigationLabComponentFragments {
             owner: "demo_order_component",
             id: "order.recommendations",
             version: "2.0.0",
-            fingerprint:
-                "0fd30e583936c0c3b491f660086fe5dbdd9fd1088ddb55e5c84a6bf9c81e7b45",
+            fingerprint: "0fd30e583936c0c3b491f660086fe5dbdd9fd1088ddb55e5c84a6bf9c81e7b45",
           ),
           versionRange: "^2.0.0",
         ),

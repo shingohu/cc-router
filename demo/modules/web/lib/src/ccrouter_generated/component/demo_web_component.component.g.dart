@@ -4,6 +4,7 @@
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
 import 'package:demo_web/src/demo_web_component.dart' as component_source;
+
 import '../binding/web_pages.route_binding.g.dart'
     as route_src_ccrouter_generated_binding_web_pages_route_binding_g_dart;
 

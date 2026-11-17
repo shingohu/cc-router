@@ -1,0 +1,291 @@
+{
+  "main": "ab20c1570fa153f658c5310744228930ae19b9d5",
+  "previousHead": "b07d9313ba48c2a2b7ed1378116c58d6c2e9d9f8",
+  "results": [
+    {
+      "step": "framework",
+      "command": [
+        "fvm",
+        "flutter",
+        "test",
+        "--no-pub",
+        "packages/ccrouter_test/test"
+      ],
+      "workingDirectory": ".",
+      "exit": 0
+    },
+    {
+      "step": "demo",
+      "command": [
+        "fvm",
+        "flutter",
+        "test",
+        "--no-pub",
+        "demo"
+      ],
+      "workingDirectory": ".",
+      "exit": 0
+    },
+    {
+      "step": "generator",
+      "command": [
+        "fvm",
+        "dart",
+        "test",
+        "--concurrency=1",
+        "packages/ccrouter_test/generator_test/route_generator_test.dart",
+        "packages/ccrouter_test/generator_test/service_generator_test.dart",
+        "packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart"
+      ],
+      "workingDirectory": ".",
+      "exit": 0
+    },
+    {
+      "step": "portable",
+      "command": [
+        "fvm",
+        "dart",
+        "test",
+        "--concurrency=1",
+        "packages/ccrouter_test/generator_test/generation_command_test.dart",
+        "--name",
+        "Host-prepared portable state also validates from local Packages"
+      ],
+      "workingDirectory": ".",
+      "exit": 0
+    },
+    {
+      "step": "plugin-analyze",
+      "command": [
+        "fvm",
+        "dart",
+        "analyze"
+      ],
+      "workingDirectory": "packages/ccrouter_analyzer_plugin",
+      "exit": 0
+    },
+    {
+      "step": "plugin",
+      "command": [
+        "fvm",
+        "dart",
+        "test",
+        "--concurrency=1"
+      ],
+      "workingDirectory": "packages/ccrouter_analyzer_plugin",
+      "exit": 0
+    },
+    {
+      "step": "tools",
+      "command": [
+        "fvm",
+        "dart",
+        "test",
+        "tool/test"
+      ],
+      "workingDirectory": ".",
+      "exit": 0
+    },
+    {
+      "step": "final-prepare",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "prepare",
+        "demo"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "publish-demo",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "publish-demo-modules-kv_storage",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo/modules/kv_storage"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "publish-demo-modules-navigation_lab",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo/modules/navigation_lab"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "publish-demo-modules-network",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo/modules/network"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "publish-demo-modules-order",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo/modules/order"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "publish-demo-modules-order_contracts",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo/modules/order_contracts"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "publish-demo-modules-payment",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo/modules/payment"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "publish-demo-modules-web",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo/modules/web"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "publish-demo-modules-web_contracts",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "portable",
+        "publish",
+        "demo/modules/web_contracts"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "host-check",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "generate",
+        "demo",
+        "--no-cache",
+        "--check"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "example-check",
+      "command": [
+        "fvm",
+        "dart",
+        "run",
+        "--verbosity=error",
+        "ccrouter_generator:ccrouter",
+        "generate",
+        "demo/modules/order/example",
+        "--no-cache",
+        "--check"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "pub",
+      "command": [
+        "CCROUTER_PUB_HOOK_DISABLE=1",
+        "fvm",
+        "flutter",
+        "pub",
+        "get"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "analyze",
+      "command": [
+        "fvm",
+        "dart",
+        "analyze",
+        "packages"
+      ],
+      "exit": 0
+    },
+    {
+      "step": "tool-analyze",
+      "command": [
+        "fvm",
+        "dart",
+        "analyze",
+        "tool"
+      ],
+      "exit": 0
+    }
+  ]
+}

@@ -922,6 +922,8 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
         ].any((item) => _hasInterceptors(item.routeId))) {
           adapterDispatchStarted = true;
           final entry = _createRouteEntry(request);
+          // Dispatch owns asynchronous failure normalization and observations.
+          // ignore: unawaited_return_in_try_block
           return _dispatchRequest(
             request,
             () => action(request),
@@ -968,6 +970,8 @@ extension CCRouterRuntimeNavigation on CCRouterRuntime {
               validateResult: validateResult,
             );
           case CCNavigationDefer(:final code, :final timeout):
+            // Resume/cancel owns terminal observations, outside this catch.
+            // ignore: unawaited_return_in_try_block
             return _deferNavigation(
               request,
               operation: operation,

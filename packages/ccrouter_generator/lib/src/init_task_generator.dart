@@ -332,10 +332,10 @@ final class _InitTaskReferenceVisitor extends RecursiveAstVisitor<void> {
       return;
     }
     for (final argument
-        in node.arguments?.arguments.whereType<NamedExpression>() ??
-            const <NamedExpression>[]) {
-      final name = argument.name.label.name;
-      final expression = argument.expression;
+        in node.arguments?.arguments.whereType<NamedArgument>() ??
+            const <NamedArgument>[]) {
+      final name = argument.name.lexeme;
+      final expression = argument.argumentExpression;
       if (name == 'contract' && !_isInitTaskContractReference(expression)) {
         throw InvalidGenerationSourceError(
           'CCInitTask contract must reference a top-level '
@@ -450,9 +450,12 @@ List<_InitTaskModel> _readInitTasks(LibraryReader library) {
     }
     final failurePolicy = failureIndex == 0 ? 'required' : 'optional';
     final timeoutObject = annotated.annotation.peek('timeout')?.objectValue;
-    final timeoutMicroseconds = timeoutObject
-        ?.getField('_duration')
-        ?.toIntValue();
+    // The SDK renamed Duration's backing field from `_duration` to
+    // `inMicroseconds`; accept both representations so generated metadata
+    // remains compatible across the supported Dart SDKs.
+    final timeoutMicroseconds =
+        timeoutObject?.getField('_duration')?.toIntValue() ??
+        timeoutObject?.getField('inMicroseconds')?.toIntValue();
     if (timeoutObject != null &&
         (timeoutMicroseconds == null || timeoutMicroseconds <= 0)) {
       _failInitTask('CCInitTask timeout must be positive.', element);

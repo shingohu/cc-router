@@ -2,6 +2,7 @@
 // ignore_for_file: type=lint
 
 import 'package:flutter/foundation.dart' show internal;
+
 import '../route/capability_page.route.g.dart'
     as route_src_ccrouter_generated_route_capability_page_route_g_dart;
 import '../route/detail_page.route.g.dart'

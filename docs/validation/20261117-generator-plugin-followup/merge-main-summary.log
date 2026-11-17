@@ -1,0 +1,134 @@
+Command output excerpts; full local logs are retained under the ccrouter-main-merge prefix in the temporary directory.
+
+$ fvm flutter test --no-pub packages/ccrouter_test/test
+cwd=.
+exit=0
+00:22 +1716: <worktree>/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through reset outgoing animation
+00:22 +1717: <worktree>/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through replace outgoing animation
+00:22 +1718: All tests passed!
+
+$ fvm flutter test --no-pub demo
+cwd=.
+exit=0
+00:11 +186: <worktree>/demo/test/managed_parity_regression_test.dart: Managed: shutdown during a Shell edge swipe does not double remove (variant: TargetPlatform.iOS)
+00:11 +187: <worktree>/demo/test/managed_parity_regression_test.dart: Managed: close covered Shell seed must keep context child
+00:11 +188: All tests passed!
+
+$ fvm dart test --concurrency=1 packages/ccrouter_test/generator_test/route_generator_test.dart packages/ccrouter_test/generator_test/service_generator_test.dart packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart
+cwd=.
+exit=0
+09:51 +207: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: Host validation rejects missing or foreign-owner Renderer
+09:51 +208: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: Host reports the consumer behind a missing required UI owner edge
+09:51 +209: All tests passed!
+
+$ fvm dart test --concurrency=1 packages/ccrouter_test/generator_test/generation_command_test.dart --name Host-prepared portable state also validates from local Packages
+cwd=.
+exit=0
+00:00 +0: Host-prepared portable state also validates from local Packages
+00:12 +1: (tearDownAll)
+00:12 +1: All tests passed!
+
+$ fvm dart analyze
+cwd=packages/ccrouter_analyzer_plugin
+exit=0
+Analyzing ccrouter_analyzer_plugin...
+No issues found!
+
+$ fvm dart test --concurrency=1
+cwd=packages/ccrouter_analyzer_plugin
+exit=0
+04:00 +213: test/source_analyzer_test.dart: reports Handler arity and defers unresolved imported return types
+04:00 +214: test/source_analyzer_test.dart: does not guess non-literal identifiers aliases or timeouts
+04:00 +215: All tests passed!
+
+$ fvm dart test tool/test
+cwd=.
+exit=0
+00:07 +51: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:08 +52: tool/test/skill_bundle_check_test.dart: Host, Route and generic Service examples analyze against actual APIs
+00:12 +53: All tests passed!
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable prepare demo
+cwd=.
+exit=0
+Prepared Portable Generation State for explicitly portable Packages.
+Validated 6 components and 34 routes across 11 generated Packages.
+CCRouter generation finished: elapsed=1970ms.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo
+cwd=.
+exit=0
+Portable Generation State is ready for 9 Package(s). External publishing remains a user-owned Pub/Git step.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo/modules/kv_storage
+cwd=.
+exit=0
+Portable Generation State is ready for 1 Package(s). External publishing remains a user-owned Pub/Git step.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo/modules/navigation_lab
+cwd=.
+exit=0
+Portable Generation State is ready for 1 Package(s). External publishing remains a user-owned Pub/Git step.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo/modules/network
+cwd=.
+exit=0
+Portable Generation State is ready for 1 Package(s). External publishing remains a user-owned Pub/Git step.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo/modules/order
+cwd=.
+exit=0
+Portable Generation State is ready for 1 Package(s). External publishing remains a user-owned Pub/Git step.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo/modules/order_contracts
+cwd=.
+exit=0
+Portable Generation State is ready for 1 Package(s). External publishing remains a user-owned Pub/Git step.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo/modules/payment
+cwd=.
+exit=0
+Portable Generation State is ready for 1 Package(s). External publishing remains a user-owned Pub/Git step.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo/modules/web
+cwd=.
+exit=0
+Portable Generation State is ready for 1 Package(s). External publishing remains a user-owned Pub/Git step.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter portable publish demo/modules/web_contracts
+cwd=.
+exit=0
+Portable Generation State is ready for 1 Package(s). External publishing remains a user-owned Pub/Git step.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo --no-cache --check
+cwd=.
+exit=0
+Validated 6 components and 34 routes across 11 generated Packages.
+CCRouter generated artifacts are up to date.
+CCRouter generation finished: elapsed=1961ms.
+
+$ fvm dart run --verbosity=error ccrouter_generator:ccrouter generate demo/modules/order/example --no-cache --check
+cwd=.
+exit=0
+Validated 2 components and 2 routes across 3 generated Packages.
+CCRouter generated artifacts are up to date.
+CCRouter generation finished: elapsed=3496ms.
+
+$ CCROUTER_PUB_HOOK_DISABLE=1 fvm flutter pub get
+cwd=.
+exit=0
+Got dependencies!
+41 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+
+$ fvm dart analyze packages
+cwd=.
+exit=0
+Analyzing packages...
+No issues found!
+
+$ fvm dart analyze tool
+cwd=.
+exit=0
+Analyzing tool...
+No issues found!

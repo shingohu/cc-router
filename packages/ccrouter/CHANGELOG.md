@@ -2,6 +2,11 @@
 
 ## 0.1.0 - Unreleased
 
+- Preserve native Pop results when Flutter 3.47 calls onDidRemovePage before
+  NavigatorObserver.didPop, with one completion in either callback order.
+  Give each Managed Navigator a Semantics container for adaptive reparenting
+  without recreating logical Entries/Scopes or dropping accessibility content.
+
 - Add Host-only `CCHostAssembly.extend` for additive components and route Catalog
   adaptation while preserving generated provenance and optional bindings.
 

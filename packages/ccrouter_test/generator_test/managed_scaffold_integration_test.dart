@@ -30,14 +30,14 @@ void main() {
       File(path.join(root.path, 'pubspec.yaml')).writeAsStringSync('''
 name: scaffold_invoker
 environment:
-  sdk: ^3.10.0
+  sdk: ^3.11.0
 dependencies:
   ccrouter:
     path: framework/ccrouter
 dev_dependencies:
   ccrouter_generator:
     path: framework/ccrouter_generator
-  build_runner: ^2.10.0
+  build_runner: 2.16.1
 ''');
       await _run(Directory.current, Platform.resolvedExecutable, [
         'run',
@@ -80,7 +80,10 @@ final class DetailPage extends StatelessWidget {
 ''');
       await _run(component, _flutterExecutable(), ['pub', 'get', '--offline']);
       await _generate(component, ['portable', 'prepare', '.']);
-      await _run(example, _flutterExecutable(), ['pub', 'get', '--offline']);
+      // Flutter's app template can seed an older lockfile than the component's
+      // fresh solve. Align both independent toolchains before Portable consume;
+      // a genuine toolMismatch must remain a generation failure.
+      await _run(example, _flutterExecutable(), ['pub', 'upgrade', '--offline']);
       await _generate(example, ['generate', '.']);
       final test = File(
         path.join(example.path, 'test/managed_example_test.dart'),

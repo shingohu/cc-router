@@ -22,6 +22,19 @@ abstract final class CCRouterResolvedSymbols {
     'CCUIFragmentRenderer': 'ui_fragment',
   };
 
+  /// Selects possible semantic inputs; only resolved elements prove identity.
+  ///
+  /// Component/Host, Command marker and UI SPI types also need resolution.
+  /// Unmatched or incomplete buffers retain the conservative parser fallback.
+  static bool mayNeedResolution(String source) =>
+      _annotationLibraries.keys.any(source.contains) ||
+      const [
+        'CCRouterHost',
+        'CCComponent',
+        'CCCommand',
+        'CCUI',
+      ].any(source.contains);
+
   /// Returns only a proven framework annotation identity, shared with fixes.
   /// Resolved foreign declarations always win over spelling. An unresolved
   /// buffer needs an exact public import and no visible competing namespace.

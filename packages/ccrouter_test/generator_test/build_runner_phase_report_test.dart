@@ -3,6 +3,26 @@ import 'package:test/test.dart';
 import '../../ccrouter_generator/bin/src/build_runner_phase_report.dart';
 
 void main() {
+  test('collects repaired outputs from build_runner 2.16 phases', () {
+    final collector = CCBuildRunnerPhaseCollector()
+      ..addLine(
+        '0.12s ccrouter_generator:routes on 5 inputs: '
+        '1 skipped, 1 output, 1 fixed, 1 same, 1 no-op',
+      );
+    final report = collector
+        .finish('Built with build_runner/aot in 0.20s; wrote 2 outputs.')
+        .toJson();
+    final totals = report['totals'] as Map;
+    expect(totals['phases'], 1);
+    expect(totals['executedInputs'], 4);
+    expect(totals['invalidatedInputs'], 4);
+    expect(totals['outputs'], 1);
+    expect(totals['fixedOutputs'], 1);
+    expect(totals['sameOutputs'], 1);
+    expect((report['phases'] as List).single, containsPair('fixedOutputs', 1));
+    expect(report['unparsedFinalLines'], isNull);
+  });
+
   test('collects only completed required phases', () {
     final collector = CCBuildRunnerPhaseCollector()
       ..addLine(

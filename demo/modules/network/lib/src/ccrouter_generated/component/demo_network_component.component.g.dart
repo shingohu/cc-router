@@ -5,6 +5,7 @@ import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
 import 'package:demo_network/src/demo_network_component.dart'
     as component_source;
+
 import '../service/network_service.service.g.dart'
     as route_src_ccrouter_generated_service_network_service_service_g_dart;
 

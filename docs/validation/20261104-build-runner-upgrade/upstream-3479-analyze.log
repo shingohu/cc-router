@@ -1,0 +1,7 @@
+Analyzing cc-router...
+
+warning - demo/analysis_options.yaml:11:3 - Support for legacy plugins is deprecated, and will be removed in an upcoming version of Dart. See https://dart.dev/tools/analyzer-plugins for documentation regarding the new analyzer plugin system. - analysis_options_deprecated_plugins
+warning - packages/ccrouter_core/lib/src/navigation.dart:795:11 - Returning a 'Future' without 'await' inside a try block. Try adding an 'await'. - unawaited_return_in_try_block
+warning - packages/ccrouter_core/lib/src/navigation.dart:841:13 - Returning a 'Future' without 'await' inside a try block. Try adding an 'await'. - unawaited_return_in_try_block
+
+3 issues found.

@@ -12,16 +12,25 @@
 
 ## 当前约束
 
-核心 Package 的最低 Dart 约束统一为 Dart 3.10.0；Demo 仍按自身依赖使用更高版本：
+Runtime/Contracts 保持 Dart 3.10.0 约束；Generator 工具链有独立的 SDK 与 Flutter pin 要求：
 
 | Package | SDK 下限 |
 | --- | --- |
-| `ccrouter_core`、`ccrouter_contracts`、`ccrouter_generator`、`ccrouter` | Dart `^3.10.0` |
+| `ccrouter_core`、`ccrouter_contracts`、`ccrouter` | Dart `^3.10.0` |
+| `ccrouter_generator`、Workspace 聚合根 | Dart `^3.11.0` |
 | `ccrouter_test` | Dart `^3.10.0` |
 | `demo` | Dart `^3.11.5` |
 
-因此仓库当前可回归的最低完整 Demo 基线仍是 Dart 3.11.5；整个 Workspace 不再宣称支持
-Dart 3.9。
+生成器升级到 Analyzer `^13.3.0`、`build ^4.0.9`、`dart_style ^3.1.14`，Host 使用
+`build_runner 2.16.1`，Builder 测试配套 `build_test 3.5.20`。Analyzer 的 `meta ^1.18.3`
+与旧 OHOS `oh-3.41.9-release` 的固定 `meta 1.17.0` 冲突；不能仅凭 Dart 3.11.5 已满足
+SDK 条件就判定可解析。根与 Demo 的 FVM 现固定标准 Flutter `3.47.9 / Dart 3.13.7`。
+Quality workflow 的六个 Flutter Job 与根 FVM pin 同步使用 3.47.9；Plugin Job
+单独安装 Dart 3.13.7 并在隔离 Package 内解析、分析与测试，不合并 Analyzer 依赖图。
+`tool/test/quality_workflow_test.dart` 检查所有 CI Flutter pin 与根 `.fvmrc` 一致。
+旧 OHOS SDK 在本分支不支持；兼容 OHOS SDK、最低版本独立消费者和真实平台验证仍需单独完成。
+下文较早的安装及 smoke 数字是历史证据；本轮范围见
+[build_runner 升级记录](validation/build_runner_upgrade_20261104.md)。
 
 ## 本机 SDK 矩阵
 
@@ -32,7 +41,8 @@ Dart 3.9。
 | `ohos/oh-3.41.9-release` | `3.41.10-ohos-1.0.0` | `3.11.5` | 当前项目默认 OHOS SDK |
 | `3.41.9` | `3.41.9` | `3.11.5` | 标准 Flutter，最低完整 Demo 基线 |
 | `3.44.9` | `3.44.9` | `3.12.2` | 标准 Flutter |
-| `3.47.2` | `3.47.2` | `3.13.2` | 标准 Flutter |
+| `3.47.9` | `3.47.9` | `3.13.7` | 官方 upstream，当前分支目标与验证 SDK |
+| `3.47.2` | `3.47.2` | `3.13.2` | 标准 Flutter，历史验证 |
 
 版本信息使用以下命令确认：
 
@@ -41,28 +51,42 @@ fvm list
 fvm --version
 fvm spawn 3.41.9 --version
 fvm spawn 3.44.9 --version
-fvm spawn 3.47.2 --version
+fvm spawn 3.47.9 --version
 fvm flutter --version
 ```
 
 ## 验证命令
 
-当前默认项目 SDK 为 OHOS Flutter：
+本分支默认项目 SDK 为官方标准 Flutter 3.47.9；以下命令从仓库根目录执行：
 
 ```sh
-fvm dart analyze
+fvm dart analyze packages
+fvm dart analyze tool
 fvm dart test --concurrency=1 packages/ccrouter_test/generator_test
 fvm flutter test packages/ccrouter_test/test
 fvm flutter test demo/test
 fvm dart run ccrouter_generator:ccrouter generate demo --check
 ```
 
-标准 Flutter SDK 使用指定版本执行同一组不依赖 OHOS 平台的测试：
+仓库根是 Workspace 聚合根。根目录的 `fvm dart analyze` 会进入 Demo legacy Plugin
+bootstrap，当前可因弃用 warning 返回退出码 2，不作为聚合门禁。独立 Plugin 的分析和测试
+从其 Package 目录执行，与上面的根目录检查分开：
+
+```sh
+(
+  cd packages/ccrouter_analyzer_plugin &&
+    fvm dart analyze &&
+    fvm dart test --concurrency=1
+)
+```
+
+其他 SDK 应在隔离工作区先确认能解析本分支，再执行同一组不依赖 OHOS 平台的测试。
+以下为指定 SDK 命令示例，不证明列出的旧 SDK 已兼容新工具链：
 
 ```sh
 fvm spawn 3.41.9 test packages/ccrouter_test/test
 fvm spawn 3.44.9 test packages/ccrouter_test/test
-fvm spawn 3.47.2 test packages/ccrouter_test/test
+fvm spawn 3.47.9 test packages/ccrouter_test/test
 ```
 
 切换 SDK 后必须先在同一版本执行一次 `pub get`，再运行测试；不能并行运行多个版本，
@@ -101,11 +125,12 @@ SDK 组合在当时通过，不代表当前测试套件总数：
 | OHOS `3.41.10-ohos-1.0.0` | 默认完整回归通过：Workspace analyze、Generator 130 项、Flutter 测试 244 项、Demo 22 项、生成 `--check` |
 | 标准 `3.41.9` | 执行独立 `pub get` 后，`ccrouter_test` Flutter 测试 244 项通过 |
 | 标准 `3.44.9` | 独立临时工作区执行 `pub get` 后，`ccrouter_test` Flutter 测试 244 项通过 |
-| 标准 `3.47.2` | 独立临时工作区执行 `pub get` 后，`ccrouter_test` Flutter 测试 244 项通过 |
+| 标准 `3.47.9` | 当前分支执行 Pub、框架 1650 项、Demo 117 项与生成门禁通过 |
+| 标准 `3.47.2` | 历史独立临时工作区验证，非当前目标 SDK |
 
 此前在同一工作区并行切换 SDK 时出现的 `ink_sparkle.frag` 失败发生在 Flutter Material
 shader 资源加载，不是 CCRouter 断言失败；隔离每个 SDK 的 `.dart_tool` 和 `build` 后，
-3.44.9 与 3.47.2 均通过完整 244 项测试。兼容性回归必须遵守独立构建缓存和串行执行规则。
+当前分支 3.47.9 的框架与 Demo 回归已通过；历史 3.44.9/3.47.2 数字仅作对照。兼容性回归必须遵守独立构建缓存和串行执行规则。
 
 2026-10-03 当前默认 OHOS SDK 已追加通过 Generator `272/272`、增量生成及
 `--no-cache --check` 回归；该结果没有重新执行上述全部标准 Flutter SDK 组合，因此不覆盖或

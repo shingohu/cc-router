@@ -1,0 +1,5 @@
+  compiling builders/aot
+  6s compiling builders/aot
+  0s incremental_probe_fixture:emit on 1 input; lib/a.seed
+  0s incremental_probe_fixture:emit on 1 input: 1 output
+  Built with build_runner/aot in 6s; wrote 1 output.

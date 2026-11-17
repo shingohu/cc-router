@@ -2,6 +2,13 @@
 
 ## 0.1.0 - Unreleased
 
+- Resolve UI-only Contract/Renderer buffers and UI SPI references through the
+  current Analysis Server session, reusing annotation identity markers. Keep
+  conservative symbol proofs and unchanged isolated Analyzer constraints.
+- Add a real LSP imported-Owner/unsaved-repair regression and a maintainer check
+  of actual Analyzer 13 Generator metadata consumed by the Analyzer 8.4 Plugin,
+  including Owner library identity, diagnostic spans and Quick Fix application.
+
 - Check every conditional import/export URI for cross-Package generated internals.
   Diagnose literal Route/Contract placement IDs, self-parent and invalid/repeated
   policy IDs with canonical identity and conservative expression deferral.
