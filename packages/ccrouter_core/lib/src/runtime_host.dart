@@ -265,8 +265,9 @@ final class CCRouterRuntime {
   final CCNavigationFailurePolicy? navigationFailurePolicy;
 
   /// Runtime-specific prefix preventing trace identifiers from colliding.
+  /// The literal preserves the 32-bit RNG bound on JavaScript backends.
   final String _runtimeId =
-      '${DateTime.now().microsecondsSinceEpoch}-${Random.secure().nextInt(1 << 32)}';
+      '${DateTime.now().microsecondsSinceEpoch}-${Random.secure().nextInt(0x100000000)}';
 
   /// Private Zone identity that cannot keep this Runtime reachable on its own.
   final Object _zoneIdentity = Object();

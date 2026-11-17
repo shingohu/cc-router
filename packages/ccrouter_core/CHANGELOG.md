@@ -2,6 +2,9 @@
 
 ## 0.1.0 - Unreleased
 
+- Preserve the secure 32-bit Runtime identity range on JavaScript so Host
+  initialization and restart work in browser builds.
+
 - Add immutable Runtime navigation health with structural cache invalidation
   before external callbacks. Preserve bounded observer waiting depth and each
   listener's FIFO during terminal backpressure, including nested fan-out.

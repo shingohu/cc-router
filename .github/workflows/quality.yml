@@ -84,6 +84,26 @@ jobs:
       - name: Test framework behavior and lifecycle
         run: flutter test --no-pub packages/ccrouter_test/test
 
+  framework-web:
+    name: Flutter framework Chrome regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.9
+          channel: stable
+          cache: true
+      - name: Resolve Workspace dependencies
+        run: CCROUTER_PUB_HOOK_DISABLE=1 flutter pub get
+      # The browser test loader needs the Flutter Package as its app root.
+      - name: Test browser initialization and managed navigation
+        working-directory: packages/ccrouter_test
+        run: >-
+          flutter test --no-pub --platform chrome
+          test/runtime_identity_test.dart test/managed_router_backend_test.dart
+          --name 'Host initializes and restarts|activateExisting|deliverToExisting'
+
   generator:
     name: Generator regression
     runs-on: ubuntu-latest
