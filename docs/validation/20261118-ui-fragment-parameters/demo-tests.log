@@ -1,0 +1,120 @@
+00:00 +0: loading <home>/develop/LiberLive/cc-router/demo/test/managed_demo_feature_matrix_test.dart
+00:00 +0: <home>/develop/LiberLive/cc-router/demo/test/adaptive_layout_test.dart: Host layout metrics classify compact, medium, and expanded
+00:00 +1: <home>/develop/LiberLive/cc-router/demo/test/adaptive_layout_test.dart: display features and route placement retain Host isolation
+00:00 +2: <home>/develop/LiberLive/cc-router/demo/test/adaptive_layout_test.dart: adaptive Outlet policy maps one, two, and multiple panes
+00:00 +3: <home>/develop/LiberLive/cc-router/demo/test/managed_demo_feature_matrix_test.dart: explicit Cupertino page has readable body in Material Host
+00:06 +4: <home>/develop/LiberLive/cc-router/demo/test/managed_demo_feature_matrix_test.dart: explicit Cupertino page has readable body in Material Host
+00:06 +5: <home>/develop/LiberLive/cc-router/demo/test/managed_demo_feature_matrix_test.dart: explicit Cupertino page has readable body in Material Host
+00:06 +6: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: PopGuard remains usable in a small desktop window
+00:07 +7: <home>/develop/LiberLive/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:07 +8: <home>/develop/LiberLive/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:08 +9: <home>/develop/LiberLive/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:08 +10: <home>/develop/LiberLive/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:08 +11: <home>/develop/LiberLive/cc-router/demo/test/managed_capability_scenarios_test.dart: covered exact-close Demo keeps cover and disposes its own Scope once
+00:08 +12: <home>/develop/LiberLive/cc-router/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
+00:08 +13: <home>/develop/LiberLive/cc-router/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
+00:09 +14: <home>/develop/LiberLive/cc-router/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
+00:09 +15: <home>/develop/LiberLive/cc-router/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
+00:09 +16: <home>/develop/LiberLive/cc-router/demo/test/adaptive_renderer_lifecycle_test.dart: Demo split fold unfold releases destroyed popup and preserves identities
+00:10 +17: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:10 +18: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:10 +19: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:11 +20: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:11 +21: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:11 +22: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:12 +23: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:12 +24: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:13 +25: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:14 +26: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:15 +27: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:15 +28: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:16 +29: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:16 +30: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:17 +31: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:17 +32: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:18 +33: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:18 +34: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:19 +35: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:19 +36: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 20260928
+00:20 +37: <home>/develop/LiberLive/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:20 +38: <home>/develop/LiberLive/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:21 +39: <home>/develop/LiberLive/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:22 +40: <home>/develop/LiberLive/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:22 +41: <home>/develop/LiberLive/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:22 +42: <home>/develop/LiberLive/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:22 +43: <home>/develop/LiberLive/cc-router/demo/test/host_lifecycle_lab_test.dart: reopened Host rejects old work and admits new work
+00:22 +44: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:22 +45: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:23 +46: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:24 +47: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:24 +48: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:24 +49: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:24 +50: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:25 +51: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:25 +52: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:25 +53: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:25 +54: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:25 +55: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:26 +56: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:26 +57: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:26 +58: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:26 +59: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:26 +60: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:26 +61: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:26 +62: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:27 +63: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:27 +64: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:28 +65: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:28 +66: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:29 +67: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:29 +68: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:29 +69: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:31 +70: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 13377574
+00:32 +71: <home>/develop/LiberLive/cc-router/demo/test/predictive_back_demo_test.dart: real Demo typed page cancel/commit, bridge=false (variant: TargetPlatform.android)
+00:32 +72: <home>/develop/LiberLive/cc-router/demo/test/predictive_back_demo_test.dart: real Demo typed page cancel/commit, bridge=false (variant: TargetPlatform.android)
+00:32 +73: <home>/develop/LiberLive/cc-router/demo/test/widget_test.dart: system back is evaluated by the managed PopGuard
+00:32 +74: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:33 +75: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:33 +76: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:33 +77: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:34 +78: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:34 +79: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:34 +80: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:34 +81: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:35 +82: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:35 +83: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:35 +84: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:35 +85: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:36 +86: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:36 +87: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:36 +88: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:37 +89: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:37 +90: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:37 +91: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:37 +92: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:37 +93: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:38 +94: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:38 +95: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:38 +96: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:38 +97: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:39 +98: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:39 +99: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:39 +100: <home>/develop/LiberLive/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:39 +101: <home>/develop/LiberLive/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=false timing=before (variant: TargetPlatform.android)
+00:40 +102: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: retained branch URL must follow selected branch
+00:40 +103: <home>/develop/LiberLive/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=false timing=during (variant: TargetPlatform.android)
+00:40 +104: <home>/develop/LiberLive/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=false timing=during (variant: TargetPlatform.android)
+00:40 +105: <home>/develop/LiberLive/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=false timing=during (variant: TargetPlatform.android)
+00:40 +106: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: foreign popup must hide underlying Runtime Entry
+00:40 +107: <home>/develop/LiberLive/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=false timing=transient (variant: TargetPlatform.android)
+00:41 +108: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: direct branch navigation must hide retained branch
+00:41 +109: <home>/develop/LiberLive/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
+00:41 +110: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:42 +111: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:42 +112: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:43 +113: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:45 +114: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: cancelled iOS swipe preserves Entry identity (variant: TargetPlatform.iOS)
+00:45 +115: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: shutdown retires mounted Shell and foreign popup safely
+00:45 +116: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: shutdown during a Shell edge swipe does not double remove (variant: TargetPlatform.iOS)
+00:45 +117: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: close covered Shell seed must keep context child
+00:46 +118: All tests passed!

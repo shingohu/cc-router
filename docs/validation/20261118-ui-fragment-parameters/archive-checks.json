@@ -1,0 +1,51 @@
+{
+  "sourceCommit": "9e96b695ec8f9a06c61eac6589dda51ce3eee18f",
+  "checks": [
+    {
+      "command": [
+        "fvm",
+        "dart",
+        "tool/documentation_check.dart"
+      ],
+      "exitCode": 0,
+      "stdout": "Documentation check passed for 187 Markdown files.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "tool/sanitize_validation_evidence.mjs"
+      ],
+      "exitCode": 0,
+      "stdout": "Evidence files requiring path normalization: 0\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "fvm",
+        "dart",
+        "tool/release_sensitivity_check.dart",
+        "--include-untracked"
+      ],
+      "exitCode": 0,
+      "stdout": "Release sensitivity check passed.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--cached",
+        "--check"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "evidenceComparison": {
+    "files": 19,
+    "result": "passed",
+    "normalizationOnly": "Home path replacement and trailing spaces on the demo analysis progress line; original /tmp files preserved."
+  }
+}

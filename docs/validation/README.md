@@ -1,10 +1,16 @@
 # CCRouter 验证证据索引
 
-更新日期：2026-10-26。这里集中导航验证记录，不替代[当前能力矩阵](../README.md)或
+更新日期：2026-11-18。这里集中导航验证记录，不替代[当前能力矩阵](../README.md)或
 [发布门禁](../CCRouter-release-readiness.md)。每份报告只证明其注明源码、命令、设备和范围；
 旧失败由后续修复报告闭环，不删除失败证据，也不改写历史测试数字。
 
 ## 最新源码自动化证据
+
+[2026-11-18 UI Fragment 参数统一与 Demo Plugin pin](20261118-ui-fragment-parameters/report.md)：
+统一 Contract/Dependency 默认参数和 alias 推导，消费方自动记录精确版本；框架 1719 项、
+Demo 118 项、Plugin 213 项、UI Generator 专项 139 项通过。保留 doctor 旧缓存 advisory、
+两阶段 pin 来源与实际 Demo LSP 重启后的诊断/修复证据；GUI IDE 会话未验证，Generator
+专项不代表完整 Generator 套件。
 
 [2026-10-26 核心价值回归](20261026-core-value-regression/report.md)：13 项价值逐条核对，
 区分本轮新执行和同源码全量证据；补齐 CLI schema 规则，恢复历史快照，并执行 API

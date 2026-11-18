@@ -1,0 +1,23 @@
+{"cycle": 1, "pid": 37994, "diagnostic": "ccrouter_ui_alias_duplicate", "message": "UI alias \"orderPanel\" is repeated in this consumer.\nGive each UI dependency a unique alias."}
+{"cycle": 2, "pid": 38379, "diagnostic": "ccrouter_ui_alias_duplicate", "message": "UI alias \"orderPanel\" is repeated in this consumer.\nGive each UI dependency a unique alias."}
+{
+  "host": "<home>/develop/LiberLive/cc-router/demo",
+  "pluginRef": "30204ef9a8dffcc595128915cca3cf66fe18da45",
+  "cache": "<home>/.dartServer/.plugin_manager/2830316c39d53daed22fb3806abbfdb7/analyzer_plugin",
+  "resolvedPluginRoot": "file://<home>/.pub-cache/git/cc-router-30204ef9a8dffcc595128915cca3cf66fe18da45/packages/ccrouter_analyzer_plugin",
+  "sourceUnchanged": true,
+  "runs": [
+    {
+      "cycle": 1,
+      "pid": 37994,
+      "duplicateReported": true,
+      "repairCleared": true
+    },
+    {
+      "cycle": 2,
+      "pid": 38379,
+      "duplicateReported": true,
+      "repairCleared": true
+    }
+  ]
+}
