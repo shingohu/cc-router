@@ -82,7 +82,7 @@ jobs:
       - name: Resolve Workspace dependencies
         run: CCROUTER_PUB_HOOK_DISABLE=1 flutter pub get
       - name: Test framework behavior and lifecycle
-        run: flutter test --no-pub packages/ccrouter_test/test
+        run: flutter test --no-pub --enable-vmservice packages/ccrouter_test/test
 
   generator:
     name: Generator regression

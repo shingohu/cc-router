@@ -29,4 +29,5 @@ dev_dependencies:
   leak_tracker_flutter_testing: ^3.0.10
   path: ^1.9.0
   test: ^1.26.0
+  vm_service: ^15.0.0
   yaml: ^3.1.3
