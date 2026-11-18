@@ -1,9 +1,13 @@
+import 'dart:developer';
+import 'dart:isolate';
+
 import 'package:ccrouter/ccrouter.dart';
 import 'package:ccrouter/ccrouter_host.dart';
 import 'support/managed_test_home.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:leak_tracker/leak_tracker.dart' show forceGC;
+import 'package:vm_service/vm_service_io.dart';
 
 final class _Resources {
   final routes = <WeakReference<Route<void>>>[];
@@ -38,6 +42,10 @@ final class _TrackedRoute extends MaterialPageRoute<void> {
   }
 }
 
+final class _DiagnosticOwner {
+  final target = Object();
+}
+
 // Keep strong Route locals out of the scope that later forces GC.
 Future<void> _visit(
   WidgetTester tester,
@@ -65,7 +73,96 @@ Future<void> _visit(
   await completed;
 }
 
+Future<void> _expectCollected(
+  WidgetTester tester,
+  Iterable<WeakReference<Object>> references,
+) async {
+  try {
+    expect(references.map((ref) => ref.target), everyElement(isNull));
+  } catch (_) {
+    await tester.runAsync(() async {
+      try {
+        final uri = (await Service.getInfo()).serverWebSocketUri;
+        if (uri == null) {
+          debugPrint(
+            'Retaining path unavailable; run with --enable-vmservice.',
+          );
+          return;
+        }
+        final service = await vmServiceConnectUri(
+          uri.toString(),
+        ).timeout(const Duration(seconds: 5));
+        try {
+          for (final reference in references) {
+            final objectId = _objectId(reference);
+            if (objectId == null) continue;
+            final path = await service
+                .getRetainingPath(
+                  Service.getIsolateId(Isolate.current)!,
+                  objectId,
+                  100,
+                )
+                .timeout(const Duration(seconds: 5));
+            debugPrint('Retaining path (target -> ${path.gcRootType}):');
+            for (final element in path.elements!) {
+              final value = element.value?.toJson();
+              final type = value?['class'];
+              debugPrint(
+                '${type?['library']?['uri'] ?? ''} '
+                '${type?['name'] ?? value?['type']} '
+                'via ${element.parentField ?? element.parentMapKey ?? element.parentListIndex ?? '<target>'}',
+              );
+            }
+            break;
+          }
+        } finally {
+          await service.dispose();
+        }
+      } catch (error) {
+        debugPrint('Retaining path unavailable: $error');
+      }
+    });
+    rethrow;
+  }
+}
+
+// Do not retain the target in an async frame while asking the VM who owns it.
+String? _objectId(WeakReference<Object> reference) {
+  final target = reference.target;
+  return target == null ? null : Service.getObjectId(target);
+}
+
 void main() {
+  testWidgets(
+    'GC diagnostics preserve failures and identify a retained target',
+    (tester) async {
+      final owner = _DiagnosticOwner();
+      final messages = <String>[];
+      final originalDebugPrint = debugPrint;
+      final serviceInfo = await tester.runAsync(Service.getInfo);
+      debugPrint = (message, {wrapWidth}) {
+        if (message != null) messages.add(message);
+      };
+      try {
+        await expectLater(
+          _expectCollected(tester, [WeakReference(owner.target)]),
+          throwsA(isA<TestFailure>()),
+        );
+        expect(
+          messages.join('\n'),
+          contains(
+            serviceInfo?.serverWebSocketUri == null
+                ? 'run with --enable-vmservice'
+                : '_DiagnosticOwner via target',
+          ),
+        );
+        expect(owner.target, isNotNull);
+      } finally {
+        debugPrint = originalDebugPrint;
+      }
+    },
+  );
+
   for (final capacity in [0, 2, 1000]) {
     for (final removal in ['pop', 'replace', 'remove']) {
       testWidgets(
@@ -122,18 +219,9 @@ void main() {
             () =>
                 forceGC(fullGcCycles: 3, timeout: const Duration(seconds: 20)),
           );
-          expect(
-            resources.routes.map((ref) => ref.target),
-            everyElement(isNull),
-          );
-          expect(
-            resources.controllers.map((ref) => ref.target),
-            everyElement(isNull),
-          );
-          expect(
-            resources.arguments.map((ref) => ref.target),
-            everyElement(isNull),
-          );
+          await _expectCollected(tester, resources.routes);
+          await _expectCollected(tester, resources.controllers);
+          await _expectCollected(tester, resources.arguments);
           expect(CCRouter.recentBackendNavigationEvents.length, history.length);
           expect(find.text('home'), findsOneWidget);
           expect(navigatorKey.currentState!.canPop(), isFalse);
