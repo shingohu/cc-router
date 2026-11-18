@@ -2,6 +2,10 @@
 
 ## 0.1.0 - Unreleased
 
+- BREAKING: align UI Contract parameters with Service/Command (`alias`, version
+  defaulting to `0.1.0`, and `description`). UI Dependency accepts only optional
+  `alias`; remove legacy `versionRange` and regenerate to record exact versions.
+
 - Clarify initial Backend snapshot/read-time event ordering, Entry sequence
   lower bounds versus live continuity, and independent operation deduplication.
   Document cancellable Route exit subscription reentry during shutdown/detach.

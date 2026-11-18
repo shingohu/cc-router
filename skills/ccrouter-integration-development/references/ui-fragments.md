@@ -107,10 +107,7 @@ const accountComponent = CCComponent(
   version: '0.1.0',
   dependencies: [orderComponentId],
   uiDependencies: [
-    CCUIFragmentDependency<OrderSummaryFragmentContract>(
-      versionRange: '^1.0.0',
-      alias: 'orderSummary',
-    ),
+    CCUIFragmentDependency<OrderSummaryFragmentContract>(),
   ],
 );
 ```
@@ -176,7 +173,7 @@ UI lookup reads validated Package indexes, locates Contract/Renderer declaration
 and reports complete schema public imports, direct dependencies, the required
 Owner edge and the declared UI alias. The stable Client retains the full
 component ID (`DemoNavigationLabComponentFragments`, including `Component`).
-Missing UI dependencies receive a placeholder alias, not a claimed generated
+Missing UI dependencies receive a declaration recipe, not a claimed generated
 method. Old indexes without public-type import proofs or alias defer until
 regeneration; the command never scans source, edits files or runs generation.
 Same-owner usage points to the ordinary local Widget.
@@ -186,7 +183,8 @@ The public contracts Package imports
 Props, Action and canonical `CCComponentId` through its authored public barrel.
 Each marker has exactly one framework Contract annotation; duplicate declarations
 are rejected rather than selecting the first. Declare a public non-generic marker with
-`@CCUIFragmentContract<Props, Action>(componentId: owner, id: ..., version: ...)`.
+`@CCUIFragmentContract<Props, Action>(componentId: owner, id: ...)`; explicitly
+set `version` when publishing a Contract version other than the default `0.1.0`.
 Props and DTO Actions are final classes with only const generative constructors, public final
 stored fields, no inheritance/mixins/interfaces or declared methods. DTOs must
 also have no same-library/part subclasses or implementations: these can override
@@ -218,20 +216,25 @@ The consuming `CCComponent` imports `ccrouter_ui.dart` and declares:
 
 ```dart
 uiDependencies: [
-  CCUIFragmentDependency<OrderSummaryFragmentContract>(
-    versionRange: '^1.0.0',
-    alias: 'orderSummary',
-  ),
+  CCUIFragmentDependency<OrderSummaryFragmentContract>(),
 ],
 ```
 
 The Owner must also appear in required `dependencies`; optional owners cannot
 satisfy this edge. Aliases and contract edges must be unique. The generated
 Client name is the PascalCase full component ID plus `Fragments`.
-Version ranges use the shared Contract grammar: exact, `*`, caret, tilde, or
-one or more `>=`/`>`/`<=`/`<` comparators separated by whitespace,
-including tabs/newlines. A single comparator such as `>=1.0.0` is valid; the
-Host still checks the installed version and exact schema fingerprint.
+Contract parameters match Service/Command: `alias` is optional, `version`
+defaults to `0.1.0`, and `description` defaults to an empty string. A dependency
+accepts only an optional `alias`. Method naming uses the Dependency alias,
+then the Contract alias, then the marker name with a trailing `FragmentContract`
+removed and its first character lowercased (no acronym heuristics). An empty
+stem becomes `fragment`; invalid or colliding names require an explicit alias.
+
+`versionRange` is no longer a public dependency parameter. Remove it from older
+declarations and regenerate the actual Host. As with Service/Command, generation
+records the Contract's exact current version and schema fingerprint; Host checks
+retain version, fingerprint and stale-output validation. This is source breaking
+for old dependency declarations, not a relaxation of compatibility checks.
 
 The Analyzer Owner diagnostic and imported-constant Quick Fix also support
 resolved typedef constructors for `CCComponent` and `CCUIFragmentDependency`.
@@ -300,9 +303,8 @@ Mixed documents use the highest required UI version. Legacy enum/DTO contracts k
 their original fingerprints and output versions. SDK scalar modifiers (including
 sealed num) never opt a DTO into the union schema. Migrating enum/DTO to a union,
 adding/removing union variants, or breaking nested payload shape needs a major
-Contract version, an updated consumer range and regeneration of A/B/Host.
-Exact Host fingerprints and Contract version snapshots are still required even
-when SemVer ranges match. Document and record UI versions must agree and be
+Contract version and regeneration of A/B/Host.
+Exact Host fingerprints and Contract version snapshots are required. Document and record UI versions must agree and be
 integers; malformed or downgraded metadata is rejected by both index reads and writes.
 Distributed Packages must regenerate Portable State; modifying a part or a
 variant invalidates the published proof. Older tools reject Index 5.
@@ -362,10 +364,10 @@ carry the required version and mixed documents declare the highest UI version.
 Union Actions use UI schema 3 / Package Index schema 5, including DTO Actions
 with nested union fields; old readers reject these indexes.
 Older generators reject these artifacts. Changing an enum Action to DTO requires
-major Contract SemVer, updated consumer range and regeneration of A/B/Host. Use matching framework/UI/generator
+major Contract SemVer and regeneration of A/B/Host. Use matching framework/UI/generator
 sources. Packages without UI retain their existing schema and generated API.
-The optional Analyzer Plugin checks aliases, repeated dependencies, clearly
-invalid range tokens, enum/DTO Actions, Renderer signatures and UI SPI access.
+The optional Analyzer Plugin checks effective aliases (including defaults),
+repeated dependencies, enum/DTO Actions, Renderer signatures and UI SPI access.
 Required UI Owner checks share the conservative imported-public-constant Quick
 Fix with Service/Command dependencies. Regenerate old metadata to provide UI
 marker identity and source positions. Host completeness errors enter the IDE
@@ -389,7 +391,7 @@ reading generated glue. UI consumer errors include the consumer and contract:
 | `invalidAlias` | Choose a valid Dart member name outside the generated Client's reserved members. |
 | `duplicateAlias` | Give different Fragment dependencies unique aliases. |
 | `duplicateDependency` | Keep one dependency for the same Owner/contract; render multiple instances through its one generated method. |
-| Invalid `versionRange` | Supply a supported SemVer range matching the public Contract; do not guess a component version. |
+| Obsolete `versionRange` argument | Remove the argument and regenerate; consumers automatically require the current Contract version. |
 | `missingImplementation` | Ensure the required Owner implementation and its annotated Renderer participate in the actual Host dependency closure, then regenerate that Host. |
 
 Aliases name generated methods, not mounted instance identities. Multiple cards

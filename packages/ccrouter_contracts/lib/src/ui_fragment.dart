@@ -26,7 +26,9 @@ final class CCUIFragmentContract<P extends Object, A extends Object> {
   const CCUIFragmentContract({
     required this.componentId,
     required this.id,
-    required this.version,
+    this.alias,
+    this.version = '0.1.0',
+    this.description = '',
   });
 
   /// Canonical owner declared by the public contracts Package.
@@ -35,23 +37,33 @@ final class CCUIFragmentContract<P extends Object, A extends Object> {
   /// Stable capability identifier within the owner.
   final String id;
 
+  /// Default generated Client method shared by consuming components.
+  ///
+  /// A Dependency alias overrides this name for one consumer. When absent,
+  /// generation removes a trailing `FragmentContract` from the marker name
+  /// and lowercases its first character, without acronym heuristics.
+  final String? alias;
+
   /// SemVer maintained by the owner when public shape or behavior changes.
   final String version;
+
+  /// Human-readable usage scenario exported to generated metadata.
+  final String description;
 }
 
 /// Required cross-component UI consumption recorded on a [CCComponent].
 final class CCUIFragmentDependency<T extends Object> {
   /// Requires one implementation of [T] in the Host's static assembly.
-  const CCUIFragmentDependency({
-    required this.versionRange,
-    required this.alias,
-  });
+  /// Generation records the current Contract's exact version and fingerprint,
+  /// matching Service and Command consumer compatibility checks.
+  const CCUIFragmentDependency({this.alias});
 
-  /// Accepted owner contract SemVer range.
-  final String versionRange;
-
-  /// Explicit Dart method name on the consumer's generated Fragments Client.
-  final String alias;
+  /// Overrides the Contract default method for this consuming component.
+  ///
+  /// When absent, generation uses the Contract alias and then the marker name.
+  /// The effective name must be a unique public lower-camel Dart identifier
+  /// that is not reserved by Object. It does not identify Widget instances.
+  final String? alias;
 }
 
 /// Binds a public synchronous top-level Renderer function to a marker type.

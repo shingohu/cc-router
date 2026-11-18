@@ -74,6 +74,14 @@ final class _Contract {
         .toStringValue()!;
     id = annotation.getField('id')!.toStringValue()!;
     version = annotation.getField('version')!.toStringValue()!;
+    alias = annotation.getField('alias')?.toStringValue();
+    description = annotation.getField('description')?.toStringValue() ?? '';
+    if (alias != null && !isGeneratedClientMemberName(alias!)) {
+      _fail(
+        'UI Contract alias "$alias" must be a public lower-camel Dart identifier.',
+        marker,
+      );
+    }
     if (!_id.hasMatch(id) ||
         id.length > 128 ||
         !RegExp(r'^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$').hasMatch(owner) ||
@@ -176,6 +184,12 @@ final class _Contract {
   /// Validated SemVer text.
   late final String version;
 
+  /// Optional shared generated member name; consumers may override it.
+  late final String? alias;
+
+  /// Authored usage guidance; excluded from the public data shape fingerprint.
+  late final String description;
+
   /// Complete canonical public shape fingerprint.
   late final String fingerprint;
 
@@ -188,7 +202,9 @@ final class _Contract {
     'declaration': declaration,
     'componentId': owner,
     'id': id,
+    if (alias != null) 'alias': alias,
     'version': version,
+    'description': description,
     'shapeFingerprint': fingerprint,
     'publicTypes': declarations,
   };
@@ -571,8 +587,15 @@ final class _UIFragmentBuilder implements Builder {
           (depType.typeArguments.single as InterfaceType).element,
           buildStep,
         );
-        final alias = dependency.getField('alias')!.toStringValue()!;
-        final range = dependency.getField('versionRange')!.toStringValue()!;
+        final alias =
+            dependency.getField('alias')?.toStringValue() ??
+            contract.alias ??
+            defaultUIFragmentClientMember(
+              (depType.typeArguments.single as InterfaceType)
+                  .element
+                  .displayName,
+            );
+        final range = contract.version;
         if (!isGeneratedClientMemberName(alias) ||
             alias == 'hashCode' ||
             alias == 'runtimeType' ||
@@ -611,17 +634,6 @@ final class _UIFragmentBuilder implements Builder {
                       '"${contract.owner}" for "${contract.id}". Add the public '
                       'Owner CCComponentId to CCComponent.dependencies; '
                       'optionalDependencies does not satisfy uiDependencies.',
-            variable,
-          );
-        }
-        try {
-          CCContractVersionRange.parse(range);
-        } catch (_) {
-          _fail(
-            'UI dependency requires a valid versionRange for '
-            '"${contract.owner}/${contract.id}" in consumer "$consumer"; '
-            'received "$range". Use a supported SemVer range such as '
-            '"^${contract.version}" for the public Contract version.',
             variable,
           );
         }

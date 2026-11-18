@@ -170,11 +170,7 @@ bool printUIFragmentMatches({
   final alias = existingAlias is String ? existingAlias : null;
   if (requirements.isEmpty && marker is String) {
     stdout.writeln(
-      '  Add to uiDependencies: CCUIFragmentDependency<$marker>('
-      'versionRange: \'^${contract['version']}\', alias: \'chooseUniqueAlias\')',
-    );
-    stdout.writeln(
-      '  Replace chooseUniqueAlias with a unique public lowerCamelCase member.',
+      '  Add to uiDependencies: CCUIFragmentDependency<$marker>()',
     );
   }
   if (alias != null && isGeneratedClientMemberName(alias)) {
@@ -191,7 +187,7 @@ bool printUIFragmentMatches({
     );
   } else {
     stdout.writeln(
-      '  Generated Client: available after declaring an alias and '
+      '  Generated Client: available after declaring the dependency and '
       'regenerating; old metadata without alias must be regenerated.',
     );
   }

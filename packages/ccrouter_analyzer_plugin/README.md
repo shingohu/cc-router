@@ -12,9 +12,10 @@ check each URI of conditional imports and exports at its precise literal span.
 UI Fragment checks use canonical framework symbols, including prefixed and
 transitive public exports. They report `ccrouter_ui_alias_invalid`,
 `ccrouter_ui_alias_duplicate`, `ccrouter_ui_dependency_duplicate`,
-`ccrouter_ui_version_range_invalid` (only definitely unsupported tokens),
 `ccrouter_ui_action_invalid`, and `ccrouter_ui_renderer_invalid`. Unknown or
-ambiguous types defer. The Generator remains authoritative for the complete
+ambiguous types defer. Alias checks include the effective Contract/type defaults;
+Dependency aliases override them. UI dependencies have no version-range parameter.
+The Generator remains authoritative for the complete
 Props/Action constructor/default schemas, Contract identity/version grammar, and Host closure.
 Action checks accept a plain enum, immutable final DTO or restricted sealed
 union (including nested unions and same-library/part data leaves), and reject proven

@@ -5,7 +5,7 @@
     "name": "demo_navigation_lab",
     "version": "0.1.0"
   },
-  "contentFingerprint": "741b942b0aa4f64b513f6a3a9bdf20853c5cf6f63618034b47139c18d47c5faf",
+  "contentFingerprint": "9e8ee689b03f3f52686bac507f86cfe51866e0ee8e1bdaba7206d723959e4c2e",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/demo_navigation_lab_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -34,7 +34,7 @@
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "cccbd8aaf0d251074ec370a21a3b00398a29b1036663dabdebde5908244e6cfb"
+      "contentFingerprint": "86a9845e5932819ed5e832d7c02113590ba7feecde90926c44df327b455ecf43"
     },
     {
       "name": "demo_web_contracts",
@@ -65,6 +65,7 @@
           "componentId": "demo_order_component",
           "id": "order.panel",
           "version": "1.0.0",
+          "description": "",
           "shapeFingerprint": "b6dc30358b7f47719d5cb0f80b23711e54de0367fa7aeb732d67668a275f26ba",
           "publicTypes": [
             {
@@ -127,7 +128,7 @@
           },
           "consumer": "demo_navigation_lab_component",
           "alias": "orderPanel",
-          "versionRange": "^1.0.0"
+          "versionRange": "1.0.0"
         },
         {
           "declaration": {
@@ -140,6 +141,7 @@
           "componentId": "demo_order_component",
           "id": "order.summary",
           "version": "1.0.0",
+          "description": "",
           "shapeFingerprint": "61967f68b1e2278a9d01482a9c28957ef5b734e03b4b7b1770e9a1ee7e1fdbbb",
           "publicTypes": [
             {
@@ -167,7 +169,7 @@
           },
           "consumer": "demo_navigation_lab_component",
           "alias": "orderSummary",
-          "versionRange": "^1.0.0"
+          "versionRange": "1.0.0"
         },
         {
           "uiSchemaVersion": 2,
@@ -181,6 +183,7 @@
           "componentId": "demo_order_component",
           "id": "order.recommendations",
           "version": "2.0.0",
+          "description": "",
           "shapeFingerprint": "0fd30e583936c0c3b491f660086fe5dbdd9fd1088ddb55e5c84a6bf9c81e7b45",
           "publicTypes": [
             {
@@ -208,7 +211,7 @@
           },
           "consumer": "demo_navigation_lab_component",
           "alias": "orderRecommendations",
-          "versionRange": "^2.0.0"
+          "versionRange": "2.0.0"
         }
       ]
     },

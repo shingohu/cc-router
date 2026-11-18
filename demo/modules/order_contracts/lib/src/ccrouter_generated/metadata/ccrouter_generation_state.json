@@ -5,10 +5,10 @@
     "name": "demo_order_contracts",
     "version": "0.1.0"
   },
-  "toolFingerprint": "43185b8d006864802addfbef67e620af12638a019c12d7d6d2c4d3ddba772df0",
+  "toolFingerprint": "637f8b64cf61b7dfa29b5b3c09ba39a115a96d8d360ee20907cf49c205ad6666",
   "authoredInputFingerprint": "1d1029a003b8044b86f547eb07008803900de36a5021f55a15cfec464d96552b",
-  "resolutionFingerprint": "5ddd9f370d2b510cb4380c8220c91876125ce1ee28ee6ab7fc3082851ce64302",
-  "metadataFingerprint": "60bf58115a52e6cedb3e7f266101ae7f18bd89fedf85fa8e62b9f8f865f5bbaf",
-  "managedOutputFingerprint": "d15870592ab4b83929075a984199840b9021a475869db75227c9c7d3502f82b8",
-  "contentFingerprint": "7d4ddc176277e029e073126b277f5810a48aec240631dabf05a096f24a97e30f"
+  "resolutionFingerprint": "51ce06c0ed27c41487d33008655b7cb2b901d77b9c794a56568e3e0f55f5e0e0",
+  "metadataFingerprint": "6412ffe991961844f0aa088578d2b1794e802f2ab3b896f7d6e0f4eeaf2bfa23",
+  "managedOutputFingerprint": "06b2c669642d2fa60953357ac86bcd6ac2716dc2e766948878b6bf1dcc9baab7",
+  "contentFingerprint": "42312bf28d58840bfe02212d310b649523d202fa6870e7291b09f0db701666db"
 }

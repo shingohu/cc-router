@@ -7,11 +7,18 @@ void main() {
     expect(defaultCommandClientMember('SubmitOrderCommand'), 'submitOrder');
     expect(defaultServiceClientMember('Service'), 'service');
     expect(defaultCommandClientMember('Command'), 'command');
+    expect(
+      defaultUIFragmentClientMember('OrderSummaryFragmentContract'),
+      'orderSummary',
+    );
+    expect(defaultUIFragmentClientMember('Summary'), 'summary');
+    expect(defaultUIFragmentClientMember('FragmentContract'), 'fragment');
   });
 
   test('default Client names do not guess acronym boundaries', () {
     expect(defaultServiceClientMember('HTTPService'), 'hTTP');
     expect(defaultCommandClientMember('URLCommand'), 'uRL');
+    expect(defaultUIFragmentClientMember('URLFragmentContract'), 'uRL');
   });
 
   test('generated Client aliases reject keywords and invalid casing', () {

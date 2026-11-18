@@ -96,10 +96,15 @@ The optional Analyzer Plugin uses `ccrouter_host_lifecycle_access` to reject com
 For a component-owned order summary or recommendation list, opt in to
 `ccrouter_ui`. The owner declares `@CCUIFragmentContract<Props, Action>` in a
 Pure Dart contracts package and provides `@CCUIFragmentRenderer(Contract)` in
-its implementation package. The consumer declares the required contract,
-version range, and method alias in `CCComponent.uiDependencies`, keeps the
-owner in `dependencies`, and imports only public contracts and its own
+its implementation package. The consumer declares the required contract
+in `CCComponent.uiDependencies`, keeps the owner in `dependencies`, and imports
+only public contracts and its own
 generated `<componentId>.ui.api.g.dart`, never the owner's Widget or Renderer.
+UI Contracts support optional `alias`, `version` (default `0.1.0`) and `description`.
+Dependency aliases override Contract aliases, then marker-name inference removes
+a trailing `FragmentContract` and lowercases the first character. UI dependencies
+no longer accept `versionRange`; remove it from old declarations and regenerate.
+Generation captures the exact current Contract version and shape fingerprint.
 
 The consuming Host, consumer component, and Renderer package directly depend
 on `ccrouter_ui`. The existing `generate <host>` command validates UI metadata
@@ -155,8 +160,8 @@ schema 4; old generators reject it. The
 [UI Fragment specification](docs/CCRouter-ui-fragment-design.md) records current capabilities, integration boundaries, and remaining scope.
 The Demo's Showcase entry demonstrates multiple instances, Tab retention,
 Props updates, account-key recreation, and business errors.
-The optional Analyzer Plugin checks UI aliases, repeated dependencies, clearly
-invalid ranges, enum/DTO Actions, Renderer signatures, and Host/Generated SPI
+The optional Analyzer Plugin checks UI aliases (including defaults), repeated dependencies,
+enum/DTO Actions, Renderer signatures, and Host/Generated SPI
 boundaries. It offers a conservative missing required Owner fix only when the
 public constant is already imported. Validated Generator snapshots bridge Host
 closure errors into the IDE; full Props schemas and final correctness remain

@@ -183,13 +183,16 @@ abstract final class CCRouterUIFragmentAnalysis {
             continue;
           final args = _arguments(dependency);
           final aliasNode = _named(args, 'alias');
-          final alias = aliasNode is StringLiteral
+          final type = dependency.staticType;
+          final alias = aliasNode == null || aliasNode is NullLiteral
+              ? _defaultAlias(type)
+              : aliasNode is StringLiteral
               ? aliasNode.stringValue
               : null;
           if (alias != null) {
             if (!_validAlias(alias)) {
               add(
-                aliasNode!,
+                aliasNode ?? dependency,
                 'alias_invalid',
                 'UI alias "$alias" cannot be a generated Client member.',
                 'Use a unique lowerCamelCase Dart member name without reserved Object members.',
@@ -197,14 +200,13 @@ abstract final class CCRouterUIFragmentAnalysis {
             }
             if (!aliases.add(alias)) {
               add(
-                aliasNode!,
+                aliasNode ?? dependency,
                 'alias_duplicate',
                 'UI alias "$alias" is repeated in this consumer.',
                 'Give each UI dependency a unique alias.',
               );
             }
           }
-          final type = dependency.staticType;
           if (type is InterfaceType &&
               type.typeArguments.length == 1 &&
               !_unknown(type.typeArguments.single) &&
@@ -214,22 +216,6 @@ abstract final class CCRouterUIFragmentAnalysis {
               'dependency_duplicate',
               'This UI Contract is required more than once.',
               'Keep one dependency; render multiple instances through that method with distinct Keys.',
-            );
-          }
-          final rangeNode = _named(args, 'versionRange');
-          final range = rangeNode is StringLiteral
-              ? rangeNode.stringValue
-              : null;
-          // Only reject definitely unsupported tokens; the Generator owns the range grammar.
-          if (range != null &&
-              RegExp(
-                r'[a-zA-Z]',
-              ).hasMatch(range.split('-').first.split('+').first)) {
-            add(
-              rangeNode!,
-              'version_range_invalid',
-              'UI versionRange "$range" is not a supported SemVer range.',
-              'Use a supported Contract version range such as ^1.0.0.',
             );
           }
         }
@@ -355,6 +341,38 @@ abstract final class CCRouterUIFragmentAnalysis {
         'toString',
         'noSuchMethod',
       }.contains(value);
+
+  /// Resolves Contract defaults only from a uniquely annotated marker type.
+  /// Computed dependency aliases defer instead of being mistaken for omissions.
+  static String? _defaultAlias(DartType? dependency) {
+    if (dependency is! InterfaceType || dependency.typeArguments.length != 1)
+      return null;
+    final marker = dependency.typeArguments.single;
+    if (marker is! InterfaceType) return null;
+    final annotations = marker.element.metadata.annotations
+        .map((annotation) => annotation.computeConstantValue())
+        .where(
+          (value) =>
+              value?.type is InterfaceType &&
+              CCRouterResolvedSymbols.isFrameworkType(
+                value!.type as InterfaceType,
+                'CCUIFragmentContract',
+                'ui_fragment',
+              ),
+        )
+        .toList();
+    if (annotations.length != 1) return null;
+    final alias = annotations.single!.getField('alias')?.toStringValue();
+    if (alias != null) return alias;
+    final name = marker.element.name;
+    if (name == null) return null;
+    final stem = name.endsWith('FragmentContract')
+        ? name.substring(0, name.length - 'FragmentContract'.length)
+        : name;
+    return stem.isEmpty
+        ? 'fragment'
+        : '${stem[0].toLowerCase()}${stem.substring(1)}';
+  }
 
   /// Reads only direct constructor calls, never computed dependency collections.
   static ArgumentList? _arguments(Expression expression) =>

@@ -153,8 +153,8 @@ scenario can still justify useful feedback. Prepare a report when requested;
 publish it only with the user's authorization. Do not include private business
 code, credentials, account data or unsanitized logs.
 
-UI Fragment editor diagnostics cover aliases, repeated dependencies, definitely
-invalid range tokens, enum/DTO/sealed Action, exact Renderer signatures and UI SPI
+UI Fragment editor diagnostics cover effective aliases, repeated dependencies,
+enum/DTO/sealed Action, exact Renderer signatures and UI SPI
 boundaries. Metadata-proven UI Owners share the conservative required-edge fix;
 full Props schemas and Host completeness remain Generator-owned, with Host
 failures bridged only from current structured snapshots. Follow
@@ -584,6 +584,12 @@ and public library placement have different constraints.
   global selection, Event or Service detour. Follow the guide's complete
   contracts/Renderer/consumer/Host path and error repair table. One dependency
   can render multiple keyed instances; aliases do not identify instances.
+  UI Contract parameters follow Service/Command: optional alias, version default
+  `0.1.0`, and description. A UI Dependency accepts only optional alias; resolve
+  Dependency alias, Contract alias, then the marker name without trailing
+  `FragmentContract`, lowercasing its first character. Generation records the
+  exact Contract version and fingerprint. Remove legacy `versionRange` arguments
+  and regenerate; do not replace them with unchecked wildcard metadata.
 - Use **Route** for showing a destination and optionally receiving a typed Pop result.
 - Use **Service** when repeatable methods, state reads, or resources need framework resolution, Scope/readiness, or generated dependency validation; otherwise keep a narrow ordinary API.
 - Use **Command<R>** for one requested operation with exactly one owner; use `R = void` when only completion matters.

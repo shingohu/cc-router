@@ -102,7 +102,11 @@ Composition Root 导入 `ccrouter_host.dart` 装配 Managed Backend；业务页�
 A 需要 B 的订单摘要或推荐列表时，可显式接入 `ccrouter_ui`：B 在 Pure Dart contracts
 Package 声明 `@CCUIFragmentContract<Props, Action>`，在实现 Package 提供
 `@CCUIFragmentRenderer(Contract)`；A 在 `CCComponent.uiDependencies` 声明 required
-依赖、版本范围和方法 alias，并保持 Owner 在 `dependencies` 中。A 只导入公开契约与自身
+依赖，并保持 Owner 在 `dependencies` 中。Contract 与 Service/Command 一样支持可选
+`alias`、默认 `version: '0.1.0'` 和 `description`；Dependency 只提供可选 `alias`，
+默认按 Dependency alias、Contract alias、类型名依次确定方法名（类型名去掉末尾
+`FragmentContract`，首字母小写）。消费方不再填写 `versionRange`，生成器自动记录当前
+Contract 精确版本与结构指纹。旧声明需移除 `versionRange` 并重新生成。A 只导入公开契约与自身
 生成的 `<componentId>.ui.api.g.dart`，不导入 B 的 Widget 或 Renderer。
 
 UI Fragment 不限于 Tab。它适合页面中的订单摘要、推荐列表、支付或会员面板，Dashboard/Feed
@@ -162,7 +166,7 @@ UI schema 3 / Package Index schema 5，旧工具明确拒绝。sealed 根直接�
 迁移到 union、增删变体及破坏性载荷变化需要 major Contract 版本，并重生成 A/B/Host。
 Demo `order.panel` 与原 enum/DTO 示例并存，消费者对动作及目标分别做穷尽 switch。
 [UI Fragment 规范](docs/CCRouter-ui-fragment-design.md)统一维护已有能力、接入边界和待设计扩展。
-可选 Analyzer Plugin 提供 UI alias、重复依赖、明显非法版本范围、enum/DTO/sealed Action、
+可选 Analyzer Plugin 提供 UI alias（含默认名）、重复依赖、enum/DTO/sealed Action、
 Renderer 签名及 Host/Generated SPI 越界检查；缺少 required Owner 可在公共常量已导入时
 提供保守 Quick Fix。Host 完整性错误通过有效的 Generator 结构化快照进入 IDE；
 完整 Props schema 和最终正确性仍以 `generate --check` 为准。

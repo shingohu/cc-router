@@ -14,8 +14,12 @@ depend on `ccrouter` instead.
 Optional typed local UI declarations have a separate Pure Dart entry point,
 `package:ccrouter_contracts/ccrouter_ui_contracts.dart`. It provides
 `CCUIFragmentContract`, `CCUIFragmentDependency`, and `CCUIFragmentRenderer`;
-`CCComponent.uiDependencies` records required UI consumption. Props use immutable
-DTOs; Actions use plain enums, restricted immutable DTOs or restricted sealed
+`CCComponent.uiDependencies` records required UI consumption.
+UI Contracts support optional `alias`, version defaulting to `0.1.0`, and
+`description`; UI dependencies accept only optional `alias`, with Contract alias
+and marker-name defaults. Remove legacy `versionRange` arguments and regenerate:
+consumers record the exact current Contract version and shape fingerprint.
+Props use immutable DTOs; Actions use plain enums, restricted immutable DTOs or restricted sealed
 unions, including nested union payloads. Props remain DTO-only. All DTOs are terminal, including within their defining
 library/parts; same-library inheritance cannot bypass data-only validation. Scalar types
 are supported only as DTO fields, not as root Actions. DTO Actions

@@ -29,7 +29,7 @@ void main() {
     test('UI alias $alias is diagnosed with framework identity', () async {
       final result = await fixture.resolve(
         _consumer('''
-CCUIFragmentDependency<Summary>(alias: '$alias', versionRange: '^1.0.0')
+CCUIFragmentDependency<Summary>(alias: '$alias')
 '''),
       );
       expect(fixture.codes(result), contains('ccrouter_ui_alias_invalid'));
@@ -40,15 +40,15 @@ CCUIFragmentDependency<Summary>(alias: '$alias', versionRange: '^1.0.0')
     () async {
       final aliases = await fixture.resolve(
         _consumer('''
-CCUIFragmentDependency<Summary>(alias: 'card', versionRange: '^1.0.0'),
-CCUIFragmentDependency<Summary>(alias: 'card', versionRange: '^1.0.0')
+CCUIFragmentDependency<Summary>(alias: 'card'),
+CCUIFragmentDependency<Summary>(alias: 'card')
 '''),
       );
       expect(fixture.codes(aliases), contains('ccrouter_ui_alias_duplicate'));
       final contracts = await fixture.resolve(
         _consumer('''
-CCUIFragmentDependency<Summary>(alias: 'card', versionRange: '^1.0.0'),
-CCUIFragmentDependency<SummaryAlias>(alias: 'other', versionRange: '^1.0.0')
+CCUIFragmentDependency<Summary>(alias: 'card'),
+CCUIFragmentDependency<SummaryAlias>(alias: 'other')
 ''', extra: 'typedef SummaryAlias = Summary;'),
       );
       expect(
@@ -57,16 +57,44 @@ CCUIFragmentDependency<SummaryAlias>(alias: 'other', versionRange: '^1.0.0')
       );
     },
   );
-  test('UI version ranges are checked without invoking generation', () async {
+  test(
+    'UI dependency defaults resolve without alias or version arguments',
+    () async {
+      final result = await fixture.resolve(
+        _consumer('CCUIFragmentDependency<Summary>()'),
+      );
+      expect(result.diagnostics, isEmpty);
+      expect(fixture.codes(result), isEmpty);
+    },
+  );
+  test('UI inferred names and Contract aliases participate in collisions', () async {
+    for (final annotation in [
+      "@CCUIFragmentContract<Props, Action>(componentId: CCComponentId('orders'), id: 'orders.other')\nabstract final class SummaryFragmentContract {}",
+      "@CCUIFragmentContract<Props, Action>(componentId: CCComponentId('orders'), id: 'orders.other', alias: 'summary')\nabstract final class Other {}",
+    ]) {
+      final marker = annotation.contains('class Other')
+          ? 'Other'
+          : 'SummaryFragmentContract';
+      final result = await fixture.resolve(
+        _consumer(
+          'CCUIFragmentDependency<Summary>(), CCUIFragmentDependency<$marker>()',
+          extra: annotation,
+        ),
+      );
+      expect(result.diagnostics, isEmpty);
+      expect(fixture.codes(result), contains('ccrouter_ui_alias_duplicate'));
+    }
+  });
+  test('UI explicit aliases override Contract defaults', () async {
     final result = await fixture.resolve(
-      _consumer('''
-CCUIFragmentDependency<Summary>(alias: 'card', versionRange: 'latest')
-'''),
+      _consumer(
+        "CCUIFragmentDependency<Summary>(), CCUIFragmentDependency<Other>(alias: 'other')",
+        extra:
+            "@CCUIFragmentContract<Props, Action>(componentId: CCComponentId('orders'), id: 'orders.other', alias: 'summary')\nabstract final class Other {}",
+      ),
     );
-    expect(
-      fixture.codes(result),
-      contains('ccrouter_ui_version_range_invalid'),
-    );
+    expect(result.diagnostics, isEmpty);
+    expect(fixture.codes(result), isEmpty);
   });
   test(
     'review subtype facts refresh after edits without retaining stale graphs',
@@ -160,7 +188,7 @@ final class Action extends Object { const Action(); }
                 ),
         );
         final result = await fixture.resolve(
-          "$_imports import 'package:owner_contracts/owner_contracts.dart'; const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', dependencies: [${removeAnnotation ? '' : 'orderOwner'}], uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card', versionRange: '*')]);",
+          "$_imports import 'package:owner_contracts/owner_contracts.dart'; const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', dependencies: [${removeAnnotation ? '' : 'orderOwner'}], uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card')]);",
         );
         expect(result.diagnostics, isEmpty);
         final owners = CCRouterContractOwnerIndexCache().resolve(fixture.file);
@@ -290,7 +318,7 @@ enum Kind { recommendation, device }
     () async {
       final result = await fixture.resolve(
         _consumer('''
-CCUIFragmentDependency<Summary>(alias: 'card', versionRange: '^1.0.0')
+CCUIFragmentDependency<Summary>(alias: 'card')
 '''),
       );
       expect(
@@ -308,7 +336,7 @@ class CCUIFragmentDependency<T> { const CCUIFragmentDependency({String? alias, S
 class CCComponent { const CCComponent({Object? uiDependencies}); }
 @CCUIFragmentContract<int, String>()
 class Marker {}
-const component = CCComponent(uiDependencies: [CCUIFragmentDependency<Marker>(alias: 'bad-alias', versionRange: 'latest')]);
+const component = CCComponent(uiDependencies: [CCUIFragmentDependency<Marker>(alias: 'bad-alias')]);
 ''');
       expect(fixture.codes(result), isEmpty);
     },
@@ -383,7 +411,7 @@ $_imports
 import 'package:owner_contracts/owner_contracts.dart';
 const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
  optionalDependencies: [orderOwner],
- uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card', versionRange: '^1.0.0')]);
+ uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card')]);
 ''');
       final owners = CCRouterContractOwnerIndexCache().resolve(fixture.file);
       final issues = fixture.issues(result, owners: owners);
@@ -416,34 +444,12 @@ const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
       );
     },
   );
-  test('supported range literals defer to the authoritative grammar', () async {
-    for (final range in [
-      '',
-      '*',
-      '^1.0.0',
-      '~1.0.0',
-      '1.0.0',
-      '=1.0.0',
-      '>=1.0.0 <2.0.0',
-      '^1.0.0-beta.1',
-    ]) {
-      final result = await fixture.resolve(
-        _consumer(
-          "CCUIFragmentDependency<Summary>(alias: 'card', versionRange: '$range')",
-        ),
-      );
-      expect(
-        fixture.codes(result),
-        isNot(contains('ccrouter_ui_version_range_invalid')),
-      );
-    }
-  });
   for (final (documentVersion, recordVersion) in [(1.0, 1), (2, 3)]) {
     test(
       'review UI Owner facts defer malformed versions $documentVersion/$recordVersion',
       () async {
         final result = await fixture.resolve(
-          "$_imports import 'package:owner_contracts/owner_contracts.dart'; const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card', versionRange: '*')]);",
+          "$_imports import 'package:owner_contracts/owner_contracts.dart'; const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card')]);",
         );
         final metadataPath = p.join(
           fixture.root.path,
@@ -474,7 +480,7 @@ const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
 
   test('UI owner metadata removal and legacy records defer safely', () async {
     final result = await fixture.resolve(
-      "$_imports import 'package:owner_contracts/owner_contracts.dart'; const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card', versionRange: '*')]);",
+      "$_imports import 'package:owner_contracts/owner_contracts.dart'; const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card')]);",
     );
     final cache = CCRouterContractOwnerIndexCache();
     expect(
@@ -535,7 +541,7 @@ const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
       "import 'package:owner_contracts/owner_contracts.dart' hide orderOwner;",
     ]) {
       final result = await fixture.resolve(
-        "$_imports $declaration const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card', versionRange: '*')]);",
+        "$_imports $declaration const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card')]);",
       );
       final owners = CCRouterContractOwnerIndexCache().resolve(fixture.file);
       final issue = fixture
@@ -557,7 +563,7 @@ const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
       );
     }
     final result = await fixture.resolve(
-      "$_imports import 'package:owner_contracts/owner_contracts.dart'; const ids = <CCComponentId>[]; const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', dependencies: [...ids], uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card', versionRange: '*')]);",
+      "$_imports import 'package:owner_contracts/owner_contracts.dart'; const ids = <CCComponentId>[]; const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', dependencies: [...ids], uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card')]);",
     );
     expect(
       fixture
@@ -577,7 +583,7 @@ const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
         "export 'package:ccrouter_contracts/ccrouter_ui_contracts.dart';",
       );
       final result = await fixture.resolve(
-        "import 'package:ccrouter_contracts/ccrouter_contracts.dart'; import 'barrel.dart' as ui; class Marker {} const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', uiDependencies: [ui.CCUIFragmentDependency<Marker>(alias: 'bad-alias', versionRange: '*')]);",
+        "import 'package:ccrouter_contracts/ccrouter_contracts.dart'; import 'barrel.dart' as ui; class Marker {} const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', uiDependencies: [ui.CCUIFragmentDependency<Marker>(alias: 'bad-alias')]);",
       );
       expect(fixture.codes(result), contains('ccrouter_ui_alias_invalid'));
     },
@@ -606,7 +612,7 @@ const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
     'foreign component constructors never inherit UI dependency semantics',
     () async {
       final result = await fixture.resolve(
-        "$_imports import 'package:owner_contracts/owner_contracts.dart'; class CCComponent { const CCComponent({Object? uiDependencies}); } const component = CCComponent(uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'bad-alias', versionRange: '*')]);",
+        "$_imports import 'package:owner_contracts/owner_contracts.dart'; class CCComponent { const CCComponent({Object? uiDependencies}); } const component = CCComponent(uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'bad-alias')]);",
       );
       final owners = CCRouterContractOwnerIndexCache().resolve(fixture.file);
       expect(
@@ -625,7 +631,7 @@ const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
     'UI self-consumption cannot receive a cyclic Owner dependency fix',
     () async {
       final result = await fixture.resolve(
-        "$_imports import 'package:owner_contracts/owner_contracts.dart'; const component = CCComponent(id: CCComponentId('orders'), version: '1.0.0', uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card', versionRange: '*')]);",
+        "$_imports import 'package:owner_contracts/owner_contracts.dart'; const component = CCComponent(id: CCComponentId('orders'), version: '1.0.0', uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card')]);",
       );
       final owners = CCRouterContractOwnerIndexCache().resolve(fixture.file);
       expect(
@@ -644,7 +650,7 @@ import 'package:owner_contracts/owner_contracts.dart';
 cc.CCComponent $name({Object? uiDependencies}) => const cc.CCComponent(
   id: cc.CCComponentId('consumer'), version: '1.0.0');
 final component = $name(uiDependencies: [
-  CCUIFragmentDependency<OrderFragment>(alias: 'bad-alias', versionRange: 'latest')]);
+  CCUIFragmentDependency<OrderFragment>(alias: 'bad-alias')]);
 ''');
       expect(result.diagnostics, isEmpty);
       final owners = CCRouterContractOwnerIndexCache().resolve(fixture.file);
@@ -673,11 +679,11 @@ import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:ccrouter_contracts/ccrouter_ui_contracts.dart' as ui;
 import 'package:owner_contracts/owner_contracts.dart';
 ui.CCUIFragmentDependency<T> CCUIFragmentDependency<T extends Object>({
-  required String alias, required String versionRange,
-}) => ui.CCUIFragmentDependency<T>(alias: 'card', versionRange: '*');
+  required String alias,
+}) => ui.CCUIFragmentDependency<T>(alias: 'card');
 final component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
   uiDependencies: [CCUIFragmentDependency<OrderFragment>(
-    alias: 'bad-alias', versionRange: 'latest')]);
+    alias: 'bad-alias',)]);
 ''');
       expect(result.diagnostics, isEmpty);
       expect(
@@ -697,7 +703,7 @@ typedef Component = cc.CCComponent;
 typedef Dependency<T extends Object> = ui.CCUIFragmentDependency<T>;
 class Marker {}
 const component = Component(id: cc.CCComponentId('consumer'), version: '1.0.0',
-  uiDependencies: [Dependency<Marker>(alias: 'bad-alias', versionRange: '*')]);
+  uiDependencies: [Dependency<Marker>(alias: 'bad-alias')]);
 ''');
     expect(result.diagnostics, isEmpty);
     expect(fixture.codes(result), contains('ccrouter_ui_alias_invalid'));
@@ -733,7 +739,7 @@ const component = Component(id: cc.CCComponentId('consumer'), version: '1.0.0',
 $_imports
 import 'package:owner_contracts/$library';
 const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
-  uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card', versionRange: '*')]);
+  uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card')]);
 ''');
         expect(result.diagnostics, isEmpty);
         final issue = fixture
@@ -789,7 +795,7 @@ import 'package:owner_contracts/owner_contracts.dart';
 typedef Component = CCComponent;
 typedef Dependency<T extends Object> = CCUIFragmentDependency<T>;
 const component = $component(id: CCComponentId('consumer'), version: '1.0.0',
-  uiDependencies: [$dependency<OrderFragment>(alias: 'card', versionRange: '*')]);
+  uiDependencies: [$dependency<OrderFragment>(alias: 'card')]);
 ''');
       final owners = CCRouterContractOwnerIndexCache().resolve(fixture.file);
       await _expectOwnerFix(fixture, result, owners);
@@ -832,7 +838,7 @@ const component = $component(id: CCComponentId('consumer'), version: '1.0.0',
 $_imports
 import 'package:owner_contracts/owner_contracts.dart';
 const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
-  uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card', versionRange: '*')]);
+  uiDependencies: [CCUIFragmentDependency<OrderFragment>(alias: 'card')]);
 ''');
       expect(result.diagnostics, isEmpty);
       final owners = CCRouterContractOwnerIndexCache().resolve(fixture.file);

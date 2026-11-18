@@ -281,7 +281,7 @@ Widget render$name(CCUIFragmentRenderInput<${name}Props, ${name}Action> input) =
      import 'package:ccrouter_ui/ccrouter_ui.dart';
      import 'package:$package/${stem}_fragment.dart';
      Add $ownerSymbol to CCComponent.dependencies (required, not optional).
-     Add to uiDependencies: CCUIFragmentDependency<${name}FragmentContract>(versionRange: '^1.0.0', alias: '$alias').
+     Add to uiDependencies: CCUIFragmentDependency<${name}FragmentContract>().
   4. Actual Host pubspec: include A/B implementation Packages and direct ccrouter_ui.
      Ensure ccrouter_generator and build_runner are in Host dev_dependencies.
      Run Flutter pub get from the Host, then ccrouter generate <host-root>.

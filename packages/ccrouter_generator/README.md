@@ -98,7 +98,8 @@ Route/Proxy 默认集合保持常量的实际泛型类型，不能因参数声�
 
 可选类型化 UI Fragment 也使用现有 `generate` 和 `portable prepare/publish`，不需要额外命令。
 契约包通过 `ccrouter_ui_contracts.dart` 声明 Contract，Renderer 和消费组件直接依赖
-`ccrouter_ui`；消费者在 `uiDependencies` 声明 Contract、版本范围与 alias，并把 Owner 保留在
+`ccrouter_ui`；消费者在 `uiDependencies` 声明 Contract 和可选 alias（Dependency 优先于 Contract，随后按类型名推导），
+自动记录 Contract 精确版本与结构指纹；不再接受 `versionRange`。把 Owner 保留在
 required `dependencies`。Generator 校验 DTO、普通 enum、有效默认值指纹和静态 Renderer
 装配，生成消费者专属 `<componentId>.ui.api.g.dart`。消费方不得导入 Owner Renderer 或
 `ui/*.ui.g.dart` SPI。实际消费 UI 的 Host 直接依赖 `ccrouter_ui`，启动仍传一个完整 Assembly。

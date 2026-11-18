@@ -305,7 +305,7 @@ class Home {}
     () async {
       const file = 'lib/src/ui.dart';
       const source =
-          "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\nimport 'package:ccrouter_contracts/ccrouter_ui_contracts.dart';\nclass Marker {}\nconst component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', uiDependencies: [CCUIFragmentDependency<Marker>(alias: 'bad-alias', versionRange: '*')]);\n";
+          "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\nimport 'package:ccrouter_contracts/ccrouter_ui_contracts.dart';\nclass Marker {}\nconst component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', uiDependencies: [CCUIFragmentDependency<Marker>(alias: 'bad-alias')]);\n";
       final server = await AnalysisServerSession.start({
         file: source,
       }, lsp: true);

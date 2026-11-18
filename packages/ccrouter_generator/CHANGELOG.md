@@ -2,6 +2,10 @@
 
 ## 0.1.0 - Unreleased
 
+- Align UI declarations with Service/Command defaults. Resolve Dependency alias,
+  Contract alias, then marker-name inference, and record exact Contract versions
+  instead of authored UI ranges. Update scaffold and find recipes accordingly.
+
 - Wire optional component examples to generated Host assembly, Managed app and
   an authored startup Route. Declare proven build tools and SDK test dependencies;
   prepare standalone parent Portable State before read-only example consumption.

@@ -33,6 +33,18 @@ String defaultCommandClientMember(String contractType) {
   return _lowerCamelOr(stem, fallback: 'command');
 }
 
+/// Derives a UI Client method by removing only a trailing `FragmentContract`.
+/// Contract and dependency aliases override the deterministic type fallback.
+String defaultUIFragmentClientMember(String contractType) {
+  final stem = contractType.endsWith('FragmentContract')
+      ? contractType.substring(
+          0,
+          contractType.length - 'FragmentContract'.length,
+        )
+      : contractType;
+  return _lowerCamelOr(stem, fallback: 'fragment');
+}
+
 /// Lowercases one leading character while preserving the remaining authored
 /// type spelling, or returns [fallback] when suffix removal leaves no stem.
 String _lowerCamelOr(String value, {required String fallback}) =>

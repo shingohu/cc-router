@@ -4,6 +4,11 @@
 
 首次接入按[UI 接入指南](../skills/ccrouter-integration-development/references/ui-fragments.md)操作。实施过程、早期取舍与当时的验证数字保留在[合并前快照](archive/20261024-consolidation/CCRouter-ui-fragment-design.md)和[归档索引](archive/20261024-consolidation/README.md)；当前证据统一由[验证索引](validation/README.md)导航。本文不表示 API 已冻结或正式发布门禁已关闭。
 
+声明参数与 Service/Command 对齐：Contract 提供可选 `alias`、默认 `version: '0.1.0'`
+和 `description`；Dependency 仅有可选 `alias`，按消费方覆盖、Contract 默认名、移除
+`FragmentContract` 后首字母小写的类型名依次取值。公开 `versionRange` 已移除，旧调用
+需删除该参数并重新生成；生成器仍记录精确版本和结构指纹，不改变 Host 兼容性校验。
+
 ## 适用场景与选型边界
 
 当 B 组件拥有一块完整的局部业务 UI，而 A 组件需要把它嵌入自己的 Widget 树时，使用 UI
@@ -40,7 +45,7 @@ v1 范围：
 
 - 同一契约只有一个有效 Renderer；一个 Renderer 可创建多个相互独立的 UI 实例。
 - Props 和 Action 使用明确的 Pure Dart 类型；局部交互通过类型化 callback 返回 A。
-- 静态 Host Assembly、版本范围与 shape fingerprint 校验。
+- 静态 Host Assembly、生成器记录的精确版本与 shape fingerprint 校验。
 - 复用 Flutter inherited 环境、State 生命周期与现有 App/Session Service。
 - 每个 Fragment 实例可选择 `CCUIFragmentUpdatePolicy.reuseIdenticalProps`，仅在 Props
   实例和 `active` 未变化时复用上一次 Renderer 结果；默认 `always` 保持原有更新行为。
@@ -133,10 +138,7 @@ const accountComponent = CCComponent(
   version: '0.1.0',
   dependencies: [orderComponentId],
   uiDependencies: [
-    CCUIFragmentDependency<OrderSummaryFragmentContract>(
-      versionRange: '^1.0.0',
-      alias: 'orderSummary',
-    ),
+    CCUIFragmentDependency<OrderSummaryFragmentContract>(),
   ],
 );
 ```
