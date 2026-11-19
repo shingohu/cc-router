@@ -1,5 +1,7 @@
 # Event Contract alias 与多轮 review（2026-11-19，本地）
 
+本报告记录提交前验证；随后获授权的两阶段来源与 pin 同步见[发布补充](pin-release.md)。
+
 本轮在 `codex/unify-contract-validation` 上继续工作，基线为
 `7f3d95754eefb978b0074380a19c5fb14c11a9c6`（Git tag `0.2.0`）。
 此前的[名称与版本校验收口](../20261118-contract-validation/report.md)仍在同一未提交改动中。

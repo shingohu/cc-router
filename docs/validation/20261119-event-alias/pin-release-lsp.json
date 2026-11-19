@@ -1,0 +1,21 @@
+{
+  "host": "<home>/develop/LiberLive/cc-router/demo",
+  "pluginRef": "ec9da8538b27ef17efcf44aeefc9bbad2fbef845",
+  "cache": "<home>/.dartServer/.plugin_manager/2830316c39d53daed22fb3806abbfdb7/analyzer_plugin",
+  "resolvedPluginRoot": "file://<home>/.pub-cache/git/cc-router-ec9da8538b27ef17efcf44aeefc9bbad2fbef845/packages/ccrouter_analyzer_plugin",
+  "sourceUnchanged": true,
+  "runs": [
+    {
+      "cycle": 1,
+      "pid": 13523,
+      "invalidAliasReported": true,
+      "repairCleared": true
+    },
+    {
+      "cycle": 2,
+      "pid": 13898,
+      "invalidAliasReported": true,
+      "repairCleared": true
+    }
+  ]
+}

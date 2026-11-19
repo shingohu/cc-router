@@ -8,7 +8,8 @@
 
 [2026-11-19 Event Contract alias 与多轮 review（本地）](20261119-event-alias/report.md)：
 补齐可选 alias，保留默认方法与指纹兼容；覆盖真实 Host 撞名/恢复、导入与重复注解、
-外部 metadata、Plugin 和框架回归。没有提交/推送，Demo pin 和 GUI 验证不冒充完成。
+外部 metadata、Plugin 和框架回归。[两阶段发布补充](20261119-event-alias/pin-release.md)
+记录获授权后的远端来源、Demo pin 与真实 LSP 验证；GUI 会话未验证。
 
 [2026-11-18 Client 名称与 Contract 版本校验收口（本地）](20261118-contract-validation/report.md)：
 统一 Object 保留名约束与 SemVer 解析，保留 RED/GREEN、完整套件结果和运行边界。

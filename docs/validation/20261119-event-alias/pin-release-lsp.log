@@ -1,0 +1,23 @@
+{"cycle": 1, "pid": 13523, "diagnostic": "ccrouter_alias_invalid", "message": "CCEventContract alias \"toString\" is not a public lower-camel Dart identifier, or is reserved by Object.\nChoose a non-keyword lower-camel Client member name outside Object members."}
+{"cycle": 2, "pid": 13898, "diagnostic": "ccrouter_alias_invalid", "message": "CCEventContract alias \"toString\" is not a public lower-camel Dart identifier, or is reserved by Object.\nChoose a non-keyword lower-camel Client member name outside Object members."}
+{
+  "host": "<home>/develop/LiberLive/cc-router/demo",
+  "pluginRef": "ec9da8538b27ef17efcf44aeefc9bbad2fbef845",
+  "cache": "<home>/.dartServer/.plugin_manager/2830316c39d53daed22fb3806abbfdb7/analyzer_plugin",
+  "resolvedPluginRoot": "file://<home>/.pub-cache/git/cc-router-ec9da8538b27ef17efcf44aeefc9bbad2fbef845/packages/ccrouter_analyzer_plugin",
+  "sourceUnchanged": true,
+  "runs": [
+    {
+      "cycle": 1,
+      "pid": 13523,
+      "invalidAliasReported": true,
+      "repairCleared": true
+    },
+    {
+      "cycle": 2,
+      "pid": 13898,
+      "invalidAliasReported": true,
+      "repairCleared": true
+    }
+  ]
+}
