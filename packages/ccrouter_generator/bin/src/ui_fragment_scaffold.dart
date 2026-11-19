@@ -135,13 +135,7 @@ UIFragmentScaffoldPlan planUIFragmentScaffold({
     );
   }
   final alias = '${name[0].toLowerCase()}${name.substring(1)}';
-  if (!isGeneratedClientMemberName(alias) ||
-      const {
-        'hashCode',
-        'runtimeType',
-        'toString',
-        'noSuchMethod',
-      }.contains(alias)) {
+  if (!isGeneratedClientMemberName(alias)) {
     throw const CCScaffoldException(
       'Fragment name produces a reserved UI alias; choose another name.',
     );

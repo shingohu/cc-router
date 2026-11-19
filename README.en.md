@@ -1283,6 +1283,20 @@ The Generator chooses internal callback/import names that avoid business paramet
 
 Dependency preflight resolves Owners through actual libraries, imports/exports, and show/hide clauses. Unimported declarations in the same package do not participate. Conditional imports, parts, and incomplete external namespaces defer to authoritative Builder validation rather than guessed Owners. Analyzer annotation diagnostics and Quick Fixes verify the declaration's framework library; same-named business annotations are not mistaken for CCRouter annotations. Incomplete resolution without provable import identity waits conservatively for later resolution or generation checks.
 
+Generated static Service, Command, Event and UI Client members reject Dart keywords and inherited
+Object members (`hashCode`, `runtimeType`, `toString`, `noSuchMethod`), including
+explicit aliases, Contract defaults and inferred names. Names use ASCII
+letters/digits in lowerCamelCase. Previously unchecked Owner defaults containing
+`_` or `$` require an explicit compliant alias; no automatic rename occurs.
+Choose a different alias;
+Generator declarations and external metadata use the same rule. Owner Command
+Clients are always generated; fix an invalid inferred Owner member with
+`CCCommandContract.alias`, even when consumers override their local names.
+
+Contract and Component versions use the same `CCSemVer` grammar and reject leading
+or trailing whitespace: use `'1.0.0'`, not `' 1.0.0 '`. Range expressions retain
+outer whitespace and whitespace-separated comparator support.
+
 Route, Service, Command, Event, and InitTask Contracts each have independent Contract SemVer. The Generator also emits a `shapeFingerprint` excluding source paths and implementation class names. Consumer metadata and Host Bundles carry exact version ranges and fingerprints. Workspace validation, Host assembly, and Runtime reject missing Contracts, Owner mismatches, unsatisfied version ranges, fingerprint drift, duplicate implementations, and stale artifacts with stable compatibility error codes. They do not download, negotiate, or silently downgrade old Contracts at runtime. The current `0.x` phase does not promise automatic compatibility across versions. Explicitly update versions when public shapes change, and use new Contract IDs for breaking changes.
 
 The generated Host Assembly exposes a read-only `contractBundle`. Standard startup passes it together with component Manifests to `CCRouterHost.initialize`, so business code does not handwrite version strings:
@@ -1401,6 +1415,16 @@ await OrderEvents.publishOrderPaid(
   timeout: const Duration(seconds: 3),
 );
 ```
+
+Each Event type has exactly one `CCEventContract` annotation. Its optional `alias`
+selects the complete Owner publication method name:
+`alias: 'publishPaid'` yields `OrderEvents.publishPaid(...)` with no extra prefix.
+Omitting it preserves the existing `publish<TypeWithoutEvent>` spelling. Use an
+alias to resolve inferred-name collisions. Aliases must be public lowerCamelCase
+identifiers outside Dart keywords and Object members. Alias changes affect the
+generated API and Contract fingerprint: review the Contract version and regenerate
+Owner/Subscriber/Host. Event IDs, publication permission, Subscriber IDs and
+payload transport remain independent of this name.
 
 An Event may have zero or multiple Subscribers. Stable IDs determine start order; one Subscriber's failure does not prevent others from running. The call Future completes after that dispatch finishes. If a component has exactly one Subscriber for the Event, `CCEventSubscription.id` may be omitted; the Generator uses `<subscriberComponentId>.<eventId>`. Multiple Subscribers must all provide explicit IDs. Cross-component Contracts declare `componentId`; subscribing components list the Owner in required or optional dependencies. The Generator creates a Publication Client only for the Owner; there is no `eventDependencies` list or arbitrary publishing permission.
 

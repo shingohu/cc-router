@@ -1,0 +1,284 @@
+{
+  "failedCases": 51,
+  "files": [
+    "packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart",
+    "packages/ccrouter_test/generator_test/generation_watch_test.dart",
+    "packages/ccrouter_test/generator_test/generation_command_test.dart",
+    "packages/ccrouter_test/generator_test/ui_fragment_find_command_test.dart",
+    "packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart",
+    "packages/ccrouter_test/generator_test/devtools_catalog_literal_test.dart"
+  ],
+  "failures": [
+    {
+      "file": "packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart",
+      "name": "machine proxy forwards reload only after matching success",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart",
+      "name": "machine proxy forwards parent stdin EOF to Flutter",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart",
+      "name": "interactive supervisor reports that terminal reload is ungated",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart",
+      "name": "interactive supervisor removes its lease before child termination",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart",
+      "name": "machine supervisor removes its lease before child termination",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart",
+      "name": "interactive supervisor handles termination at the first heartbeat",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart",
+      "name": "machine supervisor handles termination at the first heartbeat",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart",
+      "name": "machine proxy returns daemon error and withholds failed reload",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_watch_test.dart",
+      "name": "installed flutter build preflight reuses an active watch",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "package-local generation publishes a Pure Dart Package without Host validation",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "package-local generation preserves Flutter component artifacts",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "generate skips a non-participating Workspace aggregator",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "package-local portable lifecycle owns only the requested Package",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "Host generation preserves a sibling example Host byte for byte",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "generate check rejects cross-Package internal imports despite ignores",
+      "flutterSdkErrorPrinted": false
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "unified generation checks workspace outputs and restores stale probes",
+      "flutterSdkErrorPrinted": false
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "concurrent generation is serialized by the workspace lock",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "generation rejects authored input changed after build_runner",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "generation removes only obsolete source-tree metadata",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "clean removes managed outputs but preserves user files and rebuilds",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "cached and no-cache generation produce identical artifacts",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "profile emits a structured trace and atomically persists the latest run",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "no-cache profile traces the full generator and Builder phases",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "shared planning and unified epoch snapshots match reference state bytes",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "parallel exact-byte reads match sequential artifacts and planning state",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "Runtime Bundle reverse closure matches fixed-point generated bytes",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "InitTask reachability memo matches recursive generated bytes",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "Route visibility memo matches per-Route generated bytes",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "post-Builder aggregation reuse matches the kill-switch reference",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "shared planning snapshot isolates Build Plan state failures",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "fast path requires exact authored inputs and managed outputs",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "generation without profile emits only the final timing",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "P1 build plan diagnoses Host-only changes without skipping Builder",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "P1 build plan reports changed source and repairs local planning state",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "P6 tool identity changes force the full Builder path",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "CLI integration edits do not change the generation tool identity",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "generation-cycle kernel edits invalidate the generation tool identity",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "P2 full Builder fallback matches a Host component removal reference",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "portable prepare bypasses a matching manifest and repairs state",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "P3 falls back to Builder when a Portable Package changes resolution",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "P3 rejects a read-only Package without valid Portable Generation State",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "corrupted generation cache falls back to a full parse",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/generation_command_test.dart",
+      "name": "corrupted generation manifest fails closed to full generation",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/ui_fragment_find_command_test.dart",
+      "name": "UI lookup and existing usage use exact portable locations and alias",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/ui_fragment_find_command_test.dart",
+      "name": "missing usage reports required edge and never invents a Client alias",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/ui_fragment_find_command_test.dart",
+      "name": "legacy alias metadata defers the callable member",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/ui_fragment_find_command_test.dart",
+      "name": "a missing public DTO proof withholds the entire dependency recipe",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/ui_fragment_find_command_test.dart",
+      "name": "same-owner usage points to a local Widget and unknown consumers fail",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/ui_fragment_find_command_test.dart",
+      "name": "missing Renderer and ambiguous UI IDs are explicit",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart",
+      "name": "generate reports proven missing owners before build_runner without writes",
+      "flutterSdkErrorPrinted": true
+    },
+    {
+      "file": "packages/ccrouter_test/generator_test/devtools_catalog_literal_test.dart",
+      "name": "Host Catalog descriptions round-trip as compiled Dart literals",
+      "flutterSdkErrorPrinted": true
+    }
+  ],
+  "command": [
+    "fvm",
+    "dart",
+    "test",
+    "--concurrency=1",
+    "packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart",
+    "packages/ccrouter_test/generator_test/generation_watch_test.dart",
+    "packages/ccrouter_test/generator_test/generation_command_test.dart",
+    "packages/ccrouter_test/generator_test/ui_fragment_find_command_test.dart",
+    "packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart",
+    "packages/ccrouter_test/generator_test/devtools_catalog_literal_test.dart",
+    "--name",
+    "^(?:machine\\ proxy\\ forwards\\ reload\\ only\\ after\\ matching\\ success|machine\\ proxy\\ forwards\\ parent\\ stdin\\ EOF\\ to\\ Flutter|interactive\\ supervisor\\ reports\\ that\\ terminal\\ reload\\ is\\ ungated|interactive\\ supervisor\\ removes\\ its\\ lease\\ before\\ child\\ termination|machine\\ supervisor\\ removes\\ its\\ lease\\ before\\ child\\ termination|interactive\\ supervisor\\ handles\\ termination\\ at\\ the\\ first\\ heartbeat|machine\\ supervisor\\ handles\\ termination\\ at\\ the\\ first\\ heartbeat|machine\\ proxy\\ returns\\ daemon\\ error\\ and\\ withholds\\ failed\\ reload|installed\\ flutter\\ build\\ preflight\\ reuses\\ an\\ active\\ watch|package\\-local\\ generation\\ publishes\\ a\\ Pure\\ Dart\\ Package\\ without\\ Host\\ validation|package\\-local\\ generation\\ preserves\\ Flutter\\ component\\ artifacts|generate\\ skips\\ a\\ non\\-participating\\ Workspace\\ aggregator|package\\-local\\ portable\\ lifecycle\\ owns\\ only\\ the\\ requested\\ Package|Host\\ generation\\ preserves\\ a\\ sibling\\ example\\ Host\\ byte\\ for\\ byte|generate\\ check\\ rejects\\ cross\\-Package\\ internal\\ imports\\ despite\\ ignores|unified\\ generation\\ checks\\ workspace\\ outputs\\ and\\ restores\\ stale\\ probes|concurrent\\ generation\\ is\\ serialized\\ by\\ the\\ workspace\\ lock|generation\\ rejects\\ authored\\ input\\ changed\\ after\\ build_runner|generation\\ removes\\ only\\ obsolete\\ source\\-tree\\ metadata|clean\\ removes\\ managed\\ outputs\\ but\\ preserves\\ user\\ files\\ and\\ rebuilds|cached\\ and\\ no\\-cache\\ generation\\ produce\\ identical\\ artifacts|profile\\ emits\\ a\\ structured\\ trace\\ and\\ atomically\\ persists\\ the\\ latest\\ run|no\\-cache\\ profile\\ traces\\ the\\ full\\ generator\\ and\\ Builder\\ phases|shared\\ planning\\ and\\ unified\\ epoch\\ snapshots\\ match\\ reference\\ state\\ bytes|parallel\\ exact\\-byte\\ reads\\ match\\ sequential\\ artifacts\\ and\\ planning\\ state|Runtime\\ Bundle\\ reverse\\ closure\\ matches\\ fixed\\-point\\ generated\\ bytes|InitTask\\ reachability\\ memo\\ matches\\ recursive\\ generated\\ bytes|Route\\ visibility\\ memo\\ matches\\ per\\-Route\\ generated\\ bytes|post\\-Builder\\ aggregation\\ reuse\\ matches\\ the\\ kill\\-switch\\ reference|shared\\ planning\\ snapshot\\ isolates\\ Build\\ Plan\\ state\\ failures|fast\\ path\\ requires\\ exact\\ authored\\ inputs\\ and\\ managed\\ outputs|generation\\ without\\ profile\\ emits\\ only\\ the\\ final\\ timing|P1\\ build\\ plan\\ diagnoses\\ Host\\-only\\ changes\\ without\\ skipping\\ Builder|P1\\ build\\ plan\\ reports\\ changed\\ source\\ and\\ repairs\\ local\\ planning\\ state|P6\\ tool\\ identity\\ changes\\ force\\ the\\ full\\ Builder\\ path|CLI\\ integration\\ edits\\ do\\ not\\ change\\ the\\ generation\\ tool\\ identity|generation\\-cycle\\ kernel\\ edits\\ invalidate\\ the\\ generation\\ tool\\ identity|P2\\ full\\ Builder\\ fallback\\ matches\\ a\\ Host\\ component\\ removal\\ reference|portable\\ prepare\\ bypasses\\ a\\ matching\\ manifest\\ and\\ repairs\\ state|P3\\ falls\\ back\\ to\\ Builder\\ when\\ a\\ Portable\\ Package\\ changes\\ resolution|P3\\ rejects\\ a\\ read\\-only\\ Package\\ without\\ valid\\ Portable\\ Generation\\ State|corrupted\\ generation\\ cache\\ falls\\ back\\ to\\ a\\ full\\ parse|corrupted\\ generation\\ manifest\\ fails\\ closed\\ to\\ full\\ generation|UI\\ lookup\\ and\\ existing\\ usage\\ use\\ exact\\ portable\\ locations\\ and\\ alias|missing\\ usage\\ reports\\ required\\ edge\\ and\\ never\\ invents\\ a\\ Client\\ alias|legacy\\ alias\\ metadata\\ defers\\ the\\ callable\\ member|a\\ missing\\ public\\ DTO\\ proof\\ withholds\\ the\\ entire\\ dependency\\ recipe|same\\-owner\\ usage\\ points\\ to\\ a\\ local\\ Widget\\ and\\ unknown\\ consumers\\ fail|missing\\ Renderer\\ and\\ ambiguous\\ UI\\ IDs\\ are\\ explicit|generate\\ reports\\ proven\\ missing\\ owners\\ before\\ build_runner\\ without\\ writes|Host\\ Catalog\\ descriptions\\ round\\-trip\\ as\\ compiled\\ Dart\\ literals)$",
+    "--reporter",
+    "expanded"
+  ]
+}

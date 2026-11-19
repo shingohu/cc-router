@@ -2,6 +2,11 @@
 
 ## 0.1.0 - Unreleased
 
+- Add optional Event Contract alias with legacy default-name compatibility,
+  generated Client collision checks and reserved-name diagnostics.
+
+- Reject Object-member aliases on Service/Command/UI Contracts with shared Plugin naming validation; preserve conservative handling of computed expressions.
+
 - Include Contract and inferred defaults in UI alias validation and collisions.
   Remove the obsolete UI version-range diagnostic; dependencies no longer expose
   a version-range argument.

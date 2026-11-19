@@ -8,6 +8,7 @@ import 'package:analyzer_plugin/protocol/protocol_common.dart';
 import 'package:ccrouter_analyzer_plugin/src/component_dependency_analyzer.dart';
 import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
 import 'package:ccrouter_analyzer_plugin/src/service_lifecycle_analysis.dart';
+import 'generated_client_naming.dart';
 import 'resolved_symbols.dart';
 import 'host_lifecycle_analysis.dart';
 import 'ui_fragment_analysis.dart';
@@ -182,80 +183,6 @@ const _generatedOutputSpecs = <String, List<_GeneratedOutputSpec>>{
 /// Stable identity syntax shared by annotation-level diagnostics.
 final _stableIdPattern = RegExp(r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$');
 
-/// Public lower-camel identifier syntax used by generated Client aliases.
-final _aliasPattern = RegExp(r'^[a-z][A-Za-z0-9]*$');
-
-/// Dart keywords that cannot become generated Client members.
-const _dartKeywords = <String>{
-  'abstract',
-  'as',
-  'assert',
-  'async',
-  'await',
-  'base',
-  'break',
-  'case',
-  'catch',
-  'class',
-  'const',
-  'continue',
-  'covariant',
-  'default',
-  'deferred',
-  'do',
-  'dynamic',
-  'else',
-  'enum',
-  'export',
-  'extends',
-  'extension',
-  'external',
-  'factory',
-  'false',
-  'final',
-  'finally',
-  'for',
-  'Function',
-  'get',
-  'hide',
-  'if',
-  'implements',
-  'import',
-  'in',
-  'interface',
-  'is',
-  'late',
-  'library',
-  'mixin',
-  'new',
-  'null',
-  'of',
-  'on',
-  'operator',
-  'part',
-  'required',
-  'rethrow',
-  'return',
-  'sealed',
-  'set',
-  'show',
-  'static',
-  'super',
-  'switch',
-  'sync',
-  'this',
-  'throw',
-  'true',
-  'try',
-  'typedef',
-  'var',
-  'void',
-  'when',
-  'while',
-  'with',
-  'yield',
-};
-
 /// Function annotations that require static top-level Handler declarations.
 const _handlerAnnotations = <String>{
   'CCCommandHandler',
@@ -276,7 +203,12 @@ const _idAnnotations = <String>{
 };
 
 /// Contract annotations whose alias becomes a generated Dart member.
-const _aliasAnnotations = <String>{'CCServiceContract', 'CCCommandContract'};
+const _aliasAnnotations = <String>{
+  'CCServiceContract',
+  'CCCommandContract',
+  'CCEventContract',
+  'CCUIFragmentContract',
+};
 
 /// Named `Duration` units converted to microseconds for positivity checks.
 const _durationFactors = <String, int>{
@@ -783,16 +715,28 @@ abstract final class CCRouterSourceAnalyzer {
       }
     }
     if (_aliasAnnotations.contains(annotationName)) {
-      final alias = _literalString(_namedArgument(annotation, 'alias'));
-      if (alias != null &&
-          (!_aliasPattern.hasMatch(alias) || _dartKeywords.contains(alias))) {
+      final aliasNode = _namedArgument(annotation, 'alias');
+      var alias = _literalString(aliasNode);
+      final declaration = annotation.parent;
+      if (annotationName == 'CCCommandContract' &&
+          declaration is ClassDeclaration &&
+          (aliasNode == null || aliasNode is NullLiteral)) {
+        alias = defaultCommandClientMember(declaration.name.lexeme);
+      }
+      if (annotationName == 'CCEventContract' &&
+          declaration is ClassDeclaration &&
+          (aliasNode == null || aliasNode is NullLiteral)) {
+        alias = defaultEventClientMember(declaration.name.lexeme);
+      }
+      if (alias != null && !isGeneratedClientMemberName(alias)) {
         diagnostics.add(
           _ruleDiagnostic(
             annotation,
             code: 'ccrouter_alias_invalid',
             message:
-                '$annotationName alias "$alias" is not a public lower-camel Dart identifier.',
-            correction: 'Choose a non-keyword lower-camel Client member name.',
+                '$annotationName alias "$alias" is not a public lower-camel Dart identifier, or is reserved by Object.',
+            correction:
+                'Choose a non-keyword lower-camel Client member name outside Object members.',
           ),
         );
       }

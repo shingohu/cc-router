@@ -1,3 +1,4 @@
+import 'contract_validation.dart';
 import 'dart:convert';
 
 import 'package:analyzer/dart/constant/value.dart';
@@ -19,14 +20,6 @@ const int _initTaskMaxDescriptionLength = 4096;
 /// Portable syntax shared by generated Task and Gate identities.
 final RegExp _initTaskStableIdPattern = RegExp(
   r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$',
-);
-
-/// SemVer 2.0 syntax used by independent InitTask Contracts.
-final RegExp _initTaskSemanticVersionPattern = RegExp(
-  r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
-  r'(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)'
-  r'(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?'
-  r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$',
 );
 
 /// Matches typed initialization task contracts.
@@ -504,7 +497,7 @@ _InitTaskContractModel _contractFromObject(
       ?.getField('value')
       ?.toStringValue();
   final version = value.getField('version')?.toStringValue() ?? '0.1.0';
-  if (!_initTaskSemanticVersionPattern.hasMatch(version)) {
+  if (!isContractSemanticVersion(version)) {
     _failInitTask('InitTask "$id" must use SemVer 2.0.', element);
   }
   if (componentId != null) {

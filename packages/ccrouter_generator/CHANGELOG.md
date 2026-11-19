@@ -2,6 +2,11 @@
 
 ## 0.1.0 - Unreleased
 
+- Add optional Event Contract alias with legacy default-name compatibility,
+  generated Client collision checks and reserved-name diagnostics.
+
+- Reject inherited Object names for all Service/Command/UI Client aliases and inferred members. Replace repeated version regexes with the Runtime SemVer parser.
+
 - Align UI declarations with Service/Command defaults. Resolve Dependency alias,
   Contract alias, then marker-name inference, and record exact Contract versions
   instead of authored UI ranges. Update scaffold and find recipes accordingly.

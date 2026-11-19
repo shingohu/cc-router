@@ -631,30 +631,101 @@ void main() {
   });
 
   test('rejects invalid persisted Service and Command Client aliases', () {
-    final result = CCRouteWorkspaceValidator.validate([
-      document(
-        components: [component('orders')],
-        routes: const [],
-        serviceContracts: const [
-          {'id': 'orders.summary', 'componentId': 'orders', 'alias': 'class'},
-        ],
-      ),
-      document(source: 'commands.dart', components: const [], routes: const [])
-        ..['commandContracts'] = const [
-          {'id': 'orders.submit', 'componentId': 'orders', 'alias': 'Submit'},
-        ],
-    ]);
+    for (final aliases in [('class', 'Submit'), ('hashCode', 'toString')]) {
+      final result = CCRouteWorkspaceValidator.validate([
+        document(
+          components: [component('orders')],
+          routes: const [],
+          serviceContracts: [
+            {
+              'id': 'orders.summary',
+              'componentId': 'orders',
+              'alias': aliases.$1,
+            },
+          ],
+        ),
+        document(
+            source: 'commands.dart',
+            components: const [],
+            routes: const [],
+          )
+          ..['commandContracts'] = [
+            {
+              'id': 'orders.submit',
+              'componentId': 'orders',
+              'alias': aliases.$2,
+            },
+          ],
+      ]);
 
-    expect(
-      result.errors,
-      contains(
-        'Service contract "orders.summary" has an invalid Client alias.',
-      ),
-    );
-    expect(
-      result.errors,
-      contains('Command contract "orders.submit" has an invalid Client alias.'),
-    );
+      expect(
+        result.errors,
+        contains(
+          'Service contract "orders.summary" has an invalid Client alias.',
+        ),
+      );
+      expect(
+        result.errors,
+        contains(
+          'Command contract "orders.submit" has an invalid Client alias.',
+        ),
+      );
+    }
+  });
+
+  test(
+    'validates the inferred Owner Command Client name in external metadata',
+    () {
+      for (final aliased in [false, true]) {
+        final result = CCRouteWorkspaceValidator.validate([
+          document(components: [component('orders')], routes: const [])
+            ..['commandContracts'] = [
+              {
+                'id': 'orders.format',
+                'componentId': 'orders',
+                'type': 'ToStringCommand',
+                if (aliased) 'alias': 'formatOrder',
+              },
+            ],
+        ]);
+        expect(
+          result.errors.any(
+            (message) => message.contains('invalid Client alias'),
+          ),
+          !aliased,
+        );
+      }
+    },
+  );
+
+  test('validates explicit Event Client aliases in external metadata', () {
+    for (final alias in <Object?>[
+      null,
+      '',
+      'class',
+      'toString',
+      true,
+      3,
+      'publishCreated',
+    ]) {
+      final result = CCRouteWorkspaceValidator.validate([
+        document(components: [component('orders')], routes: const [])
+          ..['eventContracts'] = [
+            {
+              'id': 'orders.created',
+              'componentId': 'orders',
+              'type': 'OrderCreatedEvent',
+              if (alias != null) 'alias': alias,
+            },
+          ],
+      ]);
+      expect(
+        result.errors.any(
+          (message) => message.contains('invalid Client alias'),
+        ),
+        alias != null && alias != 'publishCreated',
+      );
+    }
   });
 
   test('rejects a generated consumer for a Route-scoped Service', () {
@@ -1751,9 +1822,7 @@ void main() {
         "export 'src/ccrouter_generated/contract/detail.route.contract.g.dart' show DetailRoute;\n",
       );
       expect(CCRouteBarrelExportValidator.validate(root, [metadata]), isEmpty);
-      barrel.writeAsStringSync(
-        "export 'src/detail.dart' show DetailRoute;\n",
-      );
+      barrel.writeAsStringSync("export 'src/detail.dart' show DetailRoute;\n");
       expect(
         CCRouteBarrelExportValidator.validate(root, [metadata]),
         contains(contains('detail.route.contract.g.dart')),

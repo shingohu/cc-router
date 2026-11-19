@@ -5,10 +5,10 @@
     "name": "demo_order_contracts",
     "version": "0.1.0"
   },
-  "toolFingerprint": "637f8b64cf61b7dfa29b5b3c09ba39a115a96d8d360ee20907cf49c205ad6666",
+  "toolFingerprint": "6570a79dd8362c5176a6b2dc269abc8c24c08e14f2ed0015798370c0d76780f6",
   "authoredInputFingerprint": "1d1029a003b8044b86f547eb07008803900de36a5021f55a15cfec464d96552b",
-  "resolutionFingerprint": "51ce06c0ed27c41487d33008655b7cb2b901d77b9c794a56568e3e0f55f5e0e0",
+  "resolutionFingerprint": "430f65573c65e64c18d55666f243315434be57cc3698a3fbc1126499e4a63a17",
   "metadataFingerprint": "6412ffe991961844f0aa088578d2b1794e802f2ab3b896f7d6e0f4eeaf2bfa23",
   "managedOutputFingerprint": "06b2c669642d2fa60953357ac86bcd6ac2716dc2e766948878b6bf1dcc9baab7",
-  "contentFingerprint": "42312bf28d58840bfe02212d310b649523d202fa6870e7291b09f0db701666db"
+  "contentFingerprint": "f81599d96fab64e9eb03db226b2d45649de744701aa1c3d52935880b82a6e206"
 }

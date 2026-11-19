@@ -559,6 +559,22 @@ abstract interface class OrderSummaryService { String summaryFor(int id); }
     },
   );
 
+  test(
+    'Object member Service dependency alias fails before emitting a Client',
+    () async {
+      final logs = await generateProxy('''
+const owner = CCComponentId('orders');
+@CCServiceContract(componentId: owner, id: 'orders.summary')
+abstract interface class OrderService { String load(); }
+const component = CCComponent(
+  id: CCComponentId('consumer'), version: '1.0.0', dependencies: [owner],
+  serviceDependencies: [CCServiceDependency<OrderService>(alias: 'hashCode')],
+);
+''', fails: true);
+      expect(logs, contains('alias "hashCode"'));
+    },
+  );
+
   test('proxy builder embeds typed Key and explicit alias', () async {
     final output = await generateProxy(
       r'''

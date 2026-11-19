@@ -2,6 +2,11 @@
 
 ## 0.1.0 - Unreleased
 
+- Add optional Event Contract alias with legacy default-name compatibility,
+  generated Client collision checks and reserved-name diagnostics.
+
+- Reject surrounding whitespace in Contract SemVer values while preserving range-expression whitespace. Document generated Client Object-member restrictions.
+
 - BREAKING: align UI Contract parameters with Service/Command (`alias`, version
   defaulting to `0.1.0`, and `description`). UI Dependency accepts only optional
   `alias`; remove legacy `versionRange` and regenerate to record exact versions.

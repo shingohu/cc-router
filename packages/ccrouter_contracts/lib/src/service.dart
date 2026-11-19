@@ -65,6 +65,8 @@ final class CCServiceContract {
   /// `CCServiceDependency.alias`, for example when selecting several keyed
   /// implementations. The value affects generated source compatibility but
   /// has no Runtime ownership or Service lifecycle semantics.
+  /// Aliases must be public lower-camel identifiers outside Object members
+  /// (`hashCode`, `runtimeType`, `toString`, and `noSuchMethod`).
   final String? alias;
 
   /// Independent Service Contract SemVer used by cross-package consumers.
@@ -101,7 +103,8 @@ final class CCServiceDependency<T extends Object> {
   /// Use this only to distinguish multiple Keys for the same contract, apply a
   /// consumer-specific vocabulary, or avoid a generated-name collision. When
   /// absent, the generator uses `CCServiceContract.alias` and then the contract
-  /// type name. Values must be public lower-camel Dart identifiers.
+  /// type name. Values must be public lower-camel Dart identifiers outside
+  /// inherited Object members, including when the name is inferred.
   final String? alias;
 }
 

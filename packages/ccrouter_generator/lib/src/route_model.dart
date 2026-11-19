@@ -141,7 +141,7 @@ final class _RouteModel {
     final id = annotation.read('id').stringValue;
     final version = annotation.read('version').stringValue;
     _validateStableId(id, 'Route ID', element);
-    if (!_semanticVersionPattern.hasMatch(version)) {
+    if (!isContractSemanticVersion(version)) {
       _fail('Route "$id" must use a SemVer 2.0 Contract version.', element);
     }
     final interceptorIds = annotation
@@ -613,7 +613,7 @@ final class _ComponentModel {
       requiredOwners: dependencies.toSet(),
     );
     _validateComponentId(id, element);
-    if (!_semanticVersionPattern.hasMatch(version)) {
+    if (!isContractSemanticVersion(version)) {
       _fail('Component "$id" must use a SemVer 2.0 version.', element);
     }
     final all = [...dependencies, ...optionalDependencies];
@@ -748,7 +748,7 @@ List<_ComponentCommandDependencyModel> _readComponentCommandDependencies(
     if (!isGeneratedClientMemberName(member)) {
       _fail(
         'Command dependency alias "$member" must be a public lower-camel Dart '
-        'identifier and must not be a keyword.',
+        'identifier and must not be a keyword or an inherited Object member.',
         owner,
       );
     }
@@ -924,7 +924,7 @@ List<_ComponentServiceDependencyModel> _readComponentServiceDependencies(
     if (!isGeneratedClientMemberName(member)) {
       _fail(
         'Service dependency alias "$member" must be a public lower-camel Dart '
-        'identifier and must not be a keyword.',
+        'identifier and must not be a keyword or an inherited Object member.',
         owner,
       );
     }

@@ -46,9 +46,11 @@ enum CCContractCompatibilityCode {
 /// One parsed SemVer 2.0 value used by compatibility checks.
 final class CCSemVer implements Comparable<CCSemVer> {
   /// Parses a strict `major.minor.patch[-pre][+build]` value.
+  /// Leading or trailing whitespace is invalid; range expressions handle their
+  /// own whitespace separately. Invalid versions throw [FormatException].
   factory CCSemVer.parse(String source) {
-    final match = _semVerPattern.firstMatch(source.trim());
-    if (match == null) {
+    final match = _semVerPattern.firstMatch(source);
+    if (match == null || match.end != source.length) {
       throw FormatException('Invalid Contract SemVer: $source');
     }
     final pre = match.group(4);
@@ -130,6 +132,7 @@ final class CCSemVer implements Comparable<CCSemVer> {
       '$major.$minor.$patch${preRelease.isEmpty ? '' : '-${preRelease.join('.')}'}';
 }
 
+/// SemVer lexical grammar; the parser also requires the match to consume input.
 final RegExp _semVerPattern = RegExp(
   r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
   r'((?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)'
@@ -151,7 +154,7 @@ final class CCContractVersionRange {
       return CCContractVersionRange._(source, (_) => true);
     }
     if (expression.startsWith('^')) {
-      final minimum = CCSemVer.parse(expression.substring(1));
+      final minimum = CCSemVer.parse(expression.substring(1).trim());
       final maximum = _caretUpperBound(minimum);
       return CCContractVersionRange._(
         source,
@@ -159,7 +162,7 @@ final class CCContractVersionRange {
       );
     }
     if (expression.startsWith('~')) {
-      final minimum = CCSemVer.parse(expression.substring(1));
+      final minimum = CCSemVer.parse(expression.substring(1).trim());
       final maximum = CCSemVer._(minimum.major, minimum.minor + 1, 0, const []);
       return CCContractVersionRange._(
         source,

@@ -1,5 +1,10 @@
 # ccrouter_contracts
 
+Contract and Component versions use the shared `CCSemVer` parser and reject
+leading/trailing whitespace; range expressions retain their whitespace grammar.
+Generated Service/Command/Event/UI Client names, including inferred names, reject Dart
+keywords and Object members (`hashCode`, `runtimeType`, `toString`, `noSuchMethod`).
+
 Pure Dart contracts and immutable value types shared by CCRouter packages and
 independent component contract packages. It contains Route, Service, Command,
 Event, InitTask, diagnostics, lifecycle, and navigation backend contracts.
@@ -35,3 +40,9 @@ The package does not provide a Runtime or a navigation backend. See the
 [architecture documentation](https://github.com/shingohu/cc-router/blob/main/docs/CCRouter-v0.1-architecture.md)
 and
 [release checklist](https://github.com/shingohu/cc-router/blob/main/docs/CCRouter-release-readiness.md).
+
+
+`CCEventContract.alias` optionally selects the complete generated Owner publication
+member. Omission preserves existing publish/type-name defaults. Alias changes
+are fingerprinted; review Contract versions and regenerate without changing
+Event IDs or publication permissions.

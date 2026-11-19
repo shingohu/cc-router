@@ -593,7 +593,7 @@ and public library placement have different constraints.
 - Use **Route** for showing a destination and optionally receiving a typed Pop result.
 - Use **Service** when repeatable methods, state reads, or resources need framework resolution, Scope/readiness, or generated dependency validation; otherwise keep a narrow ordinary API.
 - Use **Command<R>** for one requested operation with exactly one owner; use `R = void` when only completion matters.
-- Use **Event** for an already completed fact delivered to zero or more independent subscribers.
+- Use **Event** for an already completed fact delivered to zero or more independent subscribers. Use exactly one `CCEventContract` annotation per Event type. Set optional `alias` only for a shared publication name or a collision; it is the complete Owner Client method name, with no automatic prefix. Omission retains the existing publish/type-name fallback. It does not create consumer publication rights or `eventDependencies`. Alias changes require Contract version review and regeneration.
 - Use **InitTask** for one Runtime-lifetime startup task with dependencies or an explicit Gate.
 - Do not create a new public framework abstraction when these capabilities already express the behavior.
 
@@ -937,6 +937,9 @@ the Service Contract.
   consumer-specific override or keyed Service. The deterministic priority is
   Dependency alias, Contract alias, then type-name inference. Do not introduce
   a global namespace Facade that hides the consuming component's caller identity.
+  Effective Service/Command/Event/UI names must avoid Dart keywords and Object members
+  `hashCode`, `runtimeType`, `toString` and `noSuchMethod`, even when inferred.
+  An invalid inferred name requires an explicit valid alias; do not edit generated code.
 - Treat generated Service, Command, and Event bridges as framework SPI, not an authorization bypass. Runtime revalidates installed component identities and required/optional dependency edges; stale generation or a handwritten bridge call must fail with `CCResolutionError` before business work executes.
 - Concurrent InitTask Gate opens share one single-flight drain. Code may open a later Gate while another drain is active; do not add polling or a second task runner, because Runtime continues until the newly ready DAG is quiescent.
 - Keep a `@CCServiceContract` interface itself non-generic. Its methods may use method-owned generic parameters with public Pure Dart bounds; generated Proxies preserve bounds, nullability, and explicit type arguments. Internal callback names and import prefixes avoid authored parameter and generic names automatically. Do not use method generics to pass Flutter objects, callbacks, nested Streams, or private implementation types across a component boundary.
@@ -947,6 +950,14 @@ the Service Contract.
 - Consumers own their subscriptions. A UI caller outside a scoped invocation has no inferred Route/Session ownership: cancel the subscription/token on disposal or request replacement. A broadcast source still belongs to the Service; cancellation removes this subscription only. See [Service Stream ownership](references/implementation-patterns.md#service-stream-ownership) for setup and limits.
 
 ## Generated Code and Validation
+
+Contract and Component version strings use the shared Runtime `CCSemVer` parser
+and reject leading/trailing whitespace. Keep version values such as `1.0.0`
+canonical; supported range expressions still accept outer whitespace and
+whitespace-separated comparators. Generator validation and persisted metadata
+follow the same version and generated-member rules. The optional Analyzer checks
+literal Service/Command/UI Contract aliases with the same reserved-name policy;
+computed aliases and full generation remain Generator-owned.
 
 For a new component or internal page, the generator CLI provides non-overwriting
 templates:

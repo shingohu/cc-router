@@ -1,0 +1,7 @@
+00:00 +0: loading <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/contract_compatibility_test.dart
+00:00 +0: Contract versions reject whitespace without narrowing range whitespace
+00:00 +1: supports exact, caret, tilde, and comparator Contract ranges
+00:00 +2: reports missing, owner, version, and fingerprint incompatibility
+00:00 +3: Host assembly carries a merged Contract bundle
+00:00 +4: Runtime rejects an incompatible generated Contract bundle
+00:00 +5: All tests passed!

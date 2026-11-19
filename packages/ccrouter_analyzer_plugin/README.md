@@ -9,6 +9,13 @@ No ID or topology rewrite is offered. Cross-package generated-import diagnostics
 check each URI of conditional imports and exports at its precise literal span.
 
 
+Literal Service/Command/Event/UI Contract aliases use the same generated-member rules:
+Dart keywords and inherited Object members (`hashCode`, `runtimeType`, `toString`,
+`noSuchMethod`) are invalid. Owner Command type-name defaults are also checked
+when alias is omitted or literal null. Computed overrides defer to generation; UI effective
+default-name checks remain resolved-identity based. Local Plugin changes do not
+update the Demo's pinned Git bootstrap until its separate remote-pin workflow.
+
 UI Fragment checks use canonical framework symbols, including prefixed and
 transitive public exports. They report `ccrouter_ui_alias_invalid`,
 `ccrouter_ui_alias_duplicate`, `ccrouter_ui_dependency_duplicate`,

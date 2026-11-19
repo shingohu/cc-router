@@ -5,10 +5,10 @@
     "name": "demo_web_contracts",
     "version": "0.1.0"
   },
-  "toolFingerprint": "637f8b64cf61b7dfa29b5b3c09ba39a115a96d8d360ee20907cf49c205ad6666",
+  "toolFingerprint": "6570a79dd8362c5176a6b2dc269abc8c24c08e14f2ed0015798370c0d76780f6",
   "authoredInputFingerprint": "ca37eb6ee7e82c5bee220f650a6cd8e3c007dee5d490dc8115fb15b3ba428246",
-  "resolutionFingerprint": "3840ce5c50719ac0d895e391e88b753455ff9952c4ba913209f31988aba70534",
+  "resolutionFingerprint": "ff554bed3995703a1778cdd06ef0c61fc2f19d5b6369d4e47ca2ddcaf1693b56",
   "metadataFingerprint": "392add810244b4384893c5ab15aef25fc202548c520595834c0dbc816cf08bd7",
   "managedOutputFingerprint": "fafea3fc00aef6f3fe3f16c4f32af588f52fb80f79ab52c26912eac5543a35b3",
-  "contentFingerprint": "86b4f9eadd80836fcbad043fa7f1a29cc63fb808662775853c615c8cdf0faf11"
+  "contentFingerprint": "6e1a8d4a8200e2cfd51016e96f96f670fe71bb27439be1f4535b13cd39fedea6"
 }

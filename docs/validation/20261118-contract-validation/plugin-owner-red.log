@@ -1,0 +1,18 @@
+00:00 +0: loading test/source_analyzer_test.dart
+00:00 +0: Owner Command inferred aliases are checked without guessing computed overrides
+00:00 +0 -1: Owner Command inferred aliases are checked without guessing computed overrides [E]
+  Expected: an object with length of <1>
+    Actual: WhereIterable<CCRouterAnalyzerDiagnostic>:[]
+     Which: has length of <0>
+
+
+  package:matcher                        expect
+  test/source_analyzer_test.dart 1009:7  main.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  test/source_analyzer_test.dart: Owner Command inferred aliases are checked without guessing computed overrides
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

@@ -5261,6 +5261,12 @@ String _emitComponentCommandApi(
       '${_pascalIdentifier(_componentApiOwner(componentId))}Commands';
   final unique = <String, _CommandClientEntry>{};
   for (final entry in entries) {
+    if (!isGeneratedClientMemberName(entry.member)) {
+      throw CCPackageWorkspaceException(
+        'Command "${entry.id}" generates invalid Client member "${entry.member}" '
+        'for component "$componentId". Set a valid CCCommandContract alias.',
+      );
+    }
     final previous = unique[entry.member];
     if (previous != null && previous.id != entry.id) {
       throw CCPackageWorkspaceException(
@@ -5323,6 +5329,11 @@ String _emitComponentEventApi(
       '${_pascalIdentifier(_componentApiOwner(componentId))}Events';
   final unique = <String, _EventClientEntry>{};
   for (final entry in entries) {
+    if (!isGeneratedClientMemberName(entry.member)) {
+      throw CCPackageWorkspaceException(
+        'Event "${entry.id}" generates invalid Client member "${entry.member}". Set a valid CCEventContract alias.',
+      );
+    }
     final previous = unique[entry.member];
     if (previous != null && previous.id != entry.id) {
       throw CCPackageWorkspaceException(
@@ -6879,7 +6890,9 @@ final class _EventClientEntry {
       id: '${metadata['id'] ?? ''}',
       library: '${declarationMap['packageUri'] ?? ''}',
       type: type,
-      member: _eventClientMember(type),
+      member: '${metadata['alias'] ?? ''}'.isNotEmpty
+          ? '${metadata['alias']}'
+          : defaultEventClientMember(type),
     );
   }
 
@@ -6894,17 +6907,6 @@ final class _EventClientEntry {
 
   /// Generated lower-camel publication method.
   final String member;
-}
-
-/// Derives a concise generated Event publication method name.
-String _eventClientMember(String type) {
-  final stem = type.endsWith('Event')
-      ? type.substring(0, type.length - 'Event'.length)
-      : type;
-  final name = stem.isEmpty
-      ? 'event'
-      : '${stem[0].toUpperCase()}${stem.substring(1)}';
-  return 'publish$name';
 }
 
 /// Normalized Component node emitted into the generated DevTools Catalog.

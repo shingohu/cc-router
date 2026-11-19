@@ -224,11 +224,15 @@ The Owner must also appear in required `dependencies`; optional owners cannot
 satisfy this edge. Aliases and contract edges must be unique. The generated
 Client name is the PascalCase full component ID plus `Fragments`.
 Contract parameters match Service/Command: `alias` is optional, `version`
-defaults to `0.1.0`, and `description` defaults to an empty string. A dependency
+defaults to `0.1.0` and rejects leading/trailing whitespace, and `description`
+defaults to an empty string. Version validation uses the same `CCSemVer` parser
+as other Contract families. A dependency
 accepts only an optional `alias`. Method naming uses the Dependency alias,
 then the Contract alias, then the marker name with a trailing `FragmentContract`
 removed and its first character lowercased (no acronym heuristics). An empty
 stem becomes `fragment`; invalid or colliding names require an explicit alias.
+As with Service/Command, all effective names reject Dart keywords and inherited
+Object members (`hashCode`, `runtimeType`, `toString`, `noSuchMethod`).
 
 `versionRange` is no longer a public dependency parameter. Remove it from older
 declarations and regenerate the actual Host. As with Service/Command, generation

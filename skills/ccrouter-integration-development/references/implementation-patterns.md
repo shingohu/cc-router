@@ -1178,6 +1178,9 @@ then `CCServiceContract.alias`, then the contract type name without a trailing
 `Service`. Use the Contract alias for one shared domain name and a Dependency
 alias only for a keyed or consumer-specific override. Alias changes alter the
 generated source shape and require Contract versioning plus regeneration.
+Effective names must be public lower-camel identifiers outside Dart keywords and
+Object members (`hashCode`, `runtimeType`, `toString`, `noSuchMethod`); this also
+applies to inferred defaults and generated Command/UI Client members.
 
 Do not handwrite a Proxy or pass caller component IDs. The generated Proxy is
 stateless and resolves the current Scope on every method call. Keep local
@@ -1399,7 +1402,10 @@ composition, and tests only.
 Command methods use `CCCommandDependency.alias`, then
 `CCCommandContract.alias`, then the Command type name without a trailing
 `Command`. Keep the generated Client component-specific; do not replace it with
-a global namespace Facade that would erase caller attribution.
+a global namespace Facade that would erase caller attribution. The Owner Command
+Client is always generated: if the inferred type name conflicts with a keyword
+or Object member, set `CCCommandContract.alias`. A consumer-only override cannot
+repair the Owner Client's default name.
 
 ```dart
 @CCEventContract(id: 'orders.submitted', description: 'Order was submitted.')
@@ -1418,6 +1424,14 @@ await OrdersEvents.publishOrderSubmitted(
   const OrderSubmittedEvent('42'),
 );
 ```
+
+`CCEventContract.alias` overrides the complete generated Owner publication member.
+For example, `alias: 'publishSubmitted'` generates `OrdersEvents.publishSubmitted`.
+Omission preserves `publishOrderSubmitted`; no prefix is added to an explicit alias.
+Choose a valid non-keyword lowerCamelCase identifier outside Object members.
+Different Events in one Owner need unique effective member names. Review the
+Contract version and regenerate after alias changes because it is fingerprinted;
+Event IDs, Publisher permission, Subscriber identity and transport do not change.
 
 Generation infers an implementation-Package Event owner, installs static
 Subscribers, and emits the Owner publication Client. A shared contracts Package

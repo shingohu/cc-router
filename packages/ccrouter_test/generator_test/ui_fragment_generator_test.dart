@@ -116,6 +116,16 @@ void main() {
   test('no UI declaration emits nothing', () async {
     expect((await _generate('const value = 1;')).output, isEmpty);
   });
+  test(
+    'UI versions reject whitespace like other Contract declarations',
+    () async {
+      final result = await _generate(
+        _source.replaceFirst("version: '1.0.0'", "version: ' 1.0.0 '"),
+      );
+      expect(result.output, isEmpty);
+      expect(result.logs, contains('valid SemVer'));
+    },
+  );
   test('shape includes DTO fields and enum values', () async {
     String fingerprint(String json) =>
         ((jsonDecode(json) as Map)['uiContracts'] as List)

@@ -7,6 +7,9 @@ void main() {
     expect(defaultCommandClientMember('SubmitOrderCommand'), 'submitOrder');
     expect(defaultServiceClientMember('Service'), 'service');
     expect(defaultCommandClientMember('Command'), 'command');
+    expect(defaultEventClientMember('OrderPaidEvent'), 'publishOrderPaid');
+    expect(defaultEventClientMember('OrderPaid'), 'publishOrderPaid');
+    expect(defaultEventClientMember('Event'), 'publishevent');
     expect(
       defaultUIFragmentClientMember('OrderSummaryFragmentContract'),
       'orderSummary',
@@ -27,5 +30,28 @@ void main() {
     expect(isGeneratedClientMemberName('class'), isFalse);
     expect(isGeneratedClientMemberName('Network'), isFalse);
     expect(isGeneratedClientMemberName('network.client'), isFalse);
+  });
+
+  test('all generated Clients reject inherited Object member names', () {
+    for (final name in [
+      'hashCode',
+      'runtimeType',
+      'toString',
+      'noSuchMethod',
+    ]) {
+      expect(isGeneratedClientMemberName(name), isFalse, reason: name);
+    }
+    expect(
+      isGeneratedClientMemberName(
+        defaultServiceClientMember('HashCodeService'),
+      ),
+      isFalse,
+    );
+    expect(
+      isGeneratedClientMemberName(
+        defaultCommandClientMember('ToStringCommand'),
+      ),
+      isFalse,
+    );
   });
 }

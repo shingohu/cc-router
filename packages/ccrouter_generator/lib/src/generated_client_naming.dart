@@ -3,11 +3,17 @@ import 'package:analyzer/dart/ast/token.dart';
 /// Returns whether [value] can be emitted as a public generated Client member.
 ///
 /// Generated aliases deliberately accept only ASCII lower-camel identifiers.
-/// Dart keywords are rejected so authored metadata cannot produce source that
-/// fails later during analysis.
+/// Dart keywords and inherited Object members are rejected so static Client
+/// members cannot conflict with instance members during compilation.
 bool isGeneratedClientMemberName(String value) =>
     RegExp(r'^[a-z][A-Za-z0-9]*$').hasMatch(value) &&
-    !Keyword.keywords.containsKey(value);
+    !Keyword.keywords.containsKey(value) &&
+    !const {
+      'hashCode',
+      'runtimeType',
+      'toString',
+      'noSuchMethod',
+    }.contains(value);
 
 /// Derives the stable default member name for a Service contract type.
 ///
@@ -49,3 +55,14 @@ String defaultUIFragmentClientMember(String contractType) {
 /// type spelling, or returns [fallback] when suffix removal leaves no stem.
 String _lowerCamelOr(String value, {required String fallback}) =>
     value.isEmpty ? fallback : '${value[0].toLowerCase()}${value.substring(1)}';
+
+/// Preserves the established Owner Event publication member spelling.
+String defaultEventClientMember(String type) {
+  final stem = type.endsWith('Event')
+      ? type.substring(0, type.length - 'Event'.length)
+      : type;
+  final name = stem.isEmpty
+      ? 'event'
+      : '${stem[0].toUpperCase()}${stem.substring(1)}';
+  return 'publish$name';
+}

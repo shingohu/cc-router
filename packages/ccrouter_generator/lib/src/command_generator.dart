@@ -1,3 +1,4 @@
+import 'contract_validation.dart';
 import 'dart:convert';
 
 import 'package:analyzer/dart/element/element.dart';
@@ -19,14 +20,6 @@ const int _commandMaxDescriptionLength = 4096;
 /// Portable syntax shared by generated Command identities.
 final RegExp _commandStableIdPattern = RegExp(
   r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$',
-);
-
-/// SemVer 2.0 syntax used by independent Command Contracts.
-final RegExp _commandSemanticVersionPattern = RegExp(
-  r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
-  r'(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)'
-  r'(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?'
-  r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$',
 );
 
 /// Matches generated Command contracts from the canonical contracts package.
@@ -360,14 +353,15 @@ List<_CommandContractModel> _readCommandContracts(LibraryReader library) {
         : aliasReader.stringValue;
     final version = annotated.annotation.read('version').stringValue;
     _validateCommandId(id, 'Command ID', element);
-    if (alias != null && !isGeneratedClientMemberName(alias)) {
+    final member = alias ?? defaultCommandClientMember(element.displayName);
+    if (!isGeneratedClientMemberName(member)) {
       _failCommand(
-        'Command "$id" alias "$alias" must be a public lower-camel Dart '
-        'identifier and must not be a keyword.',
+        'Command "$id" alias "$member" must be a public lower-camel Dart '
+        'identifier and must not be a keyword or an inherited Object member.',
         element,
       );
     }
-    if (!_commandSemanticVersionPattern.hasMatch(version)) {
+    if (!isContractSemanticVersion(version)) {
       _failCommand('Command "$id" must use SemVer 2.0.', element);
     }
     if (!ids.add(id)) {
@@ -493,14 +487,15 @@ _CommandContractModel _readCommandContract(ClassElement element) {
     _failCommand('CCCommandContract requires a const id.', element);
   }
   _validateCommandId(id, 'Command ID', element);
-  if (alias != null && !isGeneratedClientMemberName(alias)) {
+  final member = alias ?? defaultCommandClientMember(element.displayName);
+  if (!isGeneratedClientMemberName(member)) {
     _failCommand(
-      'Command "$id" alias "$alias" must be a public lower-camel Dart '
-      'identifier and must not be a keyword.',
+      'Command "$id" alias "$member" must be a public lower-camel Dart '
+      'identifier and must not be a keyword or an inherited Object member.',
       element,
     );
   }
-  if (!_commandSemanticVersionPattern.hasMatch(version)) {
+  if (!isContractSemanticVersion(version)) {
     _failCommand('Command "$id" must use SemVer 2.0.', element);
   }
   return _CommandContractModel(

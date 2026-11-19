@@ -1,10 +1,10 @@
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/ast/visitor.dart';
-import 'package:analyzer/dart/ast/token.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:path/path.dart' as p;
 
+import 'generated_client_naming.dart';
 import 'project_context.dart';
 import 'resolved_symbols.dart';
 
@@ -190,7 +190,7 @@ abstract final class CCRouterUIFragmentAnalysis {
               ? aliasNode.stringValue
               : null;
           if (alias != null) {
-            if (!_validAlias(alias)) {
+            if (!isGeneratedClientMemberName(alias)) {
               add(
                 aliasNode ?? dependency,
                 'alias_invalid',
@@ -330,17 +330,6 @@ abstract final class CCRouterUIFragmentAnalysis {
 
   /// Nullable Renderer boundaries do not satisfy the generated call signature.
   static bool _nullable(DartType type) => type.getDisplayString().endsWith('?');
-
-  /// Mirrors generated member spelling and reserved Object names.
-  static bool _validAlias(String value) =>
-      RegExp(r'^[a-z][a-zA-Z0-9]*$').hasMatch(value) &&
-      !Keyword.keywords.containsKey(value) &&
-      !const {
-        'hashCode',
-        'runtimeType',
-        'toString',
-        'noSuchMethod',
-      }.contains(value);
 
   /// Resolves Contract defaults only from a uniquely annotated marker type.
   /// Computed dependency aliases defer instead of being mistaken for omissions.

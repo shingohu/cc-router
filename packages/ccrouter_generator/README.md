@@ -1,5 +1,9 @@
 # CCRouter 组件能力生成器
 
+Contract 和 Component 版本统一使用 `CCSemVer` 解析，拒绝首尾空白；版本范围表达式
+继续保留原有空白语法。Service/Command/Event/UI Client 的显式 alias、Contract 默认名和推导名
+统一拒绝 Dart 关键字及 Object 成员 `hashCode`、`runtimeType`、`toString`、`noSuchMethod`。
+
 组件的开发工具，不属于运行时依赖。每个实现 Package 声明一个顶层
 `const CCComponent`，内部 Route 和简单 Service 自动归属该 Owner：
 
@@ -767,3 +771,9 @@ required dependency 缺失、自依赖、依赖环、契约 exposure 与声明�
 源码位置、生成物位置的人类可读 `cc_catalog.md`。本仓库的扫描根目录是 `demo`，因此输出位于
 `demo/lib/src/ccrouter_generated/metadata/`。也可以通过 `--output-dir <directory>` 指定其他
 输出目录；校验失败时返回非零退出码。
+
+
+`CCEventContract.alias` optionally selects the complete generated Owner publication
+member. Omission preserves existing publish/type-name defaults. Alias changes
+are fingerprinted; review Contract versions and regenerate without changing
+Event IDs or publication permissions.

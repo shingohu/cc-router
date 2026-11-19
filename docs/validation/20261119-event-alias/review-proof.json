@@ -1,0 +1,18 @@
+{
+  "sourceHashesUnchanged": true,
+  "demoChangesLimitedToPortableToolIdentityAndExampleFingerprints": true,
+  "exampleMetadataUnchangedExceptFingerprints": true,
+  "changedDemoFiles": [
+    "demo/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+    "demo/modules/kv_storage/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+    "demo/modules/navigation_lab/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+    "demo/modules/network/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+    "demo/modules/order/example/lib/src/ccrouter_generated/host/demo_order_example_ccrouter.g.dart",
+    "demo/modules/order/example/lib/src/ccrouter_generated/metadata/ccrouter_package.json",
+    "demo/modules/order/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+    "demo/modules/order_contracts/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+    "demo/modules/payment/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+    "demo/modules/web/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json",
+    "demo/modules/web_contracts/lib/src/ccrouter_generated/metadata/ccrouter_generation_state.json"
+  ]
+}

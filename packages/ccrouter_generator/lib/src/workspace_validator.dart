@@ -1,3 +1,4 @@
+import 'contract_validation.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -24,14 +25,6 @@ final RegExp _workspaceIdentifierPattern = RegExp(
 /// Lowercase package-style syntax retained for component ownership IDs.
 final RegExp _workspaceComponentIdPattern = RegExp(
   r'^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$',
-);
-
-/// Full SemVer 2.0 syntax rechecked for external Package indexes.
-final RegExp _workspaceSemanticVersionPattern = RegExp(
-  r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
-  r'(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)'
-  r'(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?'
-  r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$',
 );
 
 /// Coarse key that groups only patterns which can have equal routing priority.
@@ -651,6 +644,17 @@ abstract final class CCRouteWorkspaceValidator {
           'Event contract "$id" references unknown owner component "$ownerId".',
         );
       }
+      final alias = contract['alias'];
+      final type = contract['type'];
+      final member =
+          alias ??
+          (type is String && type.isNotEmpty
+              ? defaultEventClientMember(type)
+              : null);
+      if (member != null &&
+          (member is! String || !isGeneratedClientMemberName(member))) {
+        errors.add('Event contract "$id" has an invalid Client alias.');
+      }
     }
     for (final subscription in eventSubscriptions.values) {
       final eventId = '${subscription['eventId'] ?? ''}';
@@ -748,8 +752,14 @@ abstract final class CCRouteWorkspaceValidator {
         );
       }
       final alias = contract['alias'];
-      if (alias != null &&
-          (alias is! String || !isGeneratedClientMemberName(alias))) {
+      final type = contract['type'];
+      final member =
+          alias ??
+          (type is String && type.isNotEmpty
+              ? defaultCommandClientMember(type)
+              : null);
+      if (member != null &&
+          (member is! String || !isGeneratedClientMemberName(member))) {
         errors.add('Command contract "$id" has an invalid Client alias.');
       }
       final handler = commandHandlers[id];
@@ -1352,7 +1362,7 @@ abstract final class CCRouteWorkspaceValidator {
         errors.add('Component ID "$id" is invalid.');
       }
       final version = '${component['version']}';
-      if (!_workspaceSemanticVersionPattern.hasMatch(version)) {
+      if (!isContractSemanticVersion(version)) {
         errors.add('Component "$id" must use a SemVer 2.0 version.');
       }
       final dependencies = [
@@ -1430,8 +1440,7 @@ abstract final class CCRouteWorkspaceValidator {
         final id = '${contract['id'] ?? ''}';
         final version = contract['version'];
         final fingerprint = contract['shapeFingerprint'];
-        if (version is! String ||
-            !_workspaceSemanticVersionPattern.hasMatch(version)) {
+        if (version is! String || !isContractSemanticVersion(version)) {
           errors.add(
             '${group.key} contract "$id" must declare a valid Contract SemVer.',
           );

@@ -959,6 +959,70 @@ void initializeFeature() {}
     );
   });
 
+  test('Contract aliases reject Object members before Client generation', () {
+    for (final contract in [
+      'CCServiceContract',
+      'CCCommandContract',
+      'CCEventContract',
+      'CCUIFragmentContract',
+    ]) {
+      for (final alias in [
+        'hashCode',
+        'runtimeType',
+        'toString',
+        'noSuchMethod',
+      ]) {
+        final diagnostics = CCRouterSourceAnalyzer.analyze(
+          source:
+              '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:ccrouter_contracts/ccrouter_ui_contracts.dart';
+@$contract(componentId: CCComponentId('owner'), id: 'owner.probe', alias: '$alias')
+abstract interface class Probe {}
+''',
+          filePath: path.join(packageRoot, 'lib', 'src', 'reserved_alias.dart'),
+          packageRoot: packageRoot,
+          packageName: 'sample_component',
+        );
+        expect(
+          diagnostics.where((item) => item.code == 'ccrouter_alias_invalid'),
+          hasLength(1),
+          reason: '$contract: $alias',
+        );
+      }
+    }
+  });
+
+  test(
+    'Owner Command inferred aliases are checked without guessing computed overrides',
+    () {
+      for (final override in [
+        '',
+        ", alias: 'formatOrder'",
+        ', alias: localAlias',
+      ]) {
+        final diagnostics = CCRouterSourceAnalyzer.analyze(
+          source:
+              '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+@CCCommandContract(id: 'owner.format'$override)
+final class ToStringCommand implements CCCommand<void> {
+  const ToStringCommand();
+}
+''',
+          filePath: path.join(packageRoot, 'lib', 'src', 'inferred_alias.dart'),
+          packageRoot: packageRoot,
+          packageName: 'sample_component',
+        );
+        expect(
+          diagnostics.where((item) => item.code == 'ccrouter_alias_invalid'),
+          hasLength(override.isEmpty ? 1 : 0),
+          reason: override,
+        );
+      }
+    },
+  );
+
   test('reports Handler arity and defers unresolved imported return types', () {
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '''

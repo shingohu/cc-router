@@ -4,6 +4,28 @@ import 'package:ccrouter_core/ccrouter_core.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'Contract versions reject whitespace without narrowing range whitespace',
+    () {
+      for (final value in [' 1.2.3', '1.2.3 ', '1.2.3\n', '\t1.2.3']) {
+        expect(
+          () => CCSemVer.parse(value),
+          throwsFormatException,
+          reason: value,
+        );
+      }
+      expect(CCSemVer.parse('1.2.3-rc.1+build.2').toString(), '1.2.3-rc.1');
+      for (final range in [
+        ' ^1.2.3 ',
+        '^ 1.2.3',
+        '~ 1.2.3',
+        ' >=1.2.0\t<2.0.0\n',
+      ]) {
+        expect(CCContractVersionRange.parse(range).allowsText('1.2.3'), isTrue);
+      }
+    },
+  );
+
   test('supports exact, caret, tilde, and comparator Contract ranges', () {
     expect(CCContractVersionRange.parse('1.2.3').allowsText('1.2.3'), isTrue);
     expect(CCContractVersionRange.parse('1.2.3').allowsText('1.2.4'), isFalse);

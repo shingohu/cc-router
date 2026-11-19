@@ -1,6 +1,8 @@
+import 'contract_validation.dart';
 import 'dart:convert';
 
 import 'package:analyzer/dart/ast/ast.dart';
+import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
@@ -8,6 +10,7 @@ import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
 
 import 'contract_fingerprint.dart';
+import 'generated_client_naming.dart';
 
 /// Maximum stable Event or Subscriber identifier length.
 const int _eventMaxStableIdLength = 128;
@@ -18,14 +21,6 @@ const int _eventMaxDescriptionLength = 4096;
 /// Portable syntax shared by Event and Subscriber identities.
 final RegExp _eventStableIdPattern = RegExp(
   r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$',
-);
-
-/// SemVer 2.0 syntax used by independent Event Contracts.
-final RegExp _eventSemanticVersionPattern = RegExp(
-  r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
-  r'(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)'
-  r'(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?'
-  r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$',
 );
 
 /// Matches generated Event contracts.
@@ -156,6 +151,7 @@ final class _EventMetadataBuilder implements Builder {
           <String, Object?>{
             'id': contract.id,
             'componentId': contract.componentId,
+            if (contract.alias != null) 'alias': contract.alias,
             'version': contract.version,
             'description': contract.description,
             'package': package,
@@ -175,6 +171,7 @@ final class _EventMetadataBuilder implements Builder {
               'kind': 'event',
               'id': contract.id,
               'owner': contract.componentId,
+              if (contract.alias != null) 'alias': contract.alias,
               'payloadFields': [
                 for (final field in contract.element.fields.where(
                   (field) => !field.isStatic,
@@ -228,6 +225,7 @@ final class _EventContractModel {
     required this.element,
     required this.componentId,
     required this.id,
+    required this.alias,
     required this.version,
     required this.description,
   });
@@ -240,6 +238,9 @@ final class _EventContractModel {
 
   /// Stable Event identity.
   final String id;
+
+  /// Optional explicit generated Owner Client publication member.
+  final String? alias;
 
   /// Independent Event Contract SemVer.
   final String version;
@@ -301,21 +302,33 @@ List<_EventContractModel> _readEventContracts(LibraryReader library) {
       }
       _validateEventType(field.type, field);
     }
-    final component = annotated.annotation.peek('componentId')?.objectValue;
+    final annotation = ConstantReader(_eventContractAnnotation(element));
+    final component = annotation.peek('componentId')?.objectValue;
     final componentId = component?.getField('value')?.toStringValue();
     if (componentId != null) {
       _validateEventId(componentId, 'Component ID', element);
     }
-    final id = annotated.annotation.read('id').stringValue;
-    final version = annotated.annotation.read('version').stringValue;
+    final id = annotation.read('id').stringValue;
+    final aliasReader = annotation.peek('alias');
+    final alias = aliasReader == null || aliasReader.isNull
+        ? null
+        : aliasReader.stringValue;
+    final version = annotation.read('version').stringValue;
     _validateEventId(id, 'Event ID', element);
-    if (!_eventSemanticVersionPattern.hasMatch(version)) {
+    final member = alias ?? defaultEventClientMember(element.displayName);
+    if (!isGeneratedClientMemberName(member)) {
+      _failEvent(
+        'Event "$id" alias "$member" must be a public lower-camel Dart identifier outside inherited Object members.',
+        element,
+      );
+    }
+    if (!isContractSemanticVersion(version)) {
       _failEvent('Event "$id" must use SemVer 2.0.', element);
     }
     if (!ids.add(id)) {
       _failEvent('Duplicate Event ID "$id" in this library.', element);
     }
-    final description = annotated.annotation.read('description').stringValue;
+    final description = annotation.read('description').stringValue;
     if (description.length > _eventMaxDescriptionLength) {
       _failEvent(
         'Event "$id" description exceeds $_eventMaxDescriptionLength characters.',
@@ -327,6 +340,7 @@ List<_EventContractModel> _readEventContracts(LibraryReader library) {
         element: element,
         componentId: componentId,
         id: id,
+        alias: alias,
         version: version,
         description: description,
       ),
@@ -412,22 +426,44 @@ List<_EventSubscriptionModel> _readEventSubscriptions(LibraryReader library) {
   return subscriptions;
 }
 
-/// Reads one imported Event Contract annotation.
-_EventContractModel _readEventContract(ClassElement element) {
-  final annotation = _eventContractChecker.firstAnnotationOfExact(element);
-  if (annotation == null) {
+/// Requires a single unambiguous identity and alias for each Event type.
+DartObject _eventContractAnnotation(ClassElement element) {
+  final annotations = _eventContractChecker
+      .annotationsOfExact(element, throwOnUnresolved: false)
+      .toList();
+  if (annotations.isEmpty) {
     _failEvent(
       'CCEventSubscription parameter ${element.displayName} must be annotated with CCEventContract.',
       element,
     );
   }
+  if (annotations.length != 1) {
+    _failEvent(
+      'Event requires exactly one CCEventContract annotation.',
+      element,
+    );
+  }
+  return annotations.single;
+}
+
+/// Reads one imported Event Contract annotation.
+_EventContractModel _readEventContract(ClassElement element) {
+  final annotation = _eventContractAnnotation(element);
   if (!_eventChecker.isAssignableFromType(element.thisType)) {
     _failEvent('${element.displayName} must implement CCEvent.', element);
   }
   final id = annotation.getField('id')?.toStringValue();
+  final alias = annotation.getField('alias')?.toStringValue();
   final version = annotation.getField('version')?.toStringValue() ?? '0.1.0';
   if (id == null) _failEvent('CCEventContract requires a const id.', element);
-  if (!_eventSemanticVersionPattern.hasMatch(version)) {
+  final member = alias ?? defaultEventClientMember(element.displayName);
+  if (!isGeneratedClientMemberName(member)) {
+    _failEvent(
+      'Event "$id" alias "$member" must be a public lower-camel Dart identifier outside inherited Object members.',
+      element,
+    );
+  }
+  if (!isContractSemanticVersion(version)) {
     _failEvent('Event "$id" must use SemVer 2.0.', element);
   }
   return _EventContractModel(
@@ -437,6 +473,7 @@ _EventContractModel _readEventContract(ClassElement element) {
         ?.getField('value')
         ?.toStringValue(),
     id: id,
+    alias: alias,
     version: version,
     description: annotation.getField('description')?.toStringValue() ?? '',
   );

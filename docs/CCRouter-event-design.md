@@ -175,6 +175,12 @@ await DemoOrderEvents.publishOrderCreated(
 5. Workspace Validator 拒绝组件源码对已注解 Event 直接调用 `CCRouter.event`；裸入口只用于
    未注解内部 Event、Host Composition Root、兼容迁移和测试。这是架构门禁而不是安全沙箱。
 
+`CCEventContract.alias` 是可选的完整 Publication Client 方法名，不再追加前缀。
+省略时保持既有 `publish<TypeWithoutEvent>` 命名（裸 `Event` 类型的历史 fallback 为
+`publishevent`）。同一 Owner 的方法名须唯一；显式 alias、默认名和外部 metadata 均校验
+公开 lowerCamelCase、Dart 关键字与 Object 保留成员。alias 参与 Contract 指纹；变更后需
+评审版本并重生成。它不改变 Event ID、Publisher/Subscriber 权限或 payload 语义。
+
 ## 11. 生成物与 API 隔离
 
 ```text
@@ -193,7 +199,7 @@ lib/src/ccrouter_generated/
 
 ## 12. 生成期校验
 
-1. Event 必须是公开、具体、非泛型类，并且实现 `CCEvent`。
+1. Event 必须是公开、具体、非泛型类，并且实现 `CCEvent`；每个类型恰好一个 `CCEventContract`，不静默选择重复注解中的首个。
 2. 实现 Package 可以省略 `componentId` 并从唯一 `CCComponent` 推导；contracts Package 必须
    显式声明 Owner。
 3. Event ID 全局唯一、Owner 明确、description 有界。

@@ -17,7 +17,12 @@
 
 ## 2. 版本范围与 shape 是独立门禁
 
-`CCSemVer` 解析严格的 `major.minor.patch[-pre][+build]`。范围支持精确版本、`*`、caret、tilde，以及空白分隔的一组比较器；空表达式在当前解析器中也表示任意版本。它不支持任意布尔表达式，不采用 Pub 的完整范围语法。0.x 仍按解析器的 caret/tilde 规则处理，没有“只有 exact 才合法”的额外 Runtime 限制。
+`CCSemVer` 解析严格的 `major.minor.patch[-pre][+build]`，版本值不接受首尾空白。
+Route、Service、Command、Event、InitTask、UI Contract 与 Component 的 Generator 校验
+复用同一解析器，Workspace/Host 对外部 metadata 保持同样的边界。范围表达式自身可有外围
+空白，caret/tilde 后原有的空白处理也保留；这不允许已安装的版本值携带空白。
+
+范围支持精确版本、`*`、caret、tilde，以及空白分隔的一组比较器；空表达式在当前解析器中也表示任意版本。它不支持任意布尔表达式，不采用 Pub 的完整范围语法。0.x 仍按解析器的 caret/tilde 规则处理，没有“只有 exact 才合法”的额外 Runtime 限制。
 
 消费者记录 requiredVersionRange 与 requiredShapeFingerprint。**版本处于范围内仍须精确匹配当前消费者记录的指纹**；minor 不能自动绕过 shape 变化。生成 Client 的具体范围来自当前生成声明，不手写 metadata 放宽检查。
 

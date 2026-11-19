@@ -1,0 +1,46 @@
+{
+  "baseCommit": "7f3d95754eefb978b0074380a19c5fb14c11a9c6",
+  "sourceHashesStable": true,
+  "checks": [
+    {
+      "command": [
+        "fvm",
+        "dart",
+        "tool/documentation_check.dart"
+      ],
+      "exitCode": 0,
+      "stdout": "Documentation check passed for 189 Markdown files.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "node",
+        "tool/sanitize_validation_evidence.mjs"
+      ],
+      "exitCode": 0,
+      "stdout": "Evidence files requiring path normalization: 0\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "fvm",
+        "dart",
+        "tool/release_sensitivity_check.dart",
+        "--include-untracked"
+      ],
+      "exitCode": 0,
+      "stdout": "Release sensitivity check passed.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "git",
+        "diff",
+        "--check"
+      ],
+      "exitCode": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

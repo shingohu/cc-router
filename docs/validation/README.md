@@ -1,10 +1,18 @@
 # CCRouter 验证证据索引
 
-更新日期：2026-11-18。这里集中导航验证记录，不替代[当前能力矩阵](../README.md)或
+更新日期：2026-11-19。这里集中导航验证记录，不替代[当前能力矩阵](../README.md)或
 [发布门禁](../CCRouter-release-readiness.md)。每份报告只证明其注明源码、命令、设备和范围；
 旧失败由后续修复报告闭环，不删除失败证据，也不改写历史测试数字。
 
 ## 最新源码自动化证据
+
+[2026-11-19 Event Contract alias 与多轮 review（本地）](20261119-event-alias/report.md)：
+补齐可选 alias，保留默认方法与指纹兼容；覆盖真实 Host 撞名/恢复、导入与重复注解、
+外部 metadata、Plugin 和框架回归。没有提交/推送，Demo pin 和 GUI 验证不冒充完成。
+
+[2026-11-18 Client 名称与 Contract 版本校验收口（本地）](20261118-contract-validation/report.md)：
+统一 Object 保留名约束与 SemVer 解析，保留 RED/GREEN、完整套件结果和运行边界。
+Demo 的远端 Plugin pin 尚未同步；本地源码验证不代表 GUI IDE 或远端版本验证。
 
 [2026-11-18 UI Fragment 参数统一与 Demo Plugin pin](20261118-ui-fragment-parameters/report.md)：
 统一 Contract/Dependency 默认参数和 alias 推导，消费方自动记录精确版本；框架 1719 项、

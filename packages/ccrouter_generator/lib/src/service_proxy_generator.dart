@@ -153,7 +153,7 @@ _ServiceConsumerComponentModel _readServiceConsumerComponent(
     if (!isGeneratedClientMemberName(member)) {
       _failService(
         'Service dependency alias "$member" must be a public lower-camel Dart '
-        'identifier and must not be a keyword.',
+        'identifier and must not be a keyword or an inherited Object member.',
         element,
       );
     }

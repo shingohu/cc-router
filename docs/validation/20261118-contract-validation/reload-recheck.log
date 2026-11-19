@@ -1,0 +1,22 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/flutter_run_reload_gate_test.dart
+00:00 +0: lease close during startup cannot leave a heartbeat running
+00:00 +1: canonical identity resolves the macOS temporary-directory alias
+00:00 +2: reload waits for the cycle covering the observed input
+00:00 +3: reload does not accept an older cycle after a second save
+00:00 +4: generation failure blocks the matching reload
+00:00 +5: topology change rejects reload but permits explicit restart
+00:00 +6: host identity accepts a symbolic-link alias
+00:00 +7: missing versioned input evidence fails within the bound
+00:00 +8: machine proxy forwards reload only after matching success
+00:02 +9: machine proxy forwards parent stdin EOF to Flutter
+00:04 +10: Flutter run supervisor preserves exit and removes its lease
+CCRouter interactive Hot Reload is not generation-gated. After changing generated declarations, wait for `aggregationSucceeded` before pressing r or R.
+00:04 +11: interactive supervisor reports that terminal reload is ungated
+00:06 +12: interactive supervisor removes its lease before child termination
+00:10 +13: machine supervisor removes its lease before child termination
+00:15 +14: interactive supervisor handles termination at the first heartbeat
+00:20 +15: machine supervisor handles termination at the first heartbeat
+00:25 +16: stale supervised lease expires an orphaned watch
+00:25 +17: shared watch remains active until its last run lease exits
+00:25 +18: machine proxy returns daemon error and withholds failed reload
+00:27 +19: All tests passed!

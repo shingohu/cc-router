@@ -1,3 +1,4 @@
+import 'contract_validation.dart';
 import 'dart:convert';
 
 import 'package:analyzer/dart/constant/value.dart';
@@ -21,14 +22,6 @@ const int _serviceMaxDescriptionLength = 4096;
 /// Stable identifier syntax shared by generated Service contracts and Keys.
 final RegExp _serviceStableIdPattern = RegExp(
   r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$',
-);
-
-/// SemVer 2.0 syntax used by independent Service Contracts.
-final RegExp _serviceSemanticVersionPattern = RegExp(
-  r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
-  r'(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)'
-  r'(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?'
-  r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$',
 );
 
 /// Matches Service contract declarations from the canonical contracts package.
@@ -534,11 +527,11 @@ List<_ServiceContractModel> _readServiceContracts(LibraryReader library) {
     if (alias != null && !isGeneratedClientMemberName(alias)) {
       _failService(
         'Service contract "$id" alias "$alias" must be a public lower-camel '
-        'Dart identifier and must not be a keyword.',
+        'Dart identifier and must not be a keyword or an inherited Object member.',
         element,
       );
     }
-    if (!_serviceSemanticVersionPattern.hasMatch(version)) {
+    if (!isContractSemanticVersion(version)) {
       _failService('Service contract "$id" must use SemVer 2.0.', element);
     }
     final description = annotated.annotation.read('description').stringValue;
@@ -726,11 +719,11 @@ _ServiceContractModel? _serviceContractAnnotation(InterfaceElement element) {
   if (alias != null && !isGeneratedClientMemberName(alias)) {
     _failService(
       'Service contract "$id" alias "$alias" must be a public lower-camel '
-      'Dart identifier and must not be a keyword.',
+      'Dart identifier and must not be a keyword or an inherited Object member.',
       element,
     );
   }
-  if (!_serviceSemanticVersionPattern.hasMatch(version)) {
+  if (!isContractSemanticVersion(version)) {
     _failService('Service contract "$id" must use SemVer 2.0.', element);
   }
   _validateServiceContractInheritance(element);

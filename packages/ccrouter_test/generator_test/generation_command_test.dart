@@ -16,6 +16,59 @@ void main() {
   _restorePortableGenerationStatesAfterSuite();
 
   test(
+    'Event aliases resolve publication collisions and retain default names',
+    () async {
+      final source = File(
+        'demo/modules/navigation_lab/lib/src/component_capabilities.dart',
+      );
+      final original = source.readAsStringSync();
+      const probe = '''
+@CCEventContract(id: 'demo_navigation_lab.alias_probe_one')
+final class CCRouterAliasProbe implements CCEvent {
+  const CCRouterAliasProbe();
+}
+@CCEventContract(id: 'demo_navigation_lab.alias_probe_two', alias: 'publishAliasedProbe')
+final class CCRouterAliasProbeEvent implements CCEvent {
+  const CCRouterAliasProbeEvent();
+}
+''';
+      final seeded = await _generateDemoWithoutPubResolution([]);
+      expect(seeded.exitCode, 0, reason: '${seeded.stdout}\n${seeded.stderr}');
+      final before = await _readDemoGeneratedArtifacts();
+      try {
+        source.writeAsStringSync('$original\n$probe');
+        final aliased = await _generateDemoWithoutPubResolution([]);
+        expect(
+          aliased.exitCode,
+          0,
+          reason: '${aliased.stdout}\n${aliased.stderr}',
+        );
+        final api = File(
+          'demo/modules/navigation_lab/lib/src/ccrouter_generated/component/demo_navigation_lab_component.event_api.g.dart',
+        ).readAsStringSync();
+        expect(api, contains('static Future<void> publishCCRouterAliasProbe('));
+        expect(api, contains('static Future<void> publishAliasedProbe('));
+      expect(api, contains('eventId: "demo_navigation_lab.alias_probe_two"'));
+        source.writeAsStringSync(
+          '$original\n${probe.replaceFirst(", alias: 'publishAliasedProbe'", '')}',
+        );
+        final collision = await _generateDemoWithoutPubResolution([]);
+        expect(collision.exitCode, 1);
+        expect('${collision.stderr}', contains('both generate member'));
+      } finally {
+        source.writeAsStringSync(original);
+        final restored = await _generateDemoWithoutPubResolution([]);
+        expect(
+          restored.exitCode,
+          0,
+          reason: '${restored.stdout}\n${restored.stderr}',
+        );
+        expect(await _readDemoGeneratedArtifacts(), before);
+      }
+    },
+  );
+
+  test(
     'framework dependency indexes do not change generated business identities',
     () async {
       final index = File(

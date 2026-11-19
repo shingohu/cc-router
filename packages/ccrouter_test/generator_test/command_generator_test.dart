@@ -145,6 +145,50 @@ final class SubmitOrderCommand implements CCCommand<void> {
     expect(logs, contains('must not be a keyword'));
   });
 
+  test('Object member Command alias fails at its declaration', () async {
+    final logs = await _generate(
+      reader,
+      ccCommandMetadataBuilder(BuilderOptions.empty),
+      r'''
+@CCCommandContract(id: 'orders.submit', alias: 'toString')
+final class SubmitOrderCommand implements CCCommand<void> {
+  const SubmitOrderCommand();
+}
+''',
+      'lib/src/ccrouter_generated/metadata/src/probe.command.json',
+      fails: true,
+    );
+    expect(logs, contains('alias "toString"'));
+  });
+
+  test(
+    'Owner Command Client rejects an inferred Object member until aliased',
+    () async {
+      for (final aliased in [false, true]) {
+        final output = await _generate(
+          reader,
+          ccCommandMetadataBuilder(BuilderOptions.empty),
+          '''
+@CCCommandContract(id: 'orders.format'${aliased ? ", alias: 'formatOrder'" : ''})
+final class ToStringCommand implements CCCommand<void> {
+  const ToStringCommand();
+}
+''',
+          'lib/src/ccrouter_generated/metadata/src/probe.command.json',
+          fails: !aliased,
+        );
+        if (aliased) {
+          expect(
+            jsonDecode(output)['commandContracts'][0]['alias'],
+            'formatOrder',
+          );
+        } else {
+          expect(output, contains('toString'));
+        }
+      }
+    },
+  );
+
   test('mutable payload fields fail generation', () async {
     final logs = await _generate(
       reader,

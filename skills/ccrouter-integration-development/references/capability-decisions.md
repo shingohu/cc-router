@@ -71,6 +71,8 @@ For local confirmation, menus, transient BottomSheet, `OverlayEntry`, `MenuAncho
 ## Service
 
 跨 Package 的 Route、Service、Command、Event、InitTask Contract 都要维护独立的 SemVer。
+各类 Contract（包括独立 UI family）与 Component 版本统一通过 `CCSemVer` 解析，版本字符串
+不接受首尾空白；版本范围仍保留外围空白和 whitespace 分隔比较器的语法。
 生成 metadata 会携带确定性的 `shapeFingerprint`；公共形状改变时应升级 Contract 版本，破坏性
 变更优先使用新 Contract ID，不要用组件版本或运行时字符串猜测兼容性。
 生成的 Host Assembly 同时携带 Contract descriptor 和消费者的精确版本/指纹要求；Host 启动时
@@ -90,7 +92,10 @@ When a framework-managed Service moves across Packages, declare `@CCServiceContr
 
 Use a Contract alias when every consumer should see the same generated Client
 member. Use a Dependency alias only for a keyed implementation or local naming
-override. Do not create a global Service namespace that hides which component
+override. Effective Service/Command/Event/UI Client names reject Dart keywords and
+Object members (`hashCode`, `runtimeType`, `toString`, `noSuchMethod`), including
+type-inferred defaults. Supply an explicit valid alias when inference conflicts.
+Do not create a global Service namespace that hides which component
 made the call.
 
 Do not use a Service as an event bus, a route registry, or a container for arbitrary global mutable state.
@@ -106,6 +111,12 @@ Do not use Command for repeated state queries that belong on a Service. Do not r
 ## Event
 
 Choose `CCEvent` only after a fact is complete. Examples: order paid, account switched, cache invalidated. Publishers must not depend on subscriber count, order, return values, or success.
+
+An Event may set optional `CCEventContract.alias` for its complete Owner publication
+method name. Omit it to keep the established publish/type-name fallback. Use it
+for a real naming collision or shared vocabulary; do not add an Event dependency
+or grant Subscribers publication rights. Alias changes affect generated API and
+Contract fingerprint, so review versioning and regenerate.
 
 Subscribers have stable typed IDs (`CCEventSubscriberId<E>`) and Runtime lifetime. The ID identifies the subscriber, not the Event type, so multiple subscribers of one Event use different IDs. A subscriber failure is isolated. If the publisher needs one owner to succeed, use Command. Bridge framework observations to application logs with `CCDiagnosticsConfig` and a Host-owned `CCDiagnosticSink`; keep raw payloads out of the sink and use `traceBundle` only for bounded troubleshooting.
 

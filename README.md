@@ -1750,6 +1750,17 @@ Route 与 Service Proxy 的集合默认值保留实际 List/Set/Map 类型及泛
 Analyzer 的注解诊断和 Quick Fix 核对声明所属框架 Library；业务同名注解不会因名称相同被
 识别为 CCRouter 注解。解析不完整且无法证明导入来源时，保守等待后续解析或生成校验。
 
+Service、Command、Event、UI 的生成静态 Client 入口名统一拒绝 Dart 关键字和 Object 保留成员
+`hashCode`、`runtimeType`、`toString`、`noSuchMethod`；显式 alias、Contract 默认名和类型推导
+都适用。有效入口名按 ASCII 字母/数字的 lowerCamelCase 校验；此前未校验的 Owner
+推导名如含 `_` 或 `$`，需要显式设置合规 alias，不会自动重命名类型或入口。
+遇到保留名时修改 alias，Generator 会在声明处报错，外部 metadata 也执行同样校验。
+Command 的 Owner Client 始终生成；类型推导名冲突时应设置 `CCCommandContract.alias`，
+仅覆盖消费方 alias 不能修复 Owner 的方法名。
+
+Contract 和 Component 的版本使用同一个 `CCSemVer` 解析规则，版本字符串不接受首尾空白，
+例如应写 `'1.0.0'`，不能写 `' 1.0.0 '`。版本范围表达式仍允许外围和比较器之间的空白。
+
 Route、Service、Command、Event、InitTask Contract 都有独立的 Contract SemVer。生成器会同时
 写入不包含源码路径和实现类名的 `shapeFingerprint`，消费者 metadata 和 Host Bundle 会携带
 精确的版本范围与指纹。Workspace、Host 组装和 Runtime 会使用稳定的兼容错误码拒绝缺失
@@ -1894,6 +1905,13 @@ await OrderEvents.publishOrderPaid(
   timeout: const Duration(seconds: 3),
 );
 ```
+
+每个 Event 类型只允许一个 `CCEventContract` 注解。`alias` 可显式指定完整的 Owner Publication Client 方法名，例如
+`alias: 'publishPaid'` 对应 `OrderEvents.publishPaid(...)`，不会再自动追加 `publish`。
+省略时保留既有 `publish<TypeWithoutEvent>` 命名；两个 Event 推导撞名时可为其中一个设置
+alias。alias 必须是非关键字、非 Object 保留成员的公开 lowerCamelCase 名称。更改 alias
+会改变生成 API 和 Contract 指纹，应评审 Contract 版本并重生成 Owner/Subscriber/Host；
+Event ID、发布权限、Subscriber ID 和 payload 均不因此改变。
 
 同一 Event 可以没有 Subscriber 或有多个 Subscriber。订阅按稳定 ID 确定启动顺序，单个 Subscriber 失败不会阻止其他 Subscriber；调用 Future 在本次分发完成后结束。同一组件只有一个对应 Subscriber 时可省略 `CCEventSubscription.id`，生成器使用 `<subscriberComponentId>.<eventId>`；存在多个时必须全部显式设置。跨组件 Contract 显式填写 `componentId`，订阅组件把 Owner 放入 required 或 optional dependencies。生成器只为 Owner 生成 Publication Client，不增加 `eventDependencies` 或任意发布权。
 

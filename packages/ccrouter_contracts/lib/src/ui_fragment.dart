@@ -42,9 +42,11 @@ final class CCUIFragmentContract<P extends Object, A extends Object> {
   /// A Dependency alias overrides this name for one consumer. When absent,
   /// generation removes a trailing `FragmentContract` from the marker name
   /// and lowercases its first character, without acronym heuristics.
+  /// The alias must be a public lower-camel identifier outside Object members.
   final String? alias;
 
   /// SemVer maintained by the owner when public shape or behavior changes.
+  /// Leading or trailing whitespace is rejected, as with other Contracts.
   final String version;
 
   /// Human-readable usage scenario exported to generated metadata.
