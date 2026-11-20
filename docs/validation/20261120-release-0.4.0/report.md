@@ -70,9 +70,41 @@ floating tag，不升级隔离 analyzer/analyzer_plugin 版本。
 此处的 `status`/`pin-check` 只证明静态与远端身份，`doctor` 另外证明临时 loader；真实 IDE
 重启及诊断验证单独记录，不将 CLI 成功写成 IDE 已加载。
 
+第一阶段实现提交为 `d682bc5ed91935ab23abc20ea9df8165e8648ae1`，已先推送远端。
+Demo inner bootstrap 的 manifest 和 lockfile 独立指向该 SHA，只改变一个 Git dependency；
+analyzer `8.4.0` / analyzer_plugin `0.13.10` 均未升级。
+
+- [pin-check](pin-check.log)：manifest/lock/resolved-ref 一致，远端 SHA 可解析，pin 之后无
+  Plugin production drift。
+- [首次 doctor](pin-doctor-before.log)：临时 locked resolution、分析、loader compilation
+  通过，同时指出 Demo 精确 legacy cache 是旧 manifest。
+- 从 Android Studio 关闭仅用于验收的 Demo 项目后，将 doctor 指定的整个 cache entry
+  改名备份到独立可恢复路径，没有删除 cache、没有终止业务项目进程，见
+  [备份记录](cache-backup.json)。
+- [恢复后 doctor](pin-doctor-current.log)：source pin current、cache current、loader smoke
+  passed。doctor 自身仍不声称能观察 IDE；下面两种验收另外完成。
+- [两次真实 LSP 重启](live-lsp.log)及[结构化结果](live-lsp.json)：在真实 Demo workspace 使用
+  active bootstrap，为 payment component 的 Service Dependency 注入未保存的 `toString`
+  alias，两次都出现 `ccrouter_alias_invalid`，恢复 overlay 后清除。源码磁盘 bytes 未变，
+  manager cache 的 manifest 与 active bootstrap 一致，实际 Plugin root 包含完整新 SHA。
+- GUI：Android Studio 打开 Demo 后窗口连接暂时超时。用户另行明确授权安装官方
+  `Dart-Code.dart-code` 和仅信任当前 Demo。VS Code Marketplace 显示 Verified Publisher
+  Dart Code，安装版本 `3.146.0`；信任面板仅包含本仓库 Demo 路径。
+- 在 VS Code 中打开 payment component，执行 `Dart: Restart Analysis Server`。Language
+  Status 显示配套 Flutter `3.41.10-ohos-1.0.0` / Dart `3.11.5 (Flutter)`。注入相同未保存
+  alias 后，Problems 显示 `CCServiceDependency alias "toString" cannot be a generated Client
+  member.` 与 `ccrouter_alias_invalid`；撤销后明确显示 `No problems have been detected in the
+  workspace.`。最终 Git status 确认 payment authored source 无差异。
+
+pin 更新及 GUI 验收之后再次运行：[根 analyze](pin-root-analyze.log)通过，
+[最终 pin-check](pin-check-final.log)无 production drift，[Demo 生成检查](pin-generate.log)
+保持一致。独立 pin 提交只包含两个 bootstrap 文件与本次分发证据，不包含 Plugin 实现修改。
+
 ## 验收与发布状态
 
-执行中；最终提交、pin、合并、tag 和分支状态由完成后的实际结果填入。
+实现和 pin 验收均已完成。Demo pin 更新与本段证据归档在独立提交中；最终合并目标为
+`main`，snapshot tag 为 `0.4.0`，随后删除本次已合并的开发分支。最终 Git ref 身份通过
+`git ls-remote` 核对，不在这个文件中保存编辑自身的提交 SHA。
 
 ## 未覆盖范围
 

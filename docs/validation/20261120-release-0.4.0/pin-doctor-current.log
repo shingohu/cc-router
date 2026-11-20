@@ -1,0 +1,23 @@
+CCRouter Analyzer status
+  host: <home>/develop/LiberLive/cc-router/demo
+  state: healthy
+  plugin: ccrouter_demo_analyzer_plugin
+  bootstrap: <home>/develop/LiberLive/cc-router/demo/tools/ccrouter_analyzer_plugin_host/tools/analyzer_plugin
+  source: git
+  version: 0.1.0
+  ref: d682bc5ed91935ab23abc20ea9df8165e8648ae1
+  analyzer: 8.4.0
+  analyzer_plugin: 0.13.10
+  source pin: current (manifest/lock/resolved-ref identity only)
+  cache artifact: unchecked (run analyzer doctor)
+  Analysis Server live state: unverified
+  detail: Analyzer bootstrap is statically consistent; loadability is unchecked until `ccrouter analyzer doctor` passes.
+CCRouter Analyzer doctor: locked dependencies...
+CCRouter Analyzer doctor: bootstrap analysis...
+CCRouter Analyzer doctor: loader compilation...
+CCRouter Analyzer doctor summary
+  source pin: current (manifest/lock/resolved-ref identity)
+  cache artifact: current (1 matching legacy cache entry(s))
+  loader smoke: passed in a temporary copy (not the IDE session)
+  Analysis Server restart: required before claiming bootstrap/ref or cache changes are live
+  live IDE verification: pending (doctor cannot observe or control the IDE Analysis Server)
