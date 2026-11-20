@@ -1,0 +1,21 @@
+{
+  "host": "<home>/.codex/worktrees/integrate-main-347/cc-router/demo",
+  "pluginRef": "c61cf3dabb9712aaa21e494d8011373c2361970f",
+  "cache": "<home>/.dartServer/.plugin_manager/bd0a2985b4345b83d80a60599d83c238/analyzer_plugin",
+  "resolvedPluginRoot": "file://<home>/.pub-cache/git/cc-router-c61cf3dabb9712aaa21e494d8011373c2361970f/packages/ccrouter_analyzer_plugin",
+  "sourceUnchanged": true,
+  "runs": [
+    {
+      "cycle": 1,
+      "pid": 60863,
+      "invalidAliasReported": true,
+      "repairCleared": true
+    },
+    {
+      "cycle": 2,
+      "pid": 60983,
+      "invalidAliasReported": true,
+      "repairCleared": true
+    }
+  ]
+}

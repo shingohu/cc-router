@@ -67,6 +67,15 @@ smoke 保持套件默认跳过。[源码清单](source-manifest.json)记录本�
 执行 pin-check、doctor、重启与诊断验证；最后合回 `flutter-3.47.9` 并推送。
 main 与 `0.4.0` tag 不变，本任务不创建新 tag。
 
+第一阶段合并提交 `c61cf3dabb9712aaa21e494d8011373c2361970f` 已推送且远端核验。
+Demo manifest/lock 现独立 pin 到该 SHA，Analyzer 8.4.0 / analyzer_plugin 0.13.10 未改。
+[status](pin-status.log)、[pin-check](pin-check.log)确认静态身份、远端可解析、无 production drift；
+[doctor](pin-doctor.log)确认锁定解析、bootstrap 分析与临时 loader 编译通过。
+[真实 LSP](live-lsp.log)用 3.47 SDK 连续启动两次独立 Analysis Server，未保存 overlay 中
+加入非法 alias `toString` 均出现 `ccrouter_alias_invalid`，还原后均清除，磁盘源码不变。
+[机器结果](live-lsp.json)验证 manager cache 和 resolved Plugin 路径指向新 SHA；
+[驱动](live-lsp.py)保留复现流程。此阶段尚未据此声称 GUI 已验证。
+
 ## 验证边界
 
 本次覆盖标准 3.47 SDK 的框架/Demo/Chrome、Generator 和隔离 Plugin；不将前轮原生构建

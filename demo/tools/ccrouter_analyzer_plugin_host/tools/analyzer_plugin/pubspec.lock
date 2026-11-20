@@ -45,8 +45,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/ccrouter_analyzer_plugin"
-      ref: "699c81ae6a0e0080f0f00475bfa0673aad0867ff"
-      resolved-ref: "699c81ae6a0e0080f0f00475bfa0673aad0867ff"
+      ref: c61cf3dabb9712aaa21e494d8011373c2361970f
+      resolved-ref: c61cf3dabb9712aaa21e494d8011373c2361970f
       url: "git@github.com:shingohu/cc-router.git"
     source: git
     version: "0.1.0"
