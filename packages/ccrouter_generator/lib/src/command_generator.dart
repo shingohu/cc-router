@@ -1,3 +1,4 @@
+import 'contract_validation.dart';
 import 'dart:convert';
 
 import 'package:analyzer/dart/element/element.dart';
@@ -19,14 +20,6 @@ const int _commandMaxDescriptionLength = 4096;
 /// Portable syntax shared by generated Command identities.
 final RegExp _commandStableIdPattern = RegExp(
   r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$',
-);
-
-/// SemVer 2.0 syntax used by independent Command Contracts.
-final RegExp _commandSemanticVersionPattern = RegExp(
-  r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
-  r'(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)'
-  r'(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?'
-  r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$',
 );
 
 /// Matches generated Command contracts from the canonical contracts package.
@@ -326,6 +319,12 @@ List<_CommandContractModel> _readCommandContracts(LibraryReader library) {
         element,
       );
     }
+    if (_commandContractChecker.annotationsOfExact(element).length != 1) {
+      _failCommand(
+        'Contract requires exactly one CCCommandContract annotation.',
+        element,
+      );
+    }
     final commandInterfaces = element.allSupertypes
         .where((type) => _commandChecker.isExactlyType(type))
         .toList(growable: false);
@@ -361,14 +360,15 @@ List<_CommandContractModel> _readCommandContracts(LibraryReader library) {
         : aliasReader.stringValue;
     final version = annotated.annotation.read('version').stringValue;
     _validateCommandId(id, 'Command ID', element);
-    if (alias != null && !isGeneratedClientMemberName(alias)) {
+    final member = alias ?? defaultCommandClientMember(element.displayName);
+    if (!isGeneratedClientMemberName(member)) {
       _failCommand(
-        'Command "$id" alias "$alias" must be a public lower-camel Dart '
-        'identifier and must not be a keyword.',
+        'Command "$id" alias "$member" must be a public lower-camel Dart '
+        'identifier and must not be a keyword or an inherited Object member.',
         element,
       );
     }
-    if (!_commandSemanticVersionPattern.hasMatch(version)) {
+    if (!isContractSemanticVersion(version)) {
       _failCommand('Command "$id" must use SemVer 2.0.', element);
     }
     if (!ids.add(id)) {
@@ -409,6 +409,12 @@ List<_CommandHandlerModel> _readCommandHandlers(LibraryReader library) {
         element.typeParameters.isNotEmpty) {
       _failCommand(
         'CCCommandHandler requires a public, top-level, non-generic function.',
+        element,
+      );
+    }
+    if (_commandHandlerChecker.annotationsOfExact(element).length != 1) {
+      _failCommand(
+        'Handler requires exactly one CCCommandHandler annotation.',
         element,
       );
     }
@@ -474,6 +480,12 @@ _CommandContractModel _readCommandContract(ClassElement element) {
       element,
     );
   }
+  if (_commandContractChecker.annotationsOfExact(element).length != 1) {
+    _failCommand(
+      'Contract requires exactly one CCCommandContract annotation.',
+      element,
+    );
+  }
   final interfaces = element.allSupertypes
       .where((type) => _commandChecker.isExactlyType(type))
       .toList(growable: false);
@@ -494,14 +506,15 @@ _CommandContractModel _readCommandContract(ClassElement element) {
     _failCommand('CCCommandContract requires a const id.', element);
   }
   _validateCommandId(id, 'Command ID', element);
-  if (alias != null && !isGeneratedClientMemberName(alias)) {
+  final member = alias ?? defaultCommandClientMember(element.displayName);
+  if (!isGeneratedClientMemberName(member)) {
     _failCommand(
-      'Command "$id" alias "$alias" must be a public lower-camel Dart '
-      'identifier and must not be a keyword.',
+      'Command "$id" alias "$member" must be a public lower-camel Dart '
+      'identifier and must not be a keyword or an inherited Object member.',
       element,
     );
   }
-  if (!_commandSemanticVersionPattern.hasMatch(version)) {
+  if (!isContractSemanticVersion(version)) {
     _failCommand('Command "$id" must use SemVer 2.0.', element);
   }
   return _CommandContractModel(
@@ -607,6 +620,7 @@ String _commandGeneratedLibraryPath(String source) {
 }
 
 /// Serializes a source declaration without embedding source contents.
+/// Preserves exact source coordinates and adds defining-Library identity for parts.
 Map<String, Object?> _commandSourceReference(Element element) {
   final fragment = element.firstFragment;
   final libraryFragment = fragment.libraryFragment!;
@@ -616,6 +630,8 @@ Map<String, Object?> _commandSourceReference(Element element) {
   return <String, Object?>{
     'symbol': element.displayName,
     'packageUri': libraryFragment.source.uri.toString(),
+    if (libraryFragment.source.uri != element.library!.uri)
+      'libraryUri': element.library!.uri.toString(),
     'line': location.lineNumber,
     'column': location.columnNumber,
   };

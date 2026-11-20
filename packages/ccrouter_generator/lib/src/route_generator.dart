@@ -1,3 +1,4 @@
+import 'contract_validation.dart';
 import 'dart:convert';
 
 import 'package:analyzer/dart/constant/value.dart';
@@ -75,14 +76,6 @@ const TypeChecker _componentCommandContractChecker =
 const TypeChecker _componentCommandChecker = TypeChecker.typeNamedLiterally(
   'CCCommand',
   inPackage: 'ccrouter_contracts',
-);
-
-/// Full SemVer 2.0 syntax used by component contract versions.
-final RegExp _semanticVersionPattern = RegExp(
-  r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
-  r'(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)'
-  r'(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?'
-  r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$',
 );
 
 /// Validates a generated identifier without publishing a framework utility.

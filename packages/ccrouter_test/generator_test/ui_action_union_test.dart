@@ -279,7 +279,7 @@ final class DerivedProps extends Props {
 @CCUIFragmentRenderer(Summary)
 Widget render(CCUIFragmentRenderInput<Props, Action> input) => const SizedBox();
 const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
-  dependencies: [owner], uiDependencies: [CCUIFragmentDependency<Summary>(alias: 'summary', versionRange: '^1.0.0')]);
+  dependencies: [owner], uiDependencies: [CCUIFragmentDependency<Summary>(alias: 'summary')]);
 ''', metadata: false);
       expect(
         result.output,

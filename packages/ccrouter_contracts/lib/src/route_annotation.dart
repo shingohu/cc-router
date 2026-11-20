@@ -16,9 +16,11 @@ import 'route_presentation.dart';
 /// type; use `void` when no business result exists.
 final class CCRoute<R> {
   /// Creates route metadata with exactly one of [pattern] or [patterns].
+  /// A page carries one [CCRoute] annotation; put address aliases in [patterns].
   ///
   /// The generator rejects missing or simultaneous declarations and resolves
   /// the one effective primary before emitting the Runtime definition.
+  /// Null [pattern] and empty [patterns] are inactive defaults, even when explicit.
   const CCRoute({
     required this.id,
     this.version = '0.1.0',
@@ -95,8 +97,9 @@ final class CCRoute<R> {
 /// library. The schema's unnamed constructor defines typed route parameters;
 /// the generator emits Arguments, Intent, Definition, and Codec beside that
 /// schema. A Flutter component binds the destination separately with
-/// [CCRouteImplementation]. Keep the schema in the implementation Package for
-/// a Package-public contract, or move it to a dedicated Pure Dart contracts
+/// [CCRouteImplementation]. Each schema carries exactly one [CCRouteContract].
+/// Keep the schema in the implementation Package for a Package-public contract,
+/// or move it to a dedicated Pure Dart contracts
 /// Package for a cross-component contract.
 ///
 /// Keep routes on [CCRoute] while they are component-internal. Promote them to
@@ -182,6 +185,7 @@ final class CCRouteContract<R> {
 /// or import the implementation package.
 final class CCRouteImplementation {
   /// Associates a page with the annotated schema [contract].
+  /// A page carries exactly one [CCRouteImplementation] annotation.
   ///
   /// The referenced type must carry [CCRouteContract], and workspace assembly
   /// rejects missing or duplicate implementations for the stable route ID.

@@ -1,0 +1,13 @@
+Summary: final 12 nonempty lines from /tmp/ccrouter-core-identity-framework.log.
+00:27 +1753: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: business Pop interrupted by go stays consistent
+00:27 +1754: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: business Pop interrupted by reset stays consistent
+00:27 +1755: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: business Pop interrupted by close stays consistent
+00:27 +1756: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: business Pop interrupted by popup stays consistent
+00:27 +1757: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through business outgoing animation
+00:27 +1758: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through direct outgoing animation
+00:27 +1759: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through system outgoing animation
+00:27 +1760: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through gesture outgoing animation
+00:28 +1761: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through go outgoing animation
+00:28 +1762: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through reset outgoing animation
+00:28 +1763: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through replace outgoing animation
+00:28 +1764: All tests passed!

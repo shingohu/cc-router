@@ -1,10 +1,29 @@
 # CCRouter 验证证据索引
 
-更新日期：2026-11-17。这里集中导航验证记录，不替代[当前能力矩阵](../README.md)或
+更新日期：2026-11-20。这里集中导航验证记录，不替代[当前能力矩阵](../README.md)或
 [发布门禁](../CCRouter-release-readiness.md)。每份报告只证明其注明源码、命令、设备和范围；
 旧失败由后续修复报告闭环，不删除失败证据，也不改写历史测试数字。
 
 ## 最新源码自动化证据
+
+[2026-11-20 main 0.4.0 → Flutter 3.47.9 集成](20261120-main-to-flutter347/report.md)：
+在独立集成分支保留现代工具链、平台/Web 修复并合入 main，重新生成 Portable State；
+本次回归与 Plugin 两阶段 pin 分发单独记录。
+
+[2026-11-19 Event Contract alias 与多轮 review（本地）](20261119-event-alias/report.md)：
+补齐可选 alias，保留默认方法与指纹兼容；覆盖真实 Host 撞名/恢复、导入与重复注解、
+外部 metadata、Plugin 和框架回归。[两阶段发布补充](20261119-event-alias/pin-release.md)
+记录获授权后的远端来源、Demo pin 与真实 LSP 验证；GUI 会话未验证。
+
+[2026-11-18 Client 名称与 Contract 版本校验收口（本地）](20261118-contract-validation/report.md)：
+统一 Object 保留名约束与 SemVer 解析，保留 RED/GREEN、完整套件结果和运行边界。
+Demo 的远端 Plugin pin 尚未同步；本地源码验证不代表 GUI IDE 或远端版本验证。
+
+[2026-11-18 UI Fragment 参数统一与 Demo Plugin pin](20261118-ui-fragment-parameters/report.md)：
+统一 Contract/Dependency 默认参数和 alias 推导，消费方自动记录精确版本；框架 1719 项、
+Demo 118 项、Plugin 213 项、UI Generator 专项 139 项通过。保留 doctor 旧缓存 advisory、
+两阶段 pin 来源与实际 Demo LSP 重启后的诊断/修复证据；GUI IDE 会话未验证，Generator
+专项不代表完整 Generator 套件。
 
 [2026-11-17 OHOS oh-3.47.9-dev 验证](20261117-ohos-3479-dev/report.md)：
 固定官方开发分支修订 `a9e95461`，恢复浅克隆缺失的版本标签后，Pub、框架 1719、Demo 188、

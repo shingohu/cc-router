@@ -17,11 +17,55 @@
 
 ## 2. 版本范围与 shape 是独立门禁
 
-`CCSemVer` 解析严格的 `major.minor.patch[-pre][+build]`。范围支持精确版本、`*`、caret、tilde，以及空白分隔的一组比较器；空表达式在当前解析器中也表示任意版本。它不支持任意布尔表达式，不采用 Pub 的完整范围语法。0.x 仍按解析器的 caret/tilde 规则处理，没有“只有 exact 才合法”的额外 Runtime 限制。
+`CCSemVer` 解析严格的 `major.minor.patch[-pre][+build]`，版本值不接受首尾空白。
+Route、Service、Command、Event、InitTask、UI Contract 与 Component 的 Generator 校验
+复用同一解析器，Workspace/Host 对外部 metadata 保持同样的边界。范围表达式自身可有外围
+空白，caret/tilde 后原有的空白处理也保留；这不允许已安装的版本值携带空白。
+
+范围支持精确版本、`*`、caret、tilde，以及空白分隔的一组比较器；空表达式在当前解析器中也表示任意版本。它不支持任意布尔表达式，不采用 Pub 的完整范围语法。0.x 仍按解析器的 caret/tilde 规则处理，没有“只有 exact 才合法”的额外 Runtime 限制。
+
+
+预发布标识只有纯十进制数字才按数值比较；`0x10`、`-0` 等属于非数字标识，不等于 `16`、`0`。
+数字预发布标识按位数和字典序比较，不受机器整数位数限制；major/minor/patch 仍使用 Dart int。
+caret/tilde 上界不通过整数自增构造，避免已接受的大版本值溢出。范围继续使用原有字面比较器
+语义（包括下一 core 的 prerelease 边界），不额外引入 Pub/npm 的预发布过滤策略。
+
+
+兼容错误按输入归因：Owner 的安装版本损坏只归到 Owner，合法消费者范围不会被追加“范围无效”。
+若两侧输入都损坏则分别报告；合法但超出范围仍报 `versionOutOfRange`。
+UI Host 对损坏的版本/范围统一抛出脱敏 `CCUIFragmentError('staleGeneratedOutput', id)`，
+不会向调用方泄漏包含原始版本字符串的 `FormatException`；合法范围不匹配的错误码保持不变。
+
+
+五类 Core ContractBundle 的最终门禁也核对已安装 descriptor 与消费者 requirement 的身份：
+能力 ID 最长 128 字符，Owner 最长 128 字符且使用 lowercase component 规则。
+即使两侧填写一致，空值、非法或超长身份仍报 `staleGeneratedOutput`；格式损坏的消费者
+fingerprint 同样报生成物无效。合法但不同的 SHA-256 继续报 `fingerprintChanged`，
+不会把损坏输入误当成真实公共形状变更。Host/Runtime 在启动前执行同一检查。
+
+
+Host 合并 ContractBundle 时保留同一消费身份的所有不同范围约束；范围和 fingerprint 也纳入
+完整 requirement 的去重条件。仅完整字段相同才去重，不按输入顺序选择一个范围，也不自动
+计算或重写范围交集；合并快照的再校验结果应与原始约束一致。
+
+
+CLI 输出 Package ContractBundle 时同样保留消费者 metadata 已有的范围和指纹快照；
+只在旧 metadata 缺少字段时按既有规则补齐精确版本/指纹，不把已有范围重写为 Owner 当前版本。
+InitTask 的依赖快照也遵守此规则；已有 Owner 与当前 Contract 不符时在 Workspace 提前报
+`ownerMismatch`，不同范围不被按身份静默去重。源码 API 不新增 `versionRange` 参数。
 
 消费者记录 requiredVersionRange 与 requiredShapeFingerprint。**版本处于范围内仍须精确匹配当前消费者记录的指纹**；minor 不能自动绕过 shape 变化。生成 Client 的具体范围来自当前生成声明，不手写 metadata 放宽检查。
 
 公共形状变化后，Owner 应评估 SemVer、更新契约与消费者，并重新生成 Owner/Consumer/Host；行为语义变化即使指纹不变，也由 Owner 负责版本评审。框架不会仅根据 major/minor 自动证明源码或行为兼容。
+
+
+IDE 的 Contract Owner 身份还包括定义它的 Library：同一 Package 中同名且同 Owner 的
+Contract 不会互相覆盖；共享 named part 的不同 Library 也分别识别。Service/Command 的 part
+metadata 保留原源码 `packageUri`/行列，并补充可选 `libraryUri`，catalog 往返不丢失该字段。
+旧 metadata 仅缺该证据时可被一致的新记录补全；明确冲突、带 query/fragment 或非便携 URI
+不会回退猜测，IDE 暂缓该 Owner 诊断/Quick Fix。旧 part metadata 需重新生成以补齐身份。
+
+此处 Library 证据属于源码身份/定位 metadata，不改变业务 Contract shapeFingerprint。
 
 ## 3. 规范化指纹
 

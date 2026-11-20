@@ -1,0 +1,4 @@
+00:00 +0: loading test/generator_diagnostics_bridge_test.dart
+00:00 +0: valid encoded filename characters retain their published source path
+00:00 +1: malformed or escaping published locations never become IDE paths
+00:00 +2: All tests passed!

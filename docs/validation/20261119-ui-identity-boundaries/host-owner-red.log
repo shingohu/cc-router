@@ -1,0 +1,12 @@
+00:00 +0: loading <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/ui_fragment_test.dart
+00:00 +0: UI Host uses the generated lowercase Owner grammar
+00:00 +0 -1: UI Host uses the generated lowercase Owner grammar [E]
+  Expected: throws <Instance of 'CCUIFragmentError'> with `code`: 'staleGeneratedOutput'
+    Actual: <Closure: () => CCHostAssembly>
+     Which: returned <Instance of 'CCHostAssembly'>
+
+  package:matcher                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18       expect
+  packages/ccrouter_test/test/ui_fragment_test.dart 250:7  main.<fn>
+
+00:00 +0 -1: Some tests failed.

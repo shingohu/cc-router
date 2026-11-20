@@ -161,6 +161,7 @@ abstract final class CCRouterResolvedSymbols {
     if (unit.declarations.any(
       (d) => switch (d) {
         NamedCompilationUnitMember d => d.name.lexeme == (prefix ?? name),
+        ExtensionDeclaration d => d.name?.lexeme == (prefix ?? name),
         TopLevelVariableDeclaration d => d.variables.variables.any(
           (v) => v.name.lexeme == (prefix ?? name),
         ),

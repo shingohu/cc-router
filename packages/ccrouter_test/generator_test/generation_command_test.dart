@@ -46,6 +46,59 @@ void main() {
   );
 
   test(
+    'Event aliases resolve publication collisions and retain default names',
+    () async {
+      final source = File(
+        'demo/modules/navigation_lab/lib/src/component_capabilities.dart',
+      );
+      final original = source.readAsStringSync();
+      const probe = '''
+@CCEventContract(id: 'demo_navigation_lab.alias_probe_one')
+final class CCRouterAliasProbe implements CCEvent {
+  const CCRouterAliasProbe();
+}
+@CCEventContract(id: 'demo_navigation_lab.alias_probe_two', alias: 'publishAliasedProbe')
+final class CCRouterAliasProbeEvent implements CCEvent {
+  const CCRouterAliasProbeEvent();
+}
+''';
+      final seeded = await _generateDemoWithoutPubResolution([]);
+      expect(seeded.exitCode, 0, reason: '${seeded.stdout}\n${seeded.stderr}');
+      final before = await _readDemoGeneratedArtifacts();
+      try {
+        source.writeAsStringSync('$original\n$probe');
+        final aliased = await _generateDemoWithoutPubResolution([]);
+        expect(
+          aliased.exitCode,
+          0,
+          reason: '${aliased.stdout}\n${aliased.stderr}',
+        );
+        final api = File(
+          'demo/modules/navigation_lab/lib/src/ccrouter_generated/component/demo_navigation_lab_component.event_api.g.dart',
+        ).readAsStringSync();
+        expect(api, contains('static Future<void> publishCCRouterAliasProbe('));
+        expect(api, contains('static Future<void> publishAliasedProbe('));
+        expect(api, contains('eventId: "demo_navigation_lab.alias_probe_two"'));
+        source.writeAsStringSync(
+          '$original\n${probe.replaceFirst(", alias: 'publishAliasedProbe'", '')}',
+        );
+        final collision = await _generateDemoWithoutPubResolution([]);
+        expect(collision.exitCode, 1);
+        expect('${collision.stderr}', contains('both generate member'));
+      } finally {
+        source.writeAsStringSync(original);
+        final restored = await _generateDemoWithoutPubResolution([]);
+        expect(
+          restored.exitCode,
+          0,
+          reason: '${restored.stdout}\n${restored.stderr}',
+        );
+        expect(await _readDemoGeneratedArtifacts(), before);
+      }
+    },
+  );
+
+  test(
     'framework dependency indexes do not change generated business identities',
     () async {
       final index = File(
@@ -874,27 +927,23 @@ void probe() {
     timeout: const Timeout(Duration(minutes: 2)),
   );
 
-  test(
-    'concurrent generation is serialized by the workspace lock',
-    () async {
-      Future<ProcessResult> generate() => Process.run(
-        Platform.resolvedExecutable,
-        ['run', 'ccrouter_generator:ccrouter', 'generate', 'demo', '--check'],
-        workingDirectory: Directory.current.path,
+  test('concurrent generation is serialized by the workspace lock', () async {
+    Future<ProcessResult> generate() => Process.run(
+      Platform.resolvedExecutable,
+      ['run', 'ccrouter_generator:ccrouter', 'generate', 'demo', '--check'],
+      workingDirectory: Directory.current.path,
+    );
+
+    final results = await Future.wait([generate(), generate()]);
+
+    for (final result in results) {
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+      expect(
+        '${result.stdout}',
+        contains('CCRouter generated artifacts are up to date.'),
       );
-
-      final results = await Future.wait([generate(), generate()]);
-
-      for (final result in results) {
-        expect(result.exitCode, 0, reason: '${result.stderr}');
-        expect(
-          '${result.stdout}',
-          contains('CCRouter generated artifacts are up to date.'),
-        );
-      }
-    },
-    timeout: const Timeout(Duration(minutes: 3)),
-  );
+    }
+  }, timeout: const Timeout(Duration(minutes: 3)));
 
   test(
     'generation rejects authored input changed after build_runner',
@@ -952,58 +1001,54 @@ void probe() {
     timeout: const Timeout(Duration(minutes: 5)),
   );
 
-  test(
-    'generation removes only obsolete source-tree metadata',
-    () async {
-      final legacyGeneratedRoot = Directory(
-        path.join(
-          Directory.current.path,
-          'demo',
-          'modules',
-          'payment',
-          'ccrouter_generated',
-        ),
-      );
-      final rootExistedBeforeTest = legacyGeneratedRoot.existsSync();
-      final generatedDirectory = Directory(
-        path.join(legacyGeneratedRoot.path, '.migration_probe_$pid'),
-      )..createSync(recursive: true);
-      addTearDown(() {
-        if (generatedDirectory.existsSync()) {
-          generatedDirectory.deleteSync(recursive: true);
-        }
-        if (!rootExistedBeforeTest &&
-            legacyGeneratedRoot.existsSync() &&
-            legacyGeneratedRoot.listSync().isEmpty) {
-          legacyGeneratedRoot.deleteSync();
-        }
-        if (!rootExistedBeforeTest) {
-          expect(legacyGeneratedRoot.existsSync(), isFalse);
-        }
-      });
-      final obsoleteJson = File(
-        path.join(generatedDirectory.path, 'probe.route.json'),
-      )..writeAsStringSync('{}');
-      final obsoleteMarkdown = File(
-        path.join(generatedDirectory.path, 'probe.component.md'),
-      )..writeAsStringSync('# generated');
-      final unknown = File(path.join(generatedDirectory.path, 'keep.txt'))
-        ..writeAsStringSync('user-owned');
-
-      final result = await Process.run(Platform.resolvedExecutable, [
-        'run',
-        'ccrouter_generator:ccrouter',
-        'generate',
+  test('generation removes only obsolete source-tree metadata', () async {
+    final legacyGeneratedRoot = Directory(
+      path.join(
+        Directory.current.path,
         'demo',
-      ], workingDirectory: Directory.current.path);
+        'modules',
+        'payment',
+        'ccrouter_generated',
+      ),
+    );
+    final rootExistedBeforeTest = legacyGeneratedRoot.existsSync();
+    final generatedDirectory = Directory(
+      path.join(legacyGeneratedRoot.path, '.migration_probe_$pid'),
+    )..createSync(recursive: true);
+    addTearDown(() {
+      if (generatedDirectory.existsSync()) {
+        generatedDirectory.deleteSync(recursive: true);
+      }
+      if (!rootExistedBeforeTest &&
+          legacyGeneratedRoot.existsSync() &&
+          legacyGeneratedRoot.listSync().isEmpty) {
+        legacyGeneratedRoot.deleteSync();
+      }
+      if (!rootExistedBeforeTest) {
+        expect(legacyGeneratedRoot.existsSync(), isFalse);
+      }
+    });
+    final obsoleteJson = File(
+      path.join(generatedDirectory.path, 'probe.route.json'),
+    )..writeAsStringSync('{}');
+    final obsoleteMarkdown = File(
+      path.join(generatedDirectory.path, 'probe.component.md'),
+    )..writeAsStringSync('# generated');
+    final unknown = File(path.join(generatedDirectory.path, 'keep.txt'))
+      ..writeAsStringSync('user-owned');
 
-      expect(result.exitCode, 0, reason: '${result.stderr}');
-      expect(obsoleteJson.existsSync(), isFalse);
-      expect(obsoleteMarkdown.existsSync(), isFalse);
-      expect(unknown.readAsStringSync(), 'user-owned');
-    },
-    timeout: const Timeout(Duration(minutes: 2)),
-  );
+    final result = await Process.run(Platform.resolvedExecutable, [
+      'run',
+      'ccrouter_generator:ccrouter',
+      'generate',
+      'demo',
+    ], workingDirectory: Directory.current.path);
+
+    expect(result.exitCode, 0, reason: '${result.stderr}');
+    expect(obsoleteJson.existsSync(), isFalse);
+    expect(obsoleteMarkdown.existsSync(), isFalse);
+    expect(unknown.readAsStringSync(), 'user-owned');
+  }, timeout: const Timeout(Duration(minutes: 2)));
 
   test(
     'clean removes managed outputs but preserves user files and rebuilds',
@@ -1184,23 +1229,19 @@ void probe() {
     timeout: const Timeout(Duration(minutes: 4)),
   );
 
-  test(
-    'cached and no-cache generation produce identical artifacts',
-    () async {
-      final before = await _readDemoGeneratedArtifacts();
-      final result = await Process.run(Platform.resolvedExecutable, [
-        'run',
-        'ccrouter_generator:ccrouter',
-        'generate',
-        'demo',
-        '--no-cache',
-      ], workingDirectory: Directory.current.path);
+  test('cached and no-cache generation produce identical artifacts', () async {
+    final before = await _readDemoGeneratedArtifacts();
+    final result = await Process.run(Platform.resolvedExecutable, [
+      'run',
+      'ccrouter_generator:ccrouter',
+      'generate',
+      'demo',
+      '--no-cache',
+    ], workingDirectory: Directory.current.path);
 
-      expect(result.exitCode, 0, reason: '${result.stderr}');
-      expect(await _readDemoGeneratedArtifacts(), before);
-    },
-    timeout: const Timeout(Duration(minutes: 2)),
-  );
+    expect(result.exitCode, 0, reason: '${result.stderr}');
+    expect(await _readDemoGeneratedArtifacts(), before);
+  }, timeout: const Timeout(Duration(minutes: 2)));
 
   test(
     'profile emits a structured trace and atomically persists the latest run',
@@ -1550,25 +1591,21 @@ void probe() {
     timeout: const Timeout(Duration(minutes: 5)),
   );
 
-  test(
-    'Route visibility memo matches per-Route generated bytes',
-    () async {
-      final candidate = await _generateDemo(['--no-cache', '--check']);
-      expect(candidate.exitCode, 0, reason: '${candidate.stderr}');
-      final candidateArtifacts = await _readDemoGeneratedArtifacts();
+  test('Route visibility memo matches per-Route generated bytes', () async {
+    final candidate = await _generateDemo(['--no-cache', '--check']);
+    expect(candidate.exitCode, 0, reason: '${candidate.stderr}');
+    final candidateArtifacts = await _readDemoGeneratedArtifacts();
 
-      final reference = await _generateDemo(
-        ['--no-cache', '--check'],
-        environment: {
-          ...Platform.environment,
-          'CCROUTER_DISABLE_ROUTE_VISIBILITY_MEMO': '1',
-        },
-      );
-      expect(reference.exitCode, 0, reason: '${reference.stderr}');
-      expect(await _readDemoGeneratedArtifacts(), candidateArtifacts);
-    },
-    timeout: const Timeout(Duration(minutes: 5)),
-  );
+    final reference = await _generateDemo(
+      ['--no-cache', '--check'],
+      environment: {
+        ...Platform.environment,
+        'CCROUTER_DISABLE_ROUTE_VISIBILITY_MEMO': '1',
+      },
+    );
+    expect(reference.exitCode, 0, reason: '${reference.stderr}');
+    expect(await _readDemoGeneratedArtifacts(), candidateArtifacts);
+  }, timeout: const Timeout(Duration(minutes: 5)));
 
   test(
     'post-Builder aggregation reuse matches the kill-switch reference',
@@ -1647,42 +1684,38 @@ void probe() {
     timeout: const Timeout(Duration(minutes: 5)),
   );
 
-  test(
-    'shared planning snapshot isolates Build Plan state failures',
-    () async {
-      final before = await _readDemoGeneratedArtifacts();
-      final stateDirectory = _demoBuildPlanState().parent;
-      final backup = Directory('${stateDirectory.path}.failure-test-$pid');
-      expect(backup.existsSync(), isFalse);
-      stateDirectory.renameSync(backup.path);
-      final blocker = File(stateDirectory.path)
-        ..writeAsStringSync('Build Plan directory failure probe.\n');
-      try {
-        final result = await _generateDemo(['--no-cache', '--profile']);
-        expect(result.exitCode, 0, reason: '${result.stderr}');
-        expect('${result.stdout}', contains('build-plan-state=write-failed'));
-        final spans = (_profileDelta(result, 'trace')['spans'] as List)
-            .cast<Map<String, dynamic>>();
-        expect(
-          spans.singleWhere(
-            (span) => span['name'] == 'fast-path-manifest-write',
-          )['status'],
-          'ok',
-        );
-        expect(
-          spans.singleWhere(
-            (span) => span['name'] == 'build-plan-state-write',
-          )['status'],
-          'failed',
-        );
-        expect(await _readDemoGeneratedArtifacts(), before);
-      } finally {
-        if (blocker.existsSync()) blocker.deleteSync();
-        if (backup.existsSync()) backup.renameSync(stateDirectory.path);
-      }
-    },
-    timeout: const Timeout(Duration(minutes: 3)),
-  );
+  test('shared planning snapshot isolates Build Plan state failures', () async {
+    final before = await _readDemoGeneratedArtifacts();
+    final stateDirectory = _demoBuildPlanState().parent;
+    final backup = Directory('${stateDirectory.path}.failure-test-$pid');
+    expect(backup.existsSync(), isFalse);
+    stateDirectory.renameSync(backup.path);
+    final blocker = File(stateDirectory.path)
+      ..writeAsStringSync('Build Plan directory failure probe.\n');
+    try {
+      final result = await _generateDemo(['--no-cache', '--profile']);
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+      expect('${result.stdout}', contains('build-plan-state=write-failed'));
+      final spans = (_profileDelta(result, 'trace')['spans'] as List)
+          .cast<Map<String, dynamic>>();
+      expect(
+        spans.singleWhere(
+          (span) => span['name'] == 'fast-path-manifest-write',
+        )['status'],
+        'ok',
+      );
+      expect(
+        spans.singleWhere(
+          (span) => span['name'] == 'build-plan-state-write',
+        )['status'],
+        'failed',
+      );
+      expect(await _readDemoGeneratedArtifacts(), before);
+    } finally {
+      if (blocker.existsSync()) blocker.deleteSync();
+      if (backup.existsSync()) backup.renameSync(stateDirectory.path);
+    }
+  }, timeout: const Timeout(Duration(minutes: 3)));
 
   test(
     'fast path requires exact authored inputs and managed outputs',
@@ -2016,54 +2049,46 @@ void probe() {
     timeout: const Timeout(Duration(minutes: 5)),
   );
 
-  test(
-    'P6 tool identity changes force the full Builder path',
-    () async {
-      final seeded = await _generateDemo(['--no-cache']);
-      expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
-      final state = _demoBuildPlanState();
-      final original = state.readAsBytesSync();
-      final probe = File(
-        path.join(
-          Directory.current.path,
-          'demo',
-          'lib',
-          '_ccrouter_tool_identity_probe.dart',
-        ),
+  test('P6 tool identity changes force the full Builder path', () async {
+    final seeded = await _generateDemo(['--no-cache']);
+    expect(seeded.exitCode, 0, reason: '${seeded.stderr}');
+    final state = _demoBuildPlanState();
+    final original = state.readAsBytesSync();
+    final probe = File(
+      path.join(
+        Directory.current.path,
+        'demo',
+        'lib',
+        '_ccrouter_tool_identity_probe.dart',
+      ),
+    );
+    try {
+      probe.writeAsStringSync('const ccrouterToolIdentityProbe = true;\n');
+      final document =
+          (jsonDecode(state.readAsStringSync()) as Map).cast<String, Object?>()
+            ..remove('contentFingerprint');
+      document['toolFingerprint'] = 'p6-tool-identity-probe';
+      document['contentFingerprint'] = computeCCCanonicalJsonFingerprint(
+        document,
       );
-      try {
-        probe.writeAsStringSync('const ccrouterToolIdentityProbe = true;\n');
-        final document =
-            (jsonDecode(state.readAsStringSync()) as Map)
-                .cast<String, Object?>()
-              ..remove('contentFingerprint');
-        document['toolFingerprint'] = 'p6-tool-identity-probe';
-        document['contentFingerprint'] = computeCCCanonicalJsonFingerprint(
-          document,
-        );
-        state.writeAsStringSync(jsonEncode(document), flush: true);
+      state.writeAsStringSync(jsonEncode(document), flush: true);
 
-        final result = await _generateDemo(['--check', '--profile']);
-        expect(result.exitCode, 0, reason: '${result.stderr}');
-        expect(
-          '${result.stdout}',
-          contains('build-plan suggested=runBuilder actual=runBuilder'),
-        );
-        expect('${result.stdout}', contains('tool-input-changed'));
-        expect(_profileDelta(result, 'output-delta')['files'], 0);
-        expect(
-          '${result.stderr}',
-          isNot(contains('ccrouter_generation_state')),
-        );
-      } finally {
-        if (probe.existsSync()) probe.deleteSync();
-        state.writeAsBytesSync(original, flush: true);
-        final restored = await _generateDemo(const []);
-        expect(restored.exitCode, 0, reason: '${restored.stderr}');
-      }
-    },
-    timeout: const Timeout(Duration(minutes: 4)),
-  );
+      final result = await _generateDemo(['--check', '--profile']);
+      expect(result.exitCode, 0, reason: '${result.stderr}');
+      expect(
+        '${result.stdout}',
+        contains('build-plan suggested=runBuilder actual=runBuilder'),
+      );
+      expect('${result.stdout}', contains('tool-input-changed'));
+      expect(_profileDelta(result, 'output-delta')['files'], 0);
+      expect('${result.stderr}', isNot(contains('ccrouter_generation_state')));
+    } finally {
+      if (probe.existsSync()) probe.deleteSync();
+      state.writeAsBytesSync(original, flush: true);
+      final restored = await _generateDemo(const []);
+      expect(restored.exitCode, 0, reason: '${restored.stderr}');
+    }
+  }, timeout: const Timeout(Duration(minutes: 4)));
 
   test(
     'CLI integration edits do not change the generation tool identity',
@@ -2496,50 +2521,46 @@ void probe() {
     timeout: const Timeout(Duration(minutes: 8)),
   );
 
-  test(
-    'corrupted generation cache falls back to a full parse',
-    () async {
-      final cache = File(
-        path.join(
-          Directory.current.path,
-          '.dart_tool',
-          'ccrouter',
-          'v1',
-          'cache.json',
-        ),
-      );
-      final original = cache.existsSync() ? cache.readAsBytesSync() : null;
-      addTearDown(() {
-        if (original == null) {
-          if (cache.existsSync()) cache.deleteSync();
-        } else {
-          cache
-            ..createSync(recursive: true)
-            ..writeAsBytesSync(original, flush: true);
-        }
-      });
-      cache
-        ..createSync(recursive: true)
-        ..writeAsStringSync('{invalid cache', flush: true);
+  test('corrupted generation cache falls back to a full parse', () async {
+    final cache = File(
+      path.join(
+        Directory.current.path,
+        '.dart_tool',
+        'ccrouter',
+        'v1',
+        'cache.json',
+      ),
+    );
+    final original = cache.existsSync() ? cache.readAsBytesSync() : null;
+    addTearDown(() {
+      if (original == null) {
+        if (cache.existsSync()) cache.deleteSync();
+      } else {
+        cache
+          ..createSync(recursive: true)
+          ..writeAsBytesSync(original, flush: true);
+      }
+    });
+    cache
+      ..createSync(recursive: true)
+      ..writeAsStringSync('{invalid cache', flush: true);
 
-      final result = await Process.run(Platform.resolvedExecutable, [
-        'run',
-        'ccrouter_generator:ccrouter',
-        'generate',
-        'demo',
-        '--profile',
-      ], workingDirectory: Directory.current.path);
+    final result = await Process.run(Platform.resolvedExecutable, [
+      'run',
+      'ccrouter_generator:ccrouter',
+      'generate',
+      'demo',
+      '--profile',
+    ], workingDirectory: Directory.current.path);
 
-      expect(result.exitCode, 0, reason: '${result.stderr}');
-      expect(
-        '${result.stdout}',
-        contains('cache was invalid and has been ignored'),
-      );
-      expect('${result.stdout}', contains('cache=0/'));
-      expect('${result.stdout}', contains('cache-missing'));
-    },
-    timeout: const Timeout(Duration(minutes: 2)),
-  );
+    expect(result.exitCode, 0, reason: '${result.stderr}');
+    expect(
+      '${result.stdout}',
+      contains('cache was invalid and has been ignored'),
+    );
+    expect('${result.stdout}', contains('cache=0/'));
+    expect('${result.stdout}', contains('cache-missing'));
+  }, timeout: const Timeout(Duration(minutes: 2)));
 
   test(
     'corrupted generation manifest fails closed to full generation',

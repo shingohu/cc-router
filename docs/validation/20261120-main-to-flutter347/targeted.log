@@ -1,0 +1,80 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/init_task_generator_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/init_task_generator_test.dart: task builder emits complete typed registration
+00:37 +0 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: task builder emits complete typed registration [E]
+  TimeoutException after 0:00:30.000000: Test timed out after 30 seconds. See https://pub.dev/packages/test#timeouts
+  dart:isolate  _RawReceivePort._handleMessage
+
+00:37 +0 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: nullable omission support still rejects inline Contract construction
+00:51 +1 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: a same-name Duration holder keeps its actual positive timeout
+01:00 +2 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: zero-argument internal task is adapted to Runtime signature
+01:05 +3 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: FutureOr Handler may receive invocation context
+01:10 +4 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: metadata records Contract DAG and source locations
+01:14 +5 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: contract and id cannot be configured together
+01:17 +6 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: invalid Handler signature fails generation
+01:23 +7 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: private Handler fails generation
+01:27 +8 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: incorrectly parameterized Handler fails generation
+01:30 +9 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: invalid Gate fails generation
+01:33 +10 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: non-positive timeout fails generation
+01:36 +11 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: duplicate and self dependencies fail generation
+01:39 +12 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: dependency list rejects inline Contract construction
+01:41 +13 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: required task must use a Contract
+01:44 +14 -1: packages/ccrouter_test/generator_test/init_task_generator_test.dart: async required task must declare a timeout
+01:47 +15 -1: loading packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart
+01:47 +15 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: Route null pattern with patterns
+01:54 +16 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: Route null pattern with patterns
+01:57 +17 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: Route pattern with empty patterns
+02:00 +18 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: Route pattern with empty patterns
+02:03 +19 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: Route constant null pattern
+02:05 +20 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: Route constant null pattern
+02:08 +21 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: Route two active patterns
+02:11 +22 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: Route two active patterns
+02:13 +23 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: InitTask null contract with ID
+02:16 +24 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: InitTask null contract with ID
+02:19 +25 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: InitTask constant null contract
+02:22 +26 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: InitTask constant null contract
+02:25 +27 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: InitTask contract with null ID
+02:30 +28 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: InitTask contract with null ID
+02:33 +29 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: InitTask contract with constant null ID
+02:37 +30 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: InitTask contract with constant null ID
+02:40 +31 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: InitTask two active identities
+02:43 +32 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: InitTask two active identities
+02:49 +33 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: InitTask two null identities
+02:52 +34 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: InitTask two null identities
+02:55 +35 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: Route Contract null pattern with patterns
+02:58 +36 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: Route Contract null pattern with patterns
+03:01 +37 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: Route Contract pattern with empty patterns
+03:03 +38 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: Route Contract pattern with empty patterns
+03:06 +39 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: Route Contract constant null pattern
+03:09 +40 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: Route Contract constant null pattern
+03:11 +41 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: Route Contract two active patterns
+03:14 +42 -1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: Route Contract two active patterns
+03:17 +43 -1: loading packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart
+03:17 +43 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: (setUpAll)
+03:17 +43 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight invalid import URI defers to Builder instead of crashing
+03:17 +44 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight invalid export URI defers to Builder instead of crashing
+03:17 +45 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight self-owned requirements defer to the authoritative declaration error
+03:17 +46 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight canonical prefixed constructors retain the exact preflight owner
+03:17 +47 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight foreign CCComponent never triggers a speculative preflight failure
+03:17 +48 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight foreign CCServiceDependency never triggers a speculative preflight failure
+03:17 +49 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight foreign CCServiceContract never triggers a speculative preflight failure
+03:17 +50 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight foreign CCComponentId never triggers a speculative preflight failure
+03:17 +51 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight framework UI barrel preserves exact owners: package:ccrouter_ui/ccrouter_ui.dart
+03:17 +52 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight framework UI barrel preserves exact owners: package:ccrouter_contracts/ccrouter_ui_contracts.dart
+03:17 +53 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight nested lib directories never alias another Library
+03:17 +54 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight does not use unrelated same-Package owner constants
+03:17 +55 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight unimported Contracts cannot be discovered through Package membership
+03:17 +56 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight follows exact relative barrels and preserves local shadowing
+03:17 +57 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight unknown and conditional namespaces defer to Builder
+03:17 +58 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight relative imports and CLI library paths use the same namespace
+03:17 +59 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight aggregates capabilities by uniquely proven owner
+03:17 +60 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight resolves prefixed imports and respects show and hide
+03:17 +61 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight declines computed and ambiguous declarations
+03:17 +62 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: generate reports proven missing owners before build_runner without writes
+03:20 +63 -1: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: (tearDownAll)
+03:20 +63 -1: Some tests failed.
+
+Failing tests:
+  packages/ccrouter_test/generator_test/init_task_generator_test.dart: task builder emits complete typed registration
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

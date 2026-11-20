@@ -1,0 +1,18 @@
+$ fvm dart tool/documentation_check.dart
+exit_code: 0
+Documentation check passed for 191 Markdown files.
+
+
+$ fvm dart tool/release_sensitivity_check.dart --include-untracked
+exit_code: 0
+Release sensitivity check passed.
+
+
+$ git diff --check + untracked whitespace inspection
+exit_code: 0
+Untracked source, documentation and evidence whitespace check passed.
+
+
+$ fvm dart format --output=none --set-exit-if-changed <14 changed Dart files>
+exit_code: 0
+Formatted 14 files (0 changed) in 0.65 seconds.

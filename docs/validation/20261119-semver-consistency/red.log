@@ -1,0 +1,58 @@
+00:00 +0: loading <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/contract_semver_ordering_test.dart
+00:00 +0: prerelease identifiers use decimal SemVer ordering without int conversion
+00:00 +0 -1: prerelease identifiers use decimal SemVer ordering without int conversion [E]
+  Expected: true
+    Actual: <false>
+  0 < -0
+
+  package:matcher                                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18                   expect
+  packages/ccrouter_test/test/contract_semver_ordering_test.dart 13:9  main.<fn>
+
+00:00 +0 -1: ^9223372036854775807.0.0 includes its lower bound without successor overflow
+00:00 +0 -2: ^9223372036854775807.0.0 includes its lower bound without successor overflow [E]
+  Expected: true
+    Actual: <false>
+
+  package:matcher                                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18                   expect
+  packages/ccrouter_test/test/contract_semver_ordering_test.dart 30:7  main.<fn>
+
+00:00 +0 -2: ^0.9223372036854775807.0 includes its lower bound without successor overflow
+00:00 +0 -3: ^0.9223372036854775807.0 includes its lower bound without successor overflow [E]
+  Expected: true
+    Actual: <false>
+
+  package:matcher                                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18                   expect
+  packages/ccrouter_test/test/contract_semver_ordering_test.dart 30:7  main.<fn>
+
+00:00 +0 -3: ^0.0.9223372036854775807 includes its lower bound without successor overflow
+00:00 +0 -4: ^0.0.9223372036854775807 includes its lower bound without successor overflow [E]
+  Expected: true
+    Actual: <false>
+
+  package:matcher                                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18                   expect
+  packages/ccrouter_test/test/contract_semver_ordering_test.dart 30:7  main.<fn>
+
+00:00 +0 -4: ~1.9223372036854775807.0 includes its lower bound without successor overflow
+00:00 +0 -5: ~1.9223372036854775807.0 includes its lower bound without successor overflow [E]
+  Expected: true
+    Actual: <false>
+
+  package:matcher                                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18                   expect
+  packages/ccrouter_test/test/contract_semver_ordering_test.dart 30:7  main.<fn>
+
+00:00 +0 -5: ordinary range upper boundaries retain literal comparator semantics
+00:00 +1 -5: bundle compatibility distinguishes numeric and alphanumeric prereleases
+00:00 +1 -6: bundle compatibility distinguishes numeric and alphanumeric prereleases [E]
+  Expected: <false>
+    Actual: <true>
+
+  package:matcher                                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18                   expect
+  packages/ccrouter_test/test/contract_semver_ordering_test.dart 62:7  main.<fn>
+
+00:00 +1 -6: Some tests failed.

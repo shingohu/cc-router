@@ -1,0 +1,14 @@
+CCRouter Analyzer status
+  host: <home>/develop/LiberLive/cc-router/demo
+  state: healthy
+  plugin: ccrouter_demo_analyzer_plugin
+  bootstrap: <home>/develop/LiberLive/cc-router/demo/tools/ccrouter_analyzer_plugin_host/tools/analyzer_plugin
+  source: git
+  version: 0.1.0
+  ref: ec9da8538b27ef17efcf44aeefc9bbad2fbef845
+  analyzer: 8.4.0
+  analyzer_plugin: 0.13.10
+  source pin: current (manifest/lock/resolved-ref identity only)
+  cache artifact: unchecked (run analyzer doctor)
+  Analysis Server live state: unverified
+  detail: Analyzer bootstrap is statically consistent; loadability is unchecked until `ccrouter analyzer doctor` passes.

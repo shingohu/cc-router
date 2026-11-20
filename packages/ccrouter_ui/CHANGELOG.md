@@ -2,6 +2,11 @@
 
 ## 0.1.0 (unreleased)
 
+- Enforce generated UI identity length and lowercase Owner grammar at Host attachment; reject malformed SPI before catalog installation.
+
+- Normalize malformed generated versions/ranges to sanitized staleGeneratedOutput
+  UI errors; retain versionOutOfRange for well-formed incompatible ranges.
+
 - Explain complete Assembly wiring and real UI test setup in unavailable-catalog
   errors; clarify that activity guards forward Actions, not prior side effects.
 

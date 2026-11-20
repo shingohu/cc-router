@@ -1,0 +1,36 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: component dependency preflight invalid import URI defers to Builder instead of crashing
+00:00 +0 -1: component dependency preflight invalid import URI defers to Builder instead of crashing [E]
+  FormatException: Missing end `]` to match `[` in host (at character 8)
+  http://[
+         ^
+
+  dart:core                                                                             _SimpleUri.resolve
+  package:ccrouter_generator/src/component_dependency_preflight.dart 574:38             _LibraryScope.resolve
+  package:ccrouter_generator/src/component_dependency_preflight.dart 545:9              _LibraryScope._isFramework
+  package:ccrouter_generator/src/component_dependency_preflight.dart 427:15             CCComponentDependencyPreflight._isFrameworkConstructor
+  package:ccrouter_generator/src/component_dependency_preflight.dart 395:10             CCComponentDependencyPreflight._constructorArguments
+  package:ccrouter_generator/src/component_dependency_preflight.dart 95:29              CCComponentDependencyPreflight.inspect
+  packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart 19:55  main.<fn>.<fn>
+
+00:00 +0 -1: component dependency preflight invalid export URI defers to Builder instead of crashing
+00:00 +0 -2: component dependency preflight invalid export URI defers to Builder instead of crashing [E]
+  FormatException: Missing end `]` to match `[` in host (at character 8)
+  http://[
+         ^
+
+  dart:core                                                                             _SimpleUri.resolve
+  package:ccrouter_generator/src/component_dependency_preflight.dart 619:26             _LibraryScope._exported
+  package:ccrouter_generator/src/component_dependency_preflight.dart 573:21             _LibraryScope.resolve
+  package:ccrouter_generator/src/component_dependency_preflight.dart 545:9              _LibraryScope._isFramework
+  package:ccrouter_generator/src/component_dependency_preflight.dart 427:15             CCComponentDependencyPreflight._isFrameworkConstructor
+  package:ccrouter_generator/src/component_dependency_preflight.dart 395:10             CCComponentDependencyPreflight._constructorArguments
+  package:ccrouter_generator/src/component_dependency_preflight.dart 95:29              CCComponentDependencyPreflight.inspect
+  packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart 19:55  main.<fn>.<fn>
+
+00:00 +0 -2: (tearDownAll)
+00:00 +0 -2: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

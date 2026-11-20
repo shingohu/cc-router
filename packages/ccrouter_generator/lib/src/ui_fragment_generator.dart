@@ -5,11 +5,11 @@ import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
-import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:source_gen/source_gen.dart';
 
 import 'contract_fingerprint.dart';
+import 'contract_validation.dart';
 import 'generated_client_naming.dart';
 
 part 'ui_action_schema.dart';
@@ -74,15 +74,21 @@ final class _Contract {
         .toStringValue()!;
     id = annotation.getField('id')!.toStringValue()!;
     version = annotation.getField('version')!.toStringValue()!;
+    alias = annotation.getField('alias')?.toStringValue();
+    description = annotation.getField('description')?.toStringValue() ?? '';
+    if (alias != null && !isGeneratedClientMemberName(alias!)) {
+      _fail(
+        'UI Contract alias "$alias" must be a public lower-camel Dart identifier outside Object members.',
+        marker,
+      );
+    }
     if (!_id.hasMatch(id) ||
         id.length > 128 ||
         !RegExp(r'^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$').hasMatch(owner) ||
         owner.length > 128) {
       _fail('UI contract requires stable owner and capability IDs.', marker);
     }
-    try {
-      CCSemVer.parse(version);
-    } catch (_) {
+    if (!isContractSemanticVersion(version)) {
       _fail('UI contract requires a valid SemVer.', marker);
     }
     final actionElement = action is InterfaceType
@@ -176,6 +182,12 @@ final class _Contract {
   /// Validated SemVer text.
   late final String version;
 
+  /// Optional shared generated member name; consumers may override it.
+  late final String? alias;
+
+  /// Authored usage guidance; excluded from the public data shape fingerprint.
+  late final String description;
+
   /// Complete canonical public shape fingerprint.
   late final String fingerprint;
 
@@ -188,7 +200,9 @@ final class _Contract {
     'declaration': declaration,
     'componentId': owner,
     'id': id,
+    if (alias != null) 'alias': alias,
     'version': version,
+    'description': description,
     'shapeFingerprint': fingerprint,
     'publicTypes': declarations,
   };
@@ -571,13 +585,16 @@ final class _UIFragmentBuilder implements Builder {
           (depType.typeArguments.single as InterfaceType).element,
           buildStep,
         );
-        final alias = dependency.getField('alias')!.toStringValue()!;
-        final range = dependency.getField('versionRange')!.toStringValue()!;
-        if (!isGeneratedClientMemberName(alias) ||
-            alias == 'hashCode' ||
-            alias == 'runtimeType' ||
-            alias == 'toString' ||
-            alias == 'noSuchMethod') {
+        final alias =
+            dependency.getField('alias')?.toStringValue() ??
+            contract.alias ??
+            defaultUIFragmentClientMember(
+              (depType.typeArguments.single as InterfaceType)
+                  .element
+                  .displayName,
+            );
+        final range = contract.version;
+        if (!isGeneratedClientMemberName(alias)) {
           _fail(
             'UI invalidAlias: "$alias" for "${contract.owner}/${contract.id}" '
             'in consumer "$consumer". Set alias in uiDependencies to a valid '
@@ -611,17 +628,6 @@ final class _UIFragmentBuilder implements Builder {
                       '"${contract.owner}" for "${contract.id}". Add the public '
                       'Owner CCComponentId to CCComponent.dependencies; '
                       'optionalDependencies does not satisfy uiDependencies.',
-            variable,
-          );
-        }
-        try {
-          CCContractVersionRange.parse(range);
-        } catch (_) {
-          _fail(
-            'UI dependency requires a valid versionRange for '
-            '"${contract.owner}/${contract.id}" in consumer "$consumer"; '
-            'received "$range". Use a supported SemVer range such as '
-            '"^${contract.version}" for the public Contract version.',
             variable,
           );
         }

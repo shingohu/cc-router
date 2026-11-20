@@ -1,0 +1,14 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/workspace_validator_test.dart
+00:00 +0: persisted InitTask dependency ownership cannot be silently rebound
+00:00 +0 -1: persisted InitTask dependency ownership cannot be silently rebound [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+
+  package:matcher                                                            expect
+  packages/ccrouter_test/generator_test/workspace_validator_test.dart 156:9  main.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

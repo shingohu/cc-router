@@ -1,0 +1,17 @@
+00:00 +0: loading test/ui_analysis_test.dart
+00:00 +0: Gate constructor aliases retain framework identity for literal validation
+00:01 +0 -1: Gate constructor aliases retain framework identity for literal validation [E]
+  Expected: contains 'ccrouter_identifier_invalid'
+    Actual: []
+     Which: does not contain 'ccrouter_identifier_invalid'
+
+  package:matcher                   expect
+  test/ui_analysis_test.dart 122:5  main.<fn>
+
+00:01 +0 -1: Some tests failed.
+
+Failing tests:
+  test/ui_analysis_test.dart: Gate constructor aliases retain framework identity for literal validation
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

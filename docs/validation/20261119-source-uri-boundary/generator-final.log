@@ -1,0 +1,33 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart: file URI imports and exports obey the same Package boundary
+00:00 +1: packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart: native aliases cannot hide a foreign generated library
+00:00 +2: packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart: escaped generated directory names cannot bypass the AST check
+00:00 +3: packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart: malformed namespace URIs defer to Builder without crashing
+00:00 +4: packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart: rejects cross-Package imports, exports, and conditional imports
+00:00 +5: packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart: allows owner imports, public contracts, and generated Host glue
+00:00 +6: loading packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart
+00:00 +6: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: (setUpAll)
+00:00 +6: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight invalid import URI defers to Builder instead of crashing
+00:00 +7: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight invalid export URI defers to Builder instead of crashing
+00:00 +8: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight self-owned requirements defer to the authoritative declaration error
+00:00 +9: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight canonical prefixed constructors retain the exact preflight owner
+00:00 +10: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight foreign CCComponent never triggers a speculative preflight failure
+00:00 +11: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight foreign CCServiceDependency never triggers a speculative preflight failure
+00:00 +12: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight foreign CCServiceContract never triggers a speculative preflight failure
+00:00 +13: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight foreign CCComponentId never triggers a speculative preflight failure
+00:00 +14: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight framework UI barrel preserves exact owners: package:ccrouter_ui/ccrouter_ui.dart
+00:00 +15: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight framework UI barrel preserves exact owners: package:ccrouter_contracts/ccrouter_ui_contracts.dart
+00:00 +16: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight nested lib directories never alias another Library
+00:00 +17: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight does not use unrelated same-Package owner constants
+00:00 +18: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight unimported Contracts cannot be discovered through Package membership
+00:00 +19: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight follows exact relative barrels and preserves local shadowing
+00:00 +20: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight unknown and conditional namespaces defer to Builder
+00:00 +21: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight relative imports and CLI library paths use the same namespace
+00:00 +22: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight aggregates capabilities by uniquely proven owner
+00:00 +23: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight resolves prefixed imports and respects show and hide
+00:00 +24: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: component dependency preflight declines computed and ambiguous declarations
+00:00 +25: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: generate reports proven missing owners before build_runner without writes
+00:03 +26: packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart: (tearDownAll)
+00:03 +26: loading packages/ccrouter_test/generator_test/route_api_boundary_test.dart
+00:03 +26: packages/ccrouter_test/generator_test/route_api_boundary_test.dart: another Package reports internal use and hides the public Route API
+00:07 +27: All tests passed!

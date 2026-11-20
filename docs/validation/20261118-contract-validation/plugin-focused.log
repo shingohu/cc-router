@@ -1,0 +1,162 @@
+00:00 +0: loading test/source_analyzer_test.dart
+00:00 +0: test/source_analyzer_test.dart: shared Generator configuration: root defaults
+00:00 +1: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +2: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +3: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +4: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +5: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +6: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +7: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +8: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +9: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +10: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +11: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +12: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +13: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +14: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +15: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +16: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +17: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +18: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +19: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +20: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +21: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +22: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +23: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +24: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +25: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +26: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +27: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +28: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +29: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +30: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +31: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +32: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +33: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +34: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +35: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +36: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +37: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +38: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +39: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +40: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +41: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +42: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +43: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +44: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +45: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +46: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +47: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +48: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +49: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +50: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +51: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +52: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +53: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +54: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:00 +55: test/ui_analysis_test.dart: UI alias build-card is diagnosed with framework identity
+00:01 +56: test/ui_analysis_test.dart: UI alias class is diagnosed with framework identity
+00:02 +57: test/ui_analysis_test.dart: UI alias toString is diagnosed with framework identity
+00:02 +58: test/ui_analysis_test.dart: duplicate aliases and resolved contract aliases are distinguished
+00:02 +59: test/ui_analysis_test.dart: UI dependency defaults resolve without alias or version arguments
+00:03 +60: test/ui_analysis_test.dart: UI inferred names and Contract aliases participate in collisions
+00:03 +61: test/ui_analysis_test.dart: UI explicit aliases override Contract defaults
+00:03 +62: test/ui_analysis_test.dart: review subtype facts refresh after edits without retaining stale graphs
+00:03 +63: test/ui_analysis_test.dart: review DTO subtype cannot add unmodeled behavior
+00:04 +64: test/ui_analysis_test.dart: review same-name Object model is valid Dart but invalid UI data
+00:04 +65: test/ui_analysis_test.dart: review editor checks bound work for repeated DTO graphs
+00:04 +66: test/ui_analysis_test.dart: review resolved UI Owner defers stale annotation facts removed=false
+00:04 +67: test/ui_analysis_test.dart: review resolved UI Owner defers stale annotation facts removed=true
+00:05 +68: test/ui_analysis_test.dart: legacy deep DTO defers at the IDE budget without false rejection
+00:05 +69: test/ui_analysis_test.dart: sealed Action and nested const super data are accepted
+00:05 +70: test/ui_analysis_test.dart: sealed variants in parts are checked through the defining library
+00:05 +71: test/ui_analysis_test.dart: sealed invalid model is diagnosed: sealed class Target { const Target(this.id); final String id; }
+final class UserTarget extends Target { const UserTarget(super.id); }
+final class ScoreTarget extends Target { const ScoreTarget(super.id); }
+sealed class Action { const Action(); }
+final class SettingsRequested extends Action { const SettingsRequested(); }
+final class TargetSelected extends Action { const TargetSelected(this.target); final Target target; }
+ final class Grandchild extends SettingsRequested { const Grandchild(); }
+00:05 +72: test/ui_analysis_test.dart: sealed invalid model is diagnosed: sealed class Target { const Target(this.id); final String id; }
+final class UserTarget extends Target { const UserTarget(super.id); }
+final class ScoreTarget extends Target { const ScoreTarget(super.id); }
+sealed class Action { const Action(); }
+final class SettingsRequested extends Action { const SettingsRequested(); }
+final class TargetSelected extends Action { const TargetSelected(this.target); final Target target; }
+ final class Impostor implements Action { const Impostor(); }
+00:06 +73: test/ui_analysis_test.dart: sealed invalid model is diagnosed: sealed class Target { const Target(this.id); final String id; }
+final class UserTarget extends Target { const UserTarget(super.id); }
+final class ScoreTarget extends Target { const ScoreTarget(super.id); }
+sealed class Action { const Action(); }
+final class SettingsRequested extends Action { const SettingsRequested(); }
+final class TargetSelected extends Action { const TargetSelected(this.target); final Target target; }
+ final class _Private extends Action { const _Private(); }
+00:06 +74: test/ui_analysis_test.dart: sealed invalid model is diagnosed: sealed class Target { const Target(this.id); final String id; }
+final class UserTarget extends Target { const UserTarget(super.id); }
+final class ScoreTarget extends Target { const ScoreTarget(super.id); }
+sealed class Action { const Action(); }
+final class SettingsRequested extends Action { const SettingsRequested(); }
+final class TargetSelected extends Action { const TargetSelected(this.target); final Target target; }
+ final class Generic<T> extends Action { const Generic(); }
+00:06 +75: test/ui_analysis_test.dart: sealed invalid model is diagnosed: sealed class Target { const Target(this.id); final String id; }
+final class UserTarget extends Target { const UserTarget(super.id); }
+final class ScoreTarget extends Target { const ScoreTarget(super.id); }
+sealed class Action { const Action(); }
+final class SettingsRequested extends Action { const SettingsRequested(); }
+final class TargetSelected extends Action { const TargetSelected(this.target); final Action target; }
+
+00:06 +76: test/ui_analysis_test.dart: sealed invalid model is diagnosed: sealed class Target { const Target(this.id); final String id; }
+final class UserTarget extends Target { const UserTarget(super.id); }
+final class ScoreTarget extends Target { const ScoreTarget(super.id); }
+sealed class Action { const Action(); }
+final class SettingsRequested extends Action { const SettingsRequested(); }
+final class TargetSelected extends Action { const TargetSelected(this.target); final Future<String> target; }
+
+00:06 +77: test/ui_analysis_test.dart: sealed invalid model is diagnosed: sealed class Target { const Target(this.id); final String id; }
+final class UserTarget extends Target { const UserTarget(super.id); }
+final class ScoreTarget extends Target { const ScoreTarget(super.id); }
+sealed class Action { const Action(); }
+final class SettingsRequested extends Action { const SettingsRequested(); }
+final class TargetSelected extends Action { const TargetSelected(this.target); final Target target; void run() {} }
+
+00:06 +78: test/ui_analysis_test.dart: sealed invalid model is diagnosed: sealed class Target { const Target(this.id); final String id; }
+final class UserTarget extends Target { const UserTarget(super.id); }
+final class ScoreTarget extends Target { const ScoreTarget(super.id); }
+sealed class Action { const Action(); }
+class SettingsRequested extends Action { const SettingsRequested(); }
+final class TargetSelected extends Action { const TargetSelected(this.target); final Target target; }
+
+00:07 +79: test/ui_analysis_test.dart: invalid DTO and enhanced Action types have explicit diagnostics
+00:07 +80: test/ui_analysis_test.dart: immutable DTO Action and nested enum/DTO fields are accepted
+00:07 +81: test/ui_analysis_test.dart: plain enum and multiple keyed instances need no extra dependency
+00:07 +82: test/ui_analysis_test.dart: foreign same-name UI annotations and constructors are ignored
+00:07 +83: test/ui_analysis_test.dart: partial and ambiguous source buffers do not guess UI types
+00:07 +84: test/ui_analysis_test.dart: components cannot import UI Host or Generated SPI; tests are exempt
+00:07 +85: test/ui_analysis_test.dart: Renderer signature compares exact contract types and ignores foreign inputs
+00:08 +86: test/ui_analysis_test.dart: metadata UI owner supports a safe imported-constant Quick Fix
+00:08 +87: test/ui_analysis_test.dart: review UI Owner facts defer malformed versions 1.0/1
+00:08 +88: test/ui_analysis_test.dart: review UI Owner facts defer malformed versions 2/3
+00:08 +89: test/ui_analysis_test.dart: UI owner metadata removal and legacy records defer safely
+00:08 +90: test/ui_analysis_test.dart: UI Owner Quick Fix never guesses hidden constants or edits spreads
+00:09 +91: test/ui_analysis_test.dart: prefixed and transitive UI symbols preserve framework identity
+00:09 +92: test/ui_analysis_test.dart: UI SPI references through a public barrel use canonical identity
+00:09 +93: test/ui_analysis_test.dart: foreign component constructors never inherit UI dependency semantics
+00:09 +94: test/ui_analysis_test.dart: UI self-consumption cannot receive a cyclic Owner dependency fix
+00:09 +95: test/ui_analysis_test.dart: ordinary functions named CCComponent cannot receive UI fixes
+00:10 +96: test/ui_analysis_test.dart: ordinary functions named wrapComponent cannot receive UI fixes
+00:10 +97: test/ui_analysis_test.dart: UI dependency factories do not inherit constructor semantics
+00:10 +98: test/ui_analysis_test.dart: UI typedef constructors retain canonical identity
+00:10 +99: test/ui_analysis_test.dart: same-name UI contracts in different libraries retain both Owners
+00:10 +100: test/ui_analysis_test.dart: UI Owner fix round-trips with componentAlias
+00:11 +101: test/ui_analysis_test.dart: UI Owner fix round-trips with dependencyAlias
+00:11 +102: test/ui_analysis_test.dart: UI Owner fix round-trips with bothAliases
+00:11 +103: test/ui_analysis_test.dart: part UI Owner validates library identity package:owner_contracts/contract.dart
+00:11 +104: test/ui_analysis_test.dart: part UI Owner validates library identity null
+00:11 +105: test/ui_analysis_test.dart: part UI Owner validates library identity package:consumer/contract.dart
+00:11 +106: test/ui_analysis_test.dart: part UI Owner validates library identity package:owner_contracts/../contract.dart
+00:12 +107: test/ui_analysis_test.dart: part UI Owner validates library identity package:owner_contracts/contract.dart?invalid
+00:12 +108: test/ui_analysis_test.dart: part UI Owner validates library identity not a package URI
+00:12 +109: test/ui_analysis_test.dart: part UI Owner validates library identity 123
+00:12 +110: test/ui_analysis_test.dart: nested Renderer in function is rejected
+00:12 +111: test/ui_analysis_test.dart: nested Renderer in method is rejected
+00:13 +112: All tests passed!

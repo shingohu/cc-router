@@ -1,0 +1,64 @@
+00:00 +0: loading <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/ui_fragment_test.dart
+00:00 +0: malformed ownerVersion yields a stable sanitized UI compatibility error
+00:00 +0 -1: malformed ownerVersion yields a stable sanitized UI compatibility error [E]
+  Expected: throws <Instance of 'CCUIFragmentError'> with `code`: 'staleGeneratedOutput' and `identity`: 'orders.summary' and `sanitized`: not contains 'invalid-version-input'
+    Actual: <Closure: () => CCHostAssembly>
+     Which: threw FormatException:<FormatException: Invalid Contract SemVer: invalid-version-input>
+            stack package:ccrouter_contracts/src/contract_compatibility.dart 55:7  new CCSemVer.parse
+                  package:ccrouter_ui/src/ui_fragment.dart 253:12                  _validateDescriptor
+                  package:ccrouter_ui/src/ui_fragment.dart 196:7                   CCUIHostAssembly.attach
+                  packages/ccrouter_test/test/ui_fragment_test.dart 209:24         _assembly
+                  packages/ccrouter_test/test/ui_fragment_test.dart 250:20         main.<fn>.<fn>
+                  package:matcher                                                  expect
+                  package:flutter_test/src/widget_tester.dart 477:18               expect
+                  packages/ccrouter_test/test/ui_fragment_test.dart 250:7          main.<fn>
+
+            which is not an instance of 'CCUIFragmentError'
+
+  package:matcher                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18       expect
+  packages/ccrouter_test/test/ui_fragment_test.dart 250:7  main.<fn>
+
+00:00 +0 -1: malformed consumerVersion yields a stable sanitized UI compatibility error
+00:00 +0 -2: malformed consumerVersion yields a stable sanitized UI compatibility error [E]
+  Expected: throws <Instance of 'CCUIFragmentError'> with `code`: 'staleGeneratedOutput' and `identity`: 'orders.summary' and `sanitized`: not contains 'invalid-version-input'
+    Actual: <Closure: () => CCHostAssembly>
+     Which: threw FormatException:<FormatException: Invalid Contract SemVer: invalid-version-input>
+            stack package:ccrouter_contracts/src/contract_compatibility.dart 55:7  new CCSemVer.parse
+                  package:ccrouter_ui/src/ui_fragment.dart 253:12                  _validateDescriptor
+                  package:ccrouter_ui/src/ui_fragment.dart 208:7                   CCUIHostAssembly.attach
+                  packages/ccrouter_test/test/ui_fragment_test.dart 209:24         _assembly
+                  packages/ccrouter_test/test/ui_fragment_test.dart 250:20         main.<fn>.<fn>
+                  package:matcher                                                  expect
+                  package:flutter_test/src/widget_tester.dart 477:18               expect
+                  packages/ccrouter_test/test/ui_fragment_test.dart 250:7          main.<fn>
+
+            which is not an instance of 'CCUIFragmentError'
+
+  package:matcher                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18       expect
+  packages/ccrouter_test/test/ui_fragment_test.dart 250:7  main.<fn>
+
+00:00 +0 -2: malformed range yields a stable sanitized UI compatibility error
+00:00 +0 -3: malformed range yields a stable sanitized UI compatibility error [E]
+  Expected: throws <Instance of 'CCUIFragmentError'> with `code`: 'staleGeneratedOutput' and `identity`: 'orders.summary' and `sanitized`: not contains 'invalid-version-input'
+    Actual: <Closure: () => CCHostAssembly>
+     Which: threw FormatException:<FormatException: Invalid Contract SemVer: invalid-version-input>
+            stack package:ccrouter_contracts/src/contract_compatibility.dart 55:7    new CCSemVer.parse
+                  package:ccrouter_contracts/src/contract_compatibility.dart 233:28  _parseComparator
+                  dart:_internal                                                     ListIterable.toList
+                  package:ccrouter_contracts/src/contract_compatibility.dart 180:10  new CCContractVersionRange.parse
+                  package:ccrouter_ui/src/ui_fragment.dart 219:35                    CCUIHostAssembly.attach
+                  packages/ccrouter_test/test/ui_fragment_test.dart 209:24           _assembly
+                  packages/ccrouter_test/test/ui_fragment_test.dart 250:20           main.<fn>.<fn>
+                  package:matcher                                                    expect
+                  package:flutter_test/src/widget_tester.dart 477:18                 expect
+                  packages/ccrouter_test/test/ui_fragment_test.dart 250:7            main.<fn>
+
+            which is not an instance of 'CCUIFragmentError'
+
+  package:matcher                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18       expect
+  packages/ccrouter_test/test/ui_fragment_test.dart 250:7  main.<fn>
+
+00:00 +0 -3: Some tests failed.

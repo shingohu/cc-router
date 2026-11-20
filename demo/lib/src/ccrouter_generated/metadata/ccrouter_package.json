@@ -5,7 +5,7 @@
     "name": "ccrouter_demo",
     "version": "0.1.0+1"
   },
-  "contentFingerprint": "ce4fb36cc07d767105325a627f64811934658f60cb8c7b284bcaa5b0a41fdbbc",
+  "contentFingerprint": "c247008b6573b4003c8ecbcc706ab97e429aae566eaa35162159a9c4c06b92cd",
   "bundle": {
     "library": "lib/src/ccrouter_generated/host/ccrouter_demo_ccrouter.g.dart",
     "symbol": "ccrouterGeneratedPackageBundle"
@@ -24,7 +24,7 @@
     {
       "name": "demo_navigation_lab",
       "version": "0.1.0",
-      "contentFingerprint": "741b942b0aa4f64b513f6a3a9bdf20853c5cf6f63618034b47139c18d47c5faf"
+      "contentFingerprint": "9e8ee689b03f3f52686bac507f86cfe51866e0ee8e1bdaba7206d723959e4c2e"
     },
     {
       "name": "demo_network",
@@ -34,17 +34,17 @@
     {
       "name": "demo_order",
       "version": "0.1.0",
-      "contentFingerprint": "eb7aede68c621c458080b4133992f778a058b5ad52da99d1433c6bd01612b59c"
+      "contentFingerprint": "71de49b8686e76c0c79476813f748ce6fb86d398ef0055680025ace29b30bc7e"
     },
     {
       "name": "demo_order_contracts",
       "version": "0.1.0",
-      "contentFingerprint": "cccbd8aaf0d251074ec370a21a3b00398a29b1036663dabdebde5908244e6cfb"
+      "contentFingerprint": "86a9845e5932819ed5e832d7c02113590ba7feecde90926c44df327b455ecf43"
     },
     {
       "name": "demo_payment",
       "version": "0.1.0",
-      "contentFingerprint": "781367da3cc74c560edb9d9a6f38f14daa815dffa041d43556ea781d0aedced7"
+      "contentFingerprint": "2dfb22bc7e8cbd4ad8685ac3f56a365bddc135eb0344fcd67da0e4679c2f7d67"
     },
     {
       "name": "demo_web",

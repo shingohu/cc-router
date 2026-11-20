@@ -1,0 +1,45 @@
+Final archive checks (2026-11-19)
+
+$ fvm dart tool/documentation_check.dart
+Documentation check passed for 205 Markdown files.
+exit_code: 0
+
+$ fvm dart tool/release_sensitivity_check.dart --include-untracked
+Release sensitivity check passed.
+exit_code: 0
+
+$ git diff --check
+(no output)
+exit_code: 0
+
+$ node tool/sanitize_validation_evidence.mjs
+Evidence files requiring path normalization: 0
+exit_code: 0
+
+$ python3 - <<'PY'
+import hashlib, json, pathlib, subprocess, sys
+root = pathlib.Path.cwd()
+manifest = json.loads((root/'docs/validation/20261119-export-uri-proof/source-manifest.json').read_text())
+bad = []
+for name, expected in manifest['files'].items():
+    p = root/name
+    if not p.is_file() or hashlib.sha256(p.read_bytes()).hexdigest() != expected:
+        bad.append(name)
+print(f"Manifest: {len(manifest['files'])} files checked, {len(bad)} mismatches")
+for name in bad: print(name)
+paths = subprocess.check_output(['git','ls-files','--others','--exclude-standard','-z']).decode().split('\0')
+whitespace = []
+count = 0
+for name in paths:
+    p = root/name
+    if not name or p.suffix not in {'.dart','.md','.json','.log'}: continue
+    count += 1
+    for number, line in enumerate(p.read_text().splitlines(), 1):
+        if line.rstrip(' \t') != line: whitespace.append(f'{name}:{number}')
+print(f"Untracked whitespace: {count} files checked, {len(whitespace)} issues")
+for issue in whitespace: print(issue)
+sys.exit(bool(bad or whitespace))
+PY
+Manifest: 78 files checked, 0 mismatches
+Untracked whitespace: 244 files checked, 0 issues
+exit_code: 0

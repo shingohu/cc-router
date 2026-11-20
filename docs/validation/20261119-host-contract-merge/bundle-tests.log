@@ -1,0 +1,16 @@
+00:00 +0: loading <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/generated_package_bundle_test.dart
+00:00 +0: Contract merge preserves constraints: reverse=false duplicate=false
+00:00 +1: Contract merge preserves constraints: reverse=true duplicate=false
+00:00 +2: Contract merge preserves constraints: reverse=false duplicate=true
+00:00 +3: extends an assembly without losing optional bindings or provenance
+00:00 +4: extension rejects component replacement and missing dependencies
+00:00 +5: resolves transitive bundles and deduplicates a diamond dependency
+00:00 +6: orders required and present optional component dependencies
+00:00 +7: creates the same deterministic graph from handwritten components
+00:00 +8: rejects an incomplete handwritten component graph
+00:00 +9: orders Host tool integrations and rejects duplicate identities
+00:00 +10: rejects incompatible Package identities in a diamond
+00:00 +11: rejects duplicate component identities
+00:00 +12: rejects missing required component dependencies
+00:00 +13: merges route catalogs with resolved component versions
+00:00 +14: All tests passed!

@@ -1,0 +1,15 @@
+00:00 +0: loading test/ui_analysis_test.dart
+00:00 +0: test/ui_analysis_test.dart: Service owner detection follows dependency and component typedefs
+00:00 +1: test/ui_analysis_test.dart: Service owner detection follows dependency and component typedefs
+00:02 +2: test/ui_analysis_test.dart: Service owner detection ignores same-name functions
+00:03 +3: test/ui_analysis_test.dart: Service owner facts defer when current annotation is owner changed
+00:04 +4: test/ui_analysis_test.dart: Service owner facts defer when current annotation is removed
+00:05 +5: test/ui_analysis_test.dart: Service owner facts defer when current annotation is duplicated
+00:06 +6: test/ui_analysis_test.dart: Service owner facts defer when current annotation is foreign
+00:06 +7: test/ui_analysis_test.dart: Command owner detection follows dependency and component typedefs
+00:07 +8: test/ui_analysis_test.dart: Command owner detection ignores same-name functions
+00:07 +9: test/ui_analysis_test.dart: Command owner facts defer when current annotation is owner changed
+00:07 +10: test/ui_analysis_test.dart: Command owner facts defer when current annotation is removed
+00:08 +11: test/ui_analysis_test.dart: Command owner facts defer when current annotation is duplicated
+00:08 +12: test/ui_analysis_test.dart: Command owner facts defer when current annotation is foreign
+00:09 +13: All tests passed!

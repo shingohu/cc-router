@@ -1,0 +1,37 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/duplicate_declaration_test.dart
+00:00 +0: contract/probe.route.contract.g.dart rejects repeated CCRouteContract annotations
+00:06 +0 -1: contract/probe.route.contract.g.dart rejects repeated CCRouteContract annotations [E]
+  Expected: false
+    Actual: <true>
+
+  package:matcher                                                             expect
+  packages/ccrouter_test/generator_test/duplicate_declaration_test.dart 31:7  main.<fn>
+
+00:06 +0 -1: metadata/src/probe.route.json rejects repeated CCRouteContract annotations
+00:07 +0 -2: metadata/src/probe.route.json rejects repeated CCRouteContract annotations [E]
+  Expected: false
+    Actual: <true>
+
+  package:matcher                                                             expect
+  packages/ccrouter_test/generator_test/duplicate_declaration_test.dart 31:7  main.<fn>
+
+00:07 +0 -2: init_task/probe.init_task.g.dart rejects repeated CCInitTask annotations
+00:09 +0 -3: init_task/probe.init_task.g.dart rejects repeated CCInitTask annotations [E]
+  Expected: false
+    Actual: <true>
+
+  package:matcher                                                             expect
+  packages/ccrouter_test/generator_test/duplicate_declaration_test.dart 31:7  main.<fn>
+
+00:09 +0 -3: metadata/src/probe.init_task.json rejects repeated CCInitTask annotations
+00:10 +0 -4: metadata/src/probe.init_task.json rejects repeated CCInitTask annotations [E]
+  Expected: false
+    Actual: <true>
+
+  package:matcher                                                             expect
+  packages/ccrouter_test/generator_test/duplicate_declaration_test.dart 31:7  main.<fn>
+
+00:10 +0 -4: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

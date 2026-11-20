@@ -1,0 +1,45 @@
+Main directory run: 818 passed, 42 failed, 1 skipped.
+Recovered failures matched by exact test name: 42 / 42.
+All 860 executed cases have successful results across main run and reruns.
+PASS schema 4 uninstall rejects unowned Dart backups
+PASS installed wrapper preserves successful pub exit and skips plain projects
+PASS installed wrapper never runs generation for help or dry-run Pub calls
+PASS Flutter wrapper locates only the real top-level command
+PASS clean guard rejects only a live watch owner
+PASS clean guard also rejects a live V1 watch owner
+PASS inner Dart wrapper runs post-pub once and preserves bypass semantics
+PASS inner Dart wrapper runs generation from the Package root
+PASS Flutter wrapper suppresses nested Dart post-pub hooks
+PASS pub-hook run skips a project without resolved CCRouter packages
+PASS pub-hook run skips a Workspace aggregator
+PASS post-pub hook runs package-local generation for participating Packages
+PASS package-local post-pub reports a covering active Host watch
+PASS package-local post-pub reuses exact active Host watch evidence
+PASS package-local post-pub fails fast when evidence is unavailable
+PASS package-local post-pub uses stable Builder session without local status
+PASS package-local post-pub reports an active Host watch without its target
+PASS package-local post-pub ignores stale build-root watch status
+PASS package-local post-pub rejects malformed or wrong-root watch evidence
+PASS run and pub hooks emit concise phase-specific generation logs
+PASS failed hook preserves actionable generator diagnostics
+PASS post-pub hook waits for an active watch aggregation
+PASS post-pub hook uses stable Host session without local status
+PASS post-pub hook reuses a watch through a symlinked Host path
+PASS post-pub hook surfaces active watch generation diagnostics
+PASS post-pub hook fails quickly when resolution changes during a failed cycle
+PASS post-pub hook does not reuse a historical watch failure
+PASS post-pub hook waits for ready after a watch session restart
+PASS post-pub hook fences a new failure from a legacy watch status
+PASS run and build execute a generation preflight before Flutter
+PASS find ignores legacy framework indexes without changing files
+PASS find merges contract and page sources across Package indexes
+PASS find accepts exact alias and absolute-URI declarations
+PASS find locates a generated InitTask by stable capability ID
+PASS find usage reports satisfied and missing typed dependencies
+PASS find usage does not invent a dependency for the capability owner
+PASS find usage respects Route and internal Contract boundaries
+PASS find usage rejects an unknown consumer without writing indexes
+PASS find is scoped to the selected Host dependency closure
+PASS find rejects missing queries and generation flags
+PASS find rejects missing and corrupted Package indexes
+PASS find rejects mixed dependency Index revisions without writing

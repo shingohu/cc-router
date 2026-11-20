@@ -1,0 +1,17 @@
+00:00 +0: loading test/quick_fixes_test.dart
+00:00 +0: parser-only Owner edits defer unproven packageAbsolute namespaces
+00:00 +0 -1: parser-only Owner edits defer unproven packageAbsolute namespaces [E]
+  Expected: an object with length of <0>
+    Actual: [Instance of 'CCRouterSourceFix']
+     Which: has length of <1>
+
+  package:matcher                  expect
+  test/quick_fixes_test.dart 94:7  main.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  test/quick_fixes_test.dart: parser-only Owner edits defer unproven packageAbsolute namespaces
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

@@ -1,0 +1,4 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/package_workspace_test.dart
+00:00 +0: source references preserve defining Library evidence without changing locations
+00:00 +1: source catalog enriches absent Library evidence but rejects conflicting identities
+00:00 +2: All tests passed!

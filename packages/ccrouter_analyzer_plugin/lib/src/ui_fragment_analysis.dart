@@ -1,10 +1,10 @@
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/ast/visitor.dart';
-import 'package:analyzer/dart/ast/token.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:path/path.dart' as p;
 
+import 'generated_client_naming.dart';
 import 'project_context.dart';
 import 'resolved_symbols.dart';
 
@@ -19,12 +19,14 @@ typedef _Issue = ({
 /// Read-only UI declaration checks; schema and Host closure remain Generator-owned.
 abstract final class CCRouterUIFragmentAnalysis {
   /// Examines authored declarations without starting sessions or generation.
+  /// [matchesLibrary] borrows the current call's SDK Library identity proof.
   static List<_Issue> issues({
     required CompilationUnit unit,
     required String filePath,
     required String packageRoot,
     required String packageName,
     required CCRouterAnalyzerProjectRole? projectRole,
+    required bool Function(Uri actual, String canonical) matchesLibrary,
   }) {
     final issues = <_Issue>[];
     final role =
@@ -47,12 +49,20 @@ abstract final class CCRouterUIFragmentAnalysis {
           if (directive is ExportDirective)
             ...directive.configurations.map((c) => c.uri.stringValue),
         ];
-        if (uris.any(
-          (uri) =>
-              uri == 'package:ccrouter_ui/ccrouter_ui_generated.dart' ||
-              (role == CCRouterAnalyzerProjectRole.package &&
-                  uri == 'package:ccrouter_ui/ccrouter_ui_host.dart'),
-        )) {
+        if (uris.any((uri) {
+          final parsed = uri == null ? null : Uri.tryParse(uri);
+          if (parsed == null) return false;
+          final actual = Uri.file(filePath).resolveUri(parsed);
+          return matchesLibrary(
+                actual,
+                'package:ccrouter_ui/ccrouter_ui_generated.dart',
+              ) ||
+              role == CCRouterAnalyzerProjectRole.package &&
+                  matchesLibrary(
+                    actual,
+                    'package:ccrouter_ui/ccrouter_ui_host.dart',
+                  );
+        })) {
           add(
             directive,
             'spi_access',
@@ -64,7 +74,7 @@ abstract final class CCRouterUIFragmentAnalysis {
     }
     if (packageName != 'ccrouter_ui' &&
         p.isWithin(p.join(packageRoot, 'lib'), filePath)) {
-      final references = _SPIReferences(role);
+      final references = _SPIReferences(role, matchesLibrary);
       unit.accept(references);
       for (final node in references.locations) {
         add(
@@ -183,13 +193,16 @@ abstract final class CCRouterUIFragmentAnalysis {
             continue;
           final args = _arguments(dependency);
           final aliasNode = _named(args, 'alias');
-          final alias = aliasNode is StringLiteral
+          final type = dependency.staticType;
+          final alias = aliasNode == null || aliasNode is NullLiteral
+              ? _defaultAlias(type)
+              : aliasNode is StringLiteral
               ? aliasNode.stringValue
               : null;
           if (alias != null) {
-            if (!_validAlias(alias)) {
+            if (!isGeneratedClientMemberName(alias)) {
               add(
-                aliasNode!,
+                aliasNode ?? dependency,
                 'alias_invalid',
                 'UI alias "$alias" cannot be a generated Client member.',
                 'Use a unique lowerCamelCase Dart member name without reserved Object members.',
@@ -197,14 +210,13 @@ abstract final class CCRouterUIFragmentAnalysis {
             }
             if (!aliases.add(alias)) {
               add(
-                aliasNode!,
+                aliasNode ?? dependency,
                 'alias_duplicate',
                 'UI alias "$alias" is repeated in this consumer.',
                 'Give each UI dependency a unique alias.',
               );
             }
           }
-          final type = dependency.staticType;
           if (type is InterfaceType &&
               type.typeArguments.length == 1 &&
               !_unknown(type.typeArguments.single) &&
@@ -214,22 +226,6 @@ abstract final class CCRouterUIFragmentAnalysis {
               'dependency_duplicate',
               'This UI Contract is required more than once.',
               'Keep one dependency; render multiple instances through that method with distinct Keys.',
-            );
-          }
-          final rangeNode = _named(args, 'versionRange');
-          final range = rangeNode is StringLiteral
-              ? rangeNode.stringValue
-              : null;
-          // Only reject definitely unsupported tokens; the Generator owns the range grammar.
-          if (range != null &&
-              RegExp(
-                r'[a-zA-Z]',
-              ).hasMatch(range.split('-').first.split('+').first)) {
-            add(
-              rangeNode!,
-              'version_range_invalid',
-              'UI versionRange "$range" is not a supported SemVer range.',
-              'Use a supported Contract version range such as ^1.0.0.',
             );
           }
         }
@@ -345,16 +341,37 @@ abstract final class CCRouterUIFragmentAnalysis {
   /// Nullable Renderer boundaries do not satisfy the generated call signature.
   static bool _nullable(DartType type) => type.getDisplayString().endsWith('?');
 
-  /// Mirrors generated member spelling and reserved Object names.
-  static bool _validAlias(String value) =>
-      RegExp(r'^[a-z][a-zA-Z0-9]*$').hasMatch(value) &&
-      !Keyword.keywords.containsKey(value) &&
-      !const {
-        'hashCode',
-        'runtimeType',
-        'toString',
-        'noSuchMethod',
-      }.contains(value);
+  /// Resolves Contract defaults only from a uniquely annotated marker type.
+  /// Computed dependency aliases defer instead of being mistaken for omissions.
+  static String? _defaultAlias(DartType? dependency) {
+    if (dependency is! InterfaceType || dependency.typeArguments.length != 1)
+      return null;
+    final marker = dependency.typeArguments.single;
+    if (marker is! InterfaceType) return null;
+    final annotations = marker.element.metadata.annotations
+        .map((annotation) => annotation.computeConstantValue())
+        .where(
+          (value) =>
+              value?.type is InterfaceType &&
+              CCRouterResolvedSymbols.isFrameworkType(
+                value!.type as InterfaceType,
+                'CCUIFragmentContract',
+                'ui_fragment',
+              ),
+        )
+        .toList();
+    if (annotations.length != 1) return null;
+    final alias = annotations.single!.getField('alias')?.toStringValue();
+    if (alias != null) return alias;
+    final name = marker.element.name;
+    if (name == null) return null;
+    final stem = name.endsWith('FragmentContract')
+        ? name.substring(0, name.length - 'FragmentContract'.length)
+        : name;
+    return stem.isEmpty
+        ? 'fragment'
+        : '${stem[0].toLowerCase()}${stem.substring(1)}';
+  }
 
   /// Reads only direct constructor calls, never computed dependency collections.
   static ArgumentList? _arguments(Expression expression) =>
@@ -390,18 +407,19 @@ final class _AnnotationVisitor extends RecursiveAstVisitor<void> {
 /// Checks canonical class references through prefixed and transitive barrels.
 final class _SPIReferences extends RecursiveAstVisitor<void> {
   /// The Package role controls whether Host assembly references are permitted.
-  _SPIReferences(this.role);
+  _SPIReferences(this.role, this.matchesLibrary);
 
   /// Unknown roles defer Host-only checks.
   final CCRouterAnalyzerProjectRole? role;
+
+  /// Current SDK Library proof owned only by this synchronous scan.
+  final bool Function(Uri actual, String canonical) matchesLibrary;
 
   /// Source nodes owned only by this synchronous scan.
   final locations = <AstNode>[];
 
   /// Compares defining-library identity instead of a public barrel's spelling.
   bool _forbidden(InterfaceElement element) =>
-      element.library.uri.toString() ==
-          'package:ccrouter_ui/src/ui_fragment.dart' &&
       (const {
             'CCUIFragmentDescriptor',
             'CCUIFragmentRequirement',
@@ -413,13 +431,35 @@ final class _SPIReferences extends RecursiveAstVisitor<void> {
               const {
                 'CCUIHostAssembly',
                 'CCUIDiagnostic',
-              }.contains(element.name));
+              }.contains(element.name)) &&
+      matchesLibrary(
+        element.library.uri,
+        'package:ccrouter_ui/src/ui_fragment.dart',
+      );
 
   /// Generated types remain forbidden in handwritten code even in a Host.
   @override
   void visitSimpleIdentifier(SimpleIdentifier node) {
+    final combinator = node.thisOrAncestorOfType<Combinator>();
+    if (combinator != null) {
+      final directive = combinator.parent;
+      if (combinator is! ShowCombinator ||
+          directive is! NamespaceDirective ||
+          !directive.combinators.every(
+            (c) => switch (c) {
+              ShowCombinator c => c.shownNames.any((n) => n.name == node.name),
+              HideCombinator c => !c.hiddenNames.any(
+                (n) => n.name == node.name,
+              ),
+            },
+          ))
+        return;
+    }
     final element = node.element;
-    if (element is InterfaceElement && _forbidden(element)) locations.add(node);
+    final alias = element is TypeAliasElement ? element.aliasedType : null;
+    if (element is InterfaceElement && _forbidden(element) ||
+        alias is InterfaceType && _forbidden(alias.element))
+      locations.add(node);
     super.visitSimpleIdentifier(node);
   }
 

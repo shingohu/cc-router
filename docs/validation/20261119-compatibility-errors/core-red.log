@@ -1,0 +1,16 @@
+Waiting for another flutter command to release the startup lock...
+00:00 +0: loading <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/contract_error_attribution_test.dart
+00:00 +0: Contract errors belong to their actual input: bad / 1.0.0
+00:00 +0 -1: Contract errors belong to their actual input: bad / 1.0.0 [E]
+  Expected: <false>
+    Actual: <true>
+
+  package:matcher                                                        expect
+  package:flutter_test/src/widget_tester.dart 477:18                     expect
+  packages/ccrouter_test/test/contract_error_attribution_test.dart 26:7  main.<fn>
+
+00:00 +0 -1: Contract errors belong to their actual input: 1.0.0 / bad
+00:00 +1 -1: Contract errors belong to their actual input: bad / bad
+00:00 +2 -1: Contract errors belong to their actual input: 1.0.0 / ^2.0.0
+00:00 +3 -1: Contract errors belong to their actual input: 1.0.0 / ^1.0.0
+00:00 +4 -1: Some tests failed.

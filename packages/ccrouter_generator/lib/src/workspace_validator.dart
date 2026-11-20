@@ -1,3 +1,4 @@
+import 'contract_validation.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -24,14 +25,6 @@ final RegExp _workspaceIdentifierPattern = RegExp(
 /// Lowercase package-style syntax retained for component ownership IDs.
 final RegExp _workspaceComponentIdPattern = RegExp(
   r'^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$',
-);
-
-/// Full SemVer 2.0 syntax rechecked for external Package indexes.
-final RegExp _workspaceSemanticVersionPattern = RegExp(
-  r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
-  r'(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)'
-  r'(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?'
-  r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$',
 );
 
 /// Coarse key that groups only patterns which can have equal routing priority.
@@ -651,6 +644,17 @@ abstract final class CCRouteWorkspaceValidator {
           'Event contract "$id" references unknown owner component "$ownerId".',
         );
       }
+      final alias = contract['alias'];
+      final type = contract['type'];
+      final member =
+          alias ??
+          (type is String && type.isNotEmpty
+              ? defaultEventClientMember(type)
+              : null);
+      if (member != null &&
+          (member is! String || !isGeneratedClientMemberName(member))) {
+        errors.add('Event contract "$id" has an invalid Client alias.');
+      }
     }
     for (final subscription in eventSubscriptions.values) {
       final eventId = '${subscription['eventId'] ?? ''}';
@@ -748,8 +752,14 @@ abstract final class CCRouteWorkspaceValidator {
         );
       }
       final alias = contract['alias'];
-      if (alias != null &&
-          (alias is! String || !isGeneratedClientMemberName(alias))) {
+      final type = contract['type'];
+      final member =
+          alias ??
+          (type is String && type.isNotEmpty
+              ? defaultCommandClientMember(type)
+              : null);
+      if (member != null &&
+          (member is! String || !isGeneratedClientMemberName(member))) {
         errors.add('Command contract "$id" has an invalid Client alias.');
       }
       final handler = commandHandlers[id];
@@ -1352,7 +1362,7 @@ abstract final class CCRouteWorkspaceValidator {
         errors.add('Component ID "$id" is invalid.');
       }
       final version = '${component['version']}';
-      if (!_workspaceSemanticVersionPattern.hasMatch(version)) {
+      if (!isContractSemanticVersion(version)) {
         errors.add('Component "$id" must use a SemVer 2.0 version.');
       }
       final dependencies = [
@@ -1430,8 +1440,7 @@ abstract final class CCRouteWorkspaceValidator {
         final id = '${contract['id'] ?? ''}';
         final version = contract['version'];
         final fingerprint = contract['shapeFingerprint'];
-        if (version is! String ||
-            !_workspaceSemanticVersionPattern.hasMatch(version)) {
+        if (version is! String || !isContractSemanticVersion(version)) {
           errors.add(
             '${group.key} contract "$id" must declare a valid Contract SemVer.',
           );
@@ -1489,6 +1498,8 @@ abstract final class CCRouteWorkspaceValidator {
   }
 
   /// Checks generated consumer metadata without changing legacy schema output.
+  /// Installed version errors remain with their Contract; only range parsing
+  /// failures produce the consumer-range diagnostic.
   static void _validateConsumerCompatibility({
     required CCContractKind kind,
     required Map<String, Object?> dependency,
@@ -1499,17 +1510,32 @@ abstract final class CCRouteWorkspaceValidator {
     if (contract == null) return;
     final range = dependency['requiredVersionRange'];
     final fingerprint = dependency['requiredShapeFingerprint'];
-    if (range is! String || fingerprint is! String) {
+    if (range is! String ||
+        fingerprint is! String ||
+        fingerprint.length != 64 ||
+        !RegExp(r'^[0-9a-f]{64}$').hasMatch(fingerprint)) {
       errors.add(
         '[contract:${CCContractCompatibilityCode.staleGeneratedOutput.name}] '
-        '${kind.name} contract "$id" is missing generated consumer metadata.',
+        '${kind.name} contract "$id" has invalid or missing generated consumer metadata.',
+      );
+      return;
+    }
+    if (kind == CCContractKind.initTask &&
+        dependency['componentId'] != null &&
+        dependency['componentId'] != contract['componentId']) {
+      errors.add(
+        '[contract:${CCContractCompatibilityCode.ownerMismatch.name}] '
+        'initTask contract "$id" has a stale dependency Owner.',
       );
       return;
     }
     try {
-      if (!CCContractVersionRange.parse(
-        range,
-      ).allowsText('${contract['version']}')) {
+      final parsedRange = CCContractVersionRange.parse(range);
+      final version = contract['version'];
+      // Installed metadata already owns its invalid-version diagnostic above.
+      if (version is String &&
+          isContractSemanticVersion(version) &&
+          !parsedRange.allows(CCSemVer.parse(version))) {
         errors.add(
           '[contract:${CCContractCompatibilityCode.versionOutOfRange.name}] '
           '${kind.name} contract "$id" is outside its consumer version range.',

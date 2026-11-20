@@ -1,0 +1,42 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart
+00:00 +0: union schema 3 validates mixed documents and rejects stale snapshots
+00:00 +1: review UI workspace rejects fractional version tag representations
+00:00 +2: valid UI workspace emits no diagnostics
+00:00 +3: UI metadata accepts the exact 128 character componentId boundary
+00:00 +4: UI metadata accepts the exact 128 character id boundary
+00:00 +5: UI Package rejects matching malformed componentId: Orders
+00:00 +6: UI Host rejects matching malformed componentId: Orders
+00:00 +7: UI Package rejects matching malformed componentId: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+00:00 +8: UI Host rejects matching malformed componentId: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+00:00 +9: UI Package rejects matching malformed id: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+00:00 +10: UI Host rejects matching malformed id: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+00:00 +11: UI Package rejects matching malformed id:
+00:00 +12: UI Host rejects matching malformed id:
+00:00 +13: UI Package rejects matching malformed id: 17
+00:00 +14: UI Host rejects matching malformed id: 17
+00:00 +15: UI Package rejects matching malformed shapeFingerprint: shape
+00:00 +16: UI Host rejects matching malformed shapeFingerprint: shape
+00:00 +17: UI Package rejects matching malformed shapeFingerprint: null
+00:00 +18: UI Host rejects matching malformed shapeFingerprint: null
+00:00 +19: UI Package rejects matching malformed version: invalid
+00:00 +20: UI Host rejects matching malformed version: invalid
+00:00 +21: UI Package rejects matching malformed version: null
+00:00 +22: UI Host rejects matching malformed version: null
+00:00 +23: package-local UI metadata rejects an invalid range without Host closure
+00:00 +24: invalid UI range produces one source error instead of Host fallout
+00:00 +25: UI Workspace accepts documented comparator >=1.0.0
+00:00 +26: UI Workspace accepts documented comparator <=1.0.0
+00:00 +27: UI Workspace accepts documented comparator <2.0.0
+00:00 +28: UI Workspace accepts documented comparator >=1.0.0	<2.0.0
+00:00 +29: UI Workspace accepts documented comparator >=1.0.0
+<2.0.0
+00:00 +30: structured UI contract_duplicate has an authored location and correction
+00:00 +31: structured UI owner_mismatch has an authored location and correction
+00:00 +32: structured UI implementation_duplicate has an authored location and correction
+00:00 +33: structured UI dependency_missing has an authored location and correction
+00:00 +34: structured UI stale_generated_output has an authored location and correction
+00:00 +35: structured UI missing_implementation has an authored location and correction
+00:00 +36: structured UI fingerprint_changed has an authored location and correction
+00:00 +37: structured UI version_out_of_range has an authored location and correction
+00:00 +38: invalid portable source positions never become IDE diagnostics
+00:00 +39: All tests passed!

@@ -8,6 +8,74 @@ unknown expressions and full parent/Host/Shell/Outlet closure defer to generatio
 No ID or topology rewrite is offered. Cross-package generated-import diagnostics
 check each URI of conditional imports and exports at its precise literal span.
 
+Literal Service/Command/Event/UI Contract aliases use the same generated-member rules:
+Dart keywords and inherited Object members (`hashCode`, `runtimeType`, `toString`,
+`noSuchMethod`) are invalid. Owner Command type-name defaults are also checked
+when alias is omitted or literal null. Computed overrides defer to generation; UI effective
+default-name checks remain resolved-identity based. Local Plugin changes do not
+update the Demo's pinned Git bootstrap until its separate remote-pin workflow.
+
+Literal Service/Command Dependency aliases in direct `CCComponent` lists report
+`ccrouter_alias_invalid`, using the same keyword/Object-member rule. Constructors
+require framework identity, including prefixes and typedefs; same-name functions
+and foreign descriptors are ignored. Computed aliases and non-literal/spread lists
+defer to generation. UI retains its existing diagnostic codes.
+
+Service/Command/UI required-Owner diagnostics and dependency fixes use canonical
+component/dependency constructors, including resolved prefixes and typedefs. A resolved
+Contract must still carry exactly one matching framework annotation with the metadata
+Owner. Removed, duplicate, foreign or changed annotations defer until regeneration.
+Parser-only unknown/ambiguous namespaces defer to semantic resolution; generated
+metadata alone never proves the constructor identity of a same-name business function.
+Proven self-owned Service/Command/UI dependencies receive no missing-Owner repair;
+adding the component to itself would create an invalid dependency cycle. Remove the
+cross-component declaration; use internal Service lookup, the Owner Command Client,
+or internal Widget composition for the matching capability.
+Parser-only prefixed `cc.CCComponent(...)` calls and explicit const calls share
+constructor identity checks and the same dependency-edit path.
+
+Resolved Component ID constructors support typedefs/prefixes and constant string
+references. An unproven consumer ID defers Owner diagnostics and edits to avoid
+introducing a self edge. Parser-only exported Owner constants must prove framework
+ID identity; same-name business classes are ignored. Adjacent literal strings use
+their combined ID/alias value; computed expressions remain conservative.
+
+Argument-conflict diagnostics and source fixes share one private rule set.
+Route conflicts require a non-null pattern plus a nonempty patterns list. Nullable
+InitTask contract/id constants use their resolved values; unknown nullable references
+defer parser-only checks and edits. Null/empty defaults never cause deletion fixes;
+both missing task identities still diagnose the missing value. The internal
+`quick_fixes.dart` import remains available through explicit exports.
+Timeout literals/zero require SDK Duration declaration identity. Business holders with
+the same name are ignored; unknown parser namespaces wait for resolution. Resolved
+Duration/Gate constructor typedefs and prefixes retain their actual declaration.
+
+IDE Contract Owner identity includes its defining Library, so same-name Contracts
+with the same Package/Owner and distinct Libraries cannot overwrite one another,
+including shared named parts. Service/Command part metadata keeps source URI and
+coordinates plus optional `libraryUri`; catalog round trips retain that evidence.
+Absent legacy evidence may be enriched by a consistent record, while explicit
+conflicts fail generation. Invalid/query/fragment URI evidence defers IDE Owner
+checks and fixes rather than guessing. Regenerate old part metadata for exact identity.
+Parser-only Owner fixes require complete export namespace evidence and respect
+local shadowing, including named extensions. Conditional, missing or unparseable
+branches that may expose the symbol defer edits; they are not proof of absence.
+Conditional imports and part libraries also defer parser-only edits when they may
+contribute the symbol. Hidden conditional branches do not block a proven binding.
+Parsed Contract matching respects show/hide, local shadowing and conditional imports.
+Exact Library metadata must match the real import/export path, not another same-name
+type in the Package. Resolved analysis continues to use the actual Dart element.
+Malformed URI encodings, NUL, queries/fragments, noncanonical `package:/...` and
+escaping locations never become IDE paths or crash source/diagnostic decoding.
+Valid encoded filename characters such as `#` and literal `%` keep their file identity.
+CLI preflight defers malformed import/export URIs to Builder's source errors; a
+preflight skip does not establish validity.
+Source boundary diagnostics use Dart target-file semantics for valid file URIs,
+queries, encoded separators and import-target symlinks. The current SDK URI converter
+maps Package aliases and each conditional branch without full type resolution.
+A selected conditional Library is never used as evidence for another branch.
+Metadata locations remain subject to
+their stricter portable Package-URI validation.
 
 Plugin semantic-resolution triggers reuse the annotation identity table and
 include UI-only Contract/Renderer files with imported Owner constants and UI SPI
@@ -22,9 +90,10 @@ pin separately, then run doctor and verify an IDE diagnostic/Quick Fix.
 UI Fragment checks use canonical framework symbols, including prefixed and
 transitive public exports. They report `ccrouter_ui_alias_invalid`,
 `ccrouter_ui_alias_duplicate`, `ccrouter_ui_dependency_duplicate`,
-`ccrouter_ui_version_range_invalid` (only definitely unsupported tokens),
 `ccrouter_ui_action_invalid`, and `ccrouter_ui_renderer_invalid`. Unknown or
-ambiguous types defer. The Generator remains authoritative for the complete
+ambiguous types defer. Alias checks include the effective Contract/type defaults;
+Dependency aliases override them. UI dependencies have no version-range parameter.
+The Generator remains authoritative for the complete
 Props/Action constructor/default schemas, Contract identity/version grammar, and Host closure.
 Action checks accept a plain enum, immutable final DTO or restricted sealed
 union (including nested unions and same-library/part data leaves), and reject proven
@@ -86,6 +155,13 @@ changes refresh diagnostics without a Server restart. Unknown role evidence
 is deferred, and files inside a Host Package still require review to separate
 composition code from feature code. There is no automatic import or role fix.
 Dart API visibility remains enforced independently of this optional Plugin.
+Host/UI SPI boundary identity also resolves URI/symlink aliases against the
+configured SDK libraries. Named types and typedef references participate; show
+names are checked only when every combinator exposes them, and hide names are
+excluded from references. Same-name foreign library copies stay ignored. UI
+declarations/references request existing-session semantics even without a
+Component declaration in the same file. Contract/Renderer type compatibility
+continues to use its existing Dart declaration identity checks.
 
 Optional Analysis Server diagnostics for CCRouter source boundaries and
 deterministic generated outputs. The plugin provides low-noise editing feedback

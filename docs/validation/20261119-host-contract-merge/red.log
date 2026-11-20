@@ -1,0 +1,22 @@
+00:00 +0: loading <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/generated_package_bundle_test.dart
+00:00 +0: Contract merge retains independent ranges regardless of order: false
+00:00 +0 -1: Contract merge retains independent ranges regardless of order: false [E]
+  Expected: an object with length of <2>
+    Actual: [Instance of 'CCContractRequirement']
+     Which: has length of <1>
+
+  package:matcher                                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18                   expect
+  packages/ccrouter_test/test/generated_package_bundle_test.dart 25:7  main.<fn>
+
+00:00 +0 -1: Contract merge retains independent ranges regardless of order: true
+00:00 +0 -2: Contract merge retains independent ranges regardless of order: true [E]
+  Expected: an object with length of <2>
+    Actual: [Instance of 'CCContractRequirement']
+     Which: has length of <1>
+
+  package:matcher                                                      expect
+  package:flutter_test/src/widget_tester.dart 477:18                   expect
+  packages/ccrouter_test/test/generated_package_bundle_test.dart 25:7  main.<fn>
+
+00:00 +0 -2: Some tests failed.

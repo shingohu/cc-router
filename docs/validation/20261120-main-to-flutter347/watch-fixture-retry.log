@@ -1,0 +1,6 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/generation_watch_test.dart
+00:00 +0: (setUpAll)
+05:06 +0: initial snapshot failure stops the child before releasing ownership
+05:25 +1: restored non-target outputs do not keep an idle watch rebuilding
+05:47 +2: (tearDownAll)
+05:47 +2: All tests passed!

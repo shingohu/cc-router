@@ -1,0 +1,66 @@
+00:00 +0: loading test/ui_analysis_test.dart
+00:00 +0: Service dependency literal alias bad-alias is diagnosed
+00:01 +0 -1: Service dependency literal alias bad-alias is diagnosed [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 37:9  main.<fn>
+
+00:01 +0 -1: Service dependency literal alias class is diagnosed
+00:01 +0 -2: Service dependency literal alias class is diagnosed [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 37:9  main.<fn>
+
+00:01 +0 -2: Service dependency literal alias hashCode is diagnosed
+00:01 +0 -3: Service dependency literal alias hashCode is diagnosed [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 37:9  main.<fn>
+
+00:01 +0 -3: Command dependency literal alias bad-alias is diagnosed
+00:02 +0 -4: Command dependency literal alias bad-alias is diagnosed [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 37:9  main.<fn>
+
+00:02 +0 -4: Command dependency literal alias class is diagnosed
+00:02 +0 -5: Command dependency literal alias class is diagnosed [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 37:9  main.<fn>
+
+00:02 +0 -5: Command dependency literal alias hashCode is diagnosed
+00:02 +0 -6: Command dependency literal alias hashCode is diagnosed [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 37:9  main.<fn>
+
+00:02 +0 -6: Some tests failed.
+
+Failing tests:
+  test/ui_analysis_test.dart: Command dependency literal alias bad-alias is diagnosed
+  test/ui_analysis_test.dart: Command dependency literal alias class is diagnosed
+  test/ui_analysis_test.dart: Command dependency literal alias hashCode is diagnosed
+  test/ui_analysis_test.dart: Service dependency literal alias bad-alias is diagnosed
+  ... and 2 more
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

@@ -1,0 +1,9 @@
+PASS: route contract/probe.route.contract.g.dart; repeats=1; generated=true
+PASS: route contract/probe.route.contract.g.dart; repeats=2; generated=false
+PASS: route metadata/src/probe.route.json; repeats=1; generated=true
+PASS: route metadata/src/probe.route.json; repeats=2; generated=false
+PASS: task init_task/probe.init_task.g.dart; repeats=1; generated=true
+PASS: task init_task/probe.init_task.g.dart; repeats=2; generated=false
+PASS: task metadata/src/probe.init_task.json; repeats=1; generated=true
+PASS: task metadata/src/probe.init_task.json; repeats=2; generated=false
+PASS: 8 const-annotation boundaries.

@@ -1,0 +1,13 @@
+00:00 +0: loading <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/contract_compatibility_test.dart
+00:00 +0: Contract versions reject whitespace without narrowing range whitespace
+00:00 +0 -1: Contract versions reject whitespace without narrowing range whitespace [E]
+  Expected: throws <Instance of 'FormatException'>
+    Actual: <Closure: () => CCSemVer>
+     Which: returned CCSemVer:<1.2.3>
+   1.2.3
+
+  package:matcher                                                   expect
+  package:flutter_test/src/widget_tester.dart 477:18                expect
+  packages/ccrouter_test/test/contract_compatibility_test.dart 9:7  main.<fn>
+
+00:00 +0 -1: Some tests failed.

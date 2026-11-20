@@ -19,6 +19,35 @@ void main() {
     await reader.testing.loadIsolateSources();
   });
 
+  test(
+    'Command Contracts reject duplicate declarations in local and imported paths',
+    () async {
+      for (final imported in [false, true]) {
+        const contract = '''
+@CCCommandContract(componentId: CCComponentId('owner'), id: 'owner.first', alias: 'first')
+@CCCommandContract(componentId: CCComponentId('owner'), id: 'owner.second', alias: 'second')
+final class SharedCommand implements CCCommand<void> { const SharedCommand(); }
+''';
+        final logs = await _generate(
+          reader,
+          ccCommandMetadataBuilder(BuilderOptions.empty),
+          imported
+              ? "import 'package:ccrouter_test/shared_command.dart';\n@CCCommandHandler()\nvoid handle(SharedCommand command) {}"
+              : contract,
+          'lib/src/ccrouter_generated/metadata/src/probe.command.json',
+          fails: true,
+          additionalAssets: imported
+              ? {
+                  'ccrouter_test|lib/shared_command.dart':
+                      "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\n$contract",
+                }
+              : const {},
+        );
+        expect(logs, contains('exactly one CCCommandContract'));
+      }
+    },
+  );
+
   test('handler builder emits stable typed registration', () async {
     final output = await _generate(
       reader,
@@ -145,6 +174,50 @@ final class SubmitOrderCommand implements CCCommand<void> {
     expect(logs, contains('must not be a keyword'));
   });
 
+  test('Object member Command alias fails at its declaration', () async {
+    final logs = await _generate(
+      reader,
+      ccCommandMetadataBuilder(BuilderOptions.empty),
+      r'''
+@CCCommandContract(id: 'orders.submit', alias: 'toString')
+final class SubmitOrderCommand implements CCCommand<void> {
+  const SubmitOrderCommand();
+}
+''',
+      'lib/src/ccrouter_generated/metadata/src/probe.command.json',
+      fails: true,
+    );
+    expect(logs, contains('alias "toString"'));
+  });
+
+  test(
+    'Owner Command Client rejects an inferred Object member until aliased',
+    () async {
+      for (final aliased in [false, true]) {
+        final output = await _generate(
+          reader,
+          ccCommandMetadataBuilder(BuilderOptions.empty),
+          '''
+@CCCommandContract(id: 'orders.format'${aliased ? ", alias: 'formatOrder'" : ''})
+final class ToStringCommand implements CCCommand<void> {
+  const ToStringCommand();
+}
+''',
+          'lib/src/ccrouter_generated/metadata/src/probe.command.json',
+          fails: !aliased,
+        );
+        if (aliased) {
+          expect(
+            jsonDecode(output)['commandContracts'][0]['alias'],
+            'formatOrder',
+          );
+        } else {
+          expect(output, contains('toString'));
+        }
+      }
+    },
+  );
+
   test('mutable payload fields fail generation', () async {
     final logs = await _generate(
       reader,
@@ -220,12 +293,14 @@ Future<String> _generate(
   String declarations,
   String outputPath, {
   bool fails = false,
+  Map<String, String> additionalAssets = const {},
 }) async {
   final logs = <String>[];
   const sourcePath = 'lib/src/probe.dart';
   await testBuilder(
     builder,
     {
+      ...additionalAssets,
       'ccrouter_test|$sourcePath':
           "import 'package:ccrouter/ccrouter.dart';\n$declarations",
     },

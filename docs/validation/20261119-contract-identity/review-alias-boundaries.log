@@ -1,0 +1,1 @@
+PASS: 22 resolved alias boundary cases; no false diagnoses, crashes or incorrect spans.

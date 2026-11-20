@@ -1,0 +1,7 @@
+00:00 +0: loading <home>/.codex/worktrees/integrate-main-347/cc-router/packages/ccrouter_test/test/runtime_identity_test.dart
+00:00 +0: test/runtime_identity_test.dart: Host initializes and restarts on VM and JavaScript
+00:00 +1: loading <home>/.codex/worktrees/integrate-main-347/cc-router/packages/ccrouter_test/test/managed_router_backend_test.dart
+00:00 +1: test/managed_router_backend_test.dart: activateExisting preserves the Managed Home identity
+00:00 +2: test/managed_router_backend_test.dart: deliverToExisting reaches only the registered Home receiver
+00:01 +3: test/managed_router_backend_test.dart: activateExisting reports conflict when a Foreign Popup covers the target
+00:01 +4: All tests passed!

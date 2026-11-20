@@ -1,0 +1,16 @@
+00:00 +0: loading test/ui_analysis_test.dart
+00:00 +0: IDE argument semantics: Route null pattern with patterns
+00:02 +1: IDE argument semantics: Route pattern with empty patterns
+00:03 +2: IDE argument semantics: Route constant null pattern
+00:04 +3: IDE argument semantics: Route two active patterns
+00:04 +4: IDE argument semantics: InitTask null contract with ID
+00:05 +5: IDE argument semantics: InitTask constant null contract
+00:05 +6: IDE argument semantics: InitTask contract with null ID
+00:06 +7: IDE argument semantics: InitTask contract with constant null ID
+00:06 +8: IDE argument semantics: InitTask two active identities
+00:07 +9: IDE argument semantics: InitTask two null identities
+00:07 +10: IDE argument semantics: Route Contract null pattern with patterns
+00:07 +11: IDE argument semantics: Route Contract pattern with empty patterns
+00:08 +12: IDE argument semantics: Route Contract constant null pattern
+00:08 +13: IDE argument semantics: Route Contract two active patterns
+00:08 +14: All tests passed!

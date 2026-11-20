@@ -1,0 +1,58 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/workspace_validator_test.dart
+00:00 +0: accepts typed InitTask dependencies across required components
+00:00 +1: rejects missing, optional-owner, and cyclic InitTask dependencies
+00:00 +2: rejects malformed persisted InitTask ownership and policy
+00:00 +3: rejects unsafe required InitTask startup contracts
+00:00 +4: preserves first optional InitTask order across shared DAG paths
+00:00 +5: keeps cycle and optional InitTask diagnostics on reference path
+00:00 +6: accepts Event subscribers through required or optional owners
+00:00 +7: rejects invalid Event relationships and duplicate Subscriber IDs
+00:00 +8: accepts an exact Service dependency owned by a required component
+00:00 +9: rejects missing owner and duplicate Service Client members
+00:00 +10: rejects invalid persisted Service and Command Client aliases
+00:00 +11: validates the inferred Owner Command Client name in external metadata
+00:00 +12: rejects a generated consumer for a Route-scoped Service
+00:00 +13: accepts components and emits derived route exposure
+00:00 +14: rejects missing required component dependencies
+00:00 +15: rejects required and optional self dependencies
+00:00 +16: rejects cycles across required and present optional dependencies
+00:00 +17: ignores absent optional dependencies
+00:00 +18: orders present optional and required dependencies deterministically
+00:00 +19: rejects unknown route owners
+00:00 +20: missing owner diagnostics retain exact authored locations
+00:00 +21: rejects duplicate and unknown component contributions
+00:00 +22: accepts a generated Service contract and implementation
+00:00 +23: rejects invalid Service ownership and Provider conflicts
+00:00 +24: rejects unknown source exposure
+00:00 +25: rejects duplicate routes and conflicting component descriptors
+00:00 +26: requires an explicit registrar component declaration
+00:00 +27: derives package exposure for a same-package public contract
+00:00 +28: rejects missing, duplicate, and unknown public implementations
+00:00 +29: derives external exposure and requires the owner implementation
+00:00 +30: rejects unsupported metadata schemas
+00:00 +31: rejects invalid persisted identifiers and SemVer values
+00:00 +32: rejects missing, self-referencing, and cyclic route parents
+00:00 +33: rejects parent placement mismatches
+00:00 +34: requires cross-component parents to be visible dependencies
+00:00 +35: reuses exact parent visibility through present optional dependencies
+00:00 +36: rejects equal-specificity overlapping path patterns
+00:00 +37: accepts path patterns with different fixed segments
+00:00 +38: indexed candidates retain swapped fixed and dynamic conflicts
+00:00 +39: indexed candidates retain wildcard conflicts
+00:00 +40: validates a large fixed-path catalog without conflict diagnostics
+00:00 +41: accepts provably disjoint path constraints
+00:00 +42: does not compare URI patterns with different authorities
+00:00 +43: rejects identical regex patterns
+00:00 +44: leaves complex regex overlap to runtime validation
+00:00 +45: does not require a public barrel for internal contracts
+00:00 +46: handles many internal-only documents without public barrel work
+00:00 +47: validates mixed public contracts through one package export index
+00:00 +48: requires public contracts to export the generated library
+00:00 +49: accepts a stable generated Contract barrel only through public API
+00:00 +50: requires public Service contracts to export the authored interface
+00:00 +51: requires contracts Package Command declarations in a public barrel
+00:00 +52: requires contracts Package Event declarations in a public barrel
+00:00 +53: does not require component-internal messaging contracts in a barrel
+00:00 +54: requires contracts Package InitTask constants in a public barrel
+00:00 +55: annotates and clears public libraries for messaging contracts
+00:00 +56: All tests passed!

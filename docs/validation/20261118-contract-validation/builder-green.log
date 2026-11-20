@@ -1,0 +1,7 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/service_generator_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/service_generator_test.dart: Object member Service dependency alias fails before emitting a Client
+00:09 +1: loading packages/ccrouter_test/generator_test/command_generator_test.dart
+00:09 +1: packages/ccrouter_test/generator_test/command_generator_test.dart: Object member Command alias fails at its declaration
+00:16 +2: loading packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart
+00:16 +2: packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart: UI versions reject whitespace like other Contract declarations
+00:23 +3: All tests passed!

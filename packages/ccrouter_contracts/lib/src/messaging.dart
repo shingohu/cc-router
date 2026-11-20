@@ -16,6 +16,7 @@ abstract interface class CCCommand<R> {}
 /// Declares one stable typed Command contract for generated registration.
 ///
 /// Use this annotation on a public, concrete, immutable `CCCommand<R>` class.
+/// Each class must carry exactly one [CCCommandContract] annotation.
 /// A component-internal Command may omit [componentId], allowing the generator
 /// to infer the Package's sole [CCComponent]. A Command moved into a shared
 /// contracts Package must declare its owning component explicitly.
@@ -42,6 +43,10 @@ final class CCCommandContract {
   /// override it for one consuming component. Changing this value changes the
   /// generated source API but does not change dispatch, ownership, or result
   /// semantics.
+  /// Aliases must be public lower-camel identifiers outside inherited Object
+  /// members (`hashCode`, `runtimeType`, `toString`, and `noSuchMethod`).
+  /// The Owner Client is always generated; if type-name inference conflicts,
+  /// set this Contract alias even when every consumer overrides its own name.
   final String? alias;
 
   /// Independent Command Contract SemVer used by generated clients.
@@ -59,6 +64,7 @@ final class CCCommandContract {
 /// installs it through the component Registrar.
 final class CCCommandHandler {
   /// Creates a stateless generated Command handler marker.
+  /// A function carries exactly one [CCCommandHandler] annotation.
   const CCCommandHandler();
 }
 
@@ -75,7 +81,8 @@ final class CCCommandDependency<C extends CCCommand<Object?>> {
   /// Overrides the Contract default method for this consuming component.
   ///
   /// When absent, generation uses `CCCommandContract.alias` and then the
-  /// Command type name. The value must be a public lower-camel Dart identifier.
+  /// Command type name. The effective name must be a public lower-camel Dart
+  /// identifier outside inherited Object members, including inferred names.
   final String? alias;
 }
 
@@ -90,12 +97,14 @@ abstract interface class CCEvent {}
 ///
 /// Apply this annotation to a public, concrete, immutable [CCEvent] class. A
 /// component-internal Event may omit [componentId], while a shared contracts
-/// Package declares its owning publisher component explicitly.
+/// Package declares its owning publisher component explicitly. Each Event type
+/// must have exactly one Contract annotation; competing aliases are rejected.
 final class CCEventContract {
   /// Creates one generated Event contract declaration.
   const CCEventContract({
     this.componentId,
     required this.id,
+    this.alias,
     this.version = '0.1.0',
     this.description = '',
   });
@@ -105,6 +114,15 @@ final class CCEventContract {
 
   /// Globally stable Event identity used by Trace and metadata.
   final String id;
+
+  /// Full generated Owner publication member; no prefix is added to an alias.
+  ///
+  /// When omitted, generation preserves `publish` plus the Event type name
+  /// without a trailing `Event`. Use a public lower-camel identifier outside
+  /// Dart keywords and inherited Object members. Changing this value changes
+  /// the generated source API and Contract fingerprint, not dispatch identity,
+  /// publication permission, Subscriber IDs, or payload transport.
+  final String? alias;
 
   /// Independent Event Contract SemVer used by generated publication APIs.
   final String version;
@@ -121,6 +139,7 @@ final class CCEventContract {
 /// then derives `<componentId>.<eventId>` deterministically.
 final class CCEventSubscription {
   /// Creates one generated static subscription declaration.
+  /// A function carries one [CCEventSubscription]; repeated IDs are rejected.
   const CCEventSubscription({this.id});
 
   /// Globally stable Subscriber identity, or null for the single default.

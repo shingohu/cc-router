@@ -1,0 +1,14 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/route_find_command_test.dart
+00:00 +0: find ignores legacy framework indexes without changing files
+00:02 +1: find merges contract and page sources across Package indexes
+00:04 +2: find accepts exact alias and absolute-URI declarations
+00:07 +3: find locates a generated InitTask by stable capability ID
+00:08 +4: find usage reports satisfied and missing typed dependencies
+00:11 +5: find usage does not invent a dependency for the capability owner
+00:13 +6: find usage respects Route and internal Contract boundaries
+00:16 +7: find usage rejects an unknown consumer without writing indexes
+00:17 +8: find is scoped to the selected Host dependency closure
+00:20 +9: find rejects missing queries and generation flags
+00:26 +10: find rejects missing and corrupted Package indexes
+00:29 +11: find rejects mixed dependency Index revisions without writing
+00:30 +12: All tests passed!

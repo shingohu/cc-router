@@ -1,0 +1,88 @@
+00:00 +0: loading test/ui_analysis_test.dart
+00:00 +0: IDE argument semantics: Route null pattern with patterns
+00:03 +0 -1: IDE argument semantics: Route null pattern with patterns [E]
+  Expected: <false>
+    Actual: <true>
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 43:7  main.<fn>
+
+00:03 +0 -1: IDE argument semantics: Route pattern with empty patterns
+00:04 +0 -2: IDE argument semantics: Route pattern with empty patterns [E]
+  Expected: <false>
+    Actual: <true>
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 43:7  main.<fn>
+
+00:04 +0 -2: IDE argument semantics: Route constant null pattern
+00:05 +0 -3: IDE argument semantics: Route constant null pattern [E]
+  Expected: <false>
+    Actual: <true>
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 43:7  main.<fn>
+
+00:05 +0 -3: IDE argument semantics: Route two active patterns
+00:06 +1 -3: IDE argument semantics: InitTask null contract with ID
+00:07 +1 -4: IDE argument semantics: InitTask null contract with ID [E]
+  Expected: an object with length of <0>
+    Actual: [Instance of 'CCRouterSourceFix', Instance of 'CCRouterSourceFix']
+     Which: has length of <2>
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 46:7  main.<fn>
+
+00:07 +1 -4: IDE argument semantics: InitTask constant null contract
+00:07 +1 -5: IDE argument semantics: InitTask constant null contract [E]
+  Expected: <false>
+    Actual: <true>
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 43:7  main.<fn>
+
+00:07 +1 -5: IDE argument semantics: InitTask contract with null ID
+00:08 +1 -6: IDE argument semantics: InitTask contract with null ID [E]
+  Expected: an object with length of <0>
+    Actual: [Instance of 'CCRouterSourceFix', Instance of 'CCRouterSourceFix']
+     Which: has length of <2>
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 46:7  main.<fn>
+
+00:08 +1 -6: IDE argument semantics: InitTask contract with constant null ID
+00:08 +1 -7: IDE argument semantics: InitTask contract with constant null ID [E]
+  Expected: <false>
+    Actual: <true>
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 43:7  main.<fn>
+
+00:08 +1 -7: IDE argument semantics: InitTask two active identities
+00:09 +1 -8: IDE argument semantics: InitTask two active identities [E]
+  Expected: <false>
+    Actual: <true>
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 49:7  main.<fn>
+
+00:09 +1 -8: IDE argument semantics: InitTask two null identities
+00:09 +1 -9: IDE argument semantics: InitTask two null identities [E]
+  Expected: an object with length of <0>
+    Actual: [Instance of 'CCRouterSourceFix', Instance of 'CCRouterSourceFix']
+     Which: has length of <2>
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 46:7  main.<fn>
+
+00:09 +1 -9: Some tests failed.
+
+Failing tests:
+  test/ui_analysis_test.dart: IDE argument semantics: InitTask constant null contract
+  test/ui_analysis_test.dart: IDE argument semantics: InitTask contract with constant null ID
+  test/ui_analysis_test.dart: IDE argument semantics: InitTask contract with null ID
+  test/ui_analysis_test.dart: IDE argument semantics: InitTask null contract with ID
+  ... and 5 more
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

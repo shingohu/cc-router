@@ -146,6 +146,15 @@ List<_ComponentContributionModel> _readComponentContributions(
         element,
       );
     }
+    if (_RouteMetadataBuilder._contribution
+            .annotationsOfExact(element)
+            .length !=
+        1) {
+      _fail(
+        'Declaration requires exactly one CCComponentContribution annotation.',
+        element,
+      );
+    }
     if (element.returnType is! VoidType ||
         element.formalParameters.length != 1) {
       _fail(

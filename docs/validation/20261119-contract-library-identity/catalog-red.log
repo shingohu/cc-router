@@ -1,0 +1,34 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/package_workspace_test.dart
+00:00 +0: source references preserve defining Library evidence without changing locations
+00:00 +0 -1: source references preserve defining Library evidence without changing locations [E]
+  Expected: {
+              'symbol': 'Shared',
+              'packageUri': 'package:contracts/part.dart',
+              'line': 3,
+              'column': 7,
+              'libraryUri': 'package:contracts/root.dart'
+            }
+    Actual: {
+              'symbol': 'Shared',
+              'packageUri': 'package:contracts/part.dart',
+              'line': 3,
+              'column': 7
+            }
+     Which: has different length and is missing map key 'libraryUri'
+
+  package:matcher                                                         expect
+  packages/ccrouter_test/generator_test/package_workspace_test.dart 19:5  main.<fn>
+
+00:00 +0 -1: source catalog enriches absent Library evidence but rejects conflicting identities
+00:00 +0 -2: source catalog enriches absent Library evidence but rejects conflicting identities [E]
+  Expected: 'package:contracts/root.dart'
+    Actual: <null>
+     Which: not an <Instance of 'String'>
+
+  package:matcher                                                         expect
+  packages/ccrouter_test/generator_test/package_workspace_test.dart 37:7  main.<fn>
+
+00:00 +0 -2: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

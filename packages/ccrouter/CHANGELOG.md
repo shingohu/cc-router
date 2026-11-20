@@ -7,6 +7,9 @@
   Give each Managed Navigator a Semantics container for adaptive reparenting
   without recreating logical Entries/Scopes or dropping accessibility content.
 
+- Preserve distinct Contract consumer ranges when merging Host bundles; deduplicate
+  only complete requirement values so merged snapshots do not lose constraints.
+
 - Add Host-only `CCHostAssembly.extend` for additive components and route Catalog
   adaptation while preserving generated provenance and optional bindings.
 

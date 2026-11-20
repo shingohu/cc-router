@@ -28,7 +28,7 @@ abstract final class DemoNavigationLabComponentFragments {
         fingerprint:
             "b6dc30358b7f47719d5cb0f80b23711e54de0367fa7aeb732d67668a275f26ba",
       ),
-      versionRange: "^1.0.0",
+      versionRange: "1.0.0",
     ),
   );
   static Widget orderSummary({
@@ -52,7 +52,7 @@ abstract final class DemoNavigationLabComponentFragments {
         fingerprint:
             "61967f68b1e2278a9d01482a9c28957ef5b734e03b4b7b1770e9a1ee7e1fdbbb",
       ),
-      versionRange: "^1.0.0",
+      versionRange: "1.0.0",
     ),
   );
   static Widget orderRecommendations({
@@ -79,7 +79,7 @@ abstract final class DemoNavigationLabComponentFragments {
             version: "2.0.0",
             fingerprint: "0fd30e583936c0c3b491f660086fe5dbdd9fd1088ddb55e5c84a6bf9c81e7b45",
           ),
-          versionRange: "^2.0.0",
+          versionRange: "2.0.0",
         ),
       );
 }
@@ -95,7 +95,7 @@ const ccUIRequirements = <CCUIFragmentRequirement>[
       fingerprint:
           "b6dc30358b7f47719d5cb0f80b23711e54de0367fa7aeb732d67668a275f26ba",
     ),
-    versionRange: "^1.0.0",
+    versionRange: "1.0.0",
   ),
   CCUIFragmentRequirement(
     consumer: "demo_navigation_lab_component",
@@ -106,7 +106,7 @@ const ccUIRequirements = <CCUIFragmentRequirement>[
       fingerprint:
           "61967f68b1e2278a9d01482a9c28957ef5b734e03b4b7b1770e9a1ee7e1fdbbb",
     ),
-    versionRange: "^1.0.0",
+    versionRange: "1.0.0",
   ),
   CCUIFragmentRequirement(
     consumer: "demo_navigation_lab_component",
@@ -117,6 +117,6 @@ const ccUIRequirements = <CCUIFragmentRequirement>[
       fingerprint:
           "0fd30e583936c0c3b491f660086fe5dbdd9fd1088ddb55e5c84a6bf9c81e7b45",
     ),
-    versionRange: "^2.0.0",
+    versionRange: "2.0.0",
   ),
 ];

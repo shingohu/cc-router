@@ -1,0 +1,87 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart
+00:00 +0: Generator argument semantics: Route null pattern with patterns
+00:12 +1: Generator argument semantics: Route pattern with empty patterns
+00:15 +2: Generator argument semantics: Route constant null pattern
+00:18 +3: Generator argument semantics: Route two active patterns
+00:20 +4: Generator argument semantics: InitTask null contract with ID
+00:22 +4 -1: Generator argument semantics: InitTask null contract with ID [E]
+  Expected: <true>
+    Actual: <false>
+  0s _InitTaskMetadataBuilder on 22 inputs; lib/ccrouter_test.dart
+  1s _InitTaskMetadataBuilder on 22 inputs: 1 no-op; lib/ccrouter_ui_test.dart
+  _InitTaskMetadataBuilder on lib/src/probe.dart:
+  CCInitTask contract must reference a top-level CCInitTaskContract constant.
+  package:ccrouter_test/src/probe.dart:6:23
+    ╷
+  6 │ @CCInitTask(contract: null, id: 'probe.task', gate: CCInitTaskGate.appStarted, failurePolicy: CCInitTaskFailurePolicy.optional)
+    │                       ^^^^
+    ╵
+  1s _InitTaskMetadataBuilder on 22 inputs: 22 no-op
+  Failed to build with build_runner/jit in 2s; wrote 0 outputs.
+
+  package:matcher                                                                       expect
+  packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart 31:7  main.<fn>
+
+00:22 +4 -1: Generator argument semantics: InitTask constant null contract
+00:24 +4 -2: Generator argument semantics: InitTask constant null contract [E]
+  Expected: <true>
+    Actual: <false>
+  0s _InitTaskMetadataBuilder on 22 inputs; lib/ccrouter_test.dart
+  1s _InitTaskMetadataBuilder on 22 inputs: 1 no-op; spent 1s resolving; lib/ccrouter_ui_test.dart
+  _InitTaskMetadataBuilder on lib/src/probe.dart:
+  CCInitTaskContract requires a const id.
+  package:ccrouter_test/src/probe.dart:3:27
+    ╷
+  3 │ const CCInitTaskContract? absentTask = null;
+    │                           ^^^^^^^^^^
+    ╵
+  1s _InitTaskMetadataBuilder on 22 inputs: 22 no-op; spent 1s resolving
+  Failed to build with build_runner/jit in 2s; wrote 0 outputs.
+
+  package:matcher                                                                       expect
+  packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart 31:7  main.<fn>
+
+00:24 +4 -2: Generator argument semantics: InitTask contract with null ID
+00:25 +4 -3: Generator argument semantics: InitTask contract with null ID [E]
+  Expected: <true>
+    Actual: <false>
+  0s _InitTaskMetadataBuilder on 22 inputs; spent 1s resolving; lib/ccrouter_test.dart
+  0s _InitTaskMetadataBuilder on 22 inputs: 1 no-op; spent 2s resolving; lib/ccrouter_ui_test.dart
+  _InitTaskMetadataBuilder on lib/src/probe.dart:
+  CCInitTaskContract requires a const id.
+  package:ccrouter_test/src/probe.dart:3:27
+    ╷
+  3 │ const CCInitTaskContract? absentTask = null;
+    │                           ^^^^^^^^^^
+    ╵
+  1s _InitTaskMetadataBuilder on 22 inputs: 22 no-op; spent 2s resolving
+  Failed to build with build_runner/jit in 2s; wrote 0 outputs.
+
+  package:matcher                                                                       expect
+  packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart 31:7  main.<fn>
+
+00:25 +4 -3: Generator argument semantics: InitTask contract with constant null ID
+00:27 +4 -4: Generator argument semantics: InitTask contract with constant null ID [E]
+  Expected: <true>
+    Actual: <false>
+  0s _InitTaskMetadataBuilder on 22 inputs; spent 2s resolving; lib/ccrouter_test.dart
+  1s _InitTaskMetadataBuilder on 22 inputs: 1 no-op; spent 2s resolving, 1s analyzing; lib/ccrouter_ui_test.dart
+  _InitTaskMetadataBuilder on lib/src/probe.dart:
+  CCInitTaskContract requires a const id.
+  package:ccrouter_test/src/probe.dart:3:27
+    ╷
+  3 │ const CCInitTaskContract? absentTask = null;
+    │                           ^^^^^^^^^^
+    ╵
+  1s _InitTaskMetadataBuilder on 22 inputs: 22 no-op; spent 2s resolving, 1s analyzing
+  Failed to build with build_runner/jit in 2s; wrote 0 outputs.
+
+  package:matcher                                                                       expect
+  packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart 31:7  main.<fn>
+
+00:27 +4 -4: Generator argument semantics: InitTask two active identities
+00:29 +5 -4: Generator argument semantics: InitTask two null identities
+00:30 +6 -4: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

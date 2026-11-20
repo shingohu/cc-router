@@ -3,6 +3,7 @@ import 'dart:io' as io;
 
 import 'package:analyzer/dart/analysis/analysis_context.dart';
 import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
+import 'package:analyzer/dart/analysis/uri_converter.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/file_system/file_system.dart';
 import 'package:analyzer/source/line_info.dart';
@@ -15,7 +16,8 @@ import 'package:ccrouter_analyzer_plugin/src/generator_diagnostics_bridge.dart';
 import 'package:ccrouter_analyzer_plugin/src/package_context_cache.dart';
 import 'package:ccrouter_analyzer_plugin/src/project_context.dart';
 import 'package:ccrouter_analyzer_plugin/src/quick_fixes.dart';
-import 'package:ccrouter_analyzer_plugin/src/source_analyzer.dart';
+import 'package:ccrouter_analyzer_plugin/src/source_analyzer.dart'
+    show CCRouterAnalyzerDiagnostic, CCRouterSourceAnalyzer;
 import 'package:path/path.dart' as path;
 import 'package:pub_semver/pub_semver.dart';
 import 'resolved_symbols.dart';
@@ -446,6 +448,7 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
       packageName: packageContext.name,
       contractOwners: _contractOwners.resolve(path),
       resolvedUnit: resolvedUnit,
+      uriConverter: _currentUriConverter(path),
       projectRole: _projectContexts
           .observe('${packageContext.root}/pubspec.yaml')
           .context
@@ -470,6 +473,15 @@ final class CCRouterAnalyzerPlugin extends ServerPlugin {
   /// Whether [path] can contain developer-authored CCRouter declarations.
   static bool _isAuthoredDartPath(String path) =>
       path.endsWith('.dart') && !CCRouterSourceAnalyzer.isGeneratedPath(path);
+
+  /// Borrows the current URI mapping without resolving types or retaining a context.
+  UriConverter? _currentUriConverter(String path) {
+    try {
+      return _activeContexts?.contextFor(path).currentSession.uriConverter;
+    } on Object {
+      return null;
+    }
+  }
 
   /// Uses the existing Analysis Server session only for rules needing types.
   /// Partial/unresolved input falls back to conservative syntax checks. No

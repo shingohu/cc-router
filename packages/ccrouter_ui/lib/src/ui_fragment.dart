@@ -95,10 +95,10 @@ final class CCUIFragmentDescriptor {
     required this.fingerprint,
   });
 
-  /// Canonical owning component ID.
+  /// Canonical lowercase owning component ID, at most 128 characters.
   final String owner;
 
-  /// Owner-local capability ID.
+  /// Owner-local capability ID, at most 128 characters.
   final String id;
 
   /// Contract SemVer, distinct from component version.
@@ -181,6 +181,8 @@ abstract final class CCUIHostAssembly {
   /// Registration is static. Duplicate implementations, missing owners and
   /// incompatible required edges fail before Runtime initialization. Contract
   /// version snapshots match exactly; an allowed range does not validate stale glue.
+  /// Malformed generated versions/ranges yield sanitized `staleGeneratedOutput`
+  /// errors; well-formed incompatible versions yield `versionOutOfRange`.
   static CCHostAssembly attach(
     CCHostAssembly assembly, {
     required Iterable<CCUIFragmentContribution> contributions,
@@ -216,10 +218,14 @@ abstract final class CCUIHostAssembly {
       if (actual == null) {
         throw CCUIFragmentError('missingImplementation', expected.id);
       }
-      if (!CCContractVersionRange.parse(
-        requirement.versionRange,
-      ).allows(CCSemVer.parse(actual.version))) {
-        throw CCUIFragmentError('versionOutOfRange', expected.id);
+      try {
+        if (!CCContractVersionRange.parse(
+          requirement.versionRange,
+        ).allows(CCSemVer.parse(actual.version))) {
+          throw CCUIFragmentError('versionOutOfRange', expected.id);
+        }
+      } on FormatException {
+        throw CCUIFragmentError('staleGeneratedOutput', expected.id);
       }
       if (expected.fingerprint != actual.fingerprint) {
         throw CCUIFragmentError('fingerprintChanged', expected.id);
@@ -245,12 +251,19 @@ abstract final class CCUIHostAssembly {
 /// Rejects malformed generated SPI at the Host boundary without payload logs.
 void _validateDescriptor(CCUIFragmentDescriptor contract) {
   final id = RegExp(r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$');
-  if (!id.hasMatch(contract.id) ||
-      !id.hasMatch(contract.owner) ||
+  final owner = RegExp(r'^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$');
+  if (contract.id.length > 128 ||
+      !id.hasMatch(contract.id) ||
+      contract.owner.length > 128 ||
+      !owner.hasMatch(contract.owner) ||
       !RegExp(r'^[a-f0-9]{64}$').hasMatch(contract.fingerprint)) {
     throw CCUIFragmentError('staleGeneratedOutput', contract.id);
   }
-  CCSemVer.parse(contract.version);
+  try {
+    CCSemVer.parse(contract.version);
+  } on FormatException {
+    throw CCUIFragmentError('staleGeneratedOutput', contract.id);
+  }
 }
 
 /// Current process-default UI generation; no instances or callbacks retained.

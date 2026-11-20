@@ -8,6 +8,24 @@ published.
 
 ## Unreleased
 
+## 0.4.0 - 2026-11-20 (Git snapshot)
+
+- Correct exact generic Service Key equality and SemVer prerelease/range edge cases.
+- Preserve distinct consumer version/fingerprint constraints through Host merging and
+  generated Package Bundles; reject malformed identities with consistent attribution.
+- Reject repeated declarations, align null/default argument semantics, and retain
+  defining-Library identity for Contracts declared in parts or sharing type names.
+- Make Analyzer Owner diagnostics and Quick Fixes require current, unambiguous
+  declaration evidence. Check Host/UI and generated API boundaries across supported
+  URI spellings and aliases without confusing hidden or foreign same-name symbols.
+- Validate Catalog/diagnostic locations, preserve encoded filenames, and align
+  developer guidance. Regenerate after upgrading Generator or Contract declarations.
+
+This tag identifies a repository snapshot. Package versions and `publish_to: none`
+remain unchanged; it does not certify Hosted distribution or device acceptance.
+
+## Earlier unreleased work
+
 - Added generated Service methods returning `Stream<T>` with lazy subscription,
   exact Scope ownership, cancellation/deadline propagation, and original
   error/stack delivery. Clearable consumer queues release cancelled snapshots;

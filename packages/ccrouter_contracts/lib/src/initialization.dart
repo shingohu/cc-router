@@ -48,6 +48,7 @@ enum CCInitTaskFailurePolicy {
 /// Keep a component-local constant private unless another Package genuinely
 /// depends on it. A contracts Package must provide [componentId] and export the
 /// constant through a public barrel.
+/// Nullable const values equal to null publish no task contract declaration.
 final class CCInitTaskContract {
   /// Creates one immutable task contract.
   const CCInitTaskContract({
@@ -82,6 +83,10 @@ final class CCInitTaskContract {
 /// return `void`, `Future<void>`, or `FutureOr<void>`.
 final class CCInitTask {
   /// Creates one static task declaration consumed by the generator.
+  /// A Handler must carry exactly one [CCInitTask] annotation; repeated Gate or
+  /// failure-policy declarations are rejected rather than selected by order.
+  /// Exactly one of [contract] and [id] must have a non-null value. Explicit
+  /// null is omission; non-null Contracts still reference top-level constants.
   const CCInitTask({
     this.contract,
     this.id,

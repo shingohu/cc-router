@@ -39,20 +39,25 @@ final class CCRouterMissingComponentDependency {
 
 /// Performs conservative component dependency checks over one parsed file.
 ///
-/// Only direct top-level `CCComponent(...)` descriptors are considered. A
-/// missing or direct list-literal `dependencies` argument is verifiable;
+/// Only direct top-level `CCComponent(...)` descriptors are considered.
+/// Descriptors and dependencies require proven framework constructor identity.
+/// Resolved typedefs and prefixes retain the instantiated Contract type.
+/// A missing or direct list-literal `dependencies` argument is verifiable;
 /// variables, spreads, conditionals, and computed collections are left to the
 /// authoritative Generator so incomplete editor buffers cannot cause false
 /// positives.
 abstract final class CCRouterComponentDependencyAnalyzer {
   /// Finds required owner IDs omitted from direct component dependency lists.
+  /// Proven self-owned Contracts never produce a missing-owner repair; their
+  /// cross-component declarations remain invalid Generator inputs.
+  /// An unproven consumer ID also defers, since a safe non-self edge is unknown.
   static List<CCRouterMissingComponentDependency> findMissing({
     required CompilationUnit unit,
     required String sourcePackage,
     required CCRouterContractOwnerIndex owners,
     String? sourcePath,
   }) {
-    final importPrefixes = _importPrefixes(unit);
+    final importPrefixesBySymbol = <String, Map<String, Set<String>>>{};
     final aliasIndex =
         unit.declaredFragment == null &&
             Platform.environment[_componentAliasGraphKillSwitch] != '1'
@@ -63,13 +68,13 @@ abstract final class CCRouterComponentDependencyAnalyzer {
         in unit.declarations.whereType<TopLevelVariableDeclaration>()) {
       for (final variable in declaration.variables.variables) {
         final initializer = variable.initializer;
-        final arguments = unit.declaredFragment != null && initializer != null
+        final arguments = initializer != null
             ? CCRouterResolvedSymbols.constructorArguments(
                 initializer,
                 'CCComponent',
                 'component',
               )?.arguments
-            : _constructorArguments(initializer, 'CCComponent');
+            : null;
         if (arguments == null) continue;
         final dependencies = _namedArgument(arguments, 'dependencies');
         if (dependencies != null && dependencies is! ListLiteral) {
@@ -90,13 +95,6 @@ abstract final class CCRouterComponentDependencyAnalyzer {
           ('commandDependencies', CCRouterContractKind.command),
           ('uiDependencies', CCRouterContractKind.uiFragment),
         ]) {
-          if (field.$2 == CCRouterContractKind.uiFragment &&
-              !CCRouterResolvedSymbols.isFrameworkConstructor(
-                variable.initializer!,
-                'CCComponent',
-                'component',
-              ))
-            continue;
           final value = _namedArgument(arguments, field.$1);
           if (value is! ListLiteral) continue;
           for (final element in value.elements.whereType<Expression>()) {
@@ -108,22 +106,30 @@ abstract final class CCRouterComponentDependencyAnalyzer {
                     kind: field.$2,
                     contractSymbol: type.$1,
                     prefix: type.$2,
-                    importPrefixes: importPrefixes,
+                    importPrefixes: importPrefixesBySymbol.putIfAbsent(
+                      type.$1,
+                      () => _importPrefixes(unit, type.$1),
+                    ),
                     sourcePackage: sourcePackage,
+                    unit: unit,
+                    sourcePath: sourcePath,
                   );
-            // UI self-consumption is invalid in the Generator. Never suggest
+            if (owner == null) continue;
+            // Self-consumption is invalid in the Generator. Never suggest
             // repairing it with a self dependency, which would introduce a cycle.
             final consumerId = _namedArgument(arguments, 'id');
-            if (field.$2 == CCRouterContractKind.uiFragment &&
-                owner != null &&
-                consumerId != null &&
-                (unit.declaredFragment != null
-                        ? _resolvedComponentId(consumerId)
-                        : _localLiteral(unit, consumerId, {})) ==
-                    owner.componentId)
-              continue;
-            if (owner == null ||
+            if (consumerId == null ||
                 _containsOwner(
+                      unit,
+                      [consumerId],
+                      owner,
+                      owners,
+                      sourcePath,
+                      aliasIndex,
+                    ) !=
+                    false)
+              continue;
+            if (_containsOwner(
                       unit,
                       required,
                       owner,
@@ -151,17 +157,57 @@ abstract final class CCRouterComponentDependencyAnalyzer {
     return List.unmodifiable(missing);
   }
 
-  /// Maps each source import prefix to the Package names it can expose.
-  static Map<String, Set<String>> _importPrefixes(CompilationUnit unit) {
+  /// Maps visible Contract imports; conditional namespaces cannot prove a type.
+  /// Invalid or nonportable URIs provide no declaration evidence to the editor.
+  static Map<String, Set<String>> _importPrefixes(
+    CompilationUnit unit,
+    String symbol,
+  ) {
     final result = <String, Set<String>>{};
+    final unknownPrefixes = <String>{};
     for (final directive in unit.directives.whereType<ImportDirective>()) {
-      final uri = directive.uri.stringValue;
-      final parsed = uri == null ? null : Uri.tryParse(uri);
-      if (parsed == null || parsed.scheme != 'package') continue;
-      final segments = parsed.pathSegments;
-      if (segments.isEmpty) continue;
+      if (!directive.combinators.every(
+        (c) => switch (c) {
+          ShowCombinator c => c.shownNames.any((n) => n.name == symbol),
+          HideCombinator c => !c.hiddenNames.any((n) => n.name == symbol),
+        },
+      ))
+        continue;
       final prefix = directive.prefix?.name ?? '';
-      result.putIfAbsent(prefix, () => <String>{}).add(segments.first);
+      if (directive.configurations.isNotEmpty ||
+          directive.deferredKeyword != null) {
+        unknownPrefixes.add(prefix);
+        continue;
+      }
+      final uri = directive.uri.stringValue;
+      try {
+        final parsed = uri == null ? null : Uri.tryParse(uri);
+        if (parsed == null ||
+            parsed.scheme != 'package' ||
+            parsed.hasAuthority ||
+            parsed.hasAbsolutePath ||
+            parsed.hasQuery ||
+            parsed.hasFragment)
+          continue;
+        final segments = parsed.pathSegments;
+        if (segments.length < 2 ||
+            segments.any(
+              (segment) =>
+                  segment.isEmpty ||
+                  segment == '.' ||
+                  segment == '..' ||
+                  segment.contains('/') ||
+                  segment.contains(r'\') ||
+                  segment.contains('\u0000'),
+            ))
+          continue;
+        result.putIfAbsent(prefix, () => <String>{}).add(segments.first);
+      } on FormatException {
+        continue;
+      }
+    }
+    for (final prefix in unknownPrefixes) {
+      result.remove(prefix);
     }
     return result;
   }
@@ -256,23 +302,28 @@ abstract final class CCRouterComponentDependencyAnalyzer {
         type.element.library.uri.toString() !=
             'package:ccrouter_contracts/src/component.dart')
       return null;
-    final element = switch (expression) {
-      SimpleIdentifier e => e.element,
-      PrefixedIdentifier e => e.identifier.element,
-      PropertyAccess e => e.propertyName.element,
-      _ => null,
-    };
-    final variable = switch (element) {
-      PropertyAccessorElement e => e.variable,
-      VariableElement e => e,
-      _ => null,
-    };
+    final variable = _constantVariable(expression);
     if (variable != null)
       return variable
           .computeConstantValue()
           ?.getField('value')
           ?.toStringValue();
     return _componentIdLiteral(expression);
+  }
+
+  /// Resolves storage for a constant reference without invoking a user getter.
+  static VariableElement? _constantVariable(Expression expression) {
+    final element = switch (expression) {
+      SimpleIdentifier e => e.element,
+      PrefixedIdentifier e => e.identifier.element,
+      PropertyAccess e => e.propertyName.element,
+      _ => null,
+    };
+    return switch (element) {
+      PropertyAccessorElement e => e.variable,
+      VariableElement e => e,
+      _ => null,
+    };
   }
 
   /// Reads one Contract type and its optional source import prefix.
@@ -285,18 +336,21 @@ abstract final class CCRouterComponentDependencyAnalyzer {
       CCRouterContractKind.command => 'CCCommandDependency',
       CCRouterContractKind.uiFragment => 'CCUIFragmentDependency',
     };
-    if (kind == CCRouterContractKind.uiFragment &&
-        !CCRouterResolvedSymbols.isFrameworkConstructor(
-          expression,
-          expected,
-          'ui_fragment',
-        ))
+    final file = switch (kind) {
+      CCRouterContractKind.service => 'service',
+      CCRouterContractKind.command => 'messaging',
+      CCRouterContractKind.uiFragment => 'ui_fragment',
+    };
+    if (!CCRouterResolvedSymbols.isFrameworkConstructor(
+      expression,
+      expected,
+      file,
+    ))
       return null;
     // Resolved constructor aliases may rename or bind the type parameters.
     // Read the instantiated dependency type after canonical constructor proof.
-    if (kind == CCRouterContractKind.uiFragment &&
-        expression.thisOrAncestorOfType<CompilationUnit>()?.declaredFragment !=
-            null) {
+    if (expression.thisOrAncestorOfType<CompilationUnit>()?.declaredFragment !=
+        null) {
       final dependency = expression.staticType;
       if (dependency is! InterfaceType || dependency.typeArguments.length != 1)
         return null;
@@ -308,34 +362,32 @@ abstract final class CCRouterComponentDependencyAnalyzer {
       InstanceCreationExpression value
           when value.constructorName.type.name.lexeme == expected =>
         value.constructorName.type.typeArguments?.arguments,
-      MethodInvocation value
-          when value.target == null && value.methodName.name == expected =>
+      MethodInvocation value when value.methodName.name == expected =>
         value.typeArguments?.arguments,
       _ => null,
     };
     if (typeArguments == null || typeArguments.length != 1) return null;
     final contract = typeArguments.single;
     if (contract is! NamedType) return null;
+    final unit = contract.thisOrAncestorOfType<CompilationUnit>()!;
+    final name = contract.importPrefix?.name.lexeme ?? contract.name.lexeme;
+    if (unit.declarations.any(
+      (d) => switch (d) {
+        NamedCompilationUnitMember d => d.name.lexeme == name,
+        ExtensionDeclaration d => d.name?.lexeme == name,
+        TopLevelVariableDeclaration d => d.variables.variables.any(
+          (v) => v.name.lexeme == name,
+        ),
+        _ => false,
+      },
+    ))
+      return null;
     return (
       contract.name.lexeme,
       contract.importPrefix?.name.lexeme,
       contract.type,
     );
   }
-
-  /// Returns arguments from one unresolved constructor-shaped invocation.
-  static NodeList<Expression>? _constructorArguments(
-    Expression? expression,
-    String typeName,
-  ) => switch (expression) {
-    InstanceCreationExpression value
-        when value.constructorName.type.name.lexeme == typeName =>
-      value.argumentList.arguments,
-    MethodInvocation value
-        when value.target == null && value.methodName.name == typeName =>
-      value.argumentList.arguments,
-    _ => null,
-  };
 
   /// Reads one named constructor argument.
   static Expression? _namedArgument(
@@ -348,12 +400,19 @@ abstract final class CCRouterComponentDependencyAnalyzer {
     return null;
   }
 
-  /// Reads a direct stable component ID literal.
+  /// Reads a literal argument only from a proven framework ID constructor.
+  /// Resolved typedefs/prefixes keep constructor identity, not authored spelling.
   static String? _componentIdLiteral(Expression expression) {
-    final arguments = _constructorArguments(expression, 'CCComponentId');
+    final arguments = CCRouterResolvedSymbols.constructorArguments(
+      expression,
+      'CCComponentId',
+      'component',
+    )?.arguments;
     if (arguments == null || arguments.length != 1) return null;
     final value = arguments.single;
-    return value is SimpleStringLiteral ? value.value : null;
+    return value is StringLiteral
+        ? value.stringValue
+        : _constantVariable(value)?.computeConstantValue()?.toStringValue();
   }
 }
 

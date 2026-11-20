@@ -1,3 +1,4 @@
+import 'contract_validation.dart';
 import 'dart:convert';
 
 import 'package:analyzer/dart/constant/value.dart';
@@ -21,14 +22,6 @@ const int _serviceMaxDescriptionLength = 4096;
 /// Stable identifier syntax shared by generated Service contracts and Keys.
 final RegExp _serviceStableIdPattern = RegExp(
   r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$',
-);
-
-/// SemVer 2.0 syntax used by independent Service Contracts.
-final RegExp _serviceSemanticVersionPattern = RegExp(
-  r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
-  r'(?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)'
-  r'(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*)?'
-  r'(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$',
 );
 
 /// Matches Service contract declarations from the canonical contracts package.
@@ -514,6 +507,12 @@ List<_ServiceContractModel> _readServiceContracts(LibraryReader library) {
         element,
       );
     }
+    if (_serviceContractChecker.annotationsOfExact(element).length != 1) {
+      _failService(
+        'Contract requires exactly one CCServiceContract annotation.',
+        element,
+      );
+    }
     _validateServiceContractInheritance(element);
     final component = annotated.annotation.read('componentId').objectValue;
     final componentId = component.getField('value')?.toStringValue();
@@ -534,11 +533,11 @@ List<_ServiceContractModel> _readServiceContracts(LibraryReader library) {
     if (alias != null && !isGeneratedClientMemberName(alias)) {
       _failService(
         'Service contract "$id" alias "$alias" must be a public lower-camel '
-        'Dart identifier and must not be a keyword.',
+        'Dart identifier and must not be a keyword or an inherited Object member.',
         element,
       );
     }
-    if (!_serviceSemanticVersionPattern.hasMatch(version)) {
+    if (!isContractSemanticVersion(version)) {
       _failService('Service contract "$id" must use SemVer 2.0.', element);
     }
     final description = annotated.annotation.read('description').stringValue;
@@ -589,6 +588,12 @@ List<_ServiceModel> _readServices(LibraryReader library) {
         element.displayName.startsWith('_')) {
       _failService(
         'CCService requires a public, concrete, non-generic class.',
+        element,
+      );
+    }
+    if (_serviceChecker.annotationsOfExact(element).length != 1) {
+      _failService(
+        'Declaration requires exactly one CCService annotation.',
         element,
       );
     }
@@ -709,6 +714,12 @@ List<_ServiceModel> _readServices(LibraryReader library) {
 _ServiceContractModel? _serviceContractAnnotation(InterfaceElement element) {
   final annotation = _serviceContractChecker.firstAnnotationOfExact(element);
   if (annotation == null || element is! ClassElement) return null;
+  if (_serviceContractChecker.annotationsOfExact(element).length != 1) {
+    _failService(
+      'Contract requires exactly one CCServiceContract annotation.',
+      element,
+    );
+  }
   final component = annotation.getField('componentId');
   final componentId = component?.getField('value')?.toStringValue();
   final id = annotation.getField('id')?.toStringValue();
@@ -726,11 +737,11 @@ _ServiceContractModel? _serviceContractAnnotation(InterfaceElement element) {
   if (alias != null && !isGeneratedClientMemberName(alias)) {
     _failService(
       'Service contract "$id" alias "$alias" must be a public lower-camel '
-      'Dart identifier and must not be a keyword.',
+      'Dart identifier and must not be a keyword or an inherited Object member.',
       element,
     );
   }
-  if (!_serviceSemanticVersionPattern.hasMatch(version)) {
+  if (!isContractSemanticVersion(version)) {
     _failService('Service contract "$id" must use SemVer 2.0.', element);
   }
   _validateServiceContractInheritance(element);
@@ -1070,7 +1081,7 @@ String _servicePackageUri(String package, String libraryPath) {
   return 'package:$package/${libraryPath.substring('lib/'.length)}';
 }
 
-/// Serializes one declaration's portable Package URI and source coordinates.
+/// Preserves exact source coordinates and adds defining-Library identity for parts.
 Map<String, Object?> _serviceSourceReference(Element element) {
   final fragment = element.firstFragment;
   final libraryFragment = fragment.libraryFragment!;
@@ -1080,6 +1091,8 @@ Map<String, Object?> _serviceSourceReference(Element element) {
   return <String, Object?>{
     'symbol': element.displayName,
     'packageUri': libraryFragment.source.uri.toString(),
+    if (libraryFragment.source.uri != element.library!.uri)
+      'libraryUri': element.library!.uri.toString(),
     'line': location.lineNumber,
     'column': location.columnNumber,
   };

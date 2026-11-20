@@ -1,0 +1,29 @@
+00:00 +0: loading test/source_analyzer_test.dart
+00:00 +0: test/source_analyzer_test.dart: file URI namespaces respect generated Package boundaries
+00:00 +0 -1: test/semantic_analysis_test.dart: valid Dart file URI imports retain the generated boundary
+00:00 +0 -1: test/source_analyzer_test.dart: file URI namespaces respect generated Package boundaries [E]
+  Expected: an object with length of <1>
+    Actual: WhereIterable<CCRouterAnalyzerDiagnostic>:[]
+     Which: has length of <0>
+  import 'file:///var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-analyzer-KsufdL/other/lib/src/ccrouter_generated/hidden.dart';
+
+  package:matcher                       expect
+  test/source_analyzer_test.dart 406:9  main.<fn>
+
+00:00 +0 -2: test/semantic_analysis_test.dart: valid Dart file URI imports retain the generated boundary [E]
+  Expected: contains 'ccrouter_cross_package_generated_import'
+    Actual: MappedListIterable<CCRouterAnalyzerDiagnostic, String>:[]
+     Which: does not contain 'ccrouter_cross_package_generated_import'
+
+  package:matcher                         expect
+  test/semantic_analysis_test.dart 433:7  main.<fn>
+
+00:00 +0 -2: test/semantic_analysis_test.dart: valid Dart escaped imports retain the generated boundary
+00:01 +1 -2: Some tests failed.
+
+Failing tests:
+  test/semantic_analysis_test.dart: valid Dart file URI imports retain the generated boundary
+  test/source_analyzer_test.dart: file URI namespaces respect generated Package boundaries
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

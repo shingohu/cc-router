@@ -1,0 +1,12 @@
+00:00 +7: <home>/develop/LiberLive/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: throttle rejection does not consume lifetime once
+00:00 +8: <home>/develop/LiberLive/cc-router/demo/modules/analytics_flutter/test/analytics_flutter_test.dart: Scope inherits dispatcher and merges page context
+00:00 +9: <home>/develop/LiberLive/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: revocation resets dwell and accepted once is never replayed
+00:00 +10: <home>/develop/LiberLive/cc-router/demo/modules/analytics_flutter/test/analytics_flutter_test.dart: disabled Scope returns a no-op tracker without changing policy
+00:00 +11: <home>/develop/LiberLive/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: filtered attempts do not consume once or poll every frame
+00:00 +12: <home>/develop/LiberLive/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: filtered attempts do not consume once or poll every frame
+00:00 +13: <home>/develop/LiberLive/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: background rebuild, close and detach cancel pending dwell
+00:00 +14: <home>/develop/LiberLive/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: moving a target detaches old positions and resets dwell
+00:00 +15: <home>/develop/LiberLive/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: nested scroll positions respect both viewport clips
+00:00 +16: <home>/develop/LiberLive/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: ancestor scrolling starts a clipped visibility episode
+00:00 +17: <home>/develop/LiberLive/cc-router/demo/modules/analytics_flutter/test/exposure_regression_test.dart: consent grant starts a fresh dwell without rebuilding the target
+00:00 +18: All tests passed!

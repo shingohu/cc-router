@@ -1,0 +1,16 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: component dependency preflight self-owned requirements defer to the authoritative declaration error
+00:00 +0 -1: component dependency preflight self-owned requirements defer to the authoritative declaration error [E]
+  Expected: empty
+    Actual: [Instance of 'CCComponentDependencyPreflightIssue']
+
+  package:matcher                                                                      expect
+  packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart 29:7  main.<fn>.<fn>
+
+00:00 +0 -1: component dependency preflight canonical prefixed constructors retain the exact preflight owner
+00:00 +1 -1: (tearDownAll)
+00:00 +1 -1: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

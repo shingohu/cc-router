@@ -140,6 +140,7 @@ workspace:
     File(path.join(owner.path, 'lib', 'src', 'contracts.dart'))
       ..createSync(recursive: true)
       ..writeAsStringSync('''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 const ownerComponentId = CCComponentId('owner.component');
 @CCServiceContract(componentId: ownerComponentId, id: 'owner.service')
 abstract interface class SharedService {}
@@ -192,11 +193,21 @@ abstract interface class SharedService {}
               'rootUri': '../owner_contracts',
               'packageUri': 'lib/',
             },
+            {
+              'name': 'ccrouter_contracts',
+              'rootUri': Directory(
+                '../ccrouter_contracts',
+              ).absolute.uri.toString(),
+              'packageUri': 'lib/',
+              'languageVersion': '3.10',
+            },
           ],
         }),
       );
     const source = '''
-import 'package:owner_contracts/owner_contracts.dart';
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:owner_contracts/owner_contracts.dart' show SharedService, ownerComponentId;
+const consumerComponentId = CCComponentId('consumer.component');
 const consumerComponent = CCComponent(
   id: consumerComponentId,
   version: '1.0.0',

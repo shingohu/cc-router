@@ -1,0 +1,12 @@
+00:57 +1757: <home>/.codex/worktrees/integrate-main-347/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: business Pop interrupted by close stays consistent
+00:57 +1758: <home>/.codex/worktrees/integrate-main-347/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: business Pop interrupted by close stays consistent
+00:57 +1759: <home>/.codex/worktrees/integrate-main-347/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: business Pop interrupted by close stays consistent
+00:57 +1760: <home>/.codex/worktrees/integrate-main-347/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: business Pop interrupted by popup stays consistent
+00:57 +1761: <home>/.codex/worktrees/integrate-main-347/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through business outgoing animation
+00:57 +1762: <home>/.codex/worktrees/integrate-main-347/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through direct outgoing animation
+00:57 +1763: <home>/.codex/worktrees/integrate-main-347/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through system outgoing animation
+00:57 +1764: <home>/.codex/worktrees/integrate-main-347/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through gesture outgoing animation
+00:57 +1765: <home>/.codex/worktrees/integrate-main-347/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through go outgoing animation
+00:57 +1766: <home>/.codex/worktrees/integrate-main-347/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through reset outgoing animation
+00:58 +1767: <home>/.codex/worktrees/integrate-main-347/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through replace outgoing animation
+00:58 +1768: All tests passed!

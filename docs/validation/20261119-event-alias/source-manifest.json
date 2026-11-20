@@ -1,0 +1,38 @@
+{
+  "baseCommit": "7f3d95754eefb978b0074380a19c5fb14c11a9c6",
+  "branch": "codex/unify-contract-validation",
+  "productionFiles": {
+    "packages/ccrouter_analyzer_plugin/lib/src/generated_client_naming.dart": "787eec209a2867271fa03f9b558b5e169503c1b16b4d904c47f72e4e6bd35240",
+    "packages/ccrouter_analyzer_plugin/lib/src/source_analyzer.dart": "6e659ab246f2fb1d1e88b53529d7fd6a7d313fa44f9e721c3ce91ef0173de13d",
+    "packages/ccrouter_analyzer_plugin/lib/src/ui_fragment_analysis.dart": "8c0c668f4eb732e61fa8792a2aaa3d149096bd9b255e86ddbedd657cee129576",
+    "packages/ccrouter_contracts/lib/src/contract_compatibility.dart": "080f6677456928d4d9e0dfc40e6fa9752e259180596a348a078eab93d0b34fbf",
+    "packages/ccrouter_contracts/lib/src/messaging.dart": "5e486c6c644bc030d5c1d7d8ba591b249ff6f0a1af7853d844767969a7c9a5e0",
+    "packages/ccrouter_contracts/lib/src/service.dart": "77e5ba740fb21f54d9a209a0bfc8835ba34949d196a0f9b0196296a7c42151d1",
+    "packages/ccrouter_contracts/lib/src/ui_fragment.dart": "fed43ba533df3854af21d45734bcb56ebfce128117e9ae3644a9687620440f77",
+    "packages/ccrouter_generator/bin/ccrouter_generator.dart": "9751c50bb2a7e9a6e69ac3d8c282d233cc5a52efb86e1a2b0253771d19411186",
+    "packages/ccrouter_generator/bin/src/ui_fragment_scaffold.dart": "705204ef46e47ab8b69e035e4a309472ba8544b95771ec0308b61a1860748d57",
+    "packages/ccrouter_generator/lib/src/command_generator.dart": "15343fcc45a1ea0a64beb912f41e9a4b6609a558a01a1a5874bac8e68d89066b",
+    "packages/ccrouter_generator/lib/src/contract_validation.dart": "3df176bd62da02655540d17bb322716737201f8ebbccd105ae371bd2170bf1cd",
+    "packages/ccrouter_generator/lib/src/event_generator.dart": "bbb8735751091f674d129f484b21f550ca8cf2b81d68f291cc6707d72b473177",
+    "packages/ccrouter_generator/lib/src/generated_client_naming.dart": "b009c57a792c171ef144065a7a312bc7d6e82158aa0d6395beea330ace72f6d8",
+    "packages/ccrouter_generator/lib/src/init_task_generator.dart": "50e1fed8543d8eeb02f22d3e9d737774aca5d74ffee3e92caccbfc35db1ecf29",
+    "packages/ccrouter_generator/lib/src/route_generator.dart": "8a2394aa5c6b052d38ee2ca260c1fea3425099e267f32cdc873054f999d992c9",
+    "packages/ccrouter_generator/lib/src/route_model.dart": "29c49b47dbfa8ef57d8af08c15afaeab7ac3d21bf15f886b2f46ad314f353a2d",
+    "packages/ccrouter_generator/lib/src/service_generator.dart": "45bcf44823bcbc4a934e83d82f606313cfea6e5b7744c60aff42747914dec3a9",
+    "packages/ccrouter_generator/lib/src/service_proxy_generator.dart": "4010aef9b4ee6f29e39747535ae535e02231a29d02d599d6b916f724f1af731f",
+    "packages/ccrouter_generator/lib/src/ui_fragment_generator.dart": "c3441c69ce0e4556867d9053a53afbc7bc67d41ce522d4208b4be72fdd0e4d43",
+    "packages/ccrouter_generator/lib/src/workspace_validator.dart": "7c15a80321027203f3584c24e45f0f5a1cf405f881848b285392e532a8fbe10b"
+  },
+  "testFiles": {
+    "packages/ccrouter_analyzer_plugin/test/source_analyzer_test.dart": "0454293fbd0257c2a9aef350703610376403d54af9abed92caaa8413c13fddce",
+    "packages/ccrouter_test/generator_test/command_generator_test.dart": "533b7afa872f1cff954a32e070eb2fc5de84465bf40f916bf51f3b38a0ef0d52",
+    "packages/ccrouter_test/generator_test/contract_validation_test.dart": "b2f7a58b35d086c7c6e6325a25d383cab9edc9c185786863b328832b587f1315",
+    "packages/ccrouter_test/generator_test/event_generator_test.dart": "73f6b148d657d4d54dd5c643e8192bfd995eb6917c1338f27099ce99d1cf1b07",
+    "packages/ccrouter_test/generator_test/generated_client_naming_test.dart": "b09bca4c23fef6cc42e036b79eedb92315d7b7ccdb7cd5c917e698ca8cbf27bc",
+    "packages/ccrouter_test/generator_test/generation_command_test.dart": "b787104b96620cf07af88b3e01fe945f0a3a6bef90520cb0cdc616ccd480c7fc",
+    "packages/ccrouter_test/generator_test/service_generator_test.dart": "bd9401dcd036887f23fb95c96195cb5de08e864520fcf6fb40d7b7f39002b5d5",
+    "packages/ccrouter_test/generator_test/ui_fragment_generator_test.dart": "09720179c1a611b9099a695fc9ac36c5e973faac3cfd5d13def845f453d40970",
+    "packages/ccrouter_test/generator_test/workspace_validator_test.dart": "2c0d8bb4d99498fbf498caf484e571c1dcb469972d33df6b2df95ff90be6c848",
+    "packages/ccrouter_test/test/contract_compatibility_test.dart": "11360161d37e4d36762df8bf931e088e95f489e547dd866fa005cc03f3a79913"
+  }
+}

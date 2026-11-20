@@ -1,0 +1,119 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/duplicate_declaration_test.dart
+00:00 +0: service/probe.service.g.dart rejects repeated CCService annotations
+00:05 +0 -1: service/probe.service.g.dart rejects repeated CCService annotations [E]
+  Expected: false
+    Actual: <true>
+
+  package:matcher                                                             expect
+  packages/ccrouter_test/generator_test/duplicate_declaration_test.dart 68:7  main.<fn>
+
+00:05 +0 -1: metadata/src/probe.service.json rejects repeated CCService annotations
+00:07 +0 -2: metadata/src/probe.service.json rejects repeated CCService annotations [E]
+  Expected: false
+    Actual: <true>
+
+  package:matcher                                                             expect
+  packages/ccrouter_test/generator_test/duplicate_declaration_test.dart 68:7  main.<fn>
+
+00:07 +0 -2: event/probe.event.g.dart rejects repeated CCEventSubscription annotations
+00:09 +0 -3: event/probe.event.g.dart rejects repeated CCEventSubscription annotations [E]
+  Expected: false
+    Actual: <true>
+
+  package:matcher                                                             expect
+  packages/ccrouter_test/generator_test/duplicate_declaration_test.dart 68:7  main.<fn>
+
+00:09 +0 -3: metadata/src/probe.event.json rejects repeated CCEventSubscription annotations
+00:10 +0 -4: metadata/src/probe.event.json rejects repeated CCEventSubscription annotations [E]
+  Expected: false
+    Actual: <true>
+
+  package:matcher                                                             expect
+  packages/ccrouter_test/generator_test/duplicate_declaration_test.dart 68:7  main.<fn>
+
+00:10 +0 -4: route/probe.route.g.dart rejects repeated CCRoute annotations
+00:12 +0 -5: route/probe.route.g.dart rejects repeated CCRoute annotations [E]
+  Expected: false
+    Actual: <true>
+
+  package:matcher                                                             expect
+  packages/ccrouter_test/generator_test/duplicate_declaration_test.dart 68:7  main.<fn>
+
+00:12 +0 -5: metadata/src/probe.route.json rejects repeated CCRoute annotations
+00:13 +0 -6: metadata/src/probe.route.json rejects repeated CCRoute annotations [E]
+  Expected: false
+    Actual: <true>
+
+  package:matcher                                                             expect
+  packages/ccrouter_test/generator_test/duplicate_declaration_test.dart 68:7  main.<fn>
+
+00:13 +0 -6: command/probe.command.g.dart rejects repeated CCCommandHandler annotations
+00:15 +0 -7: command/probe.command.g.dart rejects repeated CCCommandHandler annotations [E]
+  Expected: false
+    Actual: <true>
+
+  package:matcher                                                             expect
+  packages/ccrouter_test/generator_test/duplicate_declaration_test.dart 68:7  main.<fn>
+
+00:15 +0 -7: metadata/src/probe.command.json rejects repeated CCCommandHandler annotations
+00:17 +0 -8: metadata/src/probe.command.json rejects repeated CCCommandHandler annotations [E]
+  Expected: false
+    Actual: <true>
+
+  package:matcher                                                             expect
+  packages/ccrouter_test/generator_test/duplicate_declaration_test.dart 68:7  main.<fn>
+
+00:17 +0 -8: binding/probe.route_binding.g.dart rejects repeated CCRouteImplementation annotations
+00:19 +0 -9: binding/probe.route_binding.g.dart rejects repeated CCRouteImplementation annotations [E]
+  Expected: contains 'exactly one CCRouteImplementation annotation'
+    Actual: '0s Generating .route_binding.g.dart: _RouteBindingGenerator on 17 inputs; lib/src/ccrouter_generated/contract/multiple_extra_contract_fixture.route.contract.g.dart\n'
+              '0s Generating .route_binding.g.dart: _RouteBindingGenerator on 17 inputs: 1 no-op; lib/src/ccrouter_generated/route/generated_route_fixture.route.g.dart\n'
+              'Generating .route_binding.g.dart: _RouteBindingGenerator on lib/src/probe.dart:\n'
+              'CCRouteImplementation contract must be available through an explicit import.\n'
+              'package:ccrouter_test/src/probe.dart:7:13\n'
+              '  ╷\n'
+              '7 │ final class Page implements ProbeRouteContract { const Page(); }\n'
+              '  │             ^^^^\n'
+              '  ╵\n'
+              '1s Generating .route_binding.g.dart: _RouteBindingGenerator on 17 inputs: 3 output, 14 no-op\n'
+              'Failed to build with build_runner/jit in 2s; wrote 3 outputs.'
+     Which: does not contain 'exactly one CCRouteImplementation annotation'
+
+  package:matcher                                                             expect
+  packages/ccrouter_test/generator_test/duplicate_declaration_test.dart 74:7  main.<fn>
+
+00:19 +0 -9: metadata/src/probe.route.json rejects repeated CCRouteImplementation annotations
+00:21 +0 -10: metadata/src/probe.route.json rejects repeated CCRouteImplementation annotations [E]
+  Expected: contains 'exactly one CCRouteImplementation annotation'
+    Actual: '0s _RouteMetadataBuilder on 22 inputs; lib/ccrouter_test.dart\n'
+              '1s _RouteMetadataBuilder on 22 inputs: 1 no-op; lib/ccrouter_ui_test.dart\n'
+              '_RouteMetadataBuilder on lib/src/probe.dart:\n'
+              'CCRouteImplementation contract must be available through an explicit import.\n'
+              'package:ccrouter_test/src/probe.dart:7:13\n'
+              '  ╷\n'
+              '7 │ final class Page implements ProbeRouteContract { const Page(); }\n'
+              '  │             ^^^^\n'
+              '  ╵\n'
+              '1s _RouteMetadataBuilder on 22 inputs: 4 output, 18 no-op; spent 1s resolving\n'
+              'Failed to build with build_runner/jit in 2s; wrote 4 outputs.'
+     Which: does not contain 'exactly one CCRouteImplementation annotation'
+
+  package:matcher                                                             expect
+  packages/ccrouter_test/generator_test/duplicate_declaration_test.dart 74:7  main.<fn>
+
+00:21 +0 -10: metadata/src/probe.route.json rejects repeated CCComponentContribution annotations
+00:22 +0 -11: metadata/src/probe.route.json rejects repeated CCComponentContribution annotations [E]
+  Expected: false
+    Actual: <true>
+
+  package:matcher                                                             expect
+  packages/ccrouter_test/generator_test/duplicate_declaration_test.dart 68:7  main.<fn>
+
+00:22 +0 -11: contract/probe.route.contract.g.dart rejects repeated CCRouteContract annotations
+00:24 +1 -11: metadata/src/probe.route.json rejects repeated CCRouteContract annotations
+00:25 +2 -11: init_task/probe.init_task.g.dart rejects repeated CCInitTask annotations
+00:27 +3 -11: metadata/src/probe.init_task.json rejects repeated CCInitTask annotations
+00:28 +4 -11: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

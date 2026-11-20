@@ -12,6 +12,141 @@ import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
 void main() {
+  for (final uri in [
+    'package:',
+    'package:contracts',
+    'package:/contracts/source.dart',
+    'package://contracts/source.dart',
+    'package:contracts/source.dart?query',
+    'package:contracts/source.dart#fragment',
+    'package:contracts/../source.dart',
+    'package:contracts/%2E%2E/source.dart',
+    'package:contracts/sub%2Fsource.dart',
+    'package:contracts/sub%5Csource.dart',
+    'package:contracts/%FF.dart',
+    'package:contracts/%00.dart',
+    'package:contracts//source.dart',
+  ]) {
+    test('catalog rejects nonportable source and artifact URI $uri', () {
+      expect(
+        () => CCSourceReference.fromJson({'packageUri': uri}),
+        throwsFormatException,
+      );
+      expect(
+        () => CCGeneratedArtifact.fromJson({
+          'role': 'routeLibrary',
+          'symbol': 'buildRoute',
+          'packageUri': uri,
+        }),
+        throwsFormatException,
+      );
+    });
+  }
+
+  test('catalog retains valid encoded and legacy source filenames', () {
+    for (final (filename, encoded) in [
+      ('source.dart', 'source.dart'),
+      ('source#one.dart', 'source%23one.dart'),
+      ('source%FF.dart', 'source%25FF.dart'),
+    ]) {
+      final uri = 'package:contracts/$encoded';
+      final reference = CCSourceReference.fromJson({'packageUri': uri});
+      expect(reference.packageName, 'contracts');
+      expect(reference.packageUri, uri);
+      expect(
+        CCGeneratedArtifact.fromJson({
+          'role': 'routeLibrary',
+          'symbol': 'buildRoute',
+          'packageUri': uri,
+        }).packageUri,
+        uri,
+      );
+      expect(
+        CCSourceReference.fromJson(
+          {},
+          fallbackPackage: 'contracts',
+          fallbackLibrary: 'lib/$filename',
+        ).packageUri,
+        uri,
+      );
+    }
+  });
+
+  test(
+    'source references preserve defining Library evidence without changing locations',
+    () {
+      final source = {
+        'symbol': 'Shared',
+        'packageUri': 'package:contracts/part.dart',
+        'line': 3,
+        'column': 7,
+        'libraryUri': 'package:contracts/root.dart',
+      };
+      final reference = CCSourceReference.fromJson(source);
+      expect(reference.toJson(), source);
+      expect(
+        reference.markdownLocation,
+        contains('package:contracts/part.dart:3:7'),
+      );
+      for (final invalid in <Object?>[
+        null,
+        123,
+        'package:contracts/root.dart?query',
+        'package:contracts/root.dart#fragment',
+        'package:/contracts/root.dart',
+        'package:contracts/%FF.dart',
+        'package:contracts/%00.dart',
+        'package:other/root.dart',
+        'file:///root.dart',
+      ]) {
+        expect(
+          () => CCSourceReference.fromJson({...source, 'libraryUri': invalid}),
+          throwsFormatException,
+        );
+      }
+      final legacy = {...source}..remove('libraryUri');
+      expect(CCSourceReference.fromJson(legacy).toJson(), legacy);
+    },
+  );
+
+  test(
+    'source catalog enriches absent Library evidence but rejects conflicting identities',
+    () {
+      Map<String, Object?> record(String? library) => {
+        'package': 'contracts',
+        'source': 'lib/root.dart',
+        'serviceContracts': [
+          {
+            'id': 'owner.service',
+            'componentId': 'owner',
+            'declaration': {
+              'symbol': 'Shared',
+              'packageUri': 'package:contracts/part.dart',
+              if (library != null) 'libraryUri': library,
+            },
+          },
+        ],
+      };
+      for (final reverse in [false, true]) {
+        final docs = [record(null), record('package:contracts/root.dart')];
+        final catalog = CCCapabilitySourceCatalog.fromMetadata(
+          reverse ? docs.reversed : docs,
+        );
+        expect(
+          catalog.records.single.contract!.toJson()['libraryUri'],
+          'package:contracts/root.dart',
+        );
+      }
+      expect(
+        () => CCCapabilitySourceCatalog.fromMetadata([
+          record('package:contracts/root.dart'),
+          record('package:contracts/other.dart'),
+        ]),
+        throwsFormatException,
+      );
+    },
+  );
+
   test('discovers only the Host runtime dependency closure', () async {
     final fixture = await PackageResolutionFixture.create();
     addTearDown(fixture.dispose);

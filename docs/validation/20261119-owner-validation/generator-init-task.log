@@ -1,0 +1,21 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/duplicate_declaration_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/duplicate_declaration_test.dart: contract/probe.route.contract.g.dart rejects repeated CCRouteContract annotations
+00:31 +1: packages/ccrouter_test/generator_test/duplicate_declaration_test.dart: metadata/src/probe.route.json rejects repeated CCRouteContract annotations
+00:39 +2: packages/ccrouter_test/generator_test/duplicate_declaration_test.dart: init_task/probe.init_task.g.dart rejects repeated CCInitTask annotations
+00:46 +3: packages/ccrouter_test/generator_test/duplicate_declaration_test.dart: metadata/src/probe.init_task.json rejects repeated CCInitTask annotations
+00:53 +4: loading packages/ccrouter_test/generator_test/init_task_generator_test.dart
+00:53 +4: packages/ccrouter_test/generator_test/init_task_generator_test.dart: task builder emits complete typed registration
+01:17 +5: packages/ccrouter_test/generator_test/init_task_generator_test.dart: zero-argument internal task is adapted to Runtime signature
+01:27 +6: packages/ccrouter_test/generator_test/init_task_generator_test.dart: FutureOr Handler may receive invocation context
+01:32 +7: packages/ccrouter_test/generator_test/init_task_generator_test.dart: metadata records Contract DAG and source locations
+01:36 +8: packages/ccrouter_test/generator_test/init_task_generator_test.dart: contract and id cannot be configured together
+01:39 +9: packages/ccrouter_test/generator_test/init_task_generator_test.dart: invalid Handler signature fails generation
+01:41 +10: packages/ccrouter_test/generator_test/init_task_generator_test.dart: private Handler fails generation
+01:43 +11: packages/ccrouter_test/generator_test/init_task_generator_test.dart: incorrectly parameterized Handler fails generation
+01:44 +12: packages/ccrouter_test/generator_test/init_task_generator_test.dart: invalid Gate fails generation
+01:46 +13: packages/ccrouter_test/generator_test/init_task_generator_test.dart: non-positive timeout fails generation
+01:48 +14: packages/ccrouter_test/generator_test/init_task_generator_test.dart: duplicate and self dependencies fail generation
+01:50 +15: packages/ccrouter_test/generator_test/init_task_generator_test.dart: dependency list rejects inline Contract construction
+01:52 +16: packages/ccrouter_test/generator_test/init_task_generator_test.dart: required task must use a Contract
+01:54 +17: packages/ccrouter_test/generator_test/init_task_generator_test.dart: async required task must declare a timeout
+01:55 +18: All tests passed!

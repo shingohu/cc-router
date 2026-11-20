@@ -137,6 +137,205 @@ Map<String, Object?> implementation(
 };
 
 void main() {
+  test(
+    'persisted InitTask dependency snapshots retain all compatibility gates',
+    () {
+      const fingerprint =
+          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+      for (final (snapshotOwner, range, shape, expected) in [
+        ('foundation', '^1.0.0', fingerprint, null),
+        ('old_foundation', '^1.0.0', fingerprint, 'ownerMismatch'),
+        ('foundation', '^2.0.0', fingerprint, 'versionOutOfRange'),
+        ('foundation', '^1.0.0', 'b' * 64, 'fingerprintChanged'),
+        ('foundation', '^1.0.0', 'bad', 'staleGeneratedOutput'),
+      ]) {
+        final owner = document(
+          package: 'foundation',
+          components: [component('foundation')],
+          routes: [],
+          initTaskContracts: [
+            {
+              'id': 'foundation.logging',
+              'componentId': 'foundation',
+              'version': '1.0.0',
+              'shapeFingerprint': fingerprint,
+            },
+          ],
+          initTasks: [
+            {
+              'id': 'foundation.logging',
+              'componentId': 'foundation',
+              'contractId': 'foundation.logging',
+              'gateId': 'appStarted',
+              'failurePolicy': 'optional',
+              'dependsOn': <String>[],
+            },
+          ],
+        )..['schemaVersion'] = 4;
+        final consumer = document(
+          package: 'consumer',
+          components: [
+            component('consumer', dependencies: ['foundation']),
+          ],
+          routes: [],
+          initTasks: [
+            {
+              'id': 'consumer.start',
+              'componentId': 'consumer',
+              'gateId': 'appStarted',
+              'failurePolicy': 'optional',
+              'dependsOn': ['foundation.logging'],
+              'contractDependencies': [
+                {
+                  'id': 'foundation.logging',
+                  'componentId': snapshotOwner,
+                  'requiredVersionRange': range,
+                  'requiredShapeFingerprint': shape,
+                },
+              ],
+            },
+          ],
+        )..['schemaVersion'] = 4;
+        final result = CCRouteWorkspaceValidator.validate([owner, consumer]);
+        if (expected == null) {
+          expect(result.errors, isEmpty);
+        } else {
+          expect(result.errors, hasLength(1));
+          expect(result.errors.single, contains('[contract:$expected]'));
+        }
+      }
+    },
+  );
+
+  test(
+    'Workspace distinguishes malformed consumer fingerprints from valid drift',
+    () {
+      const valid =
+          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+      for (final (fingerprint, stale) in [('bad', true), ('b' * 64, false)]) {
+        final owner = document(
+          package: 'owner',
+          components: [component('owner')],
+          routes: [],
+          serviceContracts: [
+            {
+              'id': 'owner.service',
+              'componentId': 'owner',
+              'version': '1.0.0',
+              'shapeFingerprint': valid,
+            },
+          ],
+        )..['schemaVersion'] = 4;
+        final consumer = document(
+          package: 'consumer',
+          components: [
+            component(
+              'consumer',
+              dependencies: ['owner'],
+              serviceDependencies: [
+                {
+                  'id': 'owner.service',
+                  'componentId': 'owner',
+                  'contract': 'Reader',
+                  'member': 'reader',
+                  'requiredVersionRange': '1.0.0',
+                  'requiredShapeFingerprint': fingerprint,
+                },
+              ],
+            ),
+          ],
+          routes: [],
+        )..['schemaVersion'] = 4;
+        final result = CCRouteWorkspaceValidator.validate([owner, consumer]);
+        expect(result.errors, hasLength(1));
+        expect(
+          result.errors.single,
+          contains(
+            stale
+                ? '[contract:staleGeneratedOutput]'
+                : '[contract:fingerprintChanged]',
+          ),
+        );
+      }
+    },
+  );
+
+  for (final (version, range, ownerError, consumerError, outOfRange) in [
+    ('bad', '1.0.0', true, false, false),
+    ('1.0.0', 'bad', false, true, false),
+    ('bad', 'bad', true, true, false),
+    ('1.0.0', '^2.0.0', false, false, true),
+    ('1.0.0', '^1.0.0', false, false, false),
+  ]) {
+    test(
+      'Workspace version diagnostics preserve attribution: $version / $range',
+      () {
+        const fingerprint =
+            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+        final owner = document(
+          package: 'owner',
+          components: [component('owner')],
+          routes: [],
+          serviceContracts: [
+            {
+              'id': 'owner.service',
+              'componentId': 'owner',
+              'version': version,
+              'shapeFingerprint': fingerprint,
+            },
+          ],
+        )..['schemaVersion'] = 4;
+        final consumer = document(
+          package: 'consumer',
+          components: [
+            component(
+              'consumer',
+              dependencies: ['owner'],
+              serviceDependencies: [
+                {
+                  'id': 'owner.service',
+                  'componentId': 'owner',
+                  'contract': 'Reader',
+                  'member': 'reader',
+                  'requiredVersionRange': range,
+                  'requiredShapeFingerprint': fingerprint,
+                },
+              ],
+            ),
+          ],
+          routes: [],
+        )..['schemaVersion'] = 4;
+        final result = CCRouteWorkspaceValidator.validate([owner, consumer]);
+        expect(
+          result.errors.any(
+            (error) => error.contains('must declare a valid Contract SemVer'),
+          ),
+          ownerError,
+        );
+        expect(
+          result.errors.any(
+            (error) => error.contains('invalid consumer version range'),
+          ),
+          consumerError,
+        );
+        expect(
+          result.errors.any(
+            (error) => error.contains('outside its consumer version range'),
+          ),
+          outOfRange,
+        );
+        expect(
+          result.errors,
+          hasLength(
+            (ownerError ? 1 : 0) +
+                (consumerError ? 1 : 0) +
+                (outOfRange ? 1 : 0),
+          ),
+        );
+      },
+    );
+  }
+
   test('accepts typed InitTask dependencies across required components', () {
     final result = CCRouteWorkspaceValidator.validate([
       document(
@@ -631,30 +830,101 @@ void main() {
   });
 
   test('rejects invalid persisted Service and Command Client aliases', () {
-    final result = CCRouteWorkspaceValidator.validate([
-      document(
-        components: [component('orders')],
-        routes: const [],
-        serviceContracts: const [
-          {'id': 'orders.summary', 'componentId': 'orders', 'alias': 'class'},
-        ],
-      ),
-      document(source: 'commands.dart', components: const [], routes: const [])
-        ..['commandContracts'] = const [
-          {'id': 'orders.submit', 'componentId': 'orders', 'alias': 'Submit'},
-        ],
-    ]);
+    for (final aliases in [('class', 'Submit'), ('hashCode', 'toString')]) {
+      final result = CCRouteWorkspaceValidator.validate([
+        document(
+          components: [component('orders')],
+          routes: const [],
+          serviceContracts: [
+            {
+              'id': 'orders.summary',
+              'componentId': 'orders',
+              'alias': aliases.$1,
+            },
+          ],
+        ),
+        document(
+            source: 'commands.dart',
+            components: const [],
+            routes: const [],
+          )
+          ..['commandContracts'] = [
+            {
+              'id': 'orders.submit',
+              'componentId': 'orders',
+              'alias': aliases.$2,
+            },
+          ],
+      ]);
 
-    expect(
-      result.errors,
-      contains(
-        'Service contract "orders.summary" has an invalid Client alias.',
-      ),
-    );
-    expect(
-      result.errors,
-      contains('Command contract "orders.submit" has an invalid Client alias.'),
-    );
+      expect(
+        result.errors,
+        contains(
+          'Service contract "orders.summary" has an invalid Client alias.',
+        ),
+      );
+      expect(
+        result.errors,
+        contains(
+          'Command contract "orders.submit" has an invalid Client alias.',
+        ),
+      );
+    }
+  });
+
+  test(
+    'validates the inferred Owner Command Client name in external metadata',
+    () {
+      for (final aliased in [false, true]) {
+        final result = CCRouteWorkspaceValidator.validate([
+          document(components: [component('orders')], routes: const [])
+            ..['commandContracts'] = [
+              {
+                'id': 'orders.format',
+                'componentId': 'orders',
+                'type': 'ToStringCommand',
+                if (aliased) 'alias': 'formatOrder',
+              },
+            ],
+        ]);
+        expect(
+          result.errors.any(
+            (message) => message.contains('invalid Client alias'),
+          ),
+          !aliased,
+        );
+      }
+    },
+  );
+
+  test('validates explicit Event Client aliases in external metadata', () {
+    for (final alias in <Object?>[
+      null,
+      '',
+      'class',
+      'toString',
+      true,
+      3,
+      'publishCreated',
+    ]) {
+      final result = CCRouteWorkspaceValidator.validate([
+        document(components: [component('orders')], routes: const [])
+          ..['eventContracts'] = [
+            {
+              'id': 'orders.created',
+              'componentId': 'orders',
+              'type': 'OrderCreatedEvent',
+              if (alias != null) 'alias': alias,
+            },
+          ],
+      ]);
+      expect(
+        result.errors.any(
+          (message) => message.contains('invalid Client alias'),
+        ),
+        alias != null && alias != 'publishCreated',
+      );
+    }
   });
 
   test('rejects a generated consumer for a Route-scoped Service', () {
@@ -1751,9 +2021,7 @@ void main() {
         "export 'src/ccrouter_generated/contract/detail.route.contract.g.dart' show DetailRoute;\n",
       );
       expect(CCRouteBarrelExportValidator.validate(root, [metadata]), isEmpty);
-      barrel.writeAsStringSync(
-        "export 'src/detail.dart' show DetailRoute;\n",
-      );
+      barrel.writeAsStringSync("export 'src/detail.dart' show DetailRoute;\n");
       expect(
         CCRouteBarrelExportValidator.validate(root, [metadata]),
         contains(contains('detail.route.contract.g.dart')),

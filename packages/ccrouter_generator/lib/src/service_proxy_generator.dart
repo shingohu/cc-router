@@ -3,6 +3,7 @@ part of 'service_generator.dart';
 /// Emits one typed method-level Proxy API for each consuming component.
 final class _ServiceProxyGenerator extends Generator {
   /// Generates nothing when the library declares no consumed Services.
+  /// Nullable null component constants are not component declarations.
   @override
   String generate(LibraryReader library, BuildStep buildStep) {
     if (buildStep.inputId.path.contains('/ccrouter_generated/')) return '';
@@ -17,6 +18,9 @@ final class _ServiceProxyGenerator extends Generator {
           element,
         );
       }
+      if (value.isNull &&
+          element.type.nullabilitySuffix == NullabilitySuffix.question)
+        continue;
       final component = _readServiceConsumerComponent(value, element);
       if (component.dependencies.isNotEmpty) components.add(component);
     }
@@ -153,7 +157,7 @@ _ServiceConsumerComponentModel _readServiceConsumerComponent(
     if (!isGeneratedClientMemberName(member)) {
       _failService(
         'Service dependency alias "$member" must be a public lower-camel Dart '
-        'identifier and must not be a keyword.',
+        'identifier and must not be a keyword or an inherited Object member.',
         element,
       );
     }

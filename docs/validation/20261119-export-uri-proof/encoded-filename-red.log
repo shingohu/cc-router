@@ -1,0 +1,18 @@
+00:00 +0: loading test/generator_diagnostics_bridge_test.dart
+00:00 +0: valid encoded filename characters retain their published source path
+00:00 +0 -1: valid encoded filename characters retain their published source path [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+  com%23ponent.dart
+
+  package:matcher                                   expect
+  test/generator_diagnostics_bridge_test.dart 21:7  main.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Failing tests:
+  test/generator_diagnostics_bridge_test.dart: valid encoded filename characters retain their published source path
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

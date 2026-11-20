@@ -1,0 +1,39 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/core_contract_library_identity_test.dart
+00:00 +0: Service part metadata retains source location and defining Library
+00:05 +0 -1: Service part metadata retains source location and defining Library [E]
+  Expected: 'package:ccrouter_test/src/root.dart'
+    Actual: <null>
+     Which: not an <Instance of 'String'>
+
+  package:matcher                                                                      expect
+  packages/ccrouter_test/generator_test/core_contract_library_identity_test.dart 29:7  main.<fn>
+
+0s _ServiceMetadataBuilder on 23 inputs; lib/ccrouter_test.dart
+
+3s _ServiceMetadataBuilder on 23 inputs: 1 no-op; spent 2s analyzing; lib/ccrouter_ui_test.dart
+
+4s _ServiceMetadataBuilder on 23 inputs: 2 no-op; spent 3s analyzing; lib/src/ccrouter_generated/binding/generated_route_fixture.route_binding.g.dart
+
+4s _ServiceMetadataBuilder on 23 inputs: 1 output, 22 no-op; spent 3s analyzing
+
+Built with build_runner/jit in 5s; wrote 1 output.
+00:05 +0 -1: Command part metadata retains source location and defining Library
+00:07 +0 -2: Command part metadata retains source location and defining Library [E]
+  Expected: 'package:ccrouter_test/src/root.dart'
+    Actual: <null>
+     Which: not an <Instance of 'String'>
+
+  package:matcher                                                                      expect
+  packages/ccrouter_test/generator_test/core_contract_library_identity_test.dart 29:7  main.<fn>
+
+0s _CommandMetadataBuilder on 23 inputs; lib/ccrouter_test.dart
+
+1s _CommandMetadataBuilder on 23 inputs: 1 no-op; lib/ccrouter_ui_test.dart
+
+1s _CommandMetadataBuilder on 23 inputs: 1 output, 22 no-op
+
+Built with build_runner/jit in 2s; wrote 1 output.
+00:07 +0 -2: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

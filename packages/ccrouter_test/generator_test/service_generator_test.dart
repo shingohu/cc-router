@@ -76,6 +76,35 @@ void main() {
     additionalAssets: additionalAssets,
   );
 
+  test(
+    'Service Contracts reject duplicate declarations in local and imported paths',
+    () async {
+      for (final imported in [false, true]) {
+        const contract = '''
+@CCServiceContract(componentId: CCComponentId('owner'), id: 'owner.first', alias: 'first')
+@CCServiceContract(componentId: CCComponentId('owner'), id: 'owner.second', alias: 'second')
+abstract interface class SharedService { String read(); }
+''';
+        final logs = await generateMetadata(
+          imported
+              ? '@CCService()\nfinal class Implementation implements SharedService { const Implementation(); String read() => "value"; }'
+              : contract,
+          imports: imported
+              ? "import 'package:ccrouter_test/shared_service.dart';"
+              : '',
+          additionalAssets: imported
+              ? {
+                  'ccrouter_test|lib/shared_service.dart':
+                      "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\n$contract",
+                }
+              : const {},
+          fails: true,
+        );
+        expect(logs, contains('exactly one CCServiceContract'));
+      }
+    },
+  );
+
   test('contract builder emits a typed owner-only Token', () async {
     final output = await generateContract(r'''
 const owner = CCComponentId('orders');
@@ -556,6 +585,22 @@ abstract interface class OrderSummaryService { String summaryFor(int id); }
 
       expect(output, contains('OrderSummaryService orders ='));
       expect(output, isNot(contains('OrderSummaryService orderSummary =')));
+    },
+  );
+
+  test(
+    'Object member Service dependency alias fails before emitting a Client',
+    () async {
+      final logs = await generateProxy('''
+const owner = CCComponentId('orders');
+@CCServiceContract(componentId: owner, id: 'orders.summary')
+abstract interface class OrderService { String load(); }
+const component = CCComponent(
+  id: CCComponentId('consumer'), version: '1.0.0', dependencies: [owner],
+  serviceDependencies: [CCServiceDependency<OrderService>(alias: 'hashCode')],
+);
+''', fails: true);
+      expect(logs, contains('alias "hashCode"'));
     },
   );
 

@@ -1,0 +1,92 @@
+Final archive checks (2026-11-19)
+
+$ <home>/fvm/versions/ohos/oh-3.41.9-release/bin/cache/dart-sdk/bin/dart tool/documentation_check.dart
+Documentation check passed for 208 Markdown files.
+exit_code: 0
+
+$ <home>/fvm/versions/ohos/oh-3.41.9-release/bin/cache/dart-sdk/bin/dart tool/release_sensitivity_check.dart --include-untracked
+Release sensitivity check passed.
+exit_code: 0
+
+$ git diff --check
+(no output)
+exit_code: 0
+
+$ node tool/sanitize_validation_evidence.mjs
+Evidence files requiring path normalization: 0
+exit_code: 0
+
+$ <home>/fvm/versions/ohos/oh-3.41.9-release/bin/cache/dart-sdk/bin/dart format --output=none --set-exit-if-changed packages/ccrouter_analyzer_plugin/lib/src/source_analyzer.dart packages/ccrouter_analyzer_plugin/lib/src/plugin.dart packages/ccrouter_analyzer_plugin/lib/src/host_lifecycle_analysis.dart packages/ccrouter_analyzer_plugin/lib/src/ui_fragment_analysis.dart packages/ccrouter_analyzer_plugin/test/semantic_analysis_test.dart packages/ccrouter_analyzer_plugin/test/ui_analysis_test.dart
+Formatted 6 files (0 changed) in 0.08 seconds.
+exit_code: 0
+
+$ python3 - <<'PY'
+from pathlib import Path
+import hashlib,json,subprocess
+manifest=json.loads(Path('docs/validation/20261119-spi-library-proof/source-manifest.json').read_text())
+bad=[p for p,h in manifest['files'].items() if not Path(p).is_file() or hashlib.sha256(Path(p).read_bytes()).hexdigest()!=h]
+assert not bad,bad
+print(f"Manifest: {len(manifest['files'])} fingerprints match; {len(manifest['scopeFiles'])} files this round.")
+before=json.loads(Path('/tmp/ccrouter-spi-proof-before.json').read_text())
+unexpected=[p for p,h in before.items() if (not Path(p).is_file() or hashlib.sha256(Path(p).read_bytes()).hexdigest()!=h) and p not in manifest['scopeFiles']]
+assert not unexpected,unexpected
+print('No unexpected source changes outside this round.')
+for label,args in [('Demo status',['git','status','--short','--','demo']),('Dependency changes',['git','diff','--name-only','--','*pubspec*','*lock*'])]:
+ value=subprocess.check_output(args,text=True).strip()
+ print(label+': '+(value or 'clean'))
+ assert not value
+names=subprocess.check_output(['git','ls-files','--others','--exclude-standard','-z']).decode().split('\0')
+issues=[]
+count=0
+for name in names:
+ p=Path(name)
+ if not name or not p.is_file() or p.suffix not in {'.dart','.md','.json','.log'}: continue
+ count+=1
+ for i,line in enumerate(p.read_text().splitlines(),1):
+  if line.rstrip(' \t')!=line: issues.append(f'{name}:{i}')
+assert not issues,issues
+print(f'Untracked whitespace: {count} files checked, 0 issues.')
+PY
+Manifest: 84 fingerprints match; 13 files this round.
+No unexpected source changes outside this round.
+Demo status: clean
+Dependency changes: clean
+Untracked whitespace: 316 files checked, 0 issues.
+exit_code: 0
+Final archive checks (2026-11-20)
+
+$ <home>/fvm/versions/ohos/oh-3.41.9-release/bin/cache/dart-sdk/bin/dart tool/documentation_check.dart
+Documentation check passed for 208 Markdown files.
+exit_code: 0
+
+$ <home>/fvm/versions/ohos/oh-3.41.9-release/bin/cache/dart-sdk/bin/dart tool/release_sensitivity_check.dart --include-untracked
+Release sensitivity check passed.
+exit_code: 0
+
+$ git diff --check
+(no output)
+exit_code: 0
+
+$ node tool/sanitize_validation_evidence.mjs
+Evidence files requiring path normalization: 0
+exit_code: 0
+
+$ <home>/fvm/versions/ohos/oh-3.41.9-release/bin/cache/dart-sdk/bin/dart format --output=none --set-exit-if-changed packages/ccrouter_analyzer_plugin/lib/src/host_lifecycle_analysis.dart packages/ccrouter_analyzer_plugin/lib/src/ui_fragment_analysis.dart packages/ccrouter_analyzer_plugin/lib/src/source_analyzer.dart packages/ccrouter_analyzer_plugin/lib/src/plugin.dart packages/ccrouter_analyzer_plugin/test/semantic_analysis_test.dart packages/ccrouter_analyzer_plugin/test/ui_analysis_test.dart
+Formatted 6 files (0 changed) in 0.07 seconds.
+exit_code: 0
+
+$ python3 - <<'PY'
+from pathlib import Path
+import hashlib,json,subprocess
+m=json.loads(Path('docs/validation/20261119-spi-library-proof/source-manifest.json').read_text())
+bad=[p for p,h in m['files'].items() if not Path(p).is_file() or hashlib.sha256(Path(p).read_bytes()).hexdigest()!=h]
+assert not bad,bad
+before=json.loads(Path('/tmp/ccrouter-spi-proof-before.json').read_text())
+unexpected=[p for p,h in before.items() if (not Path(p).is_file() or hashlib.sha256(Path(p).read_bytes()).hexdigest()!=h) and p not in m['scopeFiles']]
+assert not unexpected,unexpected
+assert not subprocess.check_output(['git','status','--short','--','demo']).strip()
+assert not subprocess.check_output(['git','diff','--name-only','--','*pubspec*','*lock*']).strip()
+print(f"Manifest: {len(m['files'])} match; round {len(m['scopeFiles'])}; Demo clean; deps unchanged.")
+PY
+Manifest: 84 match; round 13; Demo clean; deps unchanged.
+exit_code: 0

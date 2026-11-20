@@ -57,6 +57,9 @@ Builder 测试配套 `build_test 3.5.20`。分支目标为官方标准 Flutter `
 旧 OHOS `oh-3.41.9-release` 虽包含 Dart 3.11.5，但固定 `meta 1.17.0`，与 Analyzer 的
 `meta ^1.18.3` 冲突，本分支不能用该 SDK 构建。Runtime/Contracts 的 Dart 约束和独立
 Analyzer Plugin 的版本保持原边界；不使用 overrides 强压 SDK pin。
+本次从 `main` 合入 `0.4.0` 的声明身份、参数默认值、兼容性与诊断修复；生成器保留
+Analyzer 13 的 AST API，Plugin 继续使用隔离的 Analyzer 8.4。合并后的回归与分发结果见
+[3.47 集成记录](docs/validation/20261120-main-to-flutter347/report.md)。
 升级后重新生成并分发 Portable State。验证范围见[本轮记录](docs/validation/build_runner_upgrade_20261104.md)。
 同一 Workspace 内，Host prepare 的状态也可从对应组件或 contracts Package 执行
 `portable publish` 验证；只读写入范围不改变本地依赖的内容身份，工具/源码变化仍须重新 prepare。
@@ -122,12 +125,20 @@ Composition Root 导入 `ccrouter_host.dart` 装配 Managed Backend；业务页�
 `ccrouter.yaml` 和直接依赖判定。该诊断针对组件 Package 的 `lib/`，测试／工具及生成物除外；
 同一个 Host Package 内无法自动区分装配文件与页面，仍需代码审查。Dart 导出边界独立于 Plugin 生效。
 
+Host/UI SPI 来源还会通过当前 SDK 配置核对 URI 与符号链接别名；同名文件或类型不构成证明。
+命名类型、typedef 引用和最终有效的 show 名字参与检查，hide 排除的名字不算使用。
+独立 UI 类型／Renderer 文件同样进入语义检查，不要求同文件声明 Component。
+
 ### 跨组件局部 UI
 
 A 需要 B 的订单摘要或推荐列表时，可显式接入 `ccrouter_ui`：B 在 Pure Dart contracts
 Package 声明 `@CCUIFragmentContract<Props, Action>`，在实现 Package 提供
 `@CCUIFragmentRenderer(Contract)`；A 在 `CCComponent.uiDependencies` 声明 required
-依赖、版本范围和方法 alias，并保持 Owner 在 `dependencies` 中。A 只导入公开契约与自身
+依赖，并保持 Owner 在 `dependencies` 中。Contract 与 Service/Command 一样支持可选
+`alias`、默认 `version: '0.1.0'` 和 `description`；Dependency 只提供可选 `alias`，
+默认按 Dependency alias、Contract alias、类型名依次确定方法名（类型名去掉末尾
+`FragmentContract`，首字母小写）。消费方不再填写 `versionRange`，生成器自动记录当前
+Contract 精确版本与结构指纹。旧声明需移除 `versionRange` 并重新生成。A 只导入公开契约与自身
 生成的 `<componentId>.ui.api.g.dart`，不导入 B 的 Widget 或 Renderer。
 
 UI Fragment 不限于 Tab。它适合页面中的订单摘要、推荐列表、支付或会员面板，Dashboard/Feed
@@ -187,7 +198,7 @@ UI schema 3 / Package Index schema 5，旧工具明确拒绝。sealed 根直接�
 迁移到 union、增删变体及破坏性载荷变化需要 major Contract 版本，并重生成 A/B/Host。
 Demo `order.panel` 与原 enum/DTO 示例并存，消费者对动作及目标分别做穷尽 switch。
 [UI Fragment 规范](docs/CCRouter-ui-fragment-design.md)统一维护已有能力、接入边界和待设计扩展。
-可选 Analyzer Plugin 提供 UI alias、重复依赖、明显非法版本范围、enum/DTO/sealed Action、
+可选 Analyzer Plugin 提供 UI alias（含默认名）、重复依赖、enum/DTO/sealed Action、
 Renderer 签名及 Host/Generated SPI 越界检查；缺少 required Owner 可在公共常量已导入时
 提供保守 Quick Fix。Host 完整性错误通过有效的 Generator 结构化快照进入 IDE；
 完整 Props schema 和最终正确性仍以 `generate --check` 为准。
@@ -1794,6 +1805,41 @@ Route 与 Service Proxy 的集合默认值保留实际 List/Set/Map 类型及泛
 Analyzer 的注解诊断和 Quick Fix 核对声明所属框架 Library；业务同名注解不会因名称相同被
 识别为 CCRouter 注解。解析不完整且无法证明导入来源时，保守等待后续解析或生成校验。
 
+Service、Command、Event、UI 的生成静态 Client 入口名统一拒绝 Dart 关键字和 Object 保留成员
+`hashCode`、`runtimeType`、`toString`、`noSuchMethod`；显式 alias、Contract 默认名和类型推导
+都适用。有效入口名按 ASCII 字母/数字的 lowerCamelCase 校验；此前未校验的 Owner
+推导名如含 `_` 或 `$`，需要显式设置合规 alias，不会自动重命名类型或入口。
+遇到保留名时修改 alias，Generator 会在声明处报错，外部 metadata 也执行同样校验。
+Command 的 Owner Client 始终生成；类型推导名冲突时应设置 `CCCommandContract.alias`，
+仅覆盖消费方 alias 不能修复 Owner 的方法名。
+Route/Service/Command Contract 类型各自只能有一个对应注解；本地声明、导入的 Handler/实现及
+消费组件依赖生成都会拒绝重复注解。可选 Analyzer 对直接列表中的 Service/Command
+Dependency 字面量 alias 报 `ccrouter_alias_invalid`；UI 保留 `ccrouter_ui_alias_invalid`。
+计算型 alias、非直接列表和无法证明构造器来源的表达式交由 Generator 最终校验。
+每个 InitTask Handler 也只能有一个 `CCInitTask` 注解；重复的 Gate、failurePolicy 不会按顺序覆盖。
+Service/Command/UI 的 Owner 诊断统一核对框架构造器身份，支持解析后的 prefix/typedef。
+语义解析后的 Contract 注解缺失、重复、被同名业务注解替代，或 Owner 与 metadata 不符时暂缓诊断与
+Quick Fix，等待重新生成。未解析且导入来源不明确时同样暂缓，完整校验仍由 Generator 完成。
+可证明 Contract 的 Owner 就是当前组件时，不提供补依赖诊断或添加自身的 Quick Fix；
+应移除该跨组件依赖；Service 使用内部 lookup，Command 使用 Owner Client，UI 直接组合内部 Widget。
+Parser-only 的 `cc.CCComponent(...)` 与显式 `const` 写法共用构造器来源校验和 Quick Fix。
+Provider、普通 Route/RouteImplementation、CommandHandler、EventSubscription 和
+ComponentContribution 同样拒绝重复的同类注解，源码与 metadata 生成使用相同校验。
+解析后的 Component ID 支持构造器 typedef、prefix 和 const 字符串参数；无法证明组件身份时
+暂缓补依赖诊断和 Quick Fix。相邻字符串字面量按拼接后的实际 ID/alias 校验。
+CLI 依赖预检也核对框架声明来源；业务同名符号、未知命名空间和自消费交由 Builder 最终校验。
+Route/Route Contract 按实际值判断互斥：只有非空 `pattern` 与非空列表 `patterns` 同时生效才冲突；
+`pattern: null` 和 `patterns: []` 属于默认/省略状态。InitTask 的 `contract`/`id` 也按非空值
+恰好选一项；显式或可解析常量 `null` 不算已配置，无法证明的可空引用暂缓 IDE 冲突判断。
+两项均空时仍报缺少身份，但不提供无法补全身份的删除 Quick Fix。非空 Contract 和 dependsOn
+仍须引用顶层 const；源码生成与 metadata 均校验。可空 Component/InitTask Contract 常量值为
+`null` 时表示不存在，不发布组件或任务声明。
+超时检查核对 SDK `Duration` 身份；业务同名 holder 不会被当成 `Duration.zero`。Gate 的解析后
+构造器 typedef 与 prefix 使用相同身份校验；不明确的 parser-only 绑定暂缓判断。
+
+Contract 和 Component 的版本使用同一个 `CCSemVer` 解析规则，版本字符串不接受首尾空白，
+例如应写 `'1.0.0'`，不能写 `' 1.0.0 '`。版本范围表达式仍允许外围和比较器之间的空白。
+
 Route、Service、Command、Event、InitTask Contract 都有独立的 Contract SemVer。生成器会同时
 写入不包含源码路径和实现类名的 `shapeFingerprint`，消费者 metadata 和 Host Bundle 会携带
 精确的版本范围与指纹。Workspace、Host 组装和 Runtime 会使用稳定的兼容错误码拒绝缺失
@@ -1802,6 +1848,52 @@ Contract、Owner 不匹配、版本范围不满足、指纹漂移、重复实现
 应显式升级版本，破坏性变更使用新的 Contract ID。
 版本范围支持 exact、`*`、caret、tilde，以及单个或 whitespace 分隔的
 `>=`/`>`/`<=`/`<` 比较器（包括 Tab/换行）；解析后的 SemVer prerelease 标识只读。
+预发布标识只有纯十进制数字才按数值比较；`0x10`、`-0` 等属于非数字标识，不等于 `16`、`0`。
+数字预发布标识按位数和字典序比较，不受机器整数位数限制；major/minor/patch 仍使用 Dart int。
+caret/tilde 上界不通过整数自增构造，避免已接受的大版本值溢出。范围继续使用原有字面比较器
+语义（包括下一 core 的 prerelease 边界），不额外引入 Pub/npm 的预发布过滤策略。
+兼容错误按输入归因：Owner 的安装版本损坏只归到 Owner，合法消费者范围不会被追加“范围无效”。
+若两侧输入都损坏则分别报告；合法但超出范围仍报 `versionOutOfRange`。
+UI Host 对损坏的版本/范围统一抛出脱敏 `CCUIFragmentError('staleGeneratedOutput', id)`，
+不会向调用方泄漏包含原始版本字符串的 `FormatException`；合法范围不匹配的错误码保持不变。
+五类 Core ContractBundle 的最终门禁也核对已安装 descriptor 与消费者 requirement 的身份：
+能力 ID 最长 128 字符，Owner 最长 128 字符且使用 lowercase component 规则。
+即使两侧填写一致，空值、非法或超长身份仍报 `staleGeneratedOutput`；格式损坏的消费者
+fingerprint 同样报生成物无效。合法但不同的 SHA-256 继续报 `fingerprintChanged`，
+不会把损坏输入误当成真实公共形状变更。Host/Runtime 在启动前执行同一检查。
+Host 合并 ContractBundle 时保留同一消费身份的所有不同范围约束；范围和 fingerprint 也纳入
+完整 requirement 的去重条件。仅完整字段相同才去重，不按输入顺序选择一个范围，也不自动
+计算或重写范围交集；合并快照的再校验结果应与原始约束一致。
+CLI 输出 Package ContractBundle 时同样保留消费者 metadata 已有的范围和指纹快照；
+只在旧 metadata 缺少字段时按既有规则补齐精确版本/指纹，不把已有范围重写为 Owner 当前版本。
+InitTask 的依赖快照也遵守此规则；已有 Owner 与当前 Contract 不符时在 Workspace 提前报
+`ownerMismatch`，不同范围不被按身份静默去重。源码 API 不新增 `versionRange` 参数。
+IDE 的 Contract Owner 身份还包括定义它的 Library：同一 Package 中同名且同 Owner 的
+Contract 不会互相覆盖；共享 named part 的不同 Library 也分别识别。Service/Command 的 part
+metadata 保留原源码 `packageUri`/行列，并补充可选 `libraryUri`，catalog 往返不丢失该字段。
+旧 metadata 仅缺该证据时可被一致的新记录补全；明确冲突、带 query/fragment 或非便携 URI
+不会回退猜测，IDE 暂缓该 Owner 诊断/Quick Fix。旧 part metadata 需重新生成以补齐身份。
+Parser-only Owner Quick Fix 必须证明导出命名空间完整且名字未被本地声明遮蔽；命名 extension
+也参与阴影判断。可能暴露目标符号的条件 import/export、缺失、无法解析或含 `part` 的
+命名空间会暂缓编辑，不能当成“另一个来源不存在”；隐藏目标符号的条件分支不影响已有正例。
+Parser-only Contract 匹配同样遵守 `show/hide`、本地遮蔽和条件导入；metadata 带 Library
+身份时，还必须沿真实 import/export 证明定义来源，不能按同 Package 的同名类型猜测 Owner。
+URI 解码错误、NUL、query/fragment、非规范 `package:/...` 或越界位置不会使 IDE 扫描/诊断桥
+抛异常或发布错误路径；合法编码文件名中的 `#`、字面 `%` 等仍按真实文件名定位。
+CLI 预检遇到无效 import/export URI 会交给 Builder 报源错误，暂缓并不表示输入合法。
+Catalog 的源码、实现和生成物位置在读取时统一校验便携 Package URI；非法记录报格式错误。
+旧 metadata 的原始文件路径会按 URI 路径编码一次。UI 诊断也拒绝非法位置；CLI 内部 API
+检查识别百分号与 Dart 字符串转义后的 generated 目录名。
+源码 import/export 按 Dart 的目标文件语义检查，包括有效的 `file:`、query、编码分隔符等
+写法；导入目标的符号链接也参与路径判定，CLI 不再按目录名原文筛选源码。IDE 复用当前
+SDK 的 URI 映射核对 Package 别名，不为路径检查额外请求完整类型分析；条件分支分别映射。
+metadata 中的源码位置继续要求便携 Package URI。
+
+UI Contract 的能力 ID 和 Owner ID 在 Generator、Workspace 与 Host 都限制为 128 字符；
+Owner 使用 lowercase component 规则，能力 ID 保留既有大小写 segment 规则。
+Workspace 对 Contract、Renderer、Requirement 的字段类型、版本和 SHA-256 fingerprint 分别校验，
+即使三份 metadata 内容一致也不接受损坏字段。package-local 阶段同样检查 requirement 范围，
+非法范围只报来源错误，不追加 Host 比较阶段的重复故障。
 
 生成的 Host Assembly 暴露只读 `contractBundle`。标准启动代码将它和组件 Manifest 一起交给
 `CCRouterHost.initialize`，因此业务不需要手写版本字符串：
@@ -1853,6 +1945,7 @@ final controller = CCRouter.routeService<OrderDraftController>(context);
   初始化本身失败在当前 Scope 内保持失败，不隐式重试。
   不同 error Zone 的等待者同样收到共享 readiness 的同一失败对象与堆栈，
   既有 `CCServiceInitializationError` 包装规则不变，取消单个等待不重启初始化。
+- `CCServiceKey<T>` 按精确泛型类型和名称判等，协变可赋值不代表 Key 相等。
 - 多实现使用 `CCServiceKey<T>`；跨组件调用使用生成 Client。统一名称配置在
   `CCServiceContract.alias`，单个消费者或 Key 的覆盖配置在 `CCServiceDependency.alias`；组件内部
   解析仍使用 `CCRouter.service<T>()`。
@@ -1938,6 +2031,13 @@ await OrderEvents.publishOrderPaid(
   timeout: const Duration(seconds: 3),
 );
 ```
+
+每个 Event 类型只允许一个 `CCEventContract` 注解。`alias` 可显式指定完整的 Owner Publication Client 方法名，例如
+`alias: 'publishPaid'` 对应 `OrderEvents.publishPaid(...)`，不会再自动追加 `publish`。
+省略时保留既有 `publish<TypeWithoutEvent>` 命名；两个 Event 推导撞名时可为其中一个设置
+alias。alias 必须是非关键字、非 Object 保留成员的公开 lowerCamelCase 名称。更改 alias
+会改变生成 API 和 Contract 指纹，应评审 Contract 版本并重生成 Owner/Subscriber/Host；
+Event ID、发布权限、Subscriber ID 和 payload 均不因此改变。
 
 同一 Event 可以没有 Subscriber 或有多个 Subscriber。订阅按稳定 ID 确定启动顺序，单个 Subscriber 失败不会阻止其他 Subscriber；调用 Future 在本次分发完成后结束。同一组件只有一个对应 Subscriber 时可省略 `CCEventSubscription.id`，生成器使用 `<subscriberComponentId>.<eventId>`；存在多个时必须全部显式设置。跨组件 Contract 显式填写 `componentId`，订阅组件把 Owner 放入 required 或 optional dependencies。生成器只为 Owner 生成 Publication Client，不增加 `eventDependencies` 或任意发布权。
 

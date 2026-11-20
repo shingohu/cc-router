@@ -1,0 +1,4 @@
+00:00 +0: loading test/semantic_analysis_test.dart
+00:00 +0: real plugin session checks bare Package aliases
+00:04 +1: parsed aliases use the borrowed SDK URI converter without a resolved unit
+00:04 +2: All tests passed!

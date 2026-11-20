@@ -1,0 +1,75 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/package_contract_requirement_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/package_contract_requirement_test.dart: CLI completes and emits consumer snapshots without replacing their constraints
+00:00 +1: loading packages/ccrouter_test/generator_test/workspace_validator_test.dart
+00:01 +1: packages/ccrouter_test/generator_test/workspace_validator_test.dart: persisted InitTask dependency snapshots retain all compatibility gates
+00:01 +2: packages/ccrouter_test/generator_test/workspace_validator_test.dart: Workspace distinguishes malformed consumer fingerprints from valid drift
+00:01 +3: packages/ccrouter_test/generator_test/workspace_validator_test.dart: Workspace version diagnostics preserve attribution: bad / 1.0.0
+00:01 +4: packages/ccrouter_test/generator_test/workspace_validator_test.dart: Workspace version diagnostics preserve attribution: 1.0.0 / bad
+00:01 +5: packages/ccrouter_test/generator_test/workspace_validator_test.dart: Workspace version diagnostics preserve attribution: bad / bad
+00:01 +6: packages/ccrouter_test/generator_test/workspace_validator_test.dart: Workspace version diagnostics preserve attribution: 1.0.0 / ^2.0.0
+00:01 +7: packages/ccrouter_test/generator_test/workspace_validator_test.dart: Workspace version diagnostics preserve attribution: 1.0.0 / ^1.0.0
+00:01 +8: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts typed InitTask dependencies across required components
+00:01 +9: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects missing, optional-owner, and cyclic InitTask dependencies
+00:01 +10: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects malformed persisted InitTask ownership and policy
+00:01 +11: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects unsafe required InitTask startup contracts
+00:01 +12: packages/ccrouter_test/generator_test/workspace_validator_test.dart: preserves first optional InitTask order across shared DAG paths
+00:01 +13: packages/ccrouter_test/generator_test/workspace_validator_test.dart: keeps cycle and optional InitTask diagnostics on reference path
+00:01 +14: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts Event subscribers through required or optional owners
+00:01 +15: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects invalid Event relationships and duplicate Subscriber IDs
+00:01 +16: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts an exact Service dependency owned by a required component
+00:01 +17: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects missing owner and duplicate Service Client members
+00:01 +18: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects invalid persisted Service and Command Client aliases
+00:01 +19: packages/ccrouter_test/generator_test/workspace_validator_test.dart: validates the inferred Owner Command Client name in external metadata
+00:01 +20: packages/ccrouter_test/generator_test/workspace_validator_test.dart: validates explicit Event Client aliases in external metadata
+00:01 +21: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects a generated consumer for a Route-scoped Service
+00:01 +22: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts components and emits derived route exposure
+00:01 +23: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects missing required component dependencies
+00:01 +24: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects required and optional self dependencies
+00:01 +25: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects cycles across required and present optional dependencies
+00:01 +26: packages/ccrouter_test/generator_test/workspace_validator_test.dart: ignores absent optional dependencies
+00:01 +27: packages/ccrouter_test/generator_test/workspace_validator_test.dart: orders present optional and required dependencies deterministically
+00:01 +28: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects unknown route owners
+00:01 +29: packages/ccrouter_test/generator_test/workspace_validator_test.dart: missing owner diagnostics retain exact authored locations
+00:01 +30: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects duplicate and unknown component contributions
+00:01 +31: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts a generated Service contract and implementation
+00:01 +32: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects invalid Service ownership and Provider conflicts
+00:01 +33: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects unknown source exposure
+00:01 +34: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects duplicate routes and conflicting component descriptors
+00:01 +35: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires an explicit registrar component declaration
+00:01 +36: packages/ccrouter_test/generator_test/workspace_validator_test.dart: derives package exposure for a same-package public contract
+00:01 +37: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects missing, duplicate, and unknown public implementations
+00:01 +38: packages/ccrouter_test/generator_test/workspace_validator_test.dart: derives external exposure and requires the owner implementation
+00:01 +39: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects unsupported metadata schemas
+00:01 +40: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects invalid persisted identifiers and SemVer values
+00:01 +41: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects missing, self-referencing, and cyclic route parents
+00:01 +42: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects parent placement mismatches
+00:01 +43: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires cross-component parents to be visible dependencies
+00:01 +44: packages/ccrouter_test/generator_test/workspace_validator_test.dart: reuses exact parent visibility through present optional dependencies
+00:01 +45: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects equal-specificity overlapping path patterns
+00:01 +46: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts path patterns with different fixed segments
+00:01 +47: packages/ccrouter_test/generator_test/workspace_validator_test.dart: indexed candidates retain swapped fixed and dynamic conflicts
+00:01 +48: packages/ccrouter_test/generator_test/workspace_validator_test.dart: indexed candidates retain wildcard conflicts
+00:01 +49: packages/ccrouter_test/generator_test/workspace_validator_test.dart: validates a large fixed-path catalog without conflict diagnostics
+00:01 +50: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts provably disjoint path constraints
+00:01 +51: packages/ccrouter_test/generator_test/workspace_validator_test.dart: does not compare URI patterns with different authorities
+00:01 +52: packages/ccrouter_test/generator_test/workspace_validator_test.dart: rejects identical regex patterns
+00:01 +53: packages/ccrouter_test/generator_test/workspace_validator_test.dart: leaves complex regex overlap to runtime validation
+00:01 +54: packages/ccrouter_test/generator_test/workspace_validator_test.dart: does not require a public barrel for internal contracts
+00:01 +55: packages/ccrouter_test/generator_test/workspace_validator_test.dart: handles many internal-only documents without public barrel work
+00:01 +56: packages/ccrouter_test/generator_test/workspace_validator_test.dart: validates mixed public contracts through one package export index
+00:01 +57: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires public contracts to export the generated library
+00:01 +58: packages/ccrouter_test/generator_test/workspace_validator_test.dart: accepts a stable generated Contract barrel only through public API
+00:01 +59: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires public Service contracts to export the authored interface
+00:01 +60: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires contracts Package Command declarations in a public barrel
+00:01 +61: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires contracts Package Event declarations in a public barrel
+00:01 +62: packages/ccrouter_test/generator_test/workspace_validator_test.dart: does not require component-internal messaging contracts in a barrel
+00:01 +63: packages/ccrouter_test/generator_test/workspace_validator_test.dart: requires contracts Package InitTask constants in a public barrel
+00:01 +64: packages/ccrouter_test/generator_test/workspace_validator_test.dart: annotates and clears public libraries for messaging contracts
+00:01 +65: loading packages/ccrouter_test/generator_test/host_aggregation_test.dart
+00:01 +65: packages/ccrouter_test/generator_test/host_aggregation_test.dart: host aggregation includes a component without routes
+00:02 +66: packages/ccrouter_test/generator_test/host_aggregation_test.dart: host aggregation joins an external contract to its page binding
+00:03 +67: packages/ccrouter_test/generator_test/host_aggregation_test.dart: component Route API rejects colliding generated member names
+00:03 +68: packages/ccrouter_test/generator_test/host_aggregation_test.dart: component contribution requires a Package component owner
+00:03 +69: loading packages/ccrouter_test/generator_test/contract_validation_test.dart
+00:03 +69: packages/ccrouter_test/generator_test/contract_validation_test.dart: all Contract builders use strict Runtime-compatible SemVer
+00:03 +70: All tests passed!

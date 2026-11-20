@@ -4,6 +4,11 @@
 
 首次接入按[UI 接入指南](../skills/ccrouter-integration-development/references/ui-fragments.md)操作。实施过程、早期取舍与当时的验证数字保留在[合并前快照](archive/20261024-consolidation/CCRouter-ui-fragment-design.md)和[归档索引](archive/20261024-consolidation/README.md)；当前证据统一由[验证索引](validation/README.md)导航。本文不表示 API 已冻结或正式发布门禁已关闭。
 
+声明参数与 Service/Command 对齐：Contract 提供可选 `alias`、默认 `version: '0.1.0'`
+和 `description`；Dependency 仅有可选 `alias`，按消费方覆盖、Contract 默认名、移除
+`FragmentContract` 后首字母小写的类型名依次取值。公开 `versionRange` 已移除，旧调用
+需删除该参数并重新生成；生成器仍记录精确版本和结构指纹，不改变 Host 兼容性校验。
+
 ## 适用场景与选型边界
 
 当 B 组件拥有一块完整的局部业务 UI，而 A 组件需要把它嵌入自己的 Widget 树时，使用 UI
@@ -40,7 +45,7 @@ v1 范围：
 
 - 同一契约只有一个有效 Renderer；一个 Renderer 可创建多个相互独立的 UI 实例。
 - Props 和 Action 使用明确的 Pure Dart 类型；局部交互通过类型化 callback 返回 A。
-- 静态 Host Assembly、版本范围与 shape fingerprint 校验。
+- 静态 Host Assembly、生成器记录的精确版本与 shape fingerprint 校验。
 - 复用 Flutter inherited 环境、State 生命周期与现有 App/Session Service。
 - 每个 Fragment 实例可选择 `CCUIFragmentUpdatePolicy.reuseIdenticalProps`，仅在 Props
   实例和 `active` 未变化时复用上一次 Renderer 结果；默认 `always` 保持原有更新行为。
@@ -133,10 +138,7 @@ const accountComponent = CCComponent(
   version: '0.1.0',
   dependencies: [orderComponentId],
   uiDependencies: [
-    CCUIFragmentDependency<OrderSummaryFragmentContract>(
-      versionRange: '^1.0.0',
-      alias: 'orderSummary',
-    ),
+    CCUIFragmentDependency<OrderSummaryFragmentContract>(),
   ],
 );
 ```
@@ -467,3 +469,17 @@ Package Index 编码/读取和 Host 校验拒绝不一致、未知及非整数 U
 [独立首次接入技术验证](validation/ui-fragment-adoption-20261020/README.md)保留 enum/DTO 两条路径的复现源码、日志和条件化成本；它不等于未参与实现者的可用性研究。历史实施验收、易用性审查及 Action 增量记录统一保留在[归档索引](archive/20261024-consolidation/README.md)。
 
 回归至少覆盖无 UI 组件兼容、required Owner/Renderer、指纹与旧 schema 拒绝、多实例/重排、Props 竞争、最新 callback、active、Runtime generation、卸载后晚到 Action 和引用释放。UI DevTools Catalog、集合、动态 Slot 与热替换尚未支持。新能力按[后续工作与触发条件](CCRouter-future-work-plan.md)评估；API 冻结、正式分发、平台矩阵与长期性能门禁只在[Release Readiness](CCRouter-release-readiness.md)维护。
+
+## 生成版本输入的错误边界
+
+Host 对格式损坏的版本或消费者范围统一抛出
+`CCUIFragmentError('staleGeneratedOutput', contractId)`，不返回包含原始版本输入的
+`FormatException`。合法范围与已安装版本不匹配仍使用 `versionOutOfRange`；Owner、
+缺少实现、fingerprint 与精确版本快照的既有校验顺序保持。
+
+
+UI Contract 的能力 ID 和 Owner ID 在 Generator、Workspace 与 Host 都限制为 128 字符；
+Owner 使用 lowercase component 规则，能力 ID 保留既有大小写 segment 规则。
+Workspace 对 Contract、Renderer、Requirement 的字段类型、版本和 SHA-256 fingerprint 分别校验，
+即使三份 metadata 内容一致也不接受损坏字段。package-local 阶段同样检查 requirement 范围，
+非法范围只报来源错误，不追加 Host 比较阶段的重复故障。

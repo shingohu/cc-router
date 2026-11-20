@@ -19,6 +19,12 @@ import 'package:ccrouter/ccrouter.dart';
 The application Composition Root imports `ccrouter_host.dart` for
 `CCRouterHost.initialize`, `shutdown`, `runInitTasks`, and `CCHostAssembly`.
 
+Host ContractBundle merging preserves every distinct consumer range constraint.
+Only complete duplicate requirement values, including range and fingerprint, are
+deduplicated; merge order never selects a winning range. No range intersection is
+rewritten, and revalidating the merged snapshot preserves the original constraints.
+
+
 Use `CCHostAssembly.extend` to append handwritten test components or adjust an
 existing Assembly's route Catalog while preserving Contracts, Package provenance,
 tooling and optional lifecycle bindings. Existing component identities cannot

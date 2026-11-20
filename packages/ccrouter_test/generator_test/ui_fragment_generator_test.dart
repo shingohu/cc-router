@@ -116,6 +116,16 @@ void main() {
   test('no UI declaration emits nothing', () async {
     expect((await _generate('const value = 1;')).output, isEmpty);
   });
+  test(
+    'UI versions reject whitespace like other Contract declarations',
+    () async {
+      final result = await _generate(
+        _source.replaceFirst("version: '1.0.0'", "version: ' 1.0.0 '"),
+      );
+      expect(result.output, isEmpty);
+      expect(result.logs, contains('valid SemVer'));
+    },
+  );
   test('shape includes DTO fields and enum values', () async {
     String fingerprint(String json) =>
         ((jsonDecode(json) as Map)['uiContracts'] as List)
@@ -291,7 +301,7 @@ void main() {
     final result = await _generate('''$_source
 const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
   dependencies: [owner], uiDependencies: [
-    CCUIFragmentDependency<Summary>(alias: 'summary', versionRange: '^1.0.0')]);
+    CCUIFragmentDependency<Summary>(alias: 'summary')]);
 ''', metadata: false);
     expect(result.output, contains('class AccountFragments'));
     expect(result.output, contains('CCUIGeneratedFragment<'));
@@ -304,17 +314,67 @@ const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
     expect(result.output, isNot(contains('CCRouterRuntime')));
     expect(result.output, isNot(contains('registerRoute')));
   });
-  for (final range in ['>=1.0.0', '<=1.0.0', '<2.0.0']) {
-    test('consumer generation accepts single comparator $range', () async {
-      final result = await _generate('''$_source
+  test('UI defaults match Service and Command dependency declarations', () async {
+    final source =
+        '''${_source.replaceFirst(", version: '1.0.0'", '').replaceAll('Summary', 'SummaryFragmentContract')}
 const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
   dependencies: [owner], uiDependencies: [
-    CCUIFragmentDependency<Summary>(alias: 'summary', versionRange: '$range')]);
-''', metadata: false);
-      expect(result.output, contains('class AccountFragments'));
-      expect(result.output, contains('CCUIGeneratedFragment<'));
-    });
-  }
+    CCUIFragmentDependency<SummaryFragmentContract>()]);
+''';
+    final metadata = await _generate(source);
+    expect(metadata.output, isNotEmpty, reason: metadata.logs);
+    final document = jsonDecode(metadata.output) as Map;
+    expect(document['uiContracts'][0]['version'], '0.1.0');
+    expect(document['uiRequirements'][0]['alias'], 'summary');
+    expect(document['uiRequirements'][0]['versionRange'], '0.1.0');
+    final client = await _generate(source, metadata: false);
+    expect(
+      client.output,
+      contains('static Widget summary('),
+      reason: client.logs,
+    );
+  });
+  test(
+    'UI dependency alias overrides Contract alias and type inference',
+    () async {
+      final contract = _source.replaceFirst(
+        "version: '1.0.0'",
+        "alias: 'orderCard', version: '1.0.0', description: 'Order summary'",
+      );
+      for (final override in [false, true]) {
+        final result = await _generate('''$contract
+const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
+  dependencies: [owner], uiDependencies: [
+    CCUIFragmentDependency<Summary>(${override ? "alias: 'card'" : ''})]);
+''');
+        expect(result.output, isNotEmpty, reason: result.logs);
+        final document = jsonDecode(result.output) as Map;
+        expect(document['uiContracts'][0]['alias'], 'orderCard');
+        expect(document['uiContracts'][0]['description'], 'Order summary');
+        expect(
+          document['uiRequirements'][0]['alias'],
+          override ? 'card' : 'orderCard',
+        );
+        expect(document['uiRequirements'][0]['versionRange'], '1.0.0');
+      }
+    },
+  );
+  test(
+    'inferred UI names reject collisions without renaming the API',
+    () async {
+      final result = await _generate('''$_source
+@CCUIFragmentContract<Props, Action>(componentId: owner, id: 'orders.other')
+abstract final class SummaryFragmentContract {}
+const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
+  dependencies: [owner], uiDependencies: [
+    CCUIFragmentDependency<Summary>(),
+    CCUIFragmentDependency<SummaryFragmentContract>()]);
+''');
+      expect(result.output, isEmpty);
+      expect(result.logs, contains('duplicateAlias'));
+      expect(result.logs, contains('summary'));
+    },
+  );
   for (final optional in [false, true]) {
     test(
       'missing required owner explains the repair (optional: $optional)',
@@ -322,7 +382,7 @@ const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
         final result = await _generate('''$_source
 const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
   ${optional ? 'optionalDependencies: [owner],' : ''}
-  uiDependencies: [CCUIFragmentDependency<Summary>(alias: 'summary', versionRange: '^1.0.0')]);
+  uiDependencies: [CCUIFragmentDependency<Summary>(alias: 'summary')]);
 ''');
         expect(result.output, isEmpty);
         expect(result.logs, contains('dependencyMissing'));
@@ -344,8 +404,8 @@ const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
       final result = await _generate('''$_source
 const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
   dependencies: [owner], uiDependencies: [
-    CCUIFragmentDependency<Summary>(alias: 'summary', versionRange: '^1.0.0'),
-    CCUIFragmentDependency<Summary>(alias: '${scenario.alias}', versionRange: '^1.0.0'),
+    CCUIFragmentDependency<Summary>(alias: 'summary'),
+    CCUIFragmentDependency<Summary>(alias: '${scenario.alias}'),
   ]);
 ''');
       expect(result.output, isEmpty);
@@ -373,7 +433,7 @@ const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
 @CCUIFragmentRenderer(Summary)
 Widget render(CCUIFragmentRenderInput<Props, payload.Action> input) => const SizedBox();
 const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
-  dependencies: [owner], uiDependencies: [CCUIFragmentDependency<Summary>(alias: 'summary', versionRange: '^1.0.0')]);
+  dependencies: [owner], uiDependencies: [CCUIFragmentDependency<Summary>(alias: 'summary')]);
 ''',
         additionalSources: {
           'demo_order_contracts|lib/payload_probe.dart':
@@ -469,17 +529,12 @@ final class Action {
       expect(result.logs, contains('UI DTO'));
     });
   }
-  test('invalid consumer range identifies the contract and repair', () async {
-    final result = await _generate('''$_source
-const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
-  dependencies: [owner], uiDependencies: [
-    CCUIFragmentDependency<Summary>(alias: 'summary', versionRange: 'latest')]);
-''');
+  test('invalid UI Contract aliases fail before generation', () async {
+    final result = await _generate(
+      _source.replaceFirst("version: '1.0.0'", "alias: 'bad-name'"),
+    );
     expect(result.output, isEmpty);
-    expect(result.logs, contains('orders.summary'));
-    expect(result.logs, contains('account'));
-    expect(result.logs, contains('versionRange'));
-    expect(result.logs, contains('^1.0.0'));
+    expect(result.logs, contains('UI Contract alias'));
   });
   test('Renderer signature must match exact schema', () async {
     final result = await _generate('''$_source
@@ -496,7 +551,7 @@ Widget render(CCUIFragmentRenderInput<String, Action> input) => const SizedBox()
 @CCUIFragmentRenderer(Summary)
 Widget render(CCUIFragmentRenderInput<Props, Action> input) => const SizedBox();
 const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
-  dependencies: [owner], uiDependencies: [CCUIFragmentDependency<Summary>(alias: 'card', versionRange: '*')]);
+  dependencies: [owner], uiDependencies: [CCUIFragmentDependency<Summary>(alias: 'card')]);
 ''');
       final metadata = jsonDecode(result.output) as Map;
       expect((metadata['uiRequirements'] as List).single['alias'], 'card');
@@ -548,7 +603,8 @@ const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
       'componentId': 'orders',
       'id': 'orders.summary',
       'version': '1.0.0',
-      'shapeFingerprint': 'shape',
+      'shapeFingerprint':
+          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       'declaration': {
         'packageUri': 'package:contracts/ui.dart',
         'symbol': 'Summary',
@@ -620,7 +676,8 @@ const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
         'componentId': 'orders',
         'id': 'selection',
         'version': '2.0.0',
-        'shapeFingerprint': 'payload-shape',
+        'shapeFingerprint':
+            'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
         'uiSchemaVersion': 2,
       };
       final documents = <Map<String, Object?>>[
@@ -685,7 +742,8 @@ const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
       'componentId': 'orders',
       'id': 'orders.summary',
       'version': '1.0.0',
-      'shapeFingerprint': 'shape',
+      'shapeFingerprint':
+          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     };
     final documents = <Map<String, Object?>>[
       {
@@ -733,7 +791,8 @@ const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
       'componentId': 'orders',
       'id': 'orders.summary',
       'version': '1.0.0',
-      'shapeFingerprint': 'shape',
+      'shapeFingerprint':
+          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     };
     final documents = <Map<String, Object?>>[
       {

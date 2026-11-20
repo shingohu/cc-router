@@ -1,0 +1,7 @@
+0x10 vs 16: compare=0, equal=true, sameHash=false
+-0 vs 0: compare=0, equal=true, sameHash=false
+999999999999999999999 vs 1000000000000000000000: compare=1, equal=false, sameHash=false
+^9223372036854775807.0.0 allows its minimum: false
+^0.9223372036854775807.0 allows its minimum: false
+^0.0.9223372036854775807 allows its minimum: false
+~1.9223372036854775807.0 allows its minimum: false

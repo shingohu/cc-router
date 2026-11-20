@@ -5,10 +5,10 @@
     "name": "demo_order",
     "version": "0.1.0"
   },
-  "toolFingerprint": "9162530b46fde330cd4fa4ddbcbfb4423e98aa22b5a246e79c0058b75b69917f",
+  "toolFingerprint": "00c86984a42cffceccdd5aa76779a0a2f1a3971ec8db9dd6bbc353d803c5a73f",
   "authoredInputFingerprint": "34ef572ad4343a94623cdf57db9c5ca695f0bec4a24e6206272ad69dbb47b645",
-  "resolutionFingerprint": "dee6d4555152dda1f8e71403d121b8832ae4670cd9f6d5debb199dd3c1779196",
-  "metadataFingerprint": "9c09ad7ead6f1161481e4a167046d277ad2f209b37cf81a33c9dfcb39425dd89",
-  "managedOutputFingerprint": "ca701cfc9c7c560f6b3c17014f7972a365c0078b934dd9fd8e4cf4fe48339f5b",
-  "contentFingerprint": "3dca120fd82167111aaabeb18495709f00404736c09804c77b7f9a717a718a59"
+  "resolutionFingerprint": "a4588a4297110dd766fa8904466407c834c883c11383b56406679ab280156332",
+  "metadataFingerprint": "71dbce80ed0da3fcc8b36b379fd05699ac5790b473a36f71cd276b6bd1c975ac",
+  "managedOutputFingerprint": "a764e84a39890b84ba85d4ee3f7baed525d63ebf3ff74be2e49633f8beafba00",
+  "contentFingerprint": "c85ab4e872b0fc53e3dc078fa9bb331f556c931600335e61d80d580806781701"
 }

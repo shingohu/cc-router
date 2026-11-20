@@ -164,47 +164,43 @@ void main() {
         : false,
   );
 
-  test(
-    'watch kill switch performs one machine-readable fallback',
-    () async {
-      final result = await _run(
-        ['generate', 'demo', '--watch=auto', '--machine'],
-        environment: {
-          ...Platform.environment,
-          'CCROUTER_DISABLE_BUILD_WATCH': '1',
-        },
-      );
+  test('watch kill switch performs one machine-readable fallback', () async {
+    final result = await _run(
+      ['generate', 'demo', '--watch=auto', '--machine'],
+      environment: {
+        ...Platform.environment,
+        'CCROUTER_DISABLE_BUILD_WATCH': '1',
+      },
+    );
 
-      expect(result.exitCode, 0, reason: '${result.stderr}');
-      final events = const LineSplitter()
-          .convert('${result.stdout}')
-          .where((line) => line.trim().isNotEmpty)
-          .map((line) => jsonDecode(line) as Map<String, dynamic>)
-          .toList();
-      expect(events.map((event) => event['type']), [
-        'starting',
-        'fallback',
-        'succeeded',
-      ]);
-      expect(events.last.containsKey('profile'), isFalse);
+    expect(result.exitCode, 0, reason: '${result.stderr}');
+    final events = const LineSplitter()
+        .convert('${result.stdout}')
+        .where((line) => line.trim().isNotEmpty)
+        .map((line) => jsonDecode(line) as Map<String, dynamic>)
+        .toList();
+    expect(events.map((event) => event['type']), [
+      'starting',
+      'fallback',
+      'succeeded',
+    ]);
+    expect(events.last.containsKey('profile'), isFalse);
 
-      final profiled = await _run(
-        ['generate', 'demo', '--watch=auto', '--machine', '--profile'],
-        environment: {
-          ...Platform.environment,
-          'CCROUTER_DISABLE_BUILD_WATCH': '1',
-        },
-      );
-      expect(profiled.exitCode, 0, reason: '${profiled.stderr}');
-      final profiledEvents = const LineSplitter()
-          .convert('${profiled.stdout}')
-          .where((line) => line.trim().isNotEmpty)
-          .map((line) => jsonDecode(line) as Map<String, dynamic>)
-          .toList();
-      expect(profiledEvents.last['profile'], isA<Map>());
-    },
-    timeout: const Timeout(Duration(minutes: 2)),
-  );
+    final profiled = await _run(
+      ['generate', 'demo', '--watch=auto', '--machine', '--profile'],
+      environment: {
+        ...Platform.environment,
+        'CCROUTER_DISABLE_BUILD_WATCH': '1',
+      },
+    );
+    expect(profiled.exitCode, 0, reason: '${profiled.stderr}');
+    final profiledEvents = const LineSplitter()
+        .convert('${profiled.stdout}')
+        .where((line) => line.trim().isNotEmpty)
+        .map((line) => jsonDecode(line) as Map<String, dynamic>)
+        .toList();
+    expect(profiledEvents.last['profile'], isA<Map>());
+  }, timeout: const Timeout(Duration(minutes: 2)));
 
   test(
     'restored non-target outputs do not keep an idle watch rebuilding',
@@ -227,72 +223,69 @@ void main() {
       );
       final after = await _managedArtifacts();
       for (final entry in before.entries.where(
-        (entry) => path.isWithin(path.join('packages', 'ccrouter_test'), entry.key),
+        (entry) =>
+            path.isWithin(path.join('packages', 'ccrouter_test'), entry.key),
       )) {
         expect(after[entry.key], entry.value, reason: entry.key);
       }
     },
   );
 
-  test(
-    'watch publishes active and stopped local status',
-    () async {
-      ProcessResult? activeStatus;
-      Map<String, dynamic>? activeDocument;
+  test('watch publishes active and stopped local status', () async {
+    ProcessResult? activeStatus;
+    Map<String, dynamic>? activeDocument;
 
-      final watch = await _runWatchUntilReady(
-        onReady: () async {
-          activeStatus = await _run(['watch', 'status', 'demo']);
-          activeDocument =
-              jsonDecode(
-                    File(
-                      path.join(
-                        Directory.current.path,
-                        'demo',
-                        '.dart_tool',
-                        'ccrouter',
-                        'v1',
-                        'watch',
-                        'status.json',
-                      ),
-                    ).readAsStringSync(),
-                  )
-                  as Map<String, dynamic>;
-        },
-      );
+    final watch = await _runWatchUntilReady(
+      onReady: () async {
+        activeStatus = await _run(['watch', 'status', 'demo']);
+        activeDocument =
+            jsonDecode(
+                  File(
+                    path.join(
+                      Directory.current.path,
+                      'demo',
+                      '.dart_tool',
+                      'ccrouter',
+                      'v1',
+                      'watch',
+                      'status.json',
+                    ),
+                  ).readAsStringSync(),
+                )
+                as Map<String, dynamic>;
+      },
+    );
 
-      expect(activeStatus, isNotNull);
-      expect(activeStatus!.exitCode, 0, reason: '${activeStatus!.stderr}');
-      expect('${activeStatus!.stdout}', contains('watch status: active'));
-      expect('${activeStatus!.stdout}', contains('coordination schema: v2'));
-      expect(
-        '${activeStatus!.stdout}',
-        contains(_coordinationPaths.projectDirectory.path),
-      );
-      expect(activeDocument!['state'], 'ready');
-      expect(activeDocument!['active'], isTrue);
-      expect(activeDocument!['lastEvent'], 'ready');
-      expect(activeDocument!['lastBuildElapsedMs'], isA<int>());
-      expect(activeDocument!['lastBuildRunnerMs'], isNull);
-      expect(activeDocument!['lastAggregationElapsedMs'], isA<int>());
-      expect(activeDocument!['lastCycleMode'], 'inProcess');
-      expect(activeDocument!['inputRevision'], 0);
-      expect(activeDocument!['completedInputRevision'], 0);
-      expect(activeDocument!['hotRestartRequired'], isFalse);
-      expect(watch.aggregation.containsKey('profile'), isFalse);
-      expect(watch.build['buildRunner'], {
-        'formatVersion': 2,
-        'available': false,
-        'reason': 'profile-disabled',
-      });
+    expect(activeStatus, isNotNull);
+    expect(activeStatus!.exitCode, 0, reason: '${activeStatus!.stderr}');
+    expect('${activeStatus!.stdout}', contains('watch status: active'));
+    expect('${activeStatus!.stdout}', contains('coordination schema: v2'));
+    expect(
+      '${activeStatus!.stdout}',
+      contains(_coordinationPaths.projectDirectory.path),
+    );
+    expect(activeDocument!['state'], 'ready');
+    expect(activeDocument!['active'], isTrue);
+    expect(activeDocument!['lastEvent'], 'ready');
+    expect(activeDocument!['lastBuildElapsedMs'], isA<int>());
+    expect(activeDocument!['lastBuildRunnerMs'], isNull);
+    expect(activeDocument!['lastAggregationElapsedMs'], isA<int>());
+    expect(activeDocument!['lastCycleMode'], 'inProcess');
+    expect(activeDocument!['inputRevision'], 0);
+    expect(activeDocument!['completedInputRevision'], 0);
+    expect(activeDocument!['hotRestartRequired'], isFalse);
+    expect(watch.aggregation.containsKey('profile'), isFalse);
+    expect(watch.build['buildRunner'], {
+      'formatVersion': 2,
+      'available': false,
+      'reason': 'profile-disabled',
+    });
 
-      final stopped = await _run(['watch', 'status', 'demo']);
-      expect(stopped.exitCode, 0, reason: '${stopped.stderr}');
-      expect('${stopped.stdout}', contains('watch status: inactive'));
-      expect('${stopped.stdout}', contains('state: stopped'));
-    },
-    timeout: const Timeout(Duration(minutes: 3)),
-  );
+    final stopped = await _run(['watch', 'status', 'demo']);
+    expect(stopped.exitCode, 0, reason: '${stopped.stderr}');
+    expect('${stopped.stdout}', contains('watch status: inactive'));
+    expect('${stopped.stdout}', contains('state: stopped'));
+  }, timeout: const Timeout(Duration(minutes: 3)));
 
   test(
     'watch restores deleted Host observability from stable session',
@@ -335,66 +328,59 @@ void main() {
     timeout: const Timeout(Duration(minutes: 3)),
   );
 
-  test(
-    'watch invalidates after persistent build-root state removal',
-    () async {
-      final demoRoot = Directory(path.join(Directory.current.path, 'demo'));
-      final packageGraph = File(
-        path.join(Directory.current.path, '.dart_tool', 'package_graph.json'),
-      );
-      final backup = File(
-        '${packageGraph.path}.ccrouter-clean-test-$pid-'
-        '${DateTime.now().microsecondsSinceEpoch}',
-      );
-      final before = await _managedArtifacts();
-      final watch = await _ConcurrentWatch.start(demoRoot);
-      addTearDown(watch.stop);
-      await watch.waitUntilReady();
-      var exited = false;
-      watch.process.exitCode.then((_) => exited = true);
-      try {
-        packageGraph.renameSync(backup.path);
+  test('watch invalidates after persistent build-root state removal', () async {
+    final demoRoot = Directory(path.join(Directory.current.path, 'demo'));
+    final packageGraph = File(
+      path.join(Directory.current.path, '.dart_tool', 'package_graph.json'),
+    );
+    final backup = File(
+      '${packageGraph.path}.ccrouter-clean-test-$pid-'
+      '${DateTime.now().microsecondsSinceEpoch}',
+    );
+    final before = await _managedArtifacts();
+    final watch = await _ConcurrentWatch.start(demoRoot);
+    addTearDown(watch.stop);
+    await watch.waitUntilReady();
+    var exited = false;
+    watch.process.exitCode.then((_) => exited = true);
+    try {
+      packageGraph.renameSync(backup.path);
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      backup.renameSync(packageGraph.path);
+      await Future<void>.delayed(const Duration(milliseconds: 700));
+      expect(exited, isFalse, reason: watch.output.join('\n'));
+
+      packageGraph.renameSync(backup.path);
+      final deadline = DateTime.now().add(const Duration(seconds: 10));
+      while (!watch.output.any(
+            (line) => line.contains('"type":"invalidatedByClean"'),
+          ) &&
+          DateTime.now().isBefore(deadline)) {
         await Future<void>.delayed(const Duration(milliseconds: 100));
-        backup.renameSync(packageGraph.path);
-        await Future<void>.delayed(const Duration(milliseconds: 700));
-        expect(exited, isFalse, reason: watch.output.join('\n'));
-
-        packageGraph.renameSync(backup.path);
-        final deadline = DateTime.now().add(const Duration(seconds: 10));
-        while (!watch.output.any(
-              (line) => line.contains('"type":"invalidatedByClean"'),
-            ) &&
-            DateTime.now().isBefore(deadline)) {
-          await Future<void>.delayed(const Duration(milliseconds: 100));
-        }
-        expect(watch.output, contains(contains('"type":"invalidatedByClean"')));
-      } finally {
-        if (backup.existsSync()) backup.renameSync(packageGraph.path);
       }
+      expect(watch.output, contains(contains('"type":"invalidatedByClean"')));
+    } finally {
+      if (backup.existsSync()) backup.renameSync(packageGraph.path);
+    }
 
-      final result = await watch.process.exitCode.timeout(
-        const Duration(seconds: 30),
-      );
-      expect(result, 1, reason: watch.output.join('\n'));
-      expect(
-        watch.output.join('\n'),
-        contains('Pub package graph was removed'),
-      );
-      final status = await _readWatchStatus();
-      expect(status['active'], isFalse);
-      expect(status['lastEvent'], 'invalidatedByClean');
-      expect(status['failureStage'], 'clean-invalidation');
-      expect(await _managedArtifacts(), before);
+    final result = await watch.process.exitCode.timeout(
+      const Duration(seconds: 30),
+    );
+    expect(result, 1, reason: watch.output.join('\n'));
+    expect(watch.output.join('\n'), contains('Pub package graph was removed'));
+    final status = await _readWatchStatus();
+    expect(status['active'], isFalse);
+    expect(status['lastEvent'], 'invalidatedByClean');
+    expect(status['failureStage'], 'clean-invalidation');
+    expect(await _managedArtifacts(), before);
 
-      final owner = await _coordinationPaths.ownerLock.open(
-        mode: FileMode.append,
-      );
-      await owner.lock(FileLock.exclusive);
-      await owner.unlock();
-      await owner.close();
-    },
-    timeout: const Timeout(Duration(minutes: 3)),
-  );
+    final owner = await _coordinationPaths.ownerLock.open(
+      mode: FileMode.append,
+    );
+    await owner.lock(FileLock.exclusive);
+    await owner.unlock();
+    await owner.close();
+  }, timeout: const Timeout(Duration(minutes: 3)));
 
   test(
     'watch stops after a supervised Flutter lease heartbeat expires',
@@ -419,41 +405,34 @@ void main() {
     timeout: const Timeout(Duration(minutes: 3)),
   );
 
-  test(
-    'shared Builder status publication is fail-open',
-    () async {
-      final status = _localStateFile(path.join('watch', 'builder-status.json'));
-      final original = status.existsSync() ? status.readAsBytesSync() : null;
-      if (status.existsSync()) status.deleteSync();
-      Directory(status.path).createSync(recursive: true);
-      try {
-        final watch = await _runWatchUntilReady();
+  test('shared Builder status publication is fail-open', () async {
+    final status = _localStateFile(path.join('watch', 'builder-status.json'));
+    final original = status.existsSync() ? status.readAsBytesSync() : null;
+    if (status.existsSync()) status.deleteSync();
+    Directory(status.path).createSync(recursive: true);
+    try {
+      final watch = await _runWatchUntilReady();
 
-        expect(
-          watch.eventTypes,
-          containsAll(['aggregationSucceeded', 'ready']),
-        );
-        expect(
-          watch.errors.where(
-            (line) => line.contains(
-              'CCRouter shared Builder status updates are disabled',
-            ),
+      expect(watch.eventTypes, containsAll(['aggregationSucceeded', 'ready']));
+      expect(
+        watch.errors.where(
+          (line) => line.contains(
+            'CCRouter shared Builder status updates are disabled',
           ),
-          hasLength(1),
-        );
-      } finally {
-        if (Directory(status.path).existsSync()) {
-          Directory(status.path).deleteSync(recursive: true);
-        }
-        if (original != null) {
-          status
-            ..parent.createSync(recursive: true)
-            ..writeAsBytesSync(original);
-        }
+        ),
+        hasLength(1),
+      );
+    } finally {
+      if (Directory(status.path).existsSync()) {
+        Directory(status.path).deleteSync(recursive: true);
       }
-    },
-    timeout: const Timeout(Duration(minutes: 3)),
-  );
+      if (original != null) {
+        status
+          ..parent.createSync(recursive: true)
+          ..writeAsBytesSync(original);
+      }
+    }
+  }, timeout: const Timeout(Duration(minutes: 3)));
 
   test(
     'optimized and reference watch cycles publish identical artifacts',
@@ -1022,61 +1001,57 @@ void main() {
     timeout: const Timeout(Duration(minutes: 3)),
   );
 
-  test(
-    'installed flutter build preflight reuses an active watch',
-    () async {
-      final sdk = await Directory.systemTemp.createTemp(
-        'ccrouter_watch_build_wrapper_',
-      );
-      addTearDown(() => sdk.delete(recursive: true));
-      final bin = Directory(path.join(sdk.path, 'bin'))..createSync();
-      final trace = File(path.join(sdk.path, 'flutter-trace.txt'));
-      final flutter = File(path.join(bin.path, 'flutter'))
-        ..writeAsStringSync('''#!/usr/bin/env bash
+  test('installed flutter build preflight reuses an active watch', () async {
+    final sdk = await Directory.systemTemp.createTemp(
+      'ccrouter_watch_build_wrapper_',
+    );
+    addTearDown(() => sdk.delete(recursive: true));
+    final bin = Directory(path.join(sdk.path, 'bin'))..createSync();
+    final trace = File(path.join(sdk.path, 'flutter-trace.txt'));
+    final flutter = File(path.join(bin.path, 'flutter'))
+      ..writeAsStringSync('''#!/usr/bin/env bash
 printf '%s\\n' "\$@" > "\$CCROUTER_TEST_TRACE"
 ''');
-      final realFlutterRoot = ccrouterProcessEnvironment(
-        inheritedEnvironment: const {},
-      )['FLUTTER_ROOT'];
-      expect(realFlutterRoot, isNotNull);
-      // The installed wrapper correctly exports the temporary SDK root. This
-      // fixture delegates to a real Dart executable, so its Pub resolution must
-      // use that executable's paired Flutter SDK instead of the incomplete fake.
-      final dart = File(path.join(bin.path, 'dart'))
-        ..writeAsStringSync('''#!/usr/bin/env bash
+    final realFlutterRoot = ccrouterProcessEnvironment(
+      inheritedEnvironment: const {},
+    )['FLUTTER_ROOT'];
+    expect(realFlutterRoot, isNotNull);
+    // The installed wrapper correctly exports the temporary SDK root. This
+    // fixture delegates to a real Dart executable, so its Pub resolution must
+    // use that executable's paired Flutter SDK instead of the incomplete fake.
+    final dart = File(path.join(bin.path, 'dart'))
+      ..writeAsStringSync('''#!/usr/bin/env bash
 export FLUTTER_ROOT=${_shellQuote(realFlutterRoot!)}
 exec ${_shellQuote(Platform.resolvedExecutable)} "\$@"
 ''');
-      final innerDart = File(
-        path.join(bin.path, 'cache', 'dart-sdk', 'bin', 'dart'),
-      )..parent.createSync(recursive: true);
-      innerDart.writeAsStringSync('#!/usr/bin/env bash\nexit 0\n');
-      await Future.wait([
-        Process.run('chmod', ['+x', flutter.path]),
-        Process.run('chmod', ['+x', dart.path]),
-        Process.run('chmod', ['+x', innerDart.path]),
-      ]);
-      await CCPubHookManager(sdk).install();
-      ProcessResult? build;
+    final innerDart = File(
+      path.join(bin.path, 'cache', 'dart-sdk', 'bin', 'dart'),
+    )..parent.createSync(recursive: true);
+    innerDart.writeAsStringSync('#!/usr/bin/env bash\nexit 0\n');
+    await Future.wait([
+      Process.run('chmod', ['+x', flutter.path]),
+      Process.run('chmod', ['+x', dart.path]),
+      Process.run('chmod', ['+x', innerDart.path]),
+    ]);
+    await CCPubHookManager(sdk).install();
+    ProcessResult? build;
 
-      await _runWatchUntilReady(
-        onReady: () async {
-          build = await Process.run(
-            flutter.path,
-            const ['build', 'apk', '--debug'],
-            workingDirectory: path.join(Directory.current.path, 'demo'),
-            environment: _environment({'CCROUTER_TEST_TRACE': trace.path}),
-          ).timeout(const Duration(minutes: 1));
-        },
-      );
+    await _runWatchUntilReady(
+      onReady: () async {
+        build = await Process.run(
+          flutter.path,
+          const ['build', 'apk', '--debug'],
+          workingDirectory: path.join(Directory.current.path, 'demo'),
+          environment: _environment({'CCROUTER_TEST_TRACE': trace.path}),
+        ).timeout(const Duration(minutes: 1));
+      },
+    );
 
-      expect(build, isNotNull);
-      expect(build!.exitCode, 0, reason: '${build!.stderr}');
-      expect('${build!.stdout}', contains('reused active watch cycle'));
-      expect(trace.readAsLinesSync(), const ['build', 'apk', '--debug']);
-    },
-    timeout: const Timeout(Duration(minutes: 4)),
-  );
+    expect(build, isNotNull);
+    expect(build!.exitCode, 0, reason: '${build!.stderr}');
+    expect('${build!.stdout}', contains('reused active watch cycle'));
+    expect(trace.readAsLinesSync(), const ['build', 'apk', '--debug']);
+  }, timeout: const Timeout(Duration(minutes: 4)));
 
   test(
     'one-shot check waits for watch evidence matching a current source edit',
@@ -1291,43 +1266,39 @@ exec ${_shellQuote(Platform.resolvedExecutable)} "\$@"
     timeout: const Timeout(Duration(minutes: 6)),
   );
 
-  test(
-    'multi-Host watch kill switch preserves fail-fast ownership',
-    () async {
-      final demoRoot = Directory(path.join(Directory.current.path, 'demo'));
-      final exampleRoot = Directory(
-        path.join(demoRoot.path, 'modules', 'order', 'example'),
-      );
-      final environment = <String, String>{
-        ...Platform.environment,
-        'CCROUTER_DISABLE_MULTI_HOST_WATCH': '1',
-      };
-      final owner = await _ConcurrentWatch.start(
-        demoRoot,
+  test('multi-Host watch kill switch preserves fail-fast ownership', () async {
+    final demoRoot = Directory(path.join(Directory.current.path, 'demo'));
+    final exampleRoot = Directory(
+      path.join(demoRoot.path, 'modules', 'order', 'example'),
+    );
+    final environment = <String, String>{
+      ...Platform.environment,
+      'CCROUTER_DISABLE_MULTI_HOST_WATCH': '1',
+    };
+    final owner = await _ConcurrentWatch.start(
+      demoRoot,
+      environment: environment,
+    );
+    _ConcurrentWatch? conflicting;
+    try {
+      await owner.waitUntilReady();
+      conflicting = await _ConcurrentWatch.start(
+        exampleRoot,
         environment: environment,
       );
-      _ConcurrentWatch? conflicting;
-      try {
-        await owner.waitUntilReady();
-        conflicting = await _ConcurrentWatch.start(
-          exampleRoot,
-          environment: environment,
-        );
-        final code = await conflicting.process.exitCode.timeout(
-          const Duration(seconds: 30),
-        );
-        expect(code, 1);
-        expect(
-          conflicting.output.join('\n'),
-          contains('Another CCRouter generation command or watch owns'),
-        );
-      } finally {
-        await conflicting?.stop();
-        await owner.stop();
-      }
-    },
-    timeout: const Timeout(Duration(minutes: 3)),
-  );
+      final code = await conflicting.process.exitCode.timeout(
+        const Duration(seconds: 30),
+      );
+      expect(code, 1);
+      expect(
+        conflicting.output.join('\n'),
+        contains('Another CCRouter generation command or watch owns'),
+      );
+    } finally {
+      await conflicting?.stop();
+      await owner.stop();
+    }
+  }, timeout: const Timeout(Duration(minutes: 3)));
 
   test(
     'duplicate watch for one Host fails before sharing its status file',
@@ -1504,133 +1475,129 @@ done
     timeout: const Timeout(Duration(minutes: 4)),
   );
 
-  test(
-    'watch evidence reuse keeps current Builder-only output bytes',
-    () async {
-      final source = File(
-        path.join(
-          Directory.current.path,
-          'demo',
-          'modules',
-          'navigation_lab',
-          'lib',
-          'src',
-          'stack_page.dart',
-        ),
-      );
-      final original = source.readAsStringSync();
-      final originalArtifacts = await _managedArtifacts();
-      final seededSource = _replaceOnce(
-        _replaceOnce(
-          original,
-          "import 'ccrouter_generated/demo_navigation_lab_component.api.g.dart';\n",
-          "import 'ccrouter_generated/demo_navigation_lab_component.api.g.dart';\n\n"
-              'const ccrouterWatchDefaultReturnsResult = false;\n',
-        ),
-        'this.returnsResult = false',
-        'this.returnsResult = ccrouterWatchDefaultReturnsResult',
-      );
-      final changedSource = _replaceOnce(
-        seededSource,
-        'ccrouterWatchDefaultReturnsResult = false',
-        'ccrouterWatchDefaultReturnsResult = true',
-      );
-      try {
-        source.writeAsStringSync(seededSource, flush: true);
-        final seed = await _run(['generate', 'demo']);
-        expect(seed.exitCode, 0, reason: '${seed.stderr}');
-        final seededArtifacts = await _managedArtifacts();
+  test('watch evidence reuse keeps current Builder-only output bytes', () async {
+    final source = File(
+      path.join(
+        Directory.current.path,
+        'demo',
+        'modules',
+        'navigation_lab',
+        'lib',
+        'src',
+        'stack_page.dart',
+      ),
+    );
+    final original = source.readAsStringSync();
+    final originalArtifacts = await _managedArtifacts();
+    final seededSource = _replaceOnce(
+      _replaceOnce(
+        original,
+        "import 'ccrouter_generated/demo_navigation_lab_component.api.g.dart';\n",
+        "import 'ccrouter_generated/demo_navigation_lab_component.api.g.dart';\n\n"
+            'const ccrouterWatchDefaultReturnsResult = false;\n',
+      ),
+      'this.returnsResult = false',
+      'this.returnsResult = ccrouterWatchDefaultReturnsResult',
+    );
+    final changedSource = _replaceOnce(
+      seededSource,
+      'ccrouterWatchDefaultReturnsResult = false',
+      'ccrouterWatchDefaultReturnsResult = true',
+    );
+    try {
+      source.writeAsStringSync(seededSource, flush: true);
+      final seed = await _run(['generate', 'demo']);
+      expect(seed.exitCode, 0, reason: '${seed.stderr}');
+      final seededArtifacts = await _managedArtifacts();
 
-        final optimized = await _runWatchUntilReady(
-          profile: true,
-          onReady: () async {
-            source.writeAsStringSync(changedSource, flush: true);
-          },
-          additionalAggregationCycles: 1,
-        );
-        expect(
-          (_profileSpan(
-                optimized.aggregation,
-                'aggregation-reuse-inspection',
-              )['attributes']
-              as Map)['result'],
-          'hit',
-        );
-        expect(
-          (_profileSpan(
-                optimized.aggregation,
-                'planning-snapshot-capture',
-              )['attributes']
-              as Map)['evidenceMode'],
-          'input-and-current-output',
-        );
-        final optimizedArtifacts = await _managedArtifacts();
-        final optimizedPlanningState = await _localPlanningState();
-        expect(
-          _changedArtifactPaths(seededArtifacts, optimizedArtifacts),
-          contains(
-            path.join(
-              'demo',
-              'modules',
-              'navigation_lab',
-              'lib',
-              'src',
-              'ccrouter_generated',
-              'route',
-              'stack_page.route.g.dart',
-            ),
+      final optimized = await _runWatchUntilReady(
+        profile: true,
+        onReady: () async {
+          source.writeAsStringSync(changedSource, flush: true);
+        },
+        additionalAggregationCycles: 1,
+      );
+      expect(
+        (_profileSpan(
+              optimized.aggregation,
+              'aggregation-reuse-inspection',
+            )['attributes']
+            as Map)['result'],
+        'hit',
+      );
+      expect(
+        (_profileSpan(
+              optimized.aggregation,
+              'planning-snapshot-capture',
+            )['attributes']
+            as Map)['evidenceMode'],
+        'input-and-current-output',
+      );
+      final optimizedArtifacts = await _managedArtifacts();
+      final optimizedPlanningState = await _localPlanningState();
+      expect(
+        _changedArtifactPaths(seededArtifacts, optimizedArtifacts),
+        contains(
+          path.join(
+            'demo',
+            'modules',
+            'navigation_lab',
+            'lib',
+            'src',
+            'ccrouter_generated',
+            'route',
+            'stack_page.route.g.dart',
           ),
-        );
+        ),
+      );
 
-        source.writeAsStringSync(seededSource, flush: true);
-        final referenceSeed = await _run(['generate', 'demo']);
-        expect(referenceSeed.exitCode, 0, reason: '${referenceSeed.stderr}');
-        final evidenceReference = await _runWatchUntilReady(
-          profile: true,
-          environment: {
-            ...Platform.environment,
-            'CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE': '1',
-          },
-          onReady: () async {
-            source.writeAsStringSync(changedSource, flush: true);
-          },
-          additionalAggregationCycles: 1,
-        );
-        expect(
-          (_profileSpan(
-                evidenceReference.aggregation,
-                'aggregation-reuse-inspection',
-              )['attributes']
-              as Map)['result'],
-          'hit',
-        );
-        expect(
-          (_profileSpan(
-                evidenceReference.aggregation,
-                'planning-snapshot-capture',
-              )['attributes']
-              as Map)['evidenceMode'],
-          'recaptured',
-        );
-        expect(await _managedArtifacts(), optimizedArtifacts);
-        final evidenceReferencePlanningState = await _localPlanningState();
-        expect(
-          evidenceReferencePlanningState,
+      source.writeAsStringSync(seededSource, flush: true);
+      final referenceSeed = await _run(['generate', 'demo']);
+      expect(referenceSeed.exitCode, 0, reason: '${referenceSeed.stderr}');
+      final evidenceReference = await _runWatchUntilReady(
+        profile: true,
+        environment: {
+          ...Platform.environment,
+          'CCROUTER_DISABLE_WATCH_EVIDENCE_REUSE': '1',
+        },
+        onReady: () async {
+          source.writeAsStringSync(changedSource, flush: true);
+        },
+        additionalAggregationCycles: 1,
+      );
+      expect(
+        (_profileSpan(
+              evidenceReference.aggregation,
+              'aggregation-reuse-inspection',
+            )['attributes']
+            as Map)['result'],
+        'hit',
+      );
+      expect(
+        (_profileSpan(
+              evidenceReference.aggregation,
+              'planning-snapshot-capture',
+            )['attributes']
+            as Map)['evidenceMode'],
+        'recaptured',
+      );
+      expect(await _managedArtifacts(), optimizedArtifacts);
+      final evidenceReferencePlanningState = await _localPlanningState();
+      expect(
+        evidenceReferencePlanningState,
+        optimizedPlanningState,
+        reason: _planningStateDifferenceReason(
           optimizedPlanningState,
-          reason: _planningStateDifferenceReason(
-            optimizedPlanningState,
-            evidenceReferencePlanningState,
-          ),
-        );
-      } finally {
-        source.writeAsStringSync(original, flush: true);
-        final restored = await _run(['generate', 'demo']);
-        expect(restored.exitCode, 0, reason: '${restored.stderr}');
-        expect(await _managedArtifacts(), originalArtifacts);
-      }
-    },
-    timeout: const Timeout(Duration(minutes: 8)),
-  );
+          evidenceReferencePlanningState,
+        ),
+      );
+    } finally {
+      source.writeAsStringSync(original, flush: true);
+      final restored = await _run(['generate', 'demo']);
+      expect(restored.exitCode, 0, reason: '${restored.stderr}');
+      expect(await _managedArtifacts(), originalArtifacts);
+    }
+  }, timeout: const Timeout(Duration(minutes: 8)));
 
   test(
     'watch fails fast while one-shot generation is waiting for the root lock',
@@ -1680,31 +1647,27 @@ done
     timeout: const Timeout(Duration(minutes: 3)),
   );
 
-  test(
-    'V2 startup rejects a still-active legacy owner',
-    () async {
-      final legacy = legacyCCRouterWatchOwnerLockFile(Directory.current)
-        ..parent.createSync(recursive: true);
-      final held = await legacy.open(mode: FileMode.append);
-      await held.lock(FileLock.shared);
-      try {
-        final result = await _run([
-          'generate',
-          'demo',
-          '--watch=auto',
-          '--machine',
-        ]).timeout(const Duration(seconds: 30));
+  test('V2 startup rejects a still-active legacy owner', () async {
+    final legacy = legacyCCRouterWatchOwnerLockFile(Directory.current)
+      ..parent.createSync(recursive: true);
+    final held = await legacy.open(mode: FileMode.append);
+    await held.lock(FileLock.shared);
+    try {
+      final result = await _run([
+        'generate',
+        'demo',
+        '--watch=auto',
+        '--machine',
+      ]).timeout(const Duration(seconds: 30));
 
-        expect(result.exitCode, 1);
-        expect('${result.stdout}', contains('legacy CCRouter generation'));
-        expect('${result.stdout}', contains('reinstall the current Pub Hook'));
-      } finally {
-        await held.unlock();
-        await held.close();
-      }
-    },
-    timeout: const Timeout(Duration(minutes: 1)),
-  );
+      expect(result.exitCode, 1);
+      expect('${result.stdout}', contains('legacy CCRouter generation'));
+      expect('${result.stdout}', contains('reinstall the current Pub Hook'));
+    } finally {
+      await held.unlock();
+      await held.close();
+    }
+  }, timeout: const Timeout(Duration(minutes: 1)));
 }
 
 Future<void> _waitForOneShotWatchGuard() async {
@@ -2283,6 +2246,16 @@ Map<String, dynamic> _profileSpan(Map<String, dynamic> event, String name) =>
 /// suites which verify that a Host leaves unrelated Package indexes absent.
 Future<void> _prepareProtectedPackageFixture() async {
   final packageRoot = path.join('packages', 'ccrouter_test');
+  final barrel = File(
+    path.join(packageRoot, 'lib', 'ccrouter_watch_fixture.dart'),
+  );
+  expect(barrel.existsSync(), isFalse);
+  barrel.writeAsStringSync(
+    "export 'src/ccrouter_generated/contract/multiple_extra_contract_fixture.route.contract.g.dart' show GeneratedMultiExtrasRoute;\n",
+  );
+  addTearDown(() {
+    if (barrel.existsSync()) barrel.deleteSync();
+  });
   final original = {
     for (final entry in (await _managedArtifacts()).entries)
       if (path.isWithin(packageRoot, entry.key)) entry.key: entry.value,

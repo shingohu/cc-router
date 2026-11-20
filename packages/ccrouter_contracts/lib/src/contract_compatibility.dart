@@ -46,9 +46,12 @@ enum CCContractCompatibilityCode {
 /// One parsed SemVer 2.0 value used by compatibility checks.
 final class CCSemVer implements Comparable<CCSemVer> {
   /// Parses a strict `major.minor.patch[-pre][+build]` value.
+  /// Leading or trailing whitespace is invalid; range expressions handle their
+  /// own whitespace separately. Invalid versions throw [FormatException].
+  /// Core numbers use Dart int; numeric prerelease identifiers keep string precision.
   factory CCSemVer.parse(String source) {
-    final match = _semVerPattern.firstMatch(source.trim());
-    if (match == null) {
+    final match = _semVerPattern.firstMatch(source);
+    if (match == null || match.end != source.length) {
       throw FormatException('Invalid Contract SemVer: $source');
     }
     final pre = match.group(4);
@@ -62,6 +65,7 @@ final class CCSemVer implements Comparable<CCSemVer> {
     );
   }
 
+  /// Stores parsed core numbers and immutable, syntactically valid prereleases.
   const CCSemVer._(this.major, this.minor, this.patch, this.preRelease);
 
   /// Major compatibility number.
@@ -79,6 +83,7 @@ final class CCSemVer implements Comparable<CCSemVer> {
   /// Whether this is a stable release without a pre-release suffix.
   bool get isStable => preRelease.isEmpty;
 
+  /// Orders decimal prereleases without accepting signs, radices or int overflow.
   @override
   int compareTo(CCSemVer other) {
     final core = major.compareTo(other.major);
@@ -95,13 +100,14 @@ final class CCSemVer implements Comparable<CCSemVer> {
       final left = preRelease[index];
       final right = other.preRelease[index];
       if (left == right) continue;
-      final leftNumber = int.tryParse(left);
-      final rightNumber = int.tryParse(right);
-      if (leftNumber != null && rightNumber != null) {
-        return leftNumber.compareTo(rightNumber);
+      final leftNumeric = _numericPreReleasePattern.hasMatch(left);
+      final rightNumeric = _numericPreReleasePattern.hasMatch(right);
+      if (leftNumeric && rightNumeric) {
+        final digits = left.length.compareTo(right.length);
+        return digits != 0 ? digits : left.compareTo(right);
       }
-      if (leftNumber != null) return -1;
-      if (rightNumber != null) return 1;
+      if (leftNumeric) return -1;
+      if (rightNumeric) return 1;
       return left.compareTo(right);
     }
     return preRelease.length.compareTo(other.preRelease.length);
@@ -130,6 +136,10 @@ final class CCSemVer implements Comparable<CCSemVer> {
       '$major.$minor.$patch${preRelease.isEmpty ? '' : '-${preRelease.join('.')}'}';
 }
 
+/// Numeric prereleases permit digits only; signs and radix prefixes are labels.
+final RegExp _numericPreReleasePattern = RegExp(r'^[0-9]+$');
+
+/// SemVer lexical grammar; the parser also requires the match to consume input.
 final RegExp _semVerPattern = RegExp(
   r'^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)'
   r'((?:-(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)'
@@ -151,19 +161,17 @@ final class CCContractVersionRange {
       return CCContractVersionRange._(source, (_) => true);
     }
     if (expression.startsWith('^')) {
-      final minimum = CCSemVer.parse(expression.substring(1));
-      final maximum = _caretUpperBound(minimum);
+      final minimum = CCSemVer.parse(expression.substring(1).trim());
       return CCContractVersionRange._(
         source,
-        (value) => value >= minimum && value < maximum,
+        (value) => value >= minimum && _belowCaretUpperBound(value, minimum),
       );
     }
     if (expression.startsWith('~')) {
-      final minimum = CCSemVer.parse(expression.substring(1));
-      final maximum = CCSemVer._(minimum.major, minimum.minor + 1, 0, const []);
+      final minimum = CCSemVer.parse(expression.substring(1).trim());
       return CCContractVersionRange._(
         source,
-        (value) => value >= minimum && value < maximum,
+        (value) => value >= minimum && _belowNextMinor(value, minimum),
       );
     }
     final predicates = expression
@@ -176,10 +184,13 @@ final class CCContractVersionRange {
     );
   }
 
+  /// Retains authored text and a predicate compiled from supported operators.
   const CCContractVersionRange._(this.source, this._allows);
 
-  /// Original normalized range expression retained for generated metadata.
+  /// Original authored range expression retained for generated metadata.
   final String source;
+
+  /// Compiled comparisons only; never evaluates application expressions.
   final bool Function(CCSemVer) _allows;
 
   /// Whether [version] satisfies this range.
@@ -189,12 +200,32 @@ final class CCContractVersionRange {
   bool allowsText(String version) => allows(CCSemVer.parse(version));
 }
 
-CCSemVer _caretUpperBound(CCSemVer value) {
-  if (value.major > 0) return CCSemVer._(value.major + 1, 0, 0, const []);
-  if (value.minor > 0) return CCSemVer._(0, value.minor + 1, 0, const []);
-  return CCSemVer._(0, 0, value.patch + 1, const []);
+/// Compares against caret's next stable core without incrementing bounded ints.
+/// Next-core prereleases retain the existing literal-comparator range semantics.
+bool _belowCaretUpperBound(CCSemVer value, CCSemVer minimum) {
+  if (minimum.major > 0) {
+    return value.major <= minimum.major ||
+        (value.major - minimum.major == 1 &&
+            value.minor == 0 &&
+            value.patch == 0 &&
+            !value.isStable);
+  }
+  if (minimum.minor > 0) return _belowNextMinor(value, minimum);
+  return value.major == 0 &&
+      value.minor == 0 &&
+      (value.patch <= minimum.patch ||
+          (value.patch - minimum.patch == 1 && !value.isStable));
 }
 
+/// Compares the next-minor bound after the lower-bound check has succeeded.
+bool _belowNextMinor(CCSemVer value, CCSemVer minimum) =>
+    value.major == minimum.major &&
+    (value.minor <= minimum.minor ||
+        (value.minor - minimum.minor == 1 &&
+            value.patch == 0 &&
+            !value.isStable));
+
+/// Parses one exact/comparator term using the shared SemVer ordering.
 bool Function(CCSemVer) _parseComparator(String token) {
   final match = RegExp(r'^(>=|<=|>|<|=)?(.+)$').firstMatch(token);
   if (match == null)
@@ -223,10 +254,10 @@ final class CCContractDescriptor {
   /// Contract family.
   final CCContractKind kind;
 
-  /// Globally stable Contract ID.
+  /// Globally stable Contract ID, at most 128 characters with bounded segments.
   final String id;
 
-  /// Component that owns the Contract implementation.
+  /// Lowercase component identity that owns the implementation, at most 128 characters.
   final String ownerComponentId;
 
   /// Independent Contract SemVer.
@@ -251,19 +282,19 @@ final class CCContractRequirement {
   /// Contract family expected by the consumer.
   final CCContractKind kind;
 
-  /// Contract ID requested by the consumer.
+  /// Bounded stable Contract ID requested by the consumer, at most 128 characters.
   final String contractId;
 
   /// Package that generated this requirement.
   final String consumerPackage;
 
-  /// Owner component declared by the consumer metadata.
+  /// Lowercase Owner component identity declared by consumer metadata, at most 128 characters.
   final String ownerComponentId;
 
   /// Finite version range accepted by this consumer.
   final String requiredVersionRange;
 
-  /// Exact shape fingerprint accepted by this consumer.
+  /// Exact lowercase SHA-256 shape fingerprint accepted by this consumer.
   final String requiredShapeFingerprint;
 }
 
@@ -291,14 +322,29 @@ final class CCContractBundleDescriptor {
   final List<CCContractRequirement> requirements;
 
   /// Validates all local and resolved descriptors without mutating them.
+  /// Invalid installed versions are attributed to their publishing Package;
+  /// consumer range syntax is checked independently, without cascading blame.
+  /// Generated identities and fingerprints are rechecked before compatibility;
+  /// matching malformed metadata is stale, not evidence of a valid Contract.
   static List<CCContractCompatibilityIssue> validate(
     Iterable<CCContractBundleDescriptor> bundles,
   ) {
     final issues = <CCContractCompatibilityIssue>[];
     final installed = <String, CCContractDescriptor>{};
+    final versions = <String, CCSemVer>{};
     for (final bundle in bundles) {
       final localIds = <String>{};
       for (final contract in bundle.contracts) {
+        if (!_validContractIdentity(contract.id, contract.ownerComponentId)) {
+          issues.add(
+            CCContractCompatibilityIssue.stale(
+              kind: contract.kind,
+              id: contract.id,
+              packageName: bundle.packageName,
+              message: 'Contract identity is invalid.',
+            ),
+          );
+        }
         if (!localIds.add(contract.id)) {
           issues.add(CCContractCompatibilityIssue.duplicate(contract));
           continue;
@@ -315,7 +361,7 @@ final class CCContractBundleDescriptor {
         }
         installed[contract.id] = contract;
         try {
-          CCSemVer.parse(contract.version);
+          versions[contract.id] = CCSemVer.parse(contract.version);
         } on FormatException {
           issues.add(
             CCContractCompatibilityIssue.stale(
@@ -326,7 +372,7 @@ final class CCContractBundleDescriptor {
             ),
           );
         }
-        if (!RegExp(r'^[0-9a-f]{64}$').hasMatch(contract.shapeFingerprint)) {
+        if (!_validContractFingerprint(contract.shapeFingerprint)) {
           issues.add(
             CCContractCompatibilityIssue.stale(
               kind: contract.kind,
@@ -340,6 +386,21 @@ final class CCContractBundleDescriptor {
     }
     for (final bundle in bundles) {
       for (final requirement in bundle.requirements) {
+        if (!_validContractIdentity(
+              requirement.contractId,
+              requirement.ownerComponentId,
+            ) ||
+            !_validContractFingerprint(requirement.requiredShapeFingerprint)) {
+          issues.add(
+            CCContractCompatibilityIssue.stale(
+              kind: requirement.kind,
+              id: requirement.contractId,
+              packageName: requirement.consumerPackage,
+              message: 'Consumer Contract identity or fingerprint is invalid.',
+            ),
+          );
+          continue;
+        }
         final contract = installed[requirement.contractId];
         if (contract == null) {
           issues.add(
@@ -353,6 +414,8 @@ final class CCContractBundleDescriptor {
           );
           continue;
         }
+        if (!_validContractIdentity(contract.id, contract.ownerComponentId))
+          continue;
         if (contract.kind != requirement.kind ||
             contract.ownerComponentId != requirement.ownerComponentId) {
           issues.add(
@@ -371,7 +434,8 @@ final class CCContractBundleDescriptor {
           final range = CCContractVersionRange.parse(
             requirement.requiredVersionRange,
           );
-          if (!range.allowsText(contract.version)) {
+          final version = versions[contract.id];
+          if (version != null && !range.allows(version)) {
             issues.add(
               CCContractCompatibilityIssue(
                 code: CCContractCompatibilityCode.versionOutOfRange,
@@ -409,6 +473,30 @@ final class CCContractBundleDescriptor {
     return List.unmodifiable(issues);
   }
 }
+
+/// Matches generated capability IDs independently of stricter component IDs.
+final RegExp _contractIdentityPattern = RegExp(
+  r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$',
+);
+
+/// Matches the lowercase component namespace shared with Generator validation.
+final RegExp _contractOwnerPattern = RegExp(
+  r'^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$',
+);
+
+/// Matches a lowercase SHA-256 encoding, never a human-readable shape label.
+final RegExp _contractFingerprintPattern = RegExp(r'^[0-9a-f]{64}$');
+
+/// Requires bounded typed-string identities at the final generated-input gate.
+bool _validContractIdentity(String id, String owner) =>
+    id.length <= 128 &&
+    owner.length <= 128 &&
+    _contractIdentityPattern.hasMatch(id) &&
+    _contractOwnerPattern.hasMatch(owner);
+
+/// Requires the complete fingerprint text to be one SHA-256 encoding.
+bool _validContractFingerprint(String value) =>
+    value.length == 64 && _contractFingerprintPattern.hasMatch(value);
 
 /// One deterministic Contract compatibility failure.
 final class CCContractCompatibilityIssue {

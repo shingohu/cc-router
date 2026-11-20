@@ -1,0 +1,18 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/route_generator_test.dart
+00:00 +0: metadata records the public contract library
+00:24 +1: metadata separates an external contract from its page binding
+00:35 +2: builder emits a private component contract and backend-neutral registration
+00:44 +3: public contracts support several process-local typed Extras
+00:46 +4: builder keeps embedded contracts private and documents metadata
+00:48 +5: contract builder emits a standalone Pure Dart contract
+00:51 +6: contract builder emits nothing for the embedded default
+00:52 +7: contract builder emits a Contract-first Pure Dart API
+00:54 +8: page builder binds a Contract-first route without duplicating it
+00:56 +9: page builders explain an unresolved contract type
+00:59 +10: page builder rejects a Contract-first constructor mismatch
+01:01 +11: contract builder rejects page-library contract types
+01:03 +12: contract builder rejects Flutter contract types
+01:05 +13: contract builder preserves public imported contract types
+01:07 +14: contract builder imports public Query value and codec types once
+01:09 +15: contract builder reuses the unprefixed framework contract import
+01:12 +16: All tests passed!

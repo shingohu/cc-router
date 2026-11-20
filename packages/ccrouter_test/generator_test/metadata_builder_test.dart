@@ -9,6 +9,56 @@ import 'package:ccrouter_generator/builder.dart';
 import 'package:test/test.dart';
 
 void main() {
+  for (final kind in ['Service', 'Command']) {
+    test('component metadata rejects duplicate $kind Contracts', () async {
+      final reader = TestReaderWriter(
+        rootPackage: 'ccrouter_test',
+        flattenOutput: true,
+      );
+      await reader.testing.loadIsolateSources();
+      const input = 'lib/src/consumer.dart';
+      final logs = <String>[];
+      await testBuilder(
+        ccComponentMetadataBuilder(BuilderOptions.empty),
+        {
+          'ccrouter_test|$input':
+              '''
+import 'package:ccrouter/ccrouter.dart';
+import 'shared.dart';
+const consumer = CCComponent(
+  id: CCComponentId('consumer'), version: '1.0.0',
+  dependencies: [CCComponentId('owner')],
+  ${kind.toLowerCase()}Dependencies: [CC${kind}Dependency<Shared>()],
+);
+''',
+          'ccrouter_test|lib/src/shared.dart':
+              '''
+import 'package:ccrouter/ccrouter.dart';
+@CC${kind}Contract(componentId: CCComponentId('owner'), id: 'owner.first', alias: 'first')
+@CC${kind}Contract(componentId: CCComponentId('owner'), id: 'owner.second', alias: 'second')
+${kind == 'Service' ? 'abstract interface class Shared {}' : 'final class Shared implements CCCommand<void> { const Shared(); }'}
+''',
+        },
+        rootPackage: 'ccrouter_test',
+        generateFor: {'ccrouter_test|$input'},
+        isInput: (id) => id == AssetId('ccrouter_test', input),
+        readerWriter: reader,
+        flattenOutput: true,
+        onLog: (record) => logs.add(record.message),
+      );
+      expect(
+        await reader.canRead(
+          AssetId(
+            'ccrouter_test',
+            'lib/src/ccrouter_generated/metadata/src/consumer.component.json',
+          ),
+        ),
+        isFalse,
+      );
+      expect(logs.join('\n'), contains('exactly one CC${kind}Contract'));
+    });
+  }
+
   test('metadata builders preserve all mixed capability documents', () async {
     final reader = TestReaderWriter(
       rootPackage: 'ccrouter_test',

@@ -1,0 +1,13 @@
+Summary: final 12 nonempty lines from /tmp/ccrouter-cycle-framework.log.
+00:32 +1711: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: business Pop interrupted by go stays consistent
+00:32 +1712: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: business Pop interrupted by reset stays consistent
+00:32 +1713: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: business Pop interrupted by close stays consistent
+00:32 +1714: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: business Pop interrupted by popup stays consistent
+00:32 +1715: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through business outgoing animation
+00:32 +1716: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through direct outgoing animation
+00:32 +1717: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through system outgoing animation
+00:33 +1718: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through gesture outgoing animation
+00:33 +1719: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through go outgoing animation
+00:33 +1720: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through reset outgoing animation
+00:33 +1721: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through replace outgoing animation
+00:33 +1722: All tests passed!

@@ -1,0 +1,12 @@
+00:33 +107: <home>/.codex/worktrees/integrate-main-347/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:33 +108: <home>/.codex/worktrees/integrate-main-347/cc-router/demo/test/monkey_test.dart: semantic monkey remains consistent for seed 314159
+00:33 +109: <home>/.codex/worktrees/integrate-main-347/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:34 +110: <home>/.codex/worktrees/integrate-main-347/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:34 +111: <home>/.codex/worktrees/integrate-main-347/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:34 +112: <home>/.codex/worktrees/integrate-main-347/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:35 +113: <home>/.codex/worktrees/integrate-main-347/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:39 +114: <home>/.codex/worktrees/integrate-main-347/cc-router/demo/test/managed_parity_regression_test.dart: Managed: cancelled iOS swipe preserves Entry identity (variant: TargetPlatform.iOS)
+00:40 +115: <home>/.codex/worktrees/integrate-main-347/cc-router/demo/test/managed_parity_regression_test.dart: Managed: shutdown retires mounted Shell and foreign popup safely
+00:41 +116: <home>/.codex/worktrees/integrate-main-347/cc-router/demo/test/managed_parity_regression_test.dart: Managed: shutdown during a Shell edge swipe does not double remove (variant: TargetPlatform.iOS)
+00:41 +117: <home>/.codex/worktrees/integrate-main-347/cc-router/demo/test/managed_parity_regression_test.dart: Managed: close covered Shell seed must keep context child
+00:42 +118: All tests passed!

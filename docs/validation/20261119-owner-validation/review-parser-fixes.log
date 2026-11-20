@@ -1,0 +1,3 @@
+ordinary: diagnostics=1; fixes=1
+prefixed: diagnostics=1; fixes=0
+prefixed-const: diagnostics=1; fixes=1

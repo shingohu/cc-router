@@ -1,0 +1,59 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/nullable_declaration_test.dart
+00:00 +0: metadata/src/probe.component.json ignores absent nullable component constants
+00:14 +0 -1: metadata/src/probe.component.json ignores absent nullable component constants [E]
+  Expected: true
+    Actual: <false>
+  0s _ComponentMetadataBuilder on 22 inputs; lib/ccrouter_test.dart
+  9s _ComponentMetadataBuilder on 22 inputs: 1 no-op; spent 6s analyzing, 2s resolving; lib/ccrouter_ui_test.dart
+  11s _ComponentMetadataBuilder on 22 inputs: 2 no-op; spent 8s analyzing, 3s resolving; lib/src/ccrouter_generated/binding/generated_route_fixture.route_binding.g.dart
+  _ComponentMetadataBuilder on lib/src/probe.dart:
+  Unsupported operation: Null
+  #0      _NullConstant.read (package:source_gen/src/constants/reader.dart:147:29)
+  #1      _ComponentModel.read (package:ccrouter_generator/src/route_model.dart:607:43)
+  #2      _ComponentMetadataBuilder.build (package:ccrouter_generator/src/component_metadata_builder.dart:49:41)
+  <asynchronous suspension>
+  #3      Build._buildForPrimaryInput.<anonymous closure>.<anonymous closure> (package:build_runner/src/build/build.dart:449:15)
+  <asynchronous suspension>
+  #4      BuildLogLogger.scopeLogAsync.<anonymous closure> (package:build_runner/src/logging/build_log_logger.dart:60:13)
+  <asynchronous suspension>
+
+  11s _ComponentMetadataBuilder on 22 inputs: 1 output, 21 no-op; spent 9s analyzing, 3s resolving
+  Failed to build with build_runner/jit in 13s; wrote 1 output.
+
+  package:matcher                                                            expect
+  packages/ccrouter_test/generator_test/nullable_declaration_test.dart 30:7  main.<fn>
+
+00:14 +0 -1: component/probe.service_api.g.dart ignores absent nullable component constants
+00:21 +0 -2: component/probe.service_api.g.dart ignores absent nullable component constants [E]
+  Expected: true
+    Actual: <false>
+  0s Generating .service_api.g.dart: _ServiceProxyGenerator on 20 inputs; lib/src/ccrouter_generated/binding/generated_route_fixture.route_binding.g.dart
+  2s Generating .service_api.g.dart: _ServiceProxyGenerator on 20 inputs: 1 no-op; spent 2s resolving; lib/src/ccrouter_generated/binding/multiple_extra_fixture.route_binding.g.dart
+  Generating .service_api.g.dart: _ServiceProxyGenerator on lib/src/probe.dart:
+  Bad state: Missing Service metadata field: id
+  #0      _serviceObjectField (package:ccrouter_generator/src/service_proxy_generator.dart:682:3)
+  #1      _readServiceConsumerComponent (package:ccrouter_generator/src/service_proxy_generator.dart:79:5)
+  #2      _ServiceProxyGenerator.generate (package:ccrouter_generator/src/service_proxy_generator.dart:20:25)
+  #3      _generate (package:source_gen/src/builder.dart:373:33)
+  <asynchronous suspension>
+  #4      Stream.toList.<anonymous closure> (dart:async/stream.dart:1417:7)
+  <asynchronous suspension>
+  #5      _Builder._generateForLibrary (package:source_gen/src/builder.dart:115:30)
+  <asynchronous suspension>
+  #6      _Builder.build (package:source_gen/src/builder.dart:108:5)
+  <asynchronous suspension>
+  #7      Build._buildForPrimaryInput.<anonymous closure>.<anonymous closure> (package:build_runner/src/build/build.dart:449:15)
+  <asynchronous suspension>
+  #8      BuildLogLogger.scopeLogAsync.<anonymous closure> (package:build_runner/src/logging/build_log_logger.dart:60:13)
+  <asynchronous suspension>
+
+  3s Generating .service_api.g.dart: _ServiceProxyGenerator on 20 inputs: 20 no-op; spent 2s resolving
+  Failed to build with build_runner/jit in 7s; wrote 0 outputs.
+
+  package:matcher                                                            expect
+  packages/ccrouter_test/generator_test/nullable_declaration_test.dart 30:7  main.<fn>
+
+00:21 +0 -2: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

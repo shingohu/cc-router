@@ -1,0 +1,27 @@
+00:00 +0: loading test/source_analyzer_test.dart
+00:00 +0: malformed import URIs do not crash source analysis
+00:00 +0 -1: malformed import URIs do not crash source analysis [E]
+  Expected: empty
+    Actual: [Instance of 'CCRouterAnalyzerDiagnostic']
+  package:other/src/ccrouter_generated/dir%2Ffile.dart
+
+  package:matcher                      expect
+  test/source_analyzer_test.dart 37:7  main.<fn>
+
+00:00 +0 -1: invalid Package URI evidence cannot supply a parsed Contract namespace
+00:00 +0 -2: invalid Package URI evidence cannot supply a parsed Contract namespace [E]
+  Expected: <false>
+    Actual: <true>
+  package:sample_component/api.dart?query
+
+  package:matcher                      expect
+  test/source_analyzer_test.dart 56:7  main.<fn>
+
+00:00 +0 -2: Some tests failed.
+
+Failing tests:
+  test/source_analyzer_test.dart: invalid Package URI evidence cannot supply a parsed Contract namespace
+  test/source_analyzer_test.dart: malformed import URIs do not crash source analysis
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

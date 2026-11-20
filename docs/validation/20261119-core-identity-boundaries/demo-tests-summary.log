@@ -1,0 +1,13 @@
+Summary: final 12 nonempty lines from /tmp/ccrouter-core-identity-demo-tests.log.
+00:16 +107: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: foreign popup must hide underlying Runtime Entry
+00:17 +108: <home>/develop/LiberLive/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=before (variant: TargetPlatform.android)
+00:17 +109: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: direct branch navigation must hide retained branch
+00:17 +110: <home>/develop/LiberLive/cc-router/demo/test/predictive_back_demo_test.dart: ancestor Popup protects nested detail: workspace=true timing=during (variant: TargetPlatform.android)
+00:17 +111: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:17 +112: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:17 +113: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: repeated iOS swipes remove exactly one Entry (variant: TargetPlatform.iOS)
+00:18 +114: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: cancelled iOS swipe preserves Entry identity (variant: TargetPlatform.iOS)
+00:18 +115: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: shutdown retires mounted Shell and foreign popup safely
+00:18 +116: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: shutdown during a Shell edge swipe does not double remove (variant: TargetPlatform.iOS)
+00:18 +117: <home>/develop/LiberLive/cc-router/demo/test/managed_parity_regression_test.dart: Managed: close covered Shell seed must keep context child
+00:19 +118: All tests passed!

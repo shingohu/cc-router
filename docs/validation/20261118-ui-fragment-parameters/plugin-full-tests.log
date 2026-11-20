@@ -1,0 +1,215 @@
+00:00 +0: loading test/plugin_test.dart
+00:00 +0: test/plugin_test.dart: advertises a stable name and supported server boundary
+00:00 +1: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +2: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +3: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +4: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +5: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +6: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +7: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +8: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +9: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +10: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +11: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +12: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +13: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +14: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +15: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +16: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +17: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +18: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +19: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +20: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +21: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +22: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:00 +23: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:01 +24: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:01 +25: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:01 +26: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:01 +27: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:01 +28: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:02 +29: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:02 +30: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:02 +31: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:02 +32: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:03 +33: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:03 +34: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:03 +35: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:03 +36: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:03 +37: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:03 +38: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:03 +39: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:03 +40: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:03 +41: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:03 +42: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:03 +43: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:03 +44: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +45: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +46: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +47: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +48: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +49: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +50: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +51: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +52: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +53: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +54: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +55: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +56: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +57: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +58: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +59: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +60: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +61: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +62: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +63: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +64: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +65: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +66: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +67: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +68: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +69: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +70: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +71: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +72: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +73: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +74: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +75: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +76: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +77: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +78: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +79: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +80: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +81: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +82: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +83: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +84: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +85: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +86: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +87: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +88: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +89: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +90: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +91: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +92: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +93: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +94: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +95: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +96: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +97: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +98: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +99: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:04 +100: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:05 +101: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:05 +102: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:10 +103: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:11 +104: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:12 +105: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:13 +106: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:14 +107: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:14 +108: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:15 +109: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:17 +110: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:17 +111: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:18 +112: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:18 +113: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:19 +114: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:19 +115: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:21 +116: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:21 +117: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:23 +118: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:25 +119: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:25 +120: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:27 +121: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:28 +122: test/ui_analysis_test.dart: review same-name Object model is valid Dart but invalid UI data
+00:28 +123: test/semantic_analysis_test.dart: fix preserves existing interfaces and comments
+00:30 +124: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:30 +125: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:32 +126: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:33 +127: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:34 +128: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:35 +129: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:35 +130: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:36 +131: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:38 +132: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:39 +133: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:40 +134: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:41 +135: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:41 +136: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:43 +137: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:43 +138: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:44 +139: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:45 +140: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:47 +141: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:48 +142: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:50 +143: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:50 +144: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:55 +145: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:56 +146: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:59 +147: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:59 +148: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+01:02 +149: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+01:02 +150: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+01:04 +151: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+01:04 +152: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+01:06 +153: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+01:07 +154: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+01:09 +155: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+01:09 +156: test/ui_analysis_test.dart: immutable DTO Action and nested enum/DTO fields are accepted
+01:09 +157: test/semantic_analysis_test.dart: Service FutureOr<void> dispose gets a fix which passes reanalysis
+01:11 +158: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:12 +159: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:15 +160: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:15 +161: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:16 +162: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:16 +163: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:19 +164: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:20 +165: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:21 +166: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:22 +167: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:23 +168: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:24 +169: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:26 +170: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:28 +171: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:30 +172: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:31 +173: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:33 +174: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:34 +175: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:37 +176: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:38 +177: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:39 +178: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:40 +179: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:41 +180: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:42 +181: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:43 +182: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:44 +183: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:44 +184: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+01:44 +185: test/ui_analysis_test.dart: part UI Owner validates library identity package:owner_contracts/contract.dart
+01:45 +186: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+01:46 +187: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+01:47 +188: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+01:48 +189: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+01:49 +190: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+01:50 +191: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+01:50 +192: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+01:51 +193: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+01:52 +194: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+02:01 +195: test/analysis_server_integration_test.dart: real server publishes and clears invalid ccrouter.yaml
+02:16 +196: test/analysis_server_integration_test.dart: real LSP reports and clears UI alias diagnostics on editor overlay
+02:29 +197: test/analysis_server_integration_test.dart: real LSP accepts DTO Action after editor shape repair
+02:43 +198: test/analysis_server_integration_test.dart: real legacy ccrouter_host_component_owner_missing server bridges and clears current watch diagnostics
+02:55 +199: test/analysis_server_integration_test.dart: real LSP ccrouter_host_component_owner_missing server bridges and clears current watch diagnostics
+03:08 +200: test/analysis_server_integration_test.dart: real LSP ccrouter_ui_missing_implementation server bridges and clears current watch diagnostics
+03:30 +201: test/analysis_server_integration_test.dart: real legacy server follows unsaved Pub manifest overlays
+03:47 +202: test/analysis_server_integration_test.dart: real LSP server follows unsaved Pub manifest overlays
+04:02 +203: test/analysis_server_integration_test.dart: real legacy server publishes and clears stale Pub resolution hints
+04:13 +204: test/analysis_server_integration_test.dart: real LSP server publishes and clears stale Pub resolution hints
+04:24 +205: test/analysis_server_integration_test.dart: real server publishes an initial stale Pub hint for a Workspace member
+04:33 +206: test/analysis_server_integration_test.dart: real server polls structured diagnostics for a nested Workspace Host
+04:42 +207: test/analysis_server_integration_test.dart: real server clears foreign annotation diagnostics despite unrelated errors
+04:56 +208: test/analysis_server_integration_test.dart: real watcher refreshes consumers across workspace Contract packages
+05:13 +209: test/analysis_server_integration_test.dart: real LSP diagnostics and codeAction fix the open document
+05:29 +210: test/analysis_server_integration_test.dart: real legacy disk watcher refreshes all five generated capability kinds
+06:07 +211: test/analysis_server_integration_test.dart: real LSP disk watcher refreshes all five generated capability kinds
+06:48 +212: test/analysis_server_integration_test.dart: real server: unsaved overlays and service Quick Fix round trip
+07:11 +213: All tests passed!
