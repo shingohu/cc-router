@@ -60,7 +60,10 @@ Do not override SDK pins. Runtime/Contracts and the isolated IDE Plugin keep
 their existing SDK/version boundaries. Regenerate distributed Portable State.
 The main `0.4.0` declaration-identity, argument-default, compatibility and diagnostic
 fixes are integrated with Analyzer 13 AST APIs; the Plugin retains its isolated
-Analyzer 8.4 graph. See the [3.47 integration record](docs/validation/20261120-main-to-flutter347/report.md)
+Analyzer 8.4 graph. Demo VS Code settings follow `.fvm/flutter_sdk`; run `fvm use`
+in Demo before opening it. The 2026-11-20 acceptance verified real VS Code
+diagnostics on Flutter 3.47.9 / Dart 3.13.7; the SDK legacy Plugin deprecation
+warning remains. See the [3.47 integration record](docs/validation/20261120-main-to-flutter347/report.md)
 for this combined revision's regression and distribution results.
 Watch uses public `--keep-modified-outputs` to retain its previous output policy
 and avoid non-target artifact restore loops; one-shot generation keeps the
@@ -346,8 +349,8 @@ Current compatibility status:
 Verification does not certify every `3.47.x` release or a continuous Flutter range.
 The OHOS development branch reports `3.47.7+ohos-0.0.1-canary`; this is not stable
 OHOS 3.47.9 certification. See the [OHOS record](docs/validation/20261117-ohos-3479-dev/report.md)
-for native plugin and device limits. Physical-device behavior and the current IDE
-session remain separate acceptance work. Standard SDK evidence is in the
+for native plugin and device limits. Physical-device behavior remains separate
+acceptance work. Historical standard SDK platform evidence is in the
 [adaptation and fix record](docs/validation/20261117-flutter-3479-readiness/report.md#修复落地与复验).
 
 Other SDK results below are **historical snapshots from 2026-09-22, not compatibility

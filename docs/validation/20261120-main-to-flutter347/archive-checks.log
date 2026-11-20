@@ -7,3 +7,10 @@ Final changed source manifest: 126 files verified.
 Temporary watch public barrel absent.
 Toolchain/pub lock/Core/native managed-router baseline retained.
 No unmerged paths.
+Final Demo bootstrap pin: manifest/lock/remote/current cache verified.
+Two real LSP restart cycles and native VS Code diagnostic/undo verified.
+Demo FVM relative VS Code setting and SDK link checked.
+Final documentation check: 216 Markdown files passed.
+Final release sensitivity --include-untracked: passed.
+Final primary Demo generate --check passed.
+Legacy Plugin deprecation warning recorded without suppression.

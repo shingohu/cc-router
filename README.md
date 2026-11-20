@@ -60,6 +60,8 @@ Analyzer Plugin 的版本保持原边界；不使用 overrides 强压 SDK pin。
 本次从 `main` 合入 `0.4.0` 的声明身份、参数默认值、兼容性与诊断修复；生成器保留
 Analyzer 13 的 AST API，Plugin 继续使用隔离的 Analyzer 8.4。合并后的回归与分发结果见
 [3.47 集成记录](docs/validation/20261120-main-to-flutter347/report.md)。
+Demo 的 VS Code SDK 设置使用相对路径 `.fvm/flutter_sdk`，打开前先在 Demo 执行 `fvm use`；
+本次已验证 3.47.9 / Dart 3.13.7 的真实诊断与还原，SDK 的 legacy Plugin 弃用警告仍存在。
 升级后重新生成并分发 Portable State。验证范围见[本轮记录](docs/validation/build_runner_upgrade_20261104.md)。
 同一 Workspace 内，Host prepare 的状态也可从对应组件或 contracts Package 执行
 `portable publish` 验证；只读写入范围不改变本地依赖的内容身份，工具/源码变化仍须重新 prepare。
@@ -475,8 +477,8 @@ if (activation.status == CCRouteActivationStatus.activated) {
 
 已验证版本不扩展为整个 `3.47.x` 或连续 Flutter 版本范围。上述 OHOS 开发分支实际自报
 `3.47.7+ohos-0.0.1-canary`，不作为稳定 OHOS 3.47.9 认证；原生插件与真机边界见
-[OHOS 验证记录](docs/validation/20261117-ohos-3479-dev/report.md)。真机交互和 IDE 当前会话
-仍需验收；标准 SDK 范围见[适配与修复记录](docs/validation/20261117-flutter-3479-readiness/report.md#修复落地与复验)。
+[OHOS 验证记录](docs/validation/20261117-ohos-3479-dev/report.md)。真机交互仍需验收；
+标准 SDK 历史平台范围见[适配与修复记录](docs/validation/20261117-flutter-3479-readiness/report.md#修复落地与复验)。
 
 以下其他 SDK 仅保留 **2026-09-22 的历史快照，不代表当前源码兼容性承诺**：
 

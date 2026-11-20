@@ -1,5 +1,12 @@
 # IDE / Analysis Server
 
+For this repository Demo, run `fvm use` in `demo/` before opening VS Code. Its
+workspace SDK setting follows `.fvm/flutter_sdk`, avoiding an unrelated global
+OHOS SDK. The 2026-11-20 3.47 acceptance verified two real LSP restarts and a
+VS Code alias diagnostic/repair round trip on Flutter 3.47.9 / Dart 3.13.7.
+The SDK legacy Plugin deprecation warning remains; this does not certify future
+SDKs or replace verification after the next Plugin pin update.
+
 Native Dart analysis already reports an unresolved schema in
 `@CCRouteImplementation(MissingRouteContract)` as `undefined_identifier`, often
 with `const_with_non_constant_argument`. These errors are available without the

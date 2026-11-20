@@ -1,0 +1,10 @@
+Observed via native VS Code accessibility tree, 2026-11-20:
+Editor Language Status: 3.47.9, Flutter SDK; 3.13.7 (Flutter), Dart SDK.
+Info: The Dart Analysis Server has been restarted.
+Unsaved overlay: CCServiceDependency<OrderSummaryService>(alias: 'toString').
+Error: CCServiceDependency alias "toString" cannot be a generated Client member.
+Choose a non-keyword lower-camel Client member name outside Object members.
+Code: ccrouter_alias_invalid. Errors: 1, Warnings: 1.
+Undo restored original source: alias diagnostic removed, Warnings: 1, no errors.
+Remaining SDK warning: analysis_options_deprecated_plugins.
+Disk source equality and resolved Plugin cache SHA independently checked.

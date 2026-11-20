@@ -1,0 +1,19 @@
+{
+  "date": "2026-11-20",
+  "host": "<home>/develop/LiberLive/cc-router/demo",
+  "gui": "VS Code",
+  "extension": "Dart Code 3.146.0",
+  "flutter": "3.47.9",
+  "dart": "3.13.7",
+  "restartObserved": true,
+  "pluginRef": "c61cf3dabb9712aaa21e494d8011373c2361970f",
+  "resolvedPluginRoot": "file://<home>/.pub-cache/git/cc-router-c61cf3dabb9712aaa21e494d8011373c2361970f/packages/ccrouter_analyzer_plugin",
+  "invalidAlias": "toString",
+  "diagnosticObserved": "ccrouter_alias_invalid",
+  "repairClearedDiagnostic": true,
+  "remainingWarning": "analysis_options_deprecated_plugins",
+  "diskSourceUnchanged": true,
+  "workspaceSdkSetting": ".fvm/flutter_sdk",
+  "main": "ce2a251b512ffa51663d34ce7a651027207bb4f6",
+  "tag04peeled": "ce2a251b512ffa51663d34ce7a651027207bb4f6"
+}

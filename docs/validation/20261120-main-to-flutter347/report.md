@@ -74,7 +74,25 @@ Demo manifest/lock 现独立 pin 到该 SHA，Analyzer 8.4.0 / analyzer_plugin 0
 [真实 LSP](live-lsp.log)用 3.47 SDK 连续启动两次独立 Analysis Server，未保存 overlay 中
 加入非法 alias `toString` 均出现 `ccrouter_alias_invalid`，还原后均清除，磁盘源码不变。
 [机器结果](live-lsp.json)验证 manager cache 和 resolved Plugin 路径指向新 SHA；
-[驱动](live-lsp.py)保留复现流程。此阶段尚未据此声称 GUI 已验证。
+[驱动](live-lsp.py)保留复现流程。独立 pin 提交为 `d563cada`。
+
+主工作区已快进到集成结果，并以 `--enforce-lockfile` 重新解析 3.47 Workspace 与 bootstrap，
+Demo [生成检查](primary-generate.log)通过。VS Code 原先自动选择全局旧 OHOS SDK，因此新增
+Demo 相对 SDK 设置 `.fvm/flutter_sdk`，并在 Demo 执行 `fvm use 3.47.9`；不修改全局 SDK。
+关闭旧 Demo 后，[doctor](primary-doctor-before.log)报告原路径的 stale legacy cache；确认该
+cache 无打开文件，并核对仍运行的 Android Studio 使用另一个 cache，保留该无关进程。
+整份旧 cache [移到可恢复备份](primary-cache-backup.json)，未清空全局缓存。
+
+[GUI 记录](gui-verification.log)及[机器核查](gui-verification.json)：重开已信任的主 Demo，
+Language Status 显示 Flutter 3.47.9 / Dart 3.13.7；显式重启 Analysis Server，在未保存编辑中
+加入 `alias: 'toString'`，Problems 出现 `ccrouter_alias_invalid`；Undo 后该错误清除，磁盘
+源码与提交完全相同。保留 1 条 SDK `analysis_options_deprecated_plugins` 警告，未掩盖或
+升级 Plugin 架构。实际 cache manifest/resolved Plugin 路径均匹配实现 SHA。
+[最终 doctor](primary-doctor-current.log)确认 cache current、loader 通过；
+[最终 pin-check](primary-pin-check.log)远端可解析且无 drift。doctor 的 live pending 字段仍是
+命令能力边界，真实 GUI 结果由以上独立观察证明。
+
+目标采用 fast-forward 合并，普通 merge 提交保留两边历史；不重写已发布提交。
 
 ## 验证边界
 

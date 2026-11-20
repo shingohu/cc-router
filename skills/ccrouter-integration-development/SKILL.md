@@ -49,9 +49,12 @@ references. These markers request current session facts; they do not establish
 framework identity. Generator Analyzer 13 and Plugin Analyzer 8.4 remain isolated;
 the maintainer Demo integration test verifies generated metadata, Owner identity,
 diagnostic source spans and Quick Fixes across these graphs. The Demo manifest/lock
-pin the pushed fix; pin-check and temporary loader smoke pass. The current IDE
-session remains unverified. Further updates push the Plugin first and update the
-pin separately, then run doctor and verify an IDE diagnostic/Quick Fix.
+pin the integrated implementation. The 2026-11-20 acceptance verified pin-check,
+loader compilation, two real LSP restarts, and a VS Code diagnostic/repair round
+trip on Flutter 3.47.9 / Dart 3.13.7. Demo VS Code settings follow
+`.fvm/flutter_sdk`; run `fvm use` before opening it. The SDK still reports the
+legacy Plugin deprecation warning. Further updates push the Plugin first, update
+the pin separately, then run doctor and verify a new IDE diagnostic/Quick Fix.
 
 ## Framework naming
 
