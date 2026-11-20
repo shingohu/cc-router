@@ -1,0 +1,5 @@
+00:00 +0: loading test/semantic_analysis_test.dart
+00:00 +0: test/semantic_analysis_test.dart: Host lifecycle checks typedef call by semantic identity
+00:01 +1: test/semantic_analysis_test.dart: Host lifecycle checks typedef call by semantic identity
+00:01 +2: test/semantic_analysis_test.dart: real plugin session checks typed UI SPI without a Component declaration
+00:02 +3: All tests passed!

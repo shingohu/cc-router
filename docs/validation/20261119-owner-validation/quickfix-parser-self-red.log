@@ -1,0 +1,31 @@
+00:00 +0: loading test/quick_fixes_test.dart
+00:00 +0: parser-only serviceDependencies cannot add its own Owner
+00:00 +0 -1: parser-only serviceDependencies cannot add its own Owner [E]
+  Expected: not contains 'ccrouter_component_owner_dependency_missing'
+    Actual: MappedListIterable<CCRouterAnalyzerDiagnostic, String>:[
+              'ccrouter_component_owner_dependency_missing'
+            ]
+  ownerComponentId
+
+  package:matcher                  expect
+  test/quick_fixes_test.dart 29:9  main.<fn>
+
+00:00 +0 -1: parser-only commandDependencies cannot add its own Owner
+00:00 +0 -2: parser-only commandDependencies cannot add its own Owner [E]
+  Expected: not contains 'ccrouter_component_owner_dependency_missing'
+    Actual: MappedListIterable<CCRouterAnalyzerDiagnostic, String>:[
+              'ccrouter_component_owner_dependency_missing'
+            ]
+  ownerComponentId
+
+  package:matcher                  expect
+  test/quick_fixes_test.dart 29:9  main.<fn>
+
+00:00 +0 -2: Some tests failed.
+
+Failing tests:
+  test/quick_fixes_test.dart: parser-only commandDependencies cannot add its own Owner
+  test/quick_fixes_test.dart: parser-only serviceDependencies cannot add its own Owner
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

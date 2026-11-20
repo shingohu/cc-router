@@ -469,3 +469,17 @@ Package Index 编码/读取和 Host 校验拒绝不一致、未知及非整数 U
 [独立首次接入技术验证](validation/ui-fragment-adoption-20261020/README.md)保留 enum/DTO 两条路径的复现源码、日志和条件化成本；它不等于未参与实现者的可用性研究。历史实施验收、易用性审查及 Action 增量记录统一保留在[归档索引](archive/20261024-consolidation/README.md)。
 
 回归至少覆盖无 UI 组件兼容、required Owner/Renderer、指纹与旧 schema 拒绝、多实例/重排、Props 竞争、最新 callback、active、Runtime generation、卸载后晚到 Action 和引用释放。UI DevTools Catalog、集合、动态 Slot 与热替换尚未支持。新能力按[后续工作与触发条件](CCRouter-future-work-plan.md)评估；API 冻结、正式分发、平台矩阵与长期性能门禁只在[Release Readiness](CCRouter-release-readiness.md)维护。
+
+## 生成版本输入的错误边界
+
+Host 对格式损坏的版本或消费者范围统一抛出
+`CCUIFragmentError('staleGeneratedOutput', contractId)`，不返回包含原始版本输入的
+`FormatException`。合法范围与已安装版本不匹配仍使用 `versionOutOfRange`；Owner、
+缺少实现、fingerprint 与精确版本快照的既有校验顺序保持。
+
+
+UI Contract 的能力 ID 和 Owner ID 在 Generator、Workspace 与 Host 都限制为 128 字符；
+Owner 使用 lowercase component 规则，能力 ID 保留既有大小写 segment 规则。
+Workspace 对 Contract、Renderer、Requirement 的字段类型、版本和 SHA-256 fingerprint 分别校验，
+即使三份 metadata 内容一致也不接受损坏字段。package-local 阶段同样检查 requirement 范围，
+非法范围只报来源错误，不追加 Host 比较阶段的重复故障。

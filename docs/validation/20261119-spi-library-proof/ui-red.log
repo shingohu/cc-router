@@ -1,0 +1,61 @@
+00:00 +0: loading test/ui_analysis_test.dart
+00:00 +0: UI SPI fileHost paths keep their configured identity
+00:01 +0 -1: UI SPI fileHost paths keep their configured identity [E]
+  Expected: non-empty
+    Actual: WhereIterable<CCRouterAnalyzerDiagnostic>:[]
+
+  package:matcher                    expect
+  test/ui_analysis_test.dart 1305:7  main.<fn>
+
+00:01 +0 -1: UI SPI queryHost paths keep their configured identity
+00:02 +0 -2: UI SPI queryHost paths keep their configured identity [E]
+  Expected: non-empty
+    Actual: WhereIterable<CCRouterAnalyzerDiagnostic>:[]
+
+  package:matcher                    expect
+  test/ui_analysis_test.dart 1305:7  main.<fn>
+
+00:02 +0 -2: UI SPI fileGenerated paths keep their configured identity
+00:03 +0 -3: UI SPI fileGenerated paths keep their configured identity [E]
+  Expected: non-empty
+    Actual: WhereIterable<CCRouterAnalyzerDiagnostic>:[]
+
+  package:matcher                    expect
+  test/ui_analysis_test.dart 1305:7  main.<fn>
+
+00:03 +0 -3: UI SPI queryGenerated paths keep their configured identity
+00:03 +0 -4: UI SPI queryGenerated paths keep their configured identity [E]
+  Expected: non-empty
+    Actual: WhereIterable<CCRouterAnalyzerDiagnostic>:[]
+
+  package:matcher                    expect
+  test/ui_analysis_test.dart 1305:7  main.<fn>
+
+00:03 +0 -4: UI SPI typeAlias paths keep their configured identity
+00:04 +0 -5: UI SPI typeAlias paths keep their configured identity [E]
+  Expected: non-empty
+    Actual: WhereIterable<CCRouterAnalyzerDiagnostic>:[]
+
+  package:matcher                    expect
+  test/ui_analysis_test.dart 1305:7  main.<fn>
+
+00:04 +0 -5: hidden transitive UI SPI names do not count as uses
+00:04 +0 -6: hidden transitive UI SPI names do not count as uses [E]
+  Expected: empty
+    Actual: WhereIterable<String>:['ccrouter_ui_spi_access', 'ccrouter_ui_spi_access']
+
+  package:matcher                    expect
+  test/ui_analysis_test.dart 1314:5  main.<fn>
+
+00:04 +0 -6: a foreign UI SPI copy is not the configured framework library
+00:04 +1 -6: Some tests failed.
+
+Failing tests:
+  test/ui_analysis_test.dart: UI SPI fileGenerated paths keep their configured identity
+  test/ui_analysis_test.dart: UI SPI fileHost paths keep their configured identity
+  test/ui_analysis_test.dart: UI SPI queryGenerated paths keep their configured identity
+  test/ui_analysis_test.dart: UI SPI queryHost paths keep their configured identity
+  ... and 2 more
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

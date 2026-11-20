@@ -634,25 +634,51 @@ final class CCRouterGeneratorDiagnosticsBridge {
   }
 
   /// Resolves one `package:` location through the current Package config.
+  /// Rejects invalid/escaping evidence and re-encodes decoded segments exactly once.
   ({String path, int line, int column, int length})? _resolveLocation(
     Map location,
     Map<String, Uri> roots,
   ) {
     final uriValue = location['uri'];
     if (uriValue is! String || !uriValue.startsWith('package:')) return null;
-    final uri = Uri.tryParse(uriValue);
-    if (uri == null || uri.pathSegments.isEmpty) return null;
-    final packageRoot = roots[uri.pathSegments.first];
-    if (packageRoot == null) return null;
-    final relative = uri.pathSegments.skip(1).join('/');
-    final resolved = packageRoot.resolve(relative);
-    if (resolved.scheme != 'file') return null;
-    return (
-      path: path.normalize(resolved.toFilePath()),
-      line: _positiveInt(location['line']) ?? 1,
-      column: _positiveInt(location['column']) ?? 1,
-      length: _positiveInt(location['length']) ?? 1,
-    );
+    try {
+      final uri = Uri.tryParse(uriValue);
+      if (uri == null ||
+          uri.hasAuthority ||
+          uri.hasAbsolutePath ||
+          uri.hasQuery ||
+          uri.hasFragment ||
+          uri.pathSegments.length < 2 ||
+          uri.pathSegments.any(
+            (segment) =>
+                segment.isEmpty ||
+                segment == '.' ||
+                segment == '..' ||
+                segment.contains('/') ||
+                segment.contains(r'\') ||
+                segment.contains('\u0000'),
+          ))
+        return null;
+      final packageRoot = roots[uri.pathSegments.first];
+      if (packageRoot == null) return null;
+      final resolved = packageRoot.resolveUri(
+        Uri(pathSegments: uri.pathSegments.skip(1)),
+      );
+      if (resolved.scheme != 'file') return null;
+      final rootPath = path.normalize(packageRoot.toFilePath());
+      final targetPath = path.normalize(resolved.toFilePath());
+      if (!path.isWithin(rootPath, targetPath)) return null;
+      return (
+        path: targetPath,
+        line: _positiveInt(location['line']) ?? 1,
+        column: _positiveInt(location['column']) ?? 1,
+        length: _positiveInt(location['length']) ?? 1,
+      );
+    } on FormatException {
+      return null;
+    } on UnsupportedError {
+      return null;
+    }
   }
 
   /// Finds the nearest Host carrying watch or one-shot diagnostics evidence.

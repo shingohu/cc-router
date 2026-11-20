@@ -85,7 +85,7 @@ abstract final class CCComponentDependencyPreflight {
       parsed.add(_ParsedSource(source: source, unit: unit));
     }
     final scope = _LibraryScope(parsed);
-    final componentIds = _componentIds(parsed);
+    final componentIds = _componentIds(parsed, scope);
     final contracts = _contracts(parsed, componentIds, scope);
     final issues = <CCComponentDependencyPreflightIssue>[];
     for (final file in parsed.where((item) => item.source.writable)) {
@@ -95,6 +95,8 @@ abstract final class CCComponentDependencyPreflight {
           final arguments = _constructorArguments(
             variable.initializer,
             'CCComponent',
+            source: file,
+            scope: scope,
           );
           if (arguments == null) continue;
           final componentId = _resolveComponentId(
@@ -157,6 +159,8 @@ abstract final class CCComponentDependencyPreflight {
           for (final entry
               in missing.entries.toList()
                 ..sort((left, right) => left.key.compareTo(right.key))) {
+            // A self requirement is an invalid declaration, not a missing edge.
+            if (entry.key == componentId) continue;
             entry.value.sort((left, right) {
               final kind = left.kind.compareTo(right.kind);
               return kind != 0 ? kind : left.id.compareTo(right.id);
@@ -184,7 +188,10 @@ abstract final class CCComponentDependencyPreflight {
   }
 
   /// Indexes constants by their declaring library, never by Package alone.
-  static Map<_SymbolKey, String> _componentIds(List<_ParsedSource> sources) {
+  static Map<_SymbolKey, String> _componentIds(
+    List<_ParsedSource> sources,
+    _LibraryScope scope,
+  ) {
     final values = <_SymbolKey, Set<String>>{};
     for (final source in sources) {
       for (final declaration
@@ -192,7 +199,11 @@ abstract final class CCComponentDependencyPreflight {
               .whereType<TopLevelVariableDeclaration>()) {
         if (!declaration.variables.isConst) continue;
         for (final variable in declaration.variables.variables) {
-          final id = _componentIdLiteral(variable.initializer);
+          final id = _componentIdLiteral(
+            variable.initializer,
+            source: source,
+            scope: scope,
+          );
           if (id == null) continue;
           values
               .putIfAbsent(
@@ -228,6 +239,11 @@ abstract final class CCComponentDependencyPreflight {
           };
           final arguments = annotation.arguments;
           if (kind == null || arguments == null) continue;
+          final prefix = annotation.name is PrefixedIdentifier
+              ? (annotation.name as PrefixedIdentifier).prefix.name
+              : null;
+          if (!scope._isFramework(source, prefix: prefix, symbol: name))
+            continue;
           final componentId = _resolveComponentId(
             _namedArgument(arguments.arguments, 'componentId'),
             source: source,
@@ -269,7 +285,12 @@ abstract final class CCComponentDependencyPreflight {
       return;
     }
     for (final dependency in expression.elements.whereType<Expression>()) {
-      final contractType = _dependencyType(dependency, constructorName);
+      final contractType = _dependencyType(
+        dependency,
+        constructorName,
+        source: source,
+        scope: scope,
+      );
       if (contractType == null) continue;
       final symbol = scope.resolve(
         source,
@@ -305,7 +326,11 @@ abstract final class CCComponentDependencyPreflight {
     required Map<_SymbolKey, String> componentIds,
     required _LibraryScope scope,
   }) {
-    final literal = _componentIdLiteral(expression);
+    final literal = _componentIdLiteral(
+      expression,
+      source: source,
+      scope: scope,
+    );
     if (literal != null) return literal;
     final symbol = switch (expression) {
       SimpleIdentifier value => (null, value.name),
@@ -324,15 +349,17 @@ abstract final class CCComponentDependencyPreflight {
   /// Reads the type argument of one direct dependency constructor.
   static (String?, String)? _dependencyType(
     Expression expression,
-    String constructorName,
-  ) {
+    String constructorName, {
+    required _ParsedSource source,
+    required _LibraryScope scope,
+  }) {
+    if (!_isFrameworkConstructor(expression, constructorName, source, scope))
+      return null;
     final typeArguments = switch (expression) {
       InstanceCreationExpression value
           when value.constructorName.type.name.lexeme == constructorName =>
         value.constructorName.type.typeArguments?.arguments,
-      MethodInvocation value
-          when value.target == null &&
-              value.methodName.name == constructorName =>
+      MethodInvocation value when value.methodName.name == constructorName =>
         value.typeArguments?.arguments,
       _ => null,
     };
@@ -343,8 +370,17 @@ abstract final class CCComponentDependencyPreflight {
   }
 
   /// Reads one direct `CCComponentId('value')` expression.
-  static String? _componentIdLiteral(Expression? expression) {
-    final arguments = _constructorArguments(expression, 'CCComponentId');
+  static String? _componentIdLiteral(
+    Expression? expression, {
+    required _ParsedSource source,
+    required _LibraryScope scope,
+  }) {
+    final arguments = _constructorArguments(
+      expression,
+      'CCComponentId',
+      source: source,
+      scope: scope,
+    );
     if (arguments == null || arguments.length != 1) return null;
     return _stringLiteral(arguments.single);
   }
@@ -352,16 +388,44 @@ abstract final class CCComponentDependencyPreflight {
   /// Reads arguments from one direct constructor-shaped expression.
   static NodeList<Expression>? _constructorArguments(
     Expression? expression,
-    String typeName,
-  ) => switch (expression) {
-    InstanceCreationExpression value
-        when value.constructorName.type.name.lexeme == typeName =>
-      value.argumentList.arguments,
-    MethodInvocation value
-        when value.target == null && value.methodName.name == typeName =>
-      value.argumentList.arguments,
-    _ => null,
-  };
+    String typeName, {
+    required _ParsedSource source,
+    required _LibraryScope scope,
+  }) {
+    if (!_isFrameworkConstructor(expression, typeName, source, scope))
+      return null;
+    return switch (expression) {
+      InstanceCreationExpression value
+          when value.constructorName.type.name.lexeme == typeName =>
+        value.argumentList.arguments,
+      MethodInvocation value when value.methodName.name == typeName =>
+        value.argumentList.arguments,
+      _ => null,
+    };
+  }
+
+  /// Requires the referenced declaration to come from the canonical framework library.
+  static bool _isFrameworkConstructor(
+    Expression? expression,
+    String expected,
+    _ParsedSource source,
+    _LibraryScope scope,
+  ) {
+    final (prefix, symbol) = switch (expression) {
+      InstanceCreationExpression e => (
+        e.constructorName.type.importPrefix?.name.lexeme,
+        e.constructorName.type.name.lexeme,
+      ),
+      MethodInvocation e when e.target == null => (null, e.methodName.name),
+      MethodInvocation e when e.target is SimpleIdentifier => (
+        (e.target as SimpleIdentifier).name,
+        e.methodName.name,
+      ),
+      _ => (null, ''),
+    };
+    return symbol == expected &&
+        scope._isFramework(source, prefix: prefix, symbol: symbol);
+  }
 
   /// Reads one named argument from a direct argument list.
   static Expression? _namedArgument(
@@ -460,6 +524,28 @@ final class _LibraryScope {
   /// Authored sources keyed by canonical package URI.
   final Map<String, _ParsedSource> files;
 
+  /// Canonical declarations available through the known public Core barrels.
+  static const _frameworkDeclarations = {
+    'CCComponent': 'component',
+    'CCComponentId': 'component',
+    'CCServiceContract': 'service',
+    'CCServiceDependency': 'service',
+    'CCCommandContract': 'messaging',
+    'CCCommandDependency': 'messaging',
+  };
+
+  /// Proves namespace identity without assuming a matching authored spelling is Core.
+  bool _isFramework(
+    _ParsedSource source, {
+    required String? prefix,
+    required String symbol,
+  }) {
+    final file = _frameworkDeclarations[symbol];
+    return file != null &&
+        resolve(source, prefix: prefix, symbol: symbol) ==
+            _SymbolKey('package:ccrouter_contracts/src/$file.dart', symbol);
+  }
+
   /// Resolves local declarations or one unambiguous visible imported symbol.
   _SymbolKey? resolve(
     _ParsedSource source, {
@@ -484,15 +570,22 @@ final class _LibraryScope {
       }
       final uri = directive.uri.stringValue;
       if (uri == null) return null;
-      final found = _exported(
-        Uri.parse(source.libraryUri).resolve(uri).toString(),
-        symbol,
-        {},
-      );
+      final resolved = _resolveUri(source.libraryUri, uri);
+      if (resolved == null) return null;
+      final found = _exported(resolved, symbol, {});
       if (found == null) return null;
       candidates.addAll(found);
     }
     return candidates.length == 1 ? candidates.single : null;
+  }
+
+  /// Malformed authored URIs are unknown namespaces; Builder owns their errors.
+  static String? _resolveUri(String libraryUri, String target) {
+    try {
+      return Uri.parse(libraryUri).resolve(target).toString();
+    } on FormatException {
+      return null;
+    }
   }
 
   /// Follows exact export edges; an unavailable or conditional branch is unknown.
@@ -501,7 +594,15 @@ final class _LibraryScope {
     try {
       final source = files[uri];
       if (source == null) {
-        // Framework and SDK imports cannot declare authored component identities.
+        final file = _frameworkDeclarations[symbol];
+        if (file != null &&
+            (uri == 'package:ccrouter/ccrouter.dart' ||
+                uri == 'package:ccrouter_contracts/ccrouter_contracts.dart')) {
+          return {
+            _SymbolKey('package:ccrouter_contracts/src/$file.dart', symbol),
+          };
+        }
+        // Other framework/SDK names cannot declare authored component identities.
         if (uri.startsWith('dart:') ||
             uri == 'package:ccrouter/ccrouter.dart' ||
             uri == 'package:ccrouter_contracts/ccrouter_contracts.dart' ||
@@ -521,11 +622,9 @@ final class _LibraryScope {
         if (directive.configurations.isNotEmpty) return null;
         final target = directive.uri.stringValue;
         if (target == null) return null;
-        final found = _exported(
-          Uri.parse(uri).resolve(target).toString(),
-          symbol,
-          visiting,
-        );
+        final resolved = _resolveUri(uri, target);
+        if (resolved == null) return null;
+        final found = _exported(resolved, symbol, visiting);
         if (found == null) return null;
         result.addAll(found);
       }

@@ -1,0 +1,25 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart
+00:00 +0: file URI imports and exports obey the same Package boundary
+00:00 +0 -1: file URI imports and exports obey the same Package boundary [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+  import 'file:///var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter_api_file_j2QquZ/target/lib/src/ccrouter_generated/hidden.dart';
+
+  package:matcher                                                                       expect
+  packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart 42:9  main.<fn>
+
+00:00 +0 -1: escaped generated directory names cannot bypass the AST check
+00:00 +0 -2: escaped generated directory names cannot bypass the AST check [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+  import 'package:target/src/\u0063\u0063router_generated/hidden.dart';
+
+  package:matcher                                                                       expect
+  packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart 68:9  main.<fn>
+
+00:00 +0 -2: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

@@ -12,7 +12,8 @@ void main() {
     'componentId': 'orders',
     'id': 'orders.card',
     'version': '1.0.0',
-    'shapeFingerprint': 'shape',
+    'shapeFingerprint':
+        'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     'declaration': reference('Card'),
   };
   List<Map<String, Object?>> documents() => [
@@ -106,6 +107,89 @@ void main() {
       isEmpty,
     );
   });
+
+  for (final field in ['componentId', 'id']) {
+    test('UI metadata accepts the exact 128 character $field boundary', () {
+      final docs = documents();
+      final value = 'a' * 128;
+      for (final (index, role) in [
+        (0, 'uiContracts'),
+        (1, 'uiRenderers'),
+        (2, 'uiRequirements'),
+      ]) {
+        (docs[index][role] as List).single[field] = value;
+      }
+      if (field == 'componentId') {
+        (docs[1]['components'] as List).single['id'] = value;
+        (docs[2]['components'] as List).single['dependencies'] = [value];
+      }
+      expect(validateUIFragmentWorkspaceDiagnostics(docs, host: true), isEmpty);
+    });
+  }
+
+  for (final (field, invalid) in [
+    ('componentId', 'Orders'),
+    ('componentId', 'a' * 129),
+    ('id', 'a' * 129),
+    ('id', ''),
+    ('id', 17),
+    ('shapeFingerprint', 'shape'),
+    ('shapeFingerprint', null),
+    ('version', 'invalid'),
+    ('version', null),
+  ]) {
+    for (final host in [false, true]) {
+      test(
+        'UI ${host ? 'Host' : 'Package'} rejects matching malformed $field: $invalid',
+        () {
+          final docs = documents();
+          for (final (index, role) in [
+            (0, 'uiContracts'),
+            (1, 'uiRenderers'),
+            (2, 'uiRequirements'),
+          ]) {
+            (docs[index][role] as List).single[field] = invalid;
+          }
+          final diagnostics = validateUIFragmentWorkspaceDiagnostics(
+            docs,
+            host: host,
+          );
+          expect(
+            diagnostics.map((issue) => issue.code),
+            contains('ccrouter_ui_stale_generated_output'),
+          );
+        },
+      );
+    }
+  }
+  test(
+    'package-local UI metadata rejects an invalid range without Host closure',
+    () {
+      final docs = documents();
+      (docs[2]['uiRequirements'] as List).single['versionRange'] = 'invalid';
+      expect(
+        validateUIFragmentWorkspaceDiagnostics(
+          docs,
+          host: false,
+        ).map((issue) => issue.code),
+        contains('ccrouter_ui_stale_generated_output'),
+      );
+    },
+  );
+  test(
+    'invalid UI range produces one source error instead of Host fallout',
+    () {
+      final docs = documents();
+      (docs[2]['uiRequirements'] as List).single['versionRange'] = 'invalid';
+      final diagnostics = validateUIFragmentWorkspaceDiagnostics(
+        docs,
+        host: true,
+      );
+      expect(diagnostics, hasLength(1));
+      expect(diagnostics.single.code, 'ccrouter_ui_stale_generated_output');
+    },
+  );
+
   for (final range in [
     '>=1.0.0',
     '<=1.0.0',
@@ -135,7 +219,7 @@ void main() {
     'missing_implementation': (docs) => docs[1]['uiRenderers'] = <Object?>[],
     'fingerprint_changed': (docs) =>
         (docs[2]['uiRequirements'] as List).single['shapeFingerprint'] =
-            'new-shape',
+            'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
     'version_out_of_range': (docs) =>
         (docs[2]['uiRequirements'] as List).single['versionRange'] = '^2.0.0',
   };
@@ -167,6 +251,15 @@ void main() {
     for (final uri in [
       'file:///local/source.dart',
       'package:sample/../outside.dart',
+      'package:/sample/ui.dart',
+      'package://sample/ui.dart',
+      'package:sample/ui.dart?query',
+      'package:sample/ui.dart#fragment',
+      'package:sample/%FF.dart',
+      'package:sample/%00.dart',
+      'package:sample/sub%2Fui.dart',
+      'package:sample/sub%5Cui.dart',
+      'package:sample//ui.dart',
       'invalid',
     ]) {
       final docs = documents();
@@ -181,6 +274,27 @@ void main() {
           host: true,
         ).single.primaryLocation,
         isNull,
+      );
+    }
+  });
+
+  test('valid encoded UI diagnostic locations preserve source identity', () {
+    for (final uri in [
+      'package:sample/ui%23card.dart',
+      'package:sample/ui%25FF.dart',
+    ]) {
+      final docs = documents();
+      docs[1]['uiRenderers'] = <Object?>[];
+      (docs[2]['uiRequirements'] as List).single['consumerDeclaration'] = {
+        ...reference('component'),
+        'packageUri': uri,
+      };
+      expect(
+        validateUIFragmentWorkspaceDiagnostics(
+          docs,
+          host: true,
+        ).single.primaryLocation!.uri,
+        uri,
       );
     }
   });

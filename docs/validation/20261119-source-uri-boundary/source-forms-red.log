@@ -1,0 +1,95 @@
+00:00 +0: loading test/semantic_analysis_test.dart
+00:00 +0: POSIX file authorities retain the local generated boundary
+00:01 +0 -1: POSIX file authorities retain the local generated boundary [E]
+  Expected: an object with length of <1>
+    Actual: WhereIterable<CCRouterAnalyzerDiagnostic>:[]
+     Which: has length of <0>
+
+  package:matcher                         expect
+  test/semantic_analysis_test.dart 494:5  main.<fn>
+
+00:01 +0 -1: resolved fileQuery imports retain generated identity
+00:02 +0 -2: resolved fileQuery imports retain generated identity [E]
+  Expected: an object with length of <1>
+    Actual: WhereIterable<CCRouterAnalyzerDiagnostic>:[]
+     Which: has length of <0>
+
+  package:matcher                         expect
+  test/semantic_analysis_test.dart 514:7  main.<fn>
+
+00:02 +0 -2: resolved fileFragment imports retain generated identity
+00:03 +0 -3: resolved fileFragment imports retain generated identity [E]
+  Expected: empty
+    Actual: WhereIterable<Diagnostic>:[
+              Diagnostic:/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-semantic-J6rBrO/lib/sample.dart(7..142): Target of URI doesn't exist: 'file:///var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-semantic-J6rBrO/owner/lib/src/ccrouter_generated/hidden.dart#fragment'.
+            ]
+
+  package:matcher                         expect
+  test/semantic_analysis_test.dart 513:7  main.<fn>
+
+00:03 +0 -3: resolved fileSeparator imports retain generated identity
+00:03 +0 -4: resolved fileSeparator imports retain generated identity [E]
+  Expected: an object with length of <1>
+    Actual: WhereIterable<CCRouterAnalyzerDiagnostic>:[]
+     Which: has length of <0>
+
+  package:matcher                         expect
+  test/semantic_analysis_test.dart 514:7  main.<fn>
+
+00:03 +0 -4: resolved packageQuery imports retain generated identity
+00:04 +0 -5: resolved packageQuery imports retain generated identity [E]
+  Expected: an object with length of <1>
+    Actual: WhereIterable<CCRouterAnalyzerDiagnostic>:[]
+     Which: has length of <0>
+
+  package:matcher                         expect
+  test/semantic_analysis_test.dart 514:7  main.<fn>
+
+00:04 +0 -5: resolved packageFragment imports retain generated identity
+00:04 +0 -6: resolved packageFragment imports retain generated identity [E]
+  Expected: empty
+    Actual: WhereIterable<Diagnostic>:[
+              Diagnostic:/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-semantic-mhA1BL/lib/sample.dart(7..75): Target of URI doesn't exist: 'package:owner_contracts/src/ccrouter_generated/hidden.dart#fragment'.
+            ]
+
+  package:matcher                         expect
+  test/semantic_analysis_test.dart 513:7  main.<fn>
+
+00:04 +0 -6: resolved packageAbsolute imports retain generated identity
+00:04 +0 -7: resolved packageAbsolute imports retain generated identity [E]
+  Expected: an object with length of <1>
+    Actual: WhereIterable<CCRouterAnalyzerDiagnostic>:[]
+     Which: has length of <0>
+
+  package:matcher                         expect
+  test/semantic_analysis_test.dart 514:7  main.<fn>
+
+00:04 +0 -7: resolved packageAuthority imports retain generated identity
+00:05 +0 -8: resolved packageAuthority imports retain generated identity [E]
+  Expected: an object with length of <1>
+    Actual: WhereIterable<CCRouterAnalyzerDiagnostic>:[]
+     Which: has length of <0>
+
+  package:matcher                         expect
+  test/semantic_analysis_test.dart 514:7  main.<fn>
+
+00:05 +0 -8: resolved packageSeparator imports retain generated identity
+00:05 +0 -9: resolved packageSeparator imports retain generated identity [E]
+  Expected: an object with length of <1>
+    Actual: WhereIterable<CCRouterAnalyzerDiagnostic>:[]
+     Which: has length of <0>
+
+  package:matcher                         expect
+  test/semantic_analysis_test.dart 514:7  main.<fn>
+
+00:05 +0 -9: Some tests failed.
+
+Failing tests:
+  test/semantic_analysis_test.dart: POSIX file authorities retain the local generated boundary
+  test/semantic_analysis_test.dart: resolved fileFragment imports retain generated identity
+  test/semantic_analysis_test.dart: resolved fileQuery imports retain generated identity
+  test/semantic_analysis_test.dart: resolved fileSeparator imports retain generated identity
+  ... and 5 more
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

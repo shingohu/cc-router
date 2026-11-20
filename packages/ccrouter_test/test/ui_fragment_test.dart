@@ -240,6 +240,147 @@ Matcher _code(String code) =>
     isA<CCUIFragmentError>().having((e) => e.code, 'code', code);
 
 void main() {
+  test('UI Host uses the generated lowercase Owner grammar', () {
+    for (final owner in ['Orders', 'orders.Team']) {
+      final descriptor = CCUIFragmentDescriptor(
+        owner: owner,
+        id: 'orders.summary',
+        version: '1.0.0',
+        fingerprint: _fingerprint,
+      );
+      final base = CCHostAssembly.fromComponents(
+        components: [
+          CCComponentManifest(
+            id: owner,
+            version: '1.0.0',
+            registrar: const _Registrar(),
+          ),
+        ],
+      );
+      expect(
+        () => CCUIHostAssembly.attach(
+          base,
+          contributions: [
+            CCUIRenderer<_Props, _Action>(
+              contract: descriptor,
+              renderer: _renderer,
+            ),
+          ],
+          requirements: [],
+        ),
+        throwsA(_code('staleGeneratedOutput')),
+      );
+    }
+  });
+
+  for (final field in ['owner', 'id']) {
+    for (final length in [128, 129]) {
+      test(
+        'UI Host enforces the generated $field length boundary at $length',
+        () {
+          final value = 'a' * length;
+          final owner = field == 'owner' ? value : 'orders';
+          final descriptor = CCUIFragmentDescriptor(
+            owner: owner,
+            id: field == 'id' ? value : 'orders.summary',
+            version: '1.0.0',
+            fingerprint: _fingerprint,
+          );
+          final base = CCHostAssembly.fromComponents(
+            components: [
+              CCComponentManifest(
+                id: owner,
+                version: '1.0.0',
+                registrar: const _Registrar(),
+              ),
+              CCComponentManifest(
+                id: 'account',
+                version: '1.0.0',
+                registrar: const _Registrar(),
+                dependencies: [owner],
+              ),
+            ],
+          );
+          CCHostAssembly attach() => CCUIHostAssembly.attach(
+            base,
+            contributions: [
+              CCUIRenderer<_Props, _Action>(
+                contract: descriptor,
+                renderer: _renderer,
+              ),
+            ],
+            requirements: [
+              CCUIFragmentRequirement(
+                consumer: 'account',
+                contract: descriptor,
+                versionRange: '^1.0.0',
+              ),
+            ],
+          );
+          if (length == 128) {
+            expect(attach, returnsNormally);
+          } else {
+            expect(attach, throwsA(_code('staleGeneratedOutput')));
+          }
+          expect(CCRouter.isInitialized, isFalse);
+        },
+      );
+    }
+  }
+
+  for (final corrupt in ['ownerVersion', 'consumerVersion', 'range']) {
+    test(
+      'malformed $corrupt yields a stable sanitized UI compatibility error',
+      () {
+        const invalid = 'invalid-version-input';
+        final owner = CCUIFragmentDescriptor(
+          owner: 'orders',
+          id: 'orders.summary',
+          version: corrupt == 'ownerVersion' ? invalid : '1.0.0',
+          fingerprint: _fingerprint,
+        );
+        final expected = CCUIFragmentDescriptor(
+          owner: 'orders',
+          id: 'orders.summary',
+          version: corrupt == 'consumerVersion' ? invalid : '1.0.0',
+          fingerprint: _fingerprint,
+        );
+        expect(
+          () => _assembly(
+            contributions: [
+              CCUIRenderer<_Props, _Action>(
+                contract: owner,
+                renderer: _renderer,
+              ),
+            ],
+            requirements: [
+              CCUIFragmentRequirement(
+                consumer: 'account',
+                contract: expected,
+                versionRange: corrupt == 'range' ? invalid : '^1.0.0',
+              ),
+            ],
+          ),
+          throwsA(
+            isA<CCUIFragmentError>()
+                .having((error) => error.code, 'code', 'staleGeneratedOutput')
+                .having(
+                  (error) => error.contractId,
+                  'identity',
+                  'orders.summary',
+                )
+                .having(
+                  (error) => error.toString(),
+                  'sanitized',
+                  isNot(contains(invalid)),
+                ),
+          ),
+        );
+        expect(CCRouter.isInitialized, isFalse);
+      },
+    );
+  }
+
   setUp(() {
     _created = 0;
     _disposed = 0;

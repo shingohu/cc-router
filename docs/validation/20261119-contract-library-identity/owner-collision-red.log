@@ -1,0 +1,29 @@
+00:00 +0: loading test/ui_analysis_test.dart
+00:00 +0: Service Owner cache retains same-name Contracts from distinct Libraries
+00:01 +0 -1: Service Owner cache retains same-name Contracts from distinct Libraries [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+  first
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 53:9  main.<fn>
+
+00:01 +0 -1: Command Owner cache retains same-name Contracts from distinct Libraries
+00:01 +0 -2: Command Owner cache retains same-name Contracts from distinct Libraries [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+  first
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 53:9  main.<fn>
+
+00:01 +0 -2: Some tests failed.
+
+Failing tests:
+  test/ui_analysis_test.dart: Command Owner cache retains same-name Contracts from distinct Libraries
+  test/ui_analysis_test.dart: Service Owner cache retains same-name Contracts from distinct Libraries
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

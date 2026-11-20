@@ -37,6 +37,7 @@ final class CCComponentId {
 /// package-internal routes, services, and contributions to it, then generates
 /// the Runtime Registrar and Manifest. Contracts packages declare only
 /// [CCComponentId] values and public contracts, never a [CCComponent].
+/// A nullable const whose value is null is absence and publishes no component.
 final class CCComponent {
   /// Creates one immutable component definition.
   const CCComponent({
@@ -101,6 +102,7 @@ final class CCComponent {
 /// I/O, navigate, resolve services, or retain the supplied Registry.
 final class CCComponentContribution {
   /// Creates a contribution with one stable component-local [id].
+  /// A function carries exactly one [CCComponentContribution] annotation.
   const CCComponentContribution({required this.id});
 
   /// Stable identifier used for deterministic ordering and duplicate checks.

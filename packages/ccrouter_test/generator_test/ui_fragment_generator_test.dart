@@ -603,7 +603,8 @@ const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
       'componentId': 'orders',
       'id': 'orders.summary',
       'version': '1.0.0',
-      'shapeFingerprint': 'shape',
+      'shapeFingerprint':
+          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
       'declaration': {
         'packageUri': 'package:contracts/ui.dart',
         'symbol': 'Summary',
@@ -675,7 +676,8 @@ const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
         'componentId': 'orders',
         'id': 'selection',
         'version': '2.0.0',
-        'shapeFingerprint': 'payload-shape',
+        'shapeFingerprint':
+            'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
         'uiSchemaVersion': 2,
       };
       final documents = <Map<String, Object?>>[
@@ -740,7 +742,8 @@ const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
       'componentId': 'orders',
       'id': 'orders.summary',
       'version': '1.0.0',
-      'shapeFingerprint': 'shape',
+      'shapeFingerprint':
+          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     };
     final documents = <Map<String, Object?>>[
       {
@@ -788,7 +791,8 @@ const component = CCComponent(id: CCComponentId('account'), version: '1.0.0',
       'componentId': 'orders',
       'id': 'orders.summary',
       'version': '1.0.0',
-      'shapeFingerprint': 'shape',
+      'shapeFingerprint':
+          'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
     };
     final documents = <Map<String, Object?>>[
       {

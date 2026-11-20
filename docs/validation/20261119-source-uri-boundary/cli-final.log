@@ -1,0 +1,5 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/internal_api_boundary_command_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: CLI rejects alternate internal imports before changing artifacts
+00:19 +1: (tearDownAll)
+00:19 +1: All tests passed!

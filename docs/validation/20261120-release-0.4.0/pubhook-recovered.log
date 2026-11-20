@@ -1,0 +1,42 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/pub_hook_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: failure rendering removes routine Builder progress after success
+00:00 +1: infers only the Dart executable paired Flutter SDK
+00:00 +2: failure rendering preserves complete output before Builder success
+00:00 +3: pub-hook install preserves an entrypoint when its rename fails
+00:01 +4: pub-hook install, status, and uninstall are reversible
+00:05 +5: pub-hook uninstall safely restores a verified schema 4 install
+00:09 +6: schema 5 install is stale but remains safely uninstallable
+00:14 +7: schema 6 install is stale but remains safely uninstallable
+00:18 +8: schema 4 uninstall rejects unowned Dart backups
+00:21 +9: installed wrapper preserves successful pub exit and skips plain projects
+00:26 +10: installed wrapper never runs generation for help or dry-run Pub calls
+00:29 +11: Flutter wrapper locates only the real top-level command
+00:32 +12: clean guard rejects only a live watch owner
+00:35 +13: clean guard also rejects a live V1 watch owner
+00:36 +14: inner Dart wrapper runs post-pub once and preserves bypass semantics
+00:40 +15: inner Dart wrapper runs generation from the Package root
+00:42 +16: Flutter wrapper suppresses nested Dart post-pub hooks
+00:47 +17: pub-hook run skips a project without resolved CCRouter packages
+00:48 +18: pub-hook run skips a Workspace aggregator
+00:50 +19: post-pub hook runs package-local generation for participating Packages
+00:59 +20: package-local post-pub reports a covering active Host watch
+01:01 +21: package-local post-pub reuses exact active Host watch evidence
+01:03 +22: package-local post-pub fails fast when evidence is unavailable
+01:04 +23: package-local post-pub uses stable Builder session without local status
+01:05 +24: package-local post-pub reports an active Host watch without its target
+01:07 +25: package-local post-pub ignores stale build-root watch status
+01:08 +26: package-local post-pub rejects malformed or wrong-root watch evidence
+01:11 +27: run and pub hooks emit concise phase-specific generation logs
+01:20 +28: failed hook preserves actionable generator diagnostics
+01:22 +29: post-pub hook waits for an active watch aggregation
+01:23 +30: post-pub hook uses stable Host session without local status
+01:25 +31: post-pub hook reuses a watch through a symlinked Host path
+01:26 +32: post-pub hook surfaces active watch generation diagnostics
+01:28 +33: post-pub hook fails quickly when resolution changes during a failed cycle
+01:30 +34: post-pub hook does not reuse a historical watch failure
+01:31 +35: post-pub hook waits for ready after a watch session restart
+01:34 +36: post-pub hook fences a new failure from a legacy watch status
+01:36 +37: run and build execute a generation preflight before Flutter
+01:39 +38: (tearDownAll)
+01:39 +38: All tests passed!

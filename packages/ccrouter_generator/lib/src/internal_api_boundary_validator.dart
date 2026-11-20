@@ -15,6 +15,16 @@ final class CCGeneratedInternalApiBoundaryValidator {
   /// Reports forbidden imports and exports in writable Package production code.
   static List<String> validate(Iterable<CCResolvedPackage> packages) {
     final resolved = packages.toList(growable: false);
+    final libraryRoots = {
+      for (final package in resolved)
+        package.name: path.join(package.root.absolute.path, 'lib'),
+    };
+    final generatedRoots = {
+      for (final entry in libraryRoots.entries)
+        entry.key: _nativeSourcePath(
+          path.join(entry.value, 'src', 'ccrouter_generated'),
+        ),
+    };
     final errors = <String>[];
     for (final package in resolved.where((entry) => entry.writable)) {
       final sourceRoot = Directory(path.join(package.root.path, 'lib'));
@@ -30,7 +40,8 @@ final class CCGeneratedInternalApiBoundaryValidator {
         final source = path.normalize(entity.absolute.path);
         if (path.isWithin(generatedRoot, source)) continue;
         final content = entity.readAsStringSync();
-        if (!content.contains('ccrouter_generated')) continue;
+        if (!content.contains('import') && !content.contains('export'))
+          continue;
         final parsed = parseString(
           content: content,
           path: source,
@@ -50,7 +61,8 @@ final class CCGeneratedInternalApiBoundaryValidator {
                   literal,
                   source,
                   package.name,
-                  resolved,
+                  libraryRoots,
+                  generatedRoots,
                 )) {
               continue;
             }
@@ -71,30 +83,48 @@ final class CCGeneratedInternalApiBoundaryValidator {
   }
 }
 
-/// Resolves a directive URI without treating comments or string literals as imports.
+/// Resolves Package, relative and file URI identity against the same boundary.
+/// Malformed source URIs remain Builder errors.
 bool _isForeignGeneratedLibrary(
   String literal,
   String source,
   String owner,
-  List<CCResolvedPackage> packages,
+  Map<String, String> libraryRoots,
+  Map<String, String> generatedRoots,
 ) {
-  final uri = Uri.tryParse(literal);
-  if (uri == null) return false;
-  if (uri.scheme == 'package') {
-    final segments = uri.pathSegments;
-    return segments.length > 3 &&
-        segments.first != owner &&
-        segments[1] == 'src' &&
-        segments[2] == 'ccrouter_generated';
+  try {
+    final uri = Uri.tryParse(literal);
+    if (uri == null || uri.hasFragment) return false;
+    final String targetPath;
+    if (uri.scheme == 'package') {
+      final segments = uri.pathSegments;
+      if (segments.length < 2) return false;
+      final root = libraryRoots[segments.first];
+      if (root == null) return false;
+      targetPath = path.join(root, path.joinAll(segments.skip(1)));
+    } else {
+      if (uri.hasScheme && uri.scheme != 'file') return false;
+      targetPath = path.fromUri(Uri.file(source).resolveUri(uri));
+    }
+    if (targetPath.contains('\u0000')) return false;
+    final target = _nativeSourcePath(targetPath);
+    for (final entry in generatedRoots.entries) {
+      if (entry.key != owner && path.isWithin(entry.value, target)) return true;
+    }
+    return false;
+  } on FormatException {
+    return false;
+  } on UnsupportedError {
+    return false;
   }
-  if (uri.hasScheme) return false;
-  final target = path.normalize(Uri.file(source).resolveUri(uri).toFilePath());
-  for (final package in packages) {
-    if (package.name == owner) continue;
-    final generatedRoot = path.normalize(
-      path.join(package.root.absolute.path, 'lib', 'src', 'ccrouter_generated'),
-    );
-    if (path.isWithin(generatedRoot, target)) return true;
+}
+
+/// Resolves existing aliases; absent editor/build inputs keep lexical identity.
+String _nativeSourcePath(String value) {
+  final file = File(value).absolute;
+  try {
+    return path.normalize(file.resolveSymbolicLinksSync());
+  } on FileSystemException {
+    return path.normalize(file.path);
   }
-  return false;
 }

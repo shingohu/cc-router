@@ -1,0 +1,97 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: Route null pattern with patterns
+00:06 +1: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: Route null pattern with patterns
+00:08 +2: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: Route pattern with empty patterns
+00:10 +3: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: Route pattern with empty patterns
+00:11 +4: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: Route constant null pattern
+00:13 +5: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: Route constant null pattern
+00:15 +6: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: Route two active patterns
+00:16 +7: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: Route two active patterns
+00:18 +8: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: InitTask null contract with ID
+00:19 +9: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: InitTask null contract with ID
+00:21 +10: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: InitTask constant null contract
+00:23 +11: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: InitTask constant null contract
+00:25 +12: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: InitTask contract with null ID
+00:26 +13: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: InitTask contract with null ID
+00:28 +14: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: InitTask contract with constant null ID
+00:30 +15: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: InitTask contract with constant null ID
+00:32 +16: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: InitTask two active identities
+00:33 +17: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: InitTask two active identities
+00:35 +18: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: InitTask two null identities
+00:37 +19: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: InitTask two null identities
+00:38 +20: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: Route Contract null pattern with patterns
+00:40 +21: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: Route Contract null pattern with patterns
+00:42 +22: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: Route Contract pattern with empty patterns
+00:43 +23: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: Route Contract pattern with empty patterns
+00:45 +24: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: Route Contract constant null pattern
+00:47 +25: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: Route Contract constant null pattern
+00:48 +26: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator metadata argument semantics: Route Contract two active patterns
+00:50 +27: packages/ccrouter_test/generator_test/annotation_argument_consistency_test.dart: Generator source argument semantics: Route Contract two active patterns
+00:51 +28: loading packages/ccrouter_test/generator_test/nullable_declaration_test.dart
+00:51 +28: packages/ccrouter_test/generator_test/nullable_declaration_test.dart: metadata/src/probe.component.json ignores absent nullable component constants
+00:57 +29: packages/ccrouter_test/generator_test/nullable_declaration_test.dart: component/probe.service_api.g.dart ignores absent nullable component constants
+00:59 +30: loading packages/ccrouter_test/generator_test/init_task_generator_test.dart
+00:59 +30: packages/ccrouter_test/generator_test/init_task_generator_test.dart: task builder emits complete typed registration
+01:05 +31: packages/ccrouter_test/generator_test/init_task_generator_test.dart: nullable omission support still rejects inline Contract construction
+01:08 +32: packages/ccrouter_test/generator_test/init_task_generator_test.dart: a same-name Duration holder keeps its actual positive timeout
+01:10 +33: packages/ccrouter_test/generator_test/init_task_generator_test.dart: zero-argument internal task is adapted to Runtime signature
+01:12 +34: packages/ccrouter_test/generator_test/init_task_generator_test.dart: FutureOr Handler may receive invocation context
+01:14 +35: packages/ccrouter_test/generator_test/init_task_generator_test.dart: metadata records Contract DAG and source locations
+01:15 +36: packages/ccrouter_test/generator_test/init_task_generator_test.dart: contract and id cannot be configured together
+01:17 +37: packages/ccrouter_test/generator_test/init_task_generator_test.dart: invalid Handler signature fails generation
+01:19 +38: packages/ccrouter_test/generator_test/init_task_generator_test.dart: private Handler fails generation
+01:21 +39: packages/ccrouter_test/generator_test/init_task_generator_test.dart: incorrectly parameterized Handler fails generation
+01:23 +40: packages/ccrouter_test/generator_test/init_task_generator_test.dart: invalid Gate fails generation
+01:25 +41: packages/ccrouter_test/generator_test/init_task_generator_test.dart: non-positive timeout fails generation
+01:27 +42: packages/ccrouter_test/generator_test/init_task_generator_test.dart: duplicate and self dependencies fail generation
+01:29 +43: packages/ccrouter_test/generator_test/init_task_generator_test.dart: dependency list rejects inline Contract construction
+01:31 +44: packages/ccrouter_test/generator_test/init_task_generator_test.dart: required task must use a Contract
+01:33 +45: packages/ccrouter_test/generator_test/init_task_generator_test.dart: async required task must declare a timeout
+01:34 +46: loading packages/ccrouter_test/generator_test/service_generator_test.dart
+01:34 +46: packages/ccrouter_test/generator_test/service_generator_test.dart: Service Contracts reject duplicate declarations in local and imported paths
+01:46 +47: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder emits a typed owner-only Token
+02:01 +48: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder infers one directly implemented contract
+02:09 +49: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder emits an internal type-local Provider
+02:12 +50: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder emits a component caller for sync and async members
+02:14 +51: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder preserves bounded generic methods and explicit forwarding
+02:16 +52: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy defaults preserve Dart string and collection constants
+02:19 +53: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy preserves wide collection default types
+02:21 +54: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy rejects inaccessible default-only enum types
+02:23 +55: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy forwards colliding parameter and generic names
+02:24 +56: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy import prefixes avoid generic parameter names
+02:27 +57: packages/ccrouter_test/generator_test/service_generator_test.dart: contract alias is the default generated Service Client member
+02:29 +58: packages/ccrouter_test/generator_test/service_generator_test.dart: Object member Service dependency alias fails before emitting a Client
+02:30 +59: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder embeds typed Key and explicit alias
+02:32 +60: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder emits nothing without a Service dependency
+02:33 +61: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder rejects an owner missing from required dependencies
+02:35 +62: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder rejects a contract imported through src
+02:37 +63: packages/ccrouter_test/generator_test/service_generator_test.dart: service metadata records contracts and ownerless implementations
+02:43 +64: packages/ccrouter_test/generator_test/service_generator_test.dart: stream methods generate typed cancellation-aware proxies and metadata
+02:46 +65: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects keyword alias
+02:48 +66: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects concrete declaration
+02:50 +67: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects invalid ID
+02:51 +68: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects generic contract
+02:53 +69: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects nullable stream
+02:54 +70: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects stream getter
+02:56 +71: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects nested stream
+02:57 +72: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects stream element
+02:59 +73: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects custom stream
+03:00 +74: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects multiple stream cancellation tokens
+03:03 +75: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects future-or result
+03:04 +76: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects callback parameter
+03:06 +77: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects setter
+03:08 +78: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects operator
+03:09 +79: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects contract inheritance
+03:11 +80: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects missing identity
+03:12 +81: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects parameterized constructor
+03:14 +82: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects private implementation
+03:16 +83: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects invalid Key
+03:17 +84: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects multiple directly implemented contracts
+03:19 +85: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects an id beside an inferred contract
+03:20 +86: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder does not infer an indirectly inherited contract
+03:22 +87: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects direct and indirect contracts together
+03:23 +88: loading packages/ccrouter_test/generator_test/metadata_builder_test.dart
+03:24 +88: packages/ccrouter_test/generator_test/metadata_builder_test.dart: component metadata rejects duplicate Service Contracts
+03:29 +89: packages/ccrouter_test/generator_test/metadata_builder_test.dart: component metadata rejects duplicate Command Contracts
+03:30 +90: packages/ccrouter_test/generator_test/metadata_builder_test.dart: metadata builders preserve all mixed capability documents
+03:38 +91: All tests passed!

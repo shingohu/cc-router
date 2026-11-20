@@ -1,0 +1,80 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/core_contract_library_identity_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/core_contract_library_identity_test.dart: Service part metadata retains source location and defining Library
+00:12 +1: packages/ccrouter_test/generator_test/core_contract_library_identity_test.dart: Command part metadata retains source location and defining Library
+00:14 +2: loading packages/ccrouter_test/generator_test/package_workspace_test.dart
+00:15 +2: packages/ccrouter_test/generator_test/package_workspace_test.dart: source references preserve defining Library evidence without changing locations
+00:15 +3: packages/ccrouter_test/generator_test/package_workspace_test.dart: source catalog enriches absent Library evidence but rejects conflicting identities
+00:15 +4: packages/ccrouter_test/generator_test/package_workspace_test.dart: discovers only the Host runtime dependency closure
+00:15 +5: packages/ccrouter_test/generator_test/package_workspace_test.dart: requested Package write scope keeps Workspace dependencies read-only
+00:15 +6: packages/ccrouter_test/generator_test/package_workspace_test.dart: Portable State requires an explicit package declaration
+00:15 +7: packages/ccrouter_test/generator_test/package_workspace_test.dart: requires resolved Package graph instead of scanning the repository
+00:15 +8: packages/ccrouter_test/generator_test/package_workspace_test.dart: rejects corrupted and incompatible Package indexes
+00:15 +9: packages/ccrouter_test/generator_test/package_workspace_test.dart: DTO Action index uses schema 4 and cannot be relabeled as legacy UI
+00:15 +10: packages/ccrouter_test/generator_test/package_workspace_test.dart: union Action index uses schema 5 and cannot be relabeled as legacy UI
+00:15 +11: packages/ccrouter_test/generator_test/package_workspace_test.dart: non-framework CCRouter dependencies require a published index
+00:15 +12: packages/ccrouter_test/generator_test/package_workspace_test.dart: optional UI runtime does not require component Portable State
+00:15 +13: packages/ccrouter_test/generator_test/package_workspace_test.dart: Package index fingerprint is canonical and detects metadata changes
+00:15 +14: packages/ccrouter_test/generator_test/package_workspace_test.dart: capability catalog merges route contract and implementation sources
+00:15 +15: packages/ccrouter_test/generator_test/package_workspace_test.dart: capability catalog retains schema-v2 file-only locations
+00:15 +16: packages/ccrouter_test/generator_test/package_workspace_test.dart: legacy route implementation does not invent a contract location
+00:15 +17: packages/ccrouter_test/generator_test/package_workspace_test.dart: metadata cache detects add change rename and delete by exact bytes
+00:15 +18: packages/ccrouter_test/generator_test/package_workspace_test.dart: metadata cache tracks Service metadata add change rename and delete
+00:15 +19: loading packages/ccrouter_test/generator_test/service_generator_test.dart
+00:15 +19: packages/ccrouter_test/generator_test/service_generator_test.dart: Service Contracts reject duplicate declarations in local and imported paths
+00:23 +20: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder emits a typed owner-only Token
+00:24 +21: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder infers one directly implemented contract
+00:26 +22: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder emits an internal type-local Provider
+00:29 +23: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder emits a component caller for sync and async members
+00:31 +24: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder preserves bounded generic methods and explicit forwarding
+00:33 +25: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy defaults preserve Dart string and collection constants
+00:36 +26: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy preserves wide collection default types
+00:38 +27: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy rejects inaccessible default-only enum types
+00:42 +28: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy forwards colliding parameter and generic names
+00:45 +29: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy import prefixes avoid generic parameter names
+00:48 +30: packages/ccrouter_test/generator_test/service_generator_test.dart: contract alias is the default generated Service Client member
+00:53 +31: packages/ccrouter_test/generator_test/service_generator_test.dart: Object member Service dependency alias fails before emitting a Client
+00:56 +32: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder embeds typed Key and explicit alias
+00:59 +33: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder emits nothing without a Service dependency
+01:02 +34: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder rejects an owner missing from required dependencies
+01:05 +35: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder rejects a contract imported through src
+01:07 +36: packages/ccrouter_test/generator_test/service_generator_test.dart: service metadata records contracts and ownerless implementations
+01:15 +37: packages/ccrouter_test/generator_test/service_generator_test.dart: stream methods generate typed cancellation-aware proxies and metadata
+01:18 +38: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects keyword alias
+01:20 +39: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects concrete declaration
+01:21 +40: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects invalid ID
+01:23 +41: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects generic contract
+01:24 +42: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects nullable stream
+01:26 +43: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects stream getter
+01:28 +44: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects nested stream
+01:30 +45: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects stream element
+01:33 +46: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects custom stream
+01:36 +47: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects multiple stream cancellation tokens
+01:41 +48: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects future-or result
+01:46 +49: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects callback parameter
+01:50 +50: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects setter
+01:54 +51: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects operator
+01:57 +52: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects contract inheritance
+02:00 +53: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects missing identity
+02:03 +54: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects parameterized constructor
+02:06 +55: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects private implementation
+02:09 +56: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects invalid Key
+02:11 +57: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects multiple directly implemented contracts
+02:16 +58: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects an id beside an inferred contract
+02:23 +59: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder does not infer an indirectly inherited contract
+02:28 +60: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects direct and indirect contracts together
+02:31 +61: loading packages/ccrouter_test/generator_test/command_generator_test.dart
+02:31 +61: packages/ccrouter_test/generator_test/command_generator_test.dart: Command Contracts reject duplicate declarations in local and imported paths
+02:45 +62: packages/ccrouter_test/generator_test/command_generator_test.dart: handler builder emits stable typed registration
+02:48 +63: packages/ccrouter_test/generator_test/command_generator_test.dart: one-parameter handler is adapted to the registry signature
+02:51 +64: packages/ccrouter_test/generator_test/command_generator_test.dart: metadata contains portable contract and handler locations
+02:54 +65: packages/ccrouter_test/generator_test/command_generator_test.dart: command alias changes the generated Contract fingerprint
+03:04 +66: packages/ccrouter_test/generator_test/command_generator_test.dart: keyword Command alias fails generation
+03:09 +67: packages/ccrouter_test/generator_test/command_generator_test.dart: Object member Command alias fails at its declaration
+03:15 +68: packages/ccrouter_test/generator_test/command_generator_test.dart: Owner Command Client rejects an inferred Object member until aliased
+03:21 +69: packages/ccrouter_test/generator_test/command_generator_test.dart: mutable payload fields fail generation
+03:25 +70: packages/ccrouter_test/generator_test/command_generator_test.dart: handler result mismatch fails generation
+03:29 +71: packages/ccrouter_test/generator_test/command_generator_test.dart: invalid stable ID fails generation
+03:32 +72: packages/ccrouter_test/generator_test/command_generator_test.dart: annotated Command cannot bypass its generated Client
+03:36 +73: loading packages/ccrouter_test/generator_test/contracts_layout_test.dart
+03:36 +73: packages/ccrouter_test/generator_test/contracts_layout_test.dart: 领域迁移保持 Route 代码及 Route/Service 契约形状
+04:05 +74: All tests passed!

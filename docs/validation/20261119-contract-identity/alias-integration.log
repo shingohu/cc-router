@@ -1,0 +1,5 @@
+00:00 +0: loading test/source_analyzer_test.dart
+00:00 +0: test/analysis_server_integration_test.dart: real LSP reports and clears Service alias diagnostics on editor overlay
+00:00 +1: test/analysis_server_integration_test.dart: real LSP reports and clears Service alias diagnostics on editor overlay
+00:14 +2: test/analysis_server_integration_test.dart: real LSP reports and clears Command alias diagnostics on editor overlay
+00:27 +3: All tests passed!

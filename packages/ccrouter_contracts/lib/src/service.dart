@@ -31,9 +31,9 @@ final class CCServiceToken<T extends Object> {
 /// Declares one stable cross-component Service contract.
 ///
 /// Apply this annotation to a public, abstract interface in a Pure Dart
-/// contracts Package. The interface itself must be non-generic, while its
-/// methods may declare method-owned generic parameters with public Pure Dart
-/// bounds. The generator emits a typed
+/// contracts Package. The interface must be non-generic and carry exactly one
+/// [CCServiceContract] annotation. Methods may declare method-owned generic
+/// parameters with public Pure Dart bounds. The generator emits a typed
 /// `CCServiceToken<T>` for generated/advanced registration plus metadata owned
 /// by [componentId]. A simple implementation binds automatically by directly
 /// implementing this interface; cross-component consumers declare
@@ -122,6 +122,7 @@ final class CCServiceDependency<T extends Object> {
 /// a `CCComponentContribution` so construction and readiness remain explicit.
 final class CCService {
   /// Creates one generated Service Provider declaration.
+  /// A class carries exactly one [CCService]; repeated Keys/Scopes are rejected.
   const CCService({
     this.id,
     this.key,
@@ -162,10 +163,14 @@ final class CCServiceKey<T> {
   /// Stable name used in registration and resolution.
   final String name;
 
-  /// Compares both the service type and stable key name.
+  /// Compares the exact reified service type and stable key name.
+  /// Subtype assignability is not equality: `Key<Object>` and `Key<String>`
+  /// must remain distinct hash-collection keys even though generics covary.
   @override
   bool operator ==(Object other) =>
-      other is CCServiceKey<T> && other.name == name;
+      other is CCServiceKey<T> &&
+      other.runtimeType == runtimeType &&
+      other.name == name;
 
   /// Combines the service contract type and key name.
   @override

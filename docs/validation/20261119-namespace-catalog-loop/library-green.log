@@ -1,0 +1,7 @@
+00:00 +0: loading test/semantic_analysis_test.dart
+00:00 +0: parsed Contract identity follows foreign.dart with prefix
+00:01 +1: parsed Contract identity follows foreign.dart with prefix api
+00:01 +2: parsed Contract identity follows foreign_barrel.dart with prefix api
+00:02 +3: parsed Contract identity follows right_barrel.dart with prefix api
+00:02 +4: parsed Contract identity follows right_barrel.dart with prefix
+00:02 +5: All tests passed!

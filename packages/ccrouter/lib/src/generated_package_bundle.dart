@@ -270,6 +270,8 @@ final class CCHostAssembly {
   /// Dependencies precede dependants, diamond dependencies are deduplicated,
   /// sibling Packages are ordered by Package name, and component manifests are
   /// ordered by their required and present optional dependency graph.
+  /// Contract requirement snapshots retain distinct ranges; only complete
+  /// duplicate requirement values are merged after validation.
   factory CCHostAssembly.fromPackageBundles(
     Iterable<CCGeneratedPackageBundle> roots, {
     Iterable<CCHostToolIntegration> hostToolIntegrations = const [],
@@ -379,6 +381,8 @@ void _validateContractBundles(Iterable<CCContractBundleDescriptor> bundles) {
   );
 }
 
+/// Deduplicates complete requirement values, retaining every distinct constraint.
+/// Validation above proves each requirement; merging must not weaken their conjunction.
 CCContractBundleDescriptor? _mergeContractBundles(
   Iterable<CCContractBundleDescriptor> bundles,
 ) {
@@ -393,7 +397,8 @@ CCContractBundleDescriptor? _mergeContractBundles(
     for (final requirement in bundle.requirements) {
       final key =
           '${requirement.consumerPackage}\u0000${requirement.kind.name}\u0000'
-          '${requirement.contractId}\u0000${requirement.ownerComponentId}';
+          '${requirement.contractId}\u0000${requirement.ownerComponentId}\u0000'
+          '${requirement.requiredVersionRange}\u0000${requirement.requiredShapeFingerprint}';
       requirements.putIfAbsent(key, () => requirement);
     }
   }

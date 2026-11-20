@@ -14,6 +14,143 @@ void main() {
   serializeRealWorkspaceTests();
 
   group('component dependency preflight', () {
+    for (final directive in ['import', 'export']) {
+      test('invalid $directive URI defers to Builder instead of crashing', () {
+        final issues = CCComponentDependencyPreflight.inspect([
+          _source(
+            package: 'contracts',
+            file: 'api.dart',
+            contents:
+                '''
+${directive == 'export' ? "export 'http://[';" : ''}
+@CCServiceContract(componentId: CCComponentId('owner'), id: 'owner.service')
+abstract interface class SharedService {}
+''',
+          ),
+          _source(
+            package: 'consumer',
+            file: 'component.dart',
+            writable: true,
+            contents:
+                '''
+import 'package:contracts/api.dart';
+${directive == 'import' ? "import 'http://[';" : ''}
+const component = CCComponent(id: CCComponentId('consumer'), dependencies: [],
+  serviceDependencies: [CCServiceDependency<SharedService>()]);
+''',
+          ),
+        ]);
+        expect(issues, isEmpty);
+      });
+    }
+
+    test(
+      'self-owned requirements defer to the authoritative declaration error',
+      () {
+        final issues = CCComponentDependencyPreflight.inspect([
+          _source(
+            package: 'contracts',
+            file: 'api.dart',
+            contents: '''
+@CCServiceContract(componentId: CCComponentId('consumer'), id: 'consumer.service')
+abstract interface class SharedService {}
+''',
+          ),
+          _source(
+            package: 'consumer',
+            file: 'component.dart',
+            writable: true,
+            contents: '''
+import 'package:contracts/api.dart';
+const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', dependencies: [],
+  serviceDependencies: [CCServiceDependency<SharedService>()]);
+''',
+          ),
+        ]);
+        expect(issues, isEmpty);
+      },
+    );
+
+    test(
+      'canonical prefixed constructors retain the exact preflight owner',
+      () {
+        for (final present in [false, true]) {
+          final issues = CCComponentDependencyPreflight.inspect([
+            _source(
+              package: 'contracts',
+              file: 'api.dart',
+              contents: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart' as cc;
+const ownerId = cc.CCComponentId('owner');
+@cc.CCServiceContract(componentId: ownerId, id: 'owner.service')
+abstract interface class SharedService {}
+''',
+            ),
+            _source(
+              package: 'consumer',
+              file: 'component.dart',
+              writable: true,
+              contents:
+                  '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart' as cc;
+import 'package:contracts/api.dart' show ownerId, SharedService;
+const component = cc.CCComponent(id: cc.CCComponentId('consumer'), version: '1.0.0',
+  dependencies: [${present ? 'ownerId' : ''}], serviceDependencies: [cc.CCServiceDependency<SharedService>()]);
+''',
+            ),
+          ]);
+          expect(issues, hasLength(present ? 0 : 1));
+        }
+      },
+    );
+
+    for (final foreign in [
+      'CCComponent',
+      'CCServiceDependency',
+      'CCServiceContract',
+      'CCComponentId',
+    ]) {
+      test('foreign $foreign never triggers a speculative preflight failure', () {
+        final shadow = switch (foreign) {
+          'CCComponent' =>
+            'class CCComponent { const CCComponent({Object? id, Object? dependencies, Object? serviceDependencies}); }',
+          'CCServiceDependency' =>
+            'class CCServiceDependency<T> { const CCServiceDependency(); }',
+          'CCServiceContract' =>
+            'class CCServiceContract { const CCServiceContract({Object? componentId, Object? id}); }',
+          _ =>
+            'class CCComponentId { const CCComponentId(this.value); final String value; }',
+        };
+        final issues = CCComponentDependencyPreflight.inspect([
+          _source(
+            package: 'contracts',
+            file: 'api.dart',
+            contents:
+                '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+${foreign == 'CCServiceContract' || foreign == 'CCComponentId' ? shadow : ''}
+@CCServiceContract(componentId: CCComponentId('owner'), id: 'owner.service')
+abstract interface class SharedService {}
+''',
+          ),
+          _source(
+            package: 'consumer',
+            file: 'component.dart',
+            writable: true,
+            contents:
+                '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:contracts/api.dart';
+${foreign == 'CCComponent' || foreign == 'CCServiceDependency' ? shadow : ''}
+const component = CCComponent(id: CCComponentId('consumer'), dependencies: [],
+  serviceDependencies: [CCServiceDependency<SharedService>()]);
+''',
+          ),
+        ]);
+        expect(issues, isEmpty);
+      });
+    }
+
     for (final uiLibrary in [
       'package:ccrouter_ui/ccrouter_ui.dart',
       'package:ccrouter_contracts/ccrouter_ui_contracts.dart',
@@ -61,6 +198,7 @@ const component = CCComponent(id: CCComponentId('consumer'),
               path: nestedPath,
               writable: false,
               contents: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCServiceContract(componentId: CCComponentId('hidden'), id: 'hidden.service')
 abstract interface class SharedService {}
 ''',
@@ -99,6 +237,7 @@ const component = CCComponent(id: CCComponentId('consumer'), dependencies: [],
           package: 'contracts',
           file: 'api.dart',
           contents: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 const ownerId = CCComponentId('owner');
 @CCServiceContract(componentId: ownerId, id: 'owner.service')
 abstract interface class SharedService {}
@@ -114,6 +253,7 @@ abstract interface class SharedService {}
           file: 'component.dart',
           writable: true,
           contents: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:contracts/api.dart';
 const component = CCComponent(id: CCComponentId('consumer'),
   dependencies: [ownerId], serviceDependencies: [CCServiceDependency<SharedService>()]);
@@ -131,6 +271,7 @@ const component = CCComponent(id: CCComponentId('consumer'),
             package: 'contracts',
             file: 'other.dart',
             contents: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCServiceContract(componentId: CCComponentId('owner'), id: 'owner.service')
 abstract interface class SharedService {}
 ''',
@@ -145,6 +286,7 @@ abstract interface class SharedService {}
             file: 'component.dart',
             writable: true,
             contents: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:contracts/api.dart';
 const component = CCComponent(id: CCComponentId('consumer'), dependencies: [],
   serviceDependencies: [CCServiceDependency<SharedService>()]);
@@ -160,6 +302,7 @@ const component = CCComponent(id: CCComponentId('consumer'), dependencies: [],
         package: 'contracts',
         file: 'src/api.dart',
         contents: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 const ownerId = CCComponentId('owner');
 @CCServiceContract(componentId: ownerId, id: 'owner.service')
 abstract interface class SharedService {}
@@ -206,6 +349,7 @@ const component = CCComponent(id: CCComponentId('consumer'), dependencies: [owne
             package: 'contracts',
             file: 'api.dart',
             contents: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCServiceContract(componentId: CCComponentId('owner'), id: 'owner.service')
 abstract interface class SharedService {}
 ''',
@@ -233,6 +377,7 @@ const component = CCComponent(id: CCComponentId('consumer'), dependencies: [],
           path: 'package:consumer/lib/src/service.dart',
           writable: true,
           contents: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 @CCServiceContract(componentId: CCComponentId('owner'), id: 'owner.service')
 abstract interface class SharedService {}
 ''',
@@ -242,6 +387,7 @@ abstract interface class SharedService {}
           file: 'src/component.dart',
           writable: true,
           contents: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'service.dart';
 const component = CCComponent(id: CCComponentId('consumer'), dependencies: [],
   serviceDependencies: [CCServiceDependency<SharedService>()]);
@@ -257,6 +403,7 @@ const component = CCComponent(id: CCComponentId('consumer'), dependencies: [],
           package: 'owner_contracts',
           file: 'contracts.dart',
           contents: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 const ownerComponentId = CCComponentId('owner.component');
 const otherComponentId = CCComponentId('other.component');
 
@@ -275,6 +422,7 @@ abstract interface class OtherService {}
           file: 'component.dart',
           writable: true,
           contents: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:owner_contracts/contracts.dart';
 
 const consumerComponentId = CCComponentId('consumer.component');
@@ -309,6 +457,7 @@ const consumerComponent = CCComponent(
         package: 'owner_contracts',
         file: 'contracts.dart',
         contents: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 const ownerComponentId = CCComponentId('owner.component');
 @CCServiceContract(componentId: ownerComponentId, id: 'owner.service')
 abstract interface class SharedService {}
@@ -321,6 +470,7 @@ abstract interface class SharedService {}
           file: 'prefixed.dart',
           writable: true,
           contents: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 import 'package:owner_contracts/contracts.dart' as contracts;
 const consumerComponent = CCComponent(
   id: CCComponentId('consumer.component'),
@@ -366,6 +516,7 @@ const consumerComponent = CCComponent(
         package: 'owner_a',
         file: 'contracts.dart',
         contents: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 const ownerA = CCComponentId('owner.a');
 @CCServiceContract(componentId: ownerA, id: 'owner.a.service')
 abstract interface class SharedService {}
@@ -375,6 +526,7 @@ abstract interface class SharedService {}
         package: 'owner_b',
         file: 'contracts.dart',
         contents: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 const ownerB = CCComponentId('owner.a');
 @CCServiceContract(componentId: ownerB, id: 'owner.a.service')
 abstract interface class SharedService {}
@@ -508,7 +660,8 @@ CCComponentDependencyPreflightSource _source({
 }) => CCComponentDependencyPreflightSource(
   packageName: package,
   path: '/workspace/$package/lib/$file',
-  contents: contents,
+  contents:
+      "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\n$contents",
   writable: writable,
 );
 

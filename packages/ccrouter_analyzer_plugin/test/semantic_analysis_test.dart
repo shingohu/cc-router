@@ -11,7 +11,8 @@ import 'package:analyzer_plugin/protocol/protocol_generated.dart';
 import 'package:ccrouter_analyzer_plugin/src/plugin.dart';
 import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
 import 'package:ccrouter_analyzer_plugin/src/quick_fixes.dart';
-import 'package:ccrouter_analyzer_plugin/src/source_analyzer.dart';
+import 'package:ccrouter_analyzer_plugin/src/source_analyzer.dart'
+    show CCRouterAnalyzerDiagnostic, CCRouterSourceAnalyzer;
 import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
@@ -104,6 +105,174 @@ void stop() => CCRouterHost.shutdown();
       isEmpty,
     );
   });
+
+  for (final form in [
+    'fileBarrel',
+    'queryBarrel',
+    'fileFacade',
+    'queryFacade',
+    'facadeAlias',
+  ]) {
+    test(
+      'Host lifecycle boundary recognizes $form identity',
+      () async {
+        final facade = File(
+          path.join(fixture.root.path, 'framework/lib/src/facade.dart'),
+        );
+        final barrel = File(
+          path.join(fixture.root.path, 'framework/lib/ccrouter_host.dart'),
+        );
+        Link(
+          path.join(fixture.root.path, 'owner/lib/root_alias.dart'),
+        ).createSync(facade.path);
+        final uri = switch (form) {
+          'fileBarrel' => barrel.uri.toString(),
+          'queryBarrel' => 'package:ccrouter/ccrouter_host.dart?query',
+          'fileFacade' => facade.uri.toString(),
+          'queryFacade' => 'package:ccrouter/src/facade.dart?query',
+          _ => 'package:owner_contracts/root_alias.dart',
+        };
+        final source =
+            "import '$uri' as root;\nvoid stop() => root.CCRouterHost.shutdown();";
+        final result = await fixture.resolve(source);
+        expect(
+          result.diagnostics.where(
+            (d) => d.diagnosticCode.severity.name == 'ERROR',
+          ),
+          isEmpty,
+        );
+        final issues = CCRouterSourceAnalyzer.analyze(
+          source: source,
+          filePath: fixture.file,
+          packageRoot: fixture.root.path,
+          packageName: 'consumer',
+          resolvedUnit: result.unit,
+          uriConverter: fixture.collection
+              .contextFor(fixture.file)
+              .currentSession
+              .uriConverter,
+        ).where((d) => d.code == 'ccrouter_host_lifecycle_access');
+        expect(issues, isNotEmpty);
+      },
+      skip: Platform.isWindows && form == 'facadeAlias'
+          ? 'POSIX symlink fixture'
+          : false,
+    );
+  }
+
+  for (final (label, source, forbidden) in [
+    (
+      'typedef call',
+      "import 'package:owner_contracts/lifecycle.dart' as root;\ntypedef Root = root.CCRouterHost;\nvoid stop() => Root.shutdown();",
+      true,
+    ),
+    (
+      'named type',
+      "import 'package:owner_contracts/lifecycle.dart' as root;\nroot.CCRouterHost? host;",
+      true,
+    ),
+    (
+      'hidden symbol',
+      "import 'package:ccrouter/ccrouter_host.dart' hide CCRouterHost;",
+      false,
+    ),
+    (
+      'transitive show',
+      "import 'package:owner_contracts/lifecycle.dart' show CCRouterHost;",
+      true,
+    ),
+    (
+      'show then hide',
+      "import 'package:owner_contracts/lifecycle.dart' show CCRouterHost hide CCRouterHost;",
+      false,
+    ),
+  ]) {
+    test('Host lifecycle checks $label by semantic identity', () async {
+      final result = await fixture.resolve(source);
+      expect(
+        result.diagnostics.where(
+          (d) => d.diagnosticCode.severity.name == 'ERROR',
+        ),
+        isEmpty,
+      );
+      final issues = fixture
+          .diagnostics(result)
+          .where((d) => d.code == 'ccrouter_host_lifecycle_access');
+      expect(issues.isNotEmpty, forbidden);
+      if (label == 'typedef call') {
+        expect(
+          issues.map((d) => d.offset),
+          contains(source.lastIndexOf('Root.shutdown')),
+        );
+      }
+    });
+  }
+
+  test('a foreign same-name facade copy is not the configured Host', () async {
+    fixture._write(
+      'owner/lib/src/facade.dart',
+      'abstract final class CCRouterHost { static void shutdown() {} }',
+    );
+    final result = await fixture.resolve(
+      "import 'package:owner_contracts/src/facade.dart' as root;\nvoid stop() => root.CCRouterHost.shutdown();",
+    );
+    expect(
+      result.diagnostics.where(
+        (d) => d.diagnosticCode.severity.name == 'ERROR',
+      ),
+      isEmpty,
+    );
+    final issues = CCRouterSourceAnalyzer.analyze(
+      source: result.content,
+      filePath: fixture.file,
+      packageRoot: fixture.root.path,
+      packageName: 'consumer',
+      resolvedUnit: result.unit,
+      uriConverter: fixture.collection
+          .contextFor(fixture.file)
+          .currentSession
+          .uriConverter,
+    );
+    expect(
+      issues.where((d) => d.code == 'ccrouter_host_lifecycle_access'),
+      isEmpty,
+    );
+  });
+
+  for (final form in ['file', 'query', 'conditional']) {
+    test('bare Host $form directives retain the lifecycle boundary', () async {
+      final uri = File(
+        path.join(fixture.root.path, 'framework/lib/ccrouter_host.dart'),
+      ).uri;
+      final source = switch (form) {
+        'file' => "export '$uri';",
+        'query' => "export 'package:ccrouter/ccrouter_host.dart?query';",
+        _ =>
+          "export 'package:owner_contracts/wrong.dart' if (dart.library.io) '$uri';",
+      };
+      final result = await fixture.resolve(source);
+      expect(
+        result.diagnostics.where(
+          (d) => d.diagnosticCode.severity.name == 'ERROR',
+        ),
+        isEmpty,
+      );
+      final issues = CCRouterSourceAnalyzer.analyze(
+        source: source,
+        filePath: fixture.file,
+        packageRoot: fixture.root.path,
+        packageName: 'consumer',
+        uriConverter: fixture.collection
+            .contextFor(fixture.file)
+            .currentSession
+            .uriConverter,
+      );
+      expect(
+        issues.where((d) => d.code == 'ccrouter_host_lifecycle_access'),
+        hasLength(1),
+      );
+    });
+  }
 
   test(
     'foreign same-name annotations never produce framework diagnostics or fixes',
@@ -246,6 +415,167 @@ class Sample { void dispose() {} }
       expect((await pending).fixes, isEmpty);
       expect((await plugin.handleEditGetFixes(params)).fixes, isEmpty);
     },
+  );
+
+  test(
+    'real plugin session checks bare Package aliases',
+    () async {
+      fixture._write(
+        'owner/lib/src/ccrouter_generated/hidden.dart',
+        'const hidden = 1;',
+      );
+      Link(
+        path.join(fixture.root.path, 'owner/lib/public_alias.dart'),
+      ).createSync(
+        path.join(
+          fixture.root.path,
+          'owner/lib/src/ccrouter_generated/hidden.dart',
+        ),
+      );
+      const source =
+          "import 'package:owner_contracts/public_alias.dart' show hidden;\nfinal value = hidden;";
+      await fixture.resolve(source);
+      final channel = _Channel();
+      final plugin = CCRouterAnalyzerPlugin(PhysicalResourceProvider.INSTANCE)
+        ..start(channel);
+      addTearDown(
+        () => plugin.handleAnalysisSetContextRoots(
+          AnalysisSetContextRootsParams([]),
+        ),
+      );
+      await plugin.handleAnalysisSetContextRoots(
+        AnalysisSetContextRootsParams([ContextRoot(fixture.root.path, [])]),
+      );
+      await plugin.handleAnalysisUpdateContent(
+        AnalysisUpdateContentParams({fixture.file: AddContentOverlay(source)}),
+      );
+      final errors = channel.notifications
+          .where((n) => n.event == 'analysis.errors')
+          .map(AnalysisErrorsParams.fromNotification)
+          .where((p) => p.file == fixture.file)
+          .last
+          .errors;
+      expect(
+        errors.map((e) => e.code),
+        contains('ccrouter_cross_package_generated_import'),
+      );
+    },
+    skip: Platform.isWindows ? 'POSIX symlink fixture' : false,
+  );
+
+  test(
+    'real plugin session checks typed UI SPI without a Component declaration',
+    () async {
+      Link(
+        path.join(fixture.root.path, 'owner/lib/ui_alias.dart'),
+      ).createSync(path.join(fixture.root.path, 'ui/lib/src/ui_fragment.dart'));
+      const source =
+          "import 'package:owner_contracts/ui_alias.dart' as ui;\nui.CCUIHostAssembly? assembly;";
+      await fixture.resolve(source);
+      final channel = _Channel();
+      final plugin = CCRouterAnalyzerPlugin(PhysicalResourceProvider.INSTANCE)
+        ..start(channel);
+      addTearDown(
+        () => plugin.handleAnalysisSetContextRoots(
+          AnalysisSetContextRootsParams([]),
+        ),
+      );
+      await plugin.handleAnalysisSetContextRoots(
+        AnalysisSetContextRootsParams([ContextRoot(fixture.root.path, [])]),
+      );
+      await plugin.handleAnalysisUpdateContent(
+        AnalysisUpdateContentParams({fixture.file: AddContentOverlay(source)}),
+      );
+      final errors = channel.notifications
+          .where((n) => n.event == 'analysis.errors')
+          .map(AnalysisErrorsParams.fromNotification)
+          .where((p) => p.file == fixture.file)
+          .last
+          .errors;
+      expect(errors.map((e) => e.code), contains('ccrouter_ui_spi_access'));
+      const renderer = '''
+import 'package:ccrouter_contracts/ccrouter_ui_contracts.dart';
+import 'package:owner_contracts/right.dart' show ownerComponentId;
+final class Props { const Props(); }
+enum Action { select }
+@CCUIFragmentContract<Props, Action>(componentId: ownerComponentId, id: 'right.card')
+abstract final class Card {}
+@CCUIFragmentRenderer(Card)
+int render(int input) => 0;
+''';
+      final resolved = await fixture.resolve(renderer);
+      expect(
+        resolved.diagnostics.where(
+          (d) => d.diagnosticCode.severity.name == 'ERROR',
+        ),
+        isEmpty,
+      );
+      await plugin.handleAnalysisUpdateContent(
+        AnalysisUpdateContentParams({
+          fixture.file: AddContentOverlay(renderer),
+        }),
+      );
+      final rendererErrors = channel.notifications
+          .where((n) => n.event == 'analysis.errors')
+          .map(AnalysisErrorsParams.fromNotification)
+          .where((p) => p.file == fixture.file)
+          .last
+          .errors;
+      expect(
+        rendererErrors.map((e) => e.code),
+        contains('ccrouter_ui_renderer_invalid'),
+      );
+      expect(
+        rendererErrors.map((e) => e.code),
+        isNot(contains('ccrouter_ui_spi_access')),
+      );
+    },
+    skip: Platform.isWindows ? 'POSIX symlink fixture' : false,
+  );
+
+  test(
+    'parsed aliases use the borrowed SDK URI converter without a resolved unit',
+    () {
+      fixture._write(
+        'owner/lib/src/ccrouter_generated/hidden.dart',
+        'const hidden = 1;',
+      );
+      Link(
+        path.join(fixture.root.path, 'owner/lib/public_alias.dart'),
+      ).createSync(
+        path.join(
+          fixture.root.path,
+          'owner/lib/src/ccrouter_generated/hidden.dart',
+        ),
+      );
+      fixture._write('owner/lib/public.dart', 'const hidden = 2;');
+      for (final declaration in [
+        "import 'package:owner_contracts/public_alias.dart' show hidden;",
+        "import 'package:owner_contracts/public_alias.dart' if (dart.library.io) 'package:owner_contracts/public.dart' show hidden;",
+        "import 'package:owner_contracts/public.dart' if (dart.library.io) 'package:owner_contracts/public_alias.dart' show hidden;",
+      ]) {
+        final source = '$declaration\nfinal value = hidden;';
+        final issues = CCRouterSourceAnalyzer.analyze(
+          source: source,
+          filePath: fixture.file,
+          packageRoot: fixture.root.path,
+          packageName: 'consumer',
+          uriConverter: fixture.collection
+              .contextFor(fixture.file)
+              .currentSession
+              .uriConverter,
+        ).where((d) => d.code == 'ccrouter_cross_package_generated_import');
+        expect(issues, hasLength(1), reason: declaration);
+        expect(
+          source.substring(
+            issues.single.offset,
+            issues.single.offset + issues.single.length,
+          ),
+          "'package:owner_contracts/public_alias.dart'",
+        );
+      }
+    },
+    skip: Platform.isWindows ? 'POSIX symlink fixture' : false,
   );
 
   test('required async InitTask aliases still require a timeout', () async {
@@ -420,6 +750,328 @@ const component = CCComponent(id: CCComponentId('consumer'), version: '1',
     expect(fixture.fixes(result, diagnostic), isEmpty);
   });
 
+  for (final escaped in [false, true]) {
+    test(
+      'valid Dart ${escaped ? 'escaped' : 'file URI'} imports retain the generated boundary',
+      () async {
+        fixture._write(
+          'owner/lib/src/ccrouter_generated/hidden.dart',
+          'const hidden = 1;',
+        );
+        final uri = escaped
+            ? r'package:owner_contracts/src/\u0063\u0063router_generated/hidden.dart'
+            : File(
+                path.join(
+                  fixture.root.path,
+                  'owner/lib/src/ccrouter_generated/hidden.dart',
+                ),
+              ).uri.toString();
+        final source = "import '$uri' show hidden;\nfinal value = hidden;";
+        final result = await fixture.resolve(source);
+        expect(
+          result.diagnostics.where(
+            (d) => d.diagnosticCode.severity.name == 'ERROR',
+          ),
+          isEmpty,
+        );
+        expect(
+          fixture.diagnostics(result).map((d) => d.code),
+          contains('ccrouter_cross_package_generated_import'),
+        );
+      },
+    );
+  }
+
+  test(
+    'localhost file URIs are valid Dart and retain the generated boundary',
+    () async {
+      if (Platform.isWindows) return;
+      fixture._write(
+        'owner/lib/src/ccrouter_generated/hidden.dart',
+        'const hidden = 1;',
+      );
+      final uri = File(
+        path.join(
+          fixture.root.path,
+          'owner/lib/src/ccrouter_generated/hidden.dart',
+        ),
+      ).uri.replace(host: 'localhost');
+      final result = await fixture.resolve(
+        "import '$uri' show hidden;\nfinal value = hidden;",
+      );
+      expect(
+        result.diagnostics.where(
+          (d) => d.diagnosticCode.severity.name == 'ERROR',
+        ),
+        isEmpty,
+      );
+      expect(
+        fixture
+            .diagnostics(result)
+            .where((d) => d.code == 'ccrouter_cross_package_generated_import'),
+        hasLength(1),
+      );
+    },
+  );
+
+  test('POSIX file authorities retain the local generated boundary', () async {
+    if (Platform.isWindows) return;
+    fixture._write(
+      'owner/lib/src/ccrouter_generated/hidden.dart',
+      'const hidden = 1;',
+    );
+    final uri = File(
+      path.join(
+        fixture.root.path,
+        'owner/lib/src/ccrouter_generated/hidden.dart',
+      ),
+    ).uri.replace(host: 'not-local.invalid');
+    final result = await fixture.resolve(
+      "import '$uri' show hidden;\nfinal value = hidden;",
+    );
+    expect(
+      result.diagnostics.where(
+        (d) => d.diagnosticCode.severity.name == 'ERROR',
+      ),
+      isEmpty,
+    );
+    expect(
+      fixture
+          .diagnostics(result)
+          .where((d) => d.code == 'ccrouter_cross_package_generated_import'),
+      hasLength(1),
+    );
+  });
+
+  for (final form in [
+    'fileQuery',
+    'fileFragment',
+    'fileSeparator',
+    'packageQuery',
+    'packageFragment',
+    'packageAbsolute',
+    'packageAuthority',
+    'packageSeparator',
+  ]) {
+    test('resolved $form imports retain generated identity', () async {
+      fixture._write(
+        'owner/lib/src/ccrouter_generated/hidden.dart',
+        'const hidden = 1;',
+      );
+      final fileUri = File(
+        path.join(
+          fixture.root.path,
+          'owner/lib/src/ccrouter_generated/hidden.dart',
+        ),
+      ).uri;
+      final packageUri = Uri.parse(
+        'package:owner_contracts/src/ccrouter_generated/hidden.dart',
+      );
+      final uri = switch (form) {
+        'fileQuery' => fileUri.replace(query: 'query').toString(),
+        'fileFragment' => fileUri.replace(fragment: 'fragment').toString(),
+        'fileSeparator' => fileUri.toString().replaceFirst('/src/', '/src%2F'),
+        'packageQuery' => packageUri.replace(query: 'query').toString(),
+        'packageFragment' =>
+          packageUri.replace(fragment: 'fragment').toString(),
+        'packageAbsolute' =>
+          'package:/owner_contracts/src/ccrouter_generated/hidden.dart',
+        'packageAuthority' =>
+          'package://ignored/owner_contracts/src/ccrouter_generated/hidden.dart',
+        _ => packageUri.toString().replaceFirst('/src/', '/src%2F'),
+      };
+      final result = await fixture.resolve(
+        "import '$uri' show hidden;\nfinal value = hidden;",
+      );
+      final fragment = form == 'fileFragment' || form == 'packageFragment';
+      expect(
+        result.diagnostics.where(
+          (d) => d.diagnosticCode.severity.name == 'ERROR',
+        ),
+        fragment ? isNotEmpty : isEmpty,
+      );
+      expect(
+        fixture
+            .diagnostics(result)
+            .where((d) => d.code == 'ccrouter_cross_package_generated_import'),
+        fragment ? isEmpty : hasLength(1),
+      );
+    });
+  }
+
+  test(
+    'resolved Package aliases retain their generated target identity',
+    () async {
+      fixture._write(
+        'owner/lib/src/ccrouter_generated/hidden.dart',
+        'const hidden = 1;',
+      );
+      Link(
+        path.join(fixture.root.path, 'owner/lib/public_alias.dart'),
+      ).createSync(
+        path.join(
+          fixture.root.path,
+          'owner/lib/src/ccrouter_generated/hidden.dart',
+        ),
+      );
+      final result = await fixture.resolve(
+        "import 'package:owner_contracts/public_alias.dart' show hidden;\nfinal value = hidden;",
+      );
+      expect(
+        result.diagnostics.where(
+          (d) => d.diagnosticCode.severity.name == 'ERROR',
+        ),
+        isEmpty,
+      );
+      expect(
+        fixture
+            .diagnostics(result)
+            .where((d) => d.code == 'ccrouter_cross_package_generated_import'),
+        hasLength(1),
+      );
+    },
+    skip: Platform.isWindows ? 'POSIX symlink fixture' : false,
+  );
+
+  test(
+    'a named extension is valid source but must not be inserted as an Owner value',
+    () async {
+      const source = '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:owner_contracts/right.dart';
+extension ownerComponentId on Object {}
+const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
+  serviceDependencies: [CCServiceDependency<SharedService>()]);
+''';
+      final result = await fixture.resolve(source);
+      expect(result.diagnostics, isEmpty);
+      final issue = fixture
+          .diagnostics(result)
+          .singleWhere(
+            (issue) =>
+                issue.code == 'ccrouter_component_owner_dependency_missing',
+          );
+      expect(fixture.fixes(result, issue), isEmpty);
+      final broken = await fixture.resolve(
+        source.replaceFirst(
+          'serviceDependencies:',
+          'dependencies: [ownerComponentId], serviceDependencies:',
+        ),
+      );
+      expect(broken.diagnostics, isNotEmpty);
+    },
+  );
+
+  for (final mode in ['conditionalImport', 'partImport']) {
+    test('parser-only $mode Owner edit would introduce a Dart error', () async {
+      fixture._write('owner/lib/empty.dart', '');
+      fixture._write('owner/lib/with_part.dart', "part 'owner_part.dart';");
+      fixture._write('owner/lib/owner_part.dart', '''
+part of 'with_part.dart';
+const ownerComponentId = 'wrong';
+''');
+      final competing = mode == 'conditionalImport'
+          ? "'package:owner_contracts/empty.dart' if (dart.library.io) 'package:owner_contracts/wrong.dart'"
+          : "'package:owner_contracts/with_part.dart'";
+      final source =
+          '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:owner_contracts/right.dart' as api show SharedService;
+import 'package:owner_contracts/right.dart' as owner show ownerComponentId;
+import $competing as owner show ownerComponentId;
+const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
+  serviceDependencies: [CCServiceDependency<api.SharedService>()]);
+''';
+      final result = await fixture.resolve(source);
+      expect(
+        result.diagnostics.where(
+          (d) => d.diagnosticCode.severity.name == 'ERROR',
+        ),
+        isEmpty,
+      );
+      final fixes = CCRouterQuickFixes.compute(
+        source: source,
+        filePath: fixture.file,
+        offset: source.indexOf('CCServiceDependency<'),
+        diagnosticCode: 'ccrouter_component_owner_dependency_missing',
+        sourcePackage: 'consumer',
+        contractOwners: fixture.owners,
+      );
+      expect(fixes, isEmpty);
+      // Select the alternate explicitly; Analyzer's platform defaults can differ.
+      final selected = mode == 'conditionalImport'
+          ? source.replaceFirst(
+              competing,
+              "'package:owner_contracts/wrong.dart'",
+            )
+          : source;
+      final broken = await fixture.resolve(
+        selected.replaceFirst(
+          'serviceDependencies:',
+          'dependencies: [owner.ownerComponentId], serviceDependencies:',
+        ),
+      );
+      expect(
+        broken.diagnostics.where(
+          (d) => d.diagnosticCode.severity.name == 'ERROR',
+        ),
+        isNotEmpty,
+      );
+    });
+  }
+
+  for (final (library, prefix, expected) in [
+    ('foreign.dart', '', false),
+    ('foreign.dart', 'api', false),
+    ('foreign_barrel.dart', 'api', false),
+    ('right_barrel.dart', 'api', true),
+    ('right_barrel.dart', '', true),
+  ]) {
+    test(
+      'parsed Contract identity follows $library with prefix $prefix',
+      () async {
+        fixture._write('owner/lib/foreign.dart', '''
+abstract interface class SharedService {}
+''');
+        fixture._write(
+          'owner/lib/foreign_barrel.dart',
+          "export 'foreign.dart' show SharedService;",
+        );
+        fixture._write(
+          'owner/lib/right_barrel.dart',
+          "export 'right.dart' show SharedService;",
+        );
+        final source =
+            '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:owner_contracts/$library' ${prefix.isEmpty ? '' : 'as $prefix'} show SharedService;
+const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
+  serviceDependencies: [CCServiceDependency<${prefix.isEmpty ? '' : '$prefix.'}SharedService>()]);
+''';
+        final result = await fixture.resolve(source);
+        expect(
+          result.diagnostics.where(
+            (d) => d.diagnosticCode.severity.name == 'ERROR',
+          ),
+          isEmpty,
+        );
+        final issues = CCRouterSourceAnalyzer.analyze(
+          source: source,
+          filePath: fixture.file,
+          packageRoot: fixture.root.path,
+          packageName: 'consumer',
+          contractOwners: fixture.owners,
+        );
+        expect(
+          issues.any(
+            (d) => d.code == 'ccrouter_component_owner_dependency_missing',
+          ),
+          expected,
+        );
+      },
+    );
+  }
+
   for (final signature in ['void', 'Future<void>', 'FutureOr<void>']) {
     test(
       'Service $signature dispose gets a fix which passes reanalysis',
@@ -578,6 +1230,7 @@ String _apply(String source, CCRouterSourceFix fix) =>
     source.replaceRange(fix.offset, fix.offset + fix.length, fix.replacement);
 
 final class _Channel implements PluginCommunicationChannel {
+  final notifications = <Notification>[];
   @override
   void close() {}
   @override
@@ -588,7 +1241,8 @@ final class _Channel implements PluginCommunicationChannel {
     Function(Notification)? onNotification,
   }) {}
   @override
-  void sendNotification(Notification notification) {}
+  void sendNotification(Notification notification) =>
+      notifications.add(notification);
   @override
   void sendResponse(Response response) {}
 }
@@ -609,12 +1263,16 @@ final class _Fixture {
       "export 'src/facade.dart' show CCRouterHost;",
     );
     _write(
+      'ui/lib/src/ui_fragment.dart',
+      'class CCUIHostAssembly {} class CCUIRenderer {}',
+    );
+    _write(
       'owner/lib/lifecycle.dart',
       "export 'package:ccrouter/ccrouter_host.dart' show CCRouterHost;",
     );
     _write(
       'owner/lib/right.dart',
-      "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\nconst ownerComponentId = CCComponentId('right');\nabstract interface class SharedService {}\n",
+      "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\nconst ownerComponentId = CCComponentId('right');\n@CCServiceContract(componentId: ownerComponentId, id: 'right.shared')\nabstract interface class SharedService {}\n",
     );
     _write(
       'owner/lib/wrong.dart',
@@ -644,6 +1302,12 @@ final class _Fixture {
             'languageVersion': '3.10',
           },
           {
+            'name': 'ccrouter_ui',
+            'rootUri': '../ui',
+            'packageUri': 'lib/',
+            'languageVersion': '3.10',
+          },
+          {
             'name': 'ccrouter_contracts',
             'rootUri': Uri.directory(contracts).toString(),
             'packageUri': 'lib/',
@@ -669,7 +1333,10 @@ final class _Fixture {
         contractLibraryUri: 'package:owner_contracts/right.dart',
       ),
     ],
-    packageRoots: {'owner_contracts': path.join(root.path, 'owner')},
+    packageRoots: {
+      'owner_contracts': path.join(root.path, 'owner'),
+      'ccrouter_contracts': Directory('../ccrouter_contracts').absolute.path,
+    },
   );
   void _write(String name, String content) => (File(
     path.join(root.path, name),

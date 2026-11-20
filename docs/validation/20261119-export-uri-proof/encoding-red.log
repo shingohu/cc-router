@@ -1,0 +1,41 @@
+00:00 +0: loading test/quick_fixes_test.dart
+00:00 +0: test/quick_fixes_test.dart: parser-only Owner edits defer unproven packageInvalidEncoding namespaces
+00:00 +0 -1: test/contract_owner_index_test.dart: invalid encoded or absolute-path metadata URIs yield no Owner facts
+00:00 +0 -2: test/quick_fixes_test.dart: parser-only Owner edits defer unproven packageInvalidEncoding namespaces [E]
+  FormatException: Invalid UTF-8 byte (at offset 0)
+  dart:core                                                                       _Uri.pathSegments
+  package:ccrouter_analyzer_plugin/src/component_dependency_analyzer.dart 162:31  CCRouterComponentDependencyAnalyzer._importPrefixes
+  package:ccrouter_analyzer_plugin/src/component_dependency_analyzer.dart 60:28   CCRouterComponentDependencyAnalyzer.findMissing
+  package:ccrouter_analyzer_plugin/src/source_quick_fixes.dart 157:60             CCRouterQuickFixes._componentDependencyFixes
+  package:ccrouter_analyzer_plugin/src/source_quick_fixes.dart 91:14              CCRouterQuickFixes.compute
+  test/quick_fixes_test.dart 90:40                                                main.<fn>
+
+00:00 +0 -2: test/contract_owner_index_test.dart: invalid encoded or absolute-path metadata URIs yield no Owner facts [E]
+  FormatException: Invalid UTF-8 byte (at offset 0)
+  dart:core                                                              _Uri.pathSegments
+  package:ccrouter_analyzer_plugin/src/contract_owner_index.dart 895:11  _contractMetadataUri
+  package:ccrouter_analyzer_plugin/src/contract_owner_index.dart 715:27  CCRouterContractOwnerIndexCache._build
+  package:ccrouter_analyzer_plugin/src/contract_owner_index.dart 470:19  CCRouterContractOwnerIndexCache.resolve
+  test/contract_owner_index_test.dart 20:55                              main.<fn>
+
+00:00 +0 -2: test/quick_fixes_test.dart: parser-only Owner edits defer unproven relativeInvalidEncoding namespaces
+00:00 +0 -3: test/quick_fixes_test.dart: parser-only Owner edits defer unproven relativeInvalidEncoding namespaces [E]
+  FormatException: Invalid UTF-8 byte (at offset 5)
+  dart:core                                                                       _Uri.toFilePath
+  package:ccrouter_analyzer_plugin/src/contract_owner_index.dart 276:67           CCRouterContractOwnerIndex._resolveLibrary
+  package:ccrouter_analyzer_plugin/src/contract_owner_index.dart 205:24           CCRouterContractOwnerIndex.visibleComponentIdReference
+  package:ccrouter_analyzer_plugin/src/component_dependency_analyzer.dart 186:32  CCRouterComponentDependencyAnalyzer._containsOwner
+  package:ccrouter_analyzer_plugin/src/component_dependency_analyzer.dart 117:17  CCRouterComponentDependencyAnalyzer.findMissing
+  package:ccrouter_analyzer_plugin/src/source_quick_fixes.dart 157:60             CCRouterQuickFixes._componentDependencyFixes
+  package:ccrouter_analyzer_plugin/src/source_quick_fixes.dart 91:14              CCRouterQuickFixes.compute
+  test/quick_fixes_test.dart 90:40                                                main.<fn>
+
+00:00 +0 -3: Some tests failed.
+
+Failing tests:
+  test/contract_owner_index_test.dart: invalid encoded or absolute-path metadata URIs yield no Owner facts
+  test/quick_fixes_test.dart: parser-only Owner edits defer unproven packageInvalidEncoding namespaces
+  test/quick_fixes_test.dart: parser-only Owner edits defer unproven relativeInvalidEncoding namespaces
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

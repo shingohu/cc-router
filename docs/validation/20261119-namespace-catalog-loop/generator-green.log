@@ -1,0 +1,78 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/package_workspace_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/package_workspace_test.dart: catalog rejects nonportable source and artifact URI package:
+00:00 +1: packages/ccrouter_test/generator_test/package_workspace_test.dart: catalog rejects nonportable source and artifact URI package:contracts
+00:00 +2: packages/ccrouter_test/generator_test/package_workspace_test.dart: catalog rejects nonportable source and artifact URI package:/contracts/source.dart
+00:00 +3: packages/ccrouter_test/generator_test/package_workspace_test.dart: catalog rejects nonportable source and artifact URI package://contracts/source.dart
+00:00 +4: packages/ccrouter_test/generator_test/package_workspace_test.dart: catalog rejects nonportable source and artifact URI package:contracts/source.dart?query
+00:00 +5: packages/ccrouter_test/generator_test/package_workspace_test.dart: catalog rejects nonportable source and artifact URI package:contracts/source.dart#fragment
+00:00 +6: packages/ccrouter_test/generator_test/package_workspace_test.dart: catalog rejects nonportable source and artifact URI package:contracts/../source.dart
+00:00 +7: packages/ccrouter_test/generator_test/package_workspace_test.dart: catalog rejects nonportable source and artifact URI package:contracts/%2E%2E/source.dart
+00:00 +8: packages/ccrouter_test/generator_test/package_workspace_test.dart: catalog rejects nonportable source and artifact URI package:contracts/sub%2Fsource.dart
+00:00 +9: packages/ccrouter_test/generator_test/package_workspace_test.dart: catalog rejects nonportable source and artifact URI package:contracts/sub%5Csource.dart
+00:00 +10: packages/ccrouter_test/generator_test/package_workspace_test.dart: catalog rejects nonportable source and artifact URI package:contracts/%FF.dart
+00:00 +11: packages/ccrouter_test/generator_test/package_workspace_test.dart: catalog rejects nonportable source and artifact URI package:contracts/%00.dart
+00:00 +12: packages/ccrouter_test/generator_test/package_workspace_test.dart: catalog rejects nonportable source and artifact URI package:contracts//source.dart
+00:00 +13: packages/ccrouter_test/generator_test/package_workspace_test.dart: catalog retains valid encoded and legacy source filenames
+00:00 +14: packages/ccrouter_test/generator_test/package_workspace_test.dart: source references preserve defining Library evidence without changing locations
+00:00 +15: packages/ccrouter_test/generator_test/package_workspace_test.dart: source catalog enriches absent Library evidence but rejects conflicting identities
+00:00 +16: packages/ccrouter_test/generator_test/package_workspace_test.dart: discovers only the Host runtime dependency closure
+00:00 +17: packages/ccrouter_test/generator_test/package_workspace_test.dart: requested Package write scope keeps Workspace dependencies read-only
+00:00 +18: packages/ccrouter_test/generator_test/package_workspace_test.dart: Portable State requires an explicit package declaration
+00:00 +19: packages/ccrouter_test/generator_test/package_workspace_test.dart: requires resolved Package graph instead of scanning the repository
+00:00 +20: packages/ccrouter_test/generator_test/package_workspace_test.dart: rejects corrupted and incompatible Package indexes
+00:00 +21: packages/ccrouter_test/generator_test/package_workspace_test.dart: DTO Action index uses schema 4 and cannot be relabeled as legacy UI
+00:00 +22: packages/ccrouter_test/generator_test/package_workspace_test.dart: union Action index uses schema 5 and cannot be relabeled as legacy UI
+00:00 +23: packages/ccrouter_test/generator_test/package_workspace_test.dart: non-framework CCRouter dependencies require a published index
+00:00 +24: packages/ccrouter_test/generator_test/package_workspace_test.dart: optional UI runtime does not require component Portable State
+00:00 +25: packages/ccrouter_test/generator_test/package_workspace_test.dart: Package index fingerprint is canonical and detects metadata changes
+00:00 +26: packages/ccrouter_test/generator_test/package_workspace_test.dart: capability catalog merges route contract and implementation sources
+00:00 +27: packages/ccrouter_test/generator_test/package_workspace_test.dart: capability catalog retains schema-v2 file-only locations
+00:00 +28: packages/ccrouter_test/generator_test/package_workspace_test.dart: legacy route implementation does not invent a contract location
+00:00 +29: packages/ccrouter_test/generator_test/package_workspace_test.dart: metadata cache detects add change rename and delete by exact bytes
+00:00 +30: packages/ccrouter_test/generator_test/package_workspace_test.dart: metadata cache tracks Service metadata add change rename and delete
+00:00 +31: loading packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart
+00:00 +31: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: union schema 3 validates mixed documents and rejects stale snapshots
+00:00 +32: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: review UI workspace rejects fractional version tag representations
+00:00 +33: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: valid UI workspace emits no diagnostics
+00:00 +34: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI metadata accepts the exact 128 character componentId boundary
+00:00 +35: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI metadata accepts the exact 128 character id boundary
+00:00 +36: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Package rejects matching malformed componentId: Orders
+00:00 +37: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Host rejects matching malformed componentId: Orders
+00:00 +38: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Package rejects matching malformed componentId: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+00:00 +39: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Host rejects matching malformed componentId: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+00:00 +40: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Package rejects matching malformed id: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+00:00 +41: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Host rejects matching malformed id: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+00:00 +42: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Package rejects matching malformed id:
+00:00 +43: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Host rejects matching malformed id:
+00:00 +44: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Package rejects matching malformed id: 17
+00:00 +45: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Host rejects matching malformed id: 17
+00:00 +46: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Package rejects matching malformed shapeFingerprint: shape
+00:00 +47: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Host rejects matching malformed shapeFingerprint: shape
+00:00 +48: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Package rejects matching malformed shapeFingerprint: null
+00:00 +49: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Host rejects matching malformed shapeFingerprint: null
+00:00 +50: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Package rejects matching malformed version: invalid
+00:00 +51: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Host rejects matching malformed version: invalid
+00:00 +52: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Package rejects matching malformed version: null
+00:00 +53: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Host rejects matching malformed version: null
+00:00 +54: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: package-local UI metadata rejects an invalid range without Host closure
+00:00 +55: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: invalid UI range produces one source error instead of Host fallout
+00:00 +56: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator >=1.0.0
+00:00 +57: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator <=1.0.0
+00:00 +58: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator <2.0.0
+00:00 +59: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator >=1.0.0	<2.0.0
+00:00 +60: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: UI Workspace accepts documented comparator >=1.0.0
+<2.0.0
+00:00 +61: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI contract_duplicate has an authored location and correction
+00:00 +62: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI owner_mismatch has an authored location and correction
+00:00 +63: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI implementation_duplicate has an authored location and correction
+00:00 +64: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI dependency_missing has an authored location and correction
+00:00 +65: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI stale_generated_output has an authored location and correction
+00:00 +66: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI missing_implementation has an authored location and correction
+00:00 +67: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI fingerprint_changed has an authored location and correction
+00:00 +68: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: structured UI version_out_of_range has an authored location and correction
+00:00 +69: packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart: invalid portable source positions never become IDE diagnostics
+00:00 +70: loading packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart
+00:00 +70: packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart: malformed namespace URIs defer to Builder without crashing
+00:00 +71: packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart: rejects cross-Package imports, exports, and conditional imports
+00:00 +72: packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart: allows owner imports, public contracts, and generated Host glue
+00:00 +73: All tests passed!

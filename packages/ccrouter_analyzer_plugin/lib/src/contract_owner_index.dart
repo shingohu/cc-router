@@ -61,10 +61,12 @@ final class CCRouterContractOwner {
 
 /// Immutable Contract ownership snapshot built from resolved Package indexes.
 ///
-/// The index never scans arbitrary workspace source. It visits only Package
-/// roots in Pub's `package_config.json`, each Package's exact CCRouter index,
-/// and Contract source files named by that index. This keeps editor latency
-/// predictable and leaves the Generator/Workspace Validator authoritative.
+/// The snapshot loads Pub's Package roots, exact CCRouter indexes and referenced
+/// Contract sources. Parser-only checks additionally follow exact authored
+/// import/export edges to prove visibility; they never scan whole Packages or
+/// create another Analyzer session. Generator/Workspace Validator stays authoritative.
+/// Defining Libraries remain part of identity even when type names, Owners or
+/// shared part locations coincide; source and Library paths invalidate together.
 final class CCRouterContractOwnerIndex {
   /// Creates a normalized index for one Pub resolution graph.
   CCRouterContractOwnerIndex({
@@ -87,6 +89,7 @@ final class CCRouterContractOwnerIndex {
   final Map<String, String> _packageRoots;
 
   /// Resolves a Contract's real declaration, including typedefs and re-exports.
+  /// Missing, duplicate or changed current annotations defer stale metadata.
   CCRouterContractOwner? resolveType(
     CCRouterContractKind kind,
     DartType? type,
@@ -106,26 +109,31 @@ final class CCRouterContractOwnerIndex {
         .toList();
     if (candidates.length != 1) return null;
     final owner = candidates.single;
-    if (kind == CCRouterContractKind.uiFragment) {
-      // Generated facts can outlive source edits. A resolved UI marker must
-      // still carry exactly one real framework annotation with the same Owner.
-      final annotations = type.element.metadata.annotations.where((annotation) {
-        final annotationType = annotation.computeConstantValue()?.type;
-        return annotationType is InterfaceType &&
-            CCRouterResolvedSymbols.isFrameworkType(
-              annotationType,
-              'CCUIFragmentContract',
-              'ui_fragment',
-            );
-      }).toList();
-      if (annotations.length != 1) return null;
-      final currentOwner = annotations.single
-          .computeConstantValue()
-          ?.getField('componentId')
-          ?.getField('value')
-          ?.toStringValue();
-      if (currentOwner != owner.componentId) return null;
-    }
+    final (annotationName, file) = switch (kind) {
+      CCRouterContractKind.service => ('CCServiceContract', 'service'),
+      CCRouterContractKind.command => ('CCCommandContract', 'messaging'),
+      CCRouterContractKind.uiFragment => (
+        'CCUIFragmentContract',
+        'ui_fragment',
+      ),
+    };
+    // Generated facts can outlive edits; require one current matching Owner.
+    final annotations = type.element.metadata.annotations.where((annotation) {
+      final annotationType = annotation.computeConstantValue()?.type;
+      return annotationType is InterfaceType &&
+          CCRouterResolvedSymbols.isFrameworkType(
+            annotationType,
+            annotationName,
+            file,
+          );
+    }).toList();
+    if (annotations.length != 1) return null;
+    final currentOwner = annotations.single
+        .computeConstantValue()
+        ?.getField('componentId')
+        ?.getField('value')
+        ?.toStringValue();
+    if (currentOwner != owner.componentId) return null;
     return owner;
   }
 
@@ -134,13 +142,16 @@ final class CCRouterContractOwnerIndex {
   /// [importPrefixes] maps an explicit prefix to its imported Package. An
   /// empty-string key contains unprefixed Package imports. A local Contract is
   /// also eligible through [sourcePackage]. Ambiguous type names are ignored
-  /// rather than guessed.
+  /// rather than guessed. With source context, exact Library metadata must also
+  /// match the imported declaration through its complete export namespace.
   CCRouterContractOwner? resolve({
     required CCRouterContractKind kind,
     required String contractSymbol,
     required String? prefix,
     required Map<String, Set<String>> importPrefixes,
     required String sourcePackage,
+    CompilationUnit? unit,
+    String? sourcePath,
   }) {
     final visiblePackages = prefix == null
         ? <String>{sourcePackage, ...?importPrefixes['']}
@@ -150,11 +161,55 @@ final class CCRouterContractOwnerIndex {
           (owner) =>
               owner.kind == kind &&
               owner.contractSymbol == contractSymbol &&
-              visiblePackages.contains(owner.contractPackage),
+              (unit != null &&
+                      sourcePath != null &&
+                      owner.contractLibraryUri != null
+                  ? _importsExposeContract(unit, sourcePath, prefix, owner)
+                  : visiblePackages.contains(owner.contractPackage)),
         )
         .toList(growable: false);
     if (candidates.length != 1) return null;
     return candidates.single;
+  }
+
+  /// Proves one imported Contract's defining Library without a second session.
+  /// Unknown or competing namespaces defer; local declarations need resolution.
+  bool _importsExposeContract(
+    CompilationUnit unit,
+    String sourcePath,
+    String? prefix,
+    CCRouterContractOwner owner,
+  ) {
+    final symbol = owner.contractSymbol;
+    if (_declaredNames(unit).contains(prefix ?? symbol)) return false;
+    final library = _resolveLibrary(owner.contractLibraryUri!, sourcePath);
+    if (library == null) return false;
+    var contributors = 0;
+    var matching = 0;
+    for (final directive in unit.directives.whereType<ImportDirective>()) {
+      if (directive.prefix?.name != prefix ||
+          !_combinatorsExpose(directive.combinators, symbol))
+        continue;
+      if (directive.configurations.isNotEmpty ||
+          directive.deferredKeyword != null)
+        return false;
+      final uri = directive.uri.stringValue;
+      final imported = uri == null ? null : _resolveLibrary(uri, sourcePath);
+      if (imported == null) return false;
+      final exposes = _libraryExposesSymbol(imported, symbol, null, {});
+      if (exposes == null) return false;
+      if (exposes) contributors++;
+      final matches = _libraryExposesSymbol(
+        imported,
+        symbol,
+        null,
+        {},
+        declaringLibrary: library,
+      );
+      if (matches == null) return false;
+      if (matches) matching++;
+    }
+    return contributors == 1 && matching == 1;
   }
 
   /// Returns a component-ID reference that current imports provably expose.
@@ -163,6 +218,7 @@ final class CCRouterContractOwnerIndex {
   /// export graph is checked for a top-level `CCComponentId` with exactly the
   /// expected stable value. Missing, hidden, or ambiguous exports decline the
   /// edit so a Quick Fix cannot introduce unresolved or incorrect code.
+  /// Parser-only part libraries defer until their complete namespace resolves.
   String? visibleComponentIdReference({
     required CompilationUnit unit,
     required String sourcePath,
@@ -181,6 +237,8 @@ final class CCRouterContractOwnerIndex {
           .toList();
       return references.length == 1 ? references.single.key : null;
     }
+    if (unit.directives.any((d) => d is PartDirective || d is PartOfDirective))
+      return null;
     final references = <String>{};
     final localNames = _declaredNames(unit);
     if (_unitDeclaresComponentId(unit, symbol, owner.componentId)) {
@@ -196,12 +254,13 @@ final class CCRouterContractOwnerIndex {
       }
       final imported = _resolveLibrary(uri, sourcePath);
       if (imported == null ||
-          !_libraryExportsComponentId(
-            imported,
-            symbol,
-            owner.componentId,
-            <String>{},
-          )) {
+          _libraryExposesSymbol(
+                imported,
+                symbol,
+                owner.componentId,
+                <String>{},
+              ) !=
+              true) {
         continue;
       }
       final prefix = directive.prefix?.name;
@@ -219,11 +278,14 @@ final class CCRouterContractOwnerIndex {
         if (directive.prefix?.name != prefix ||
             !_combinatorsExpose(directive.combinators, symbol))
           continue;
+        if (directive.configurations.isNotEmpty) return true;
         final uri = directive.uri.stringValue;
         final imported = uri == null ? null : _resolveLibrary(uri, sourcePath);
-        if (imported != null &&
-            _libraryExportsComponentId(imported, symbol, null, {}))
-          contributors++;
+        final exports = imported == null
+            ? null
+            : _libraryExposesSymbol(imported, symbol, null, {});
+        if (exports == null) return true;
+        if (exports) contributors++;
       }
       return contributors != 1;
     });
@@ -237,78 +299,100 @@ final class CCRouterContractOwnerIndex {
         TopLevelVariableDeclaration d => d.variables.variables.map(
           (v) => v.name.lexeme,
         ),
-        ClassDeclaration d => [d.name.lexeme],
-        GenericTypeAlias d => [d.name.lexeme],
-        FunctionDeclaration d => [d.name.lexeme],
-        EnumDeclaration d => [d.name.lexeme],
-        MixinDeclaration d => [d.name.lexeme],
-        ExtensionTypeDeclaration d => [d.name.lexeme],
+        NamedCompilationUnitMember d => [d.name.lexeme],
+        ExtensionDeclaration d => [if (d.name != null) d.name!.lexeme],
         _ => <String>[],
       },
   };
 
   /// Resolves one authored import URI against Pub's Package roots.
   String? _resolveLibrary(String uri, String sourcePath) {
-    final parsed = Uri.tryParse(uri);
-    if (parsed == null) return null;
-    if (parsed.scheme == 'package') {
-      final segments = parsed.pathSegments;
-      if (segments.length < 2) return null;
-      final root = _packageRoots[segments.first];
-      if (root == null) return null;
-      return path.normalize(
-        path.join(root, 'lib', path.joinAll(segments.skip(1))),
+    try {
+      final parsed = Uri.tryParse(uri);
+      if (parsed == null ||
+          parsed.hasAuthority ||
+          parsed.hasQuery ||
+          parsed.hasFragment)
+        return null;
+      if (parsed.scheme == 'package') {
+        if (_contractMetadataUri(uri) == null) return null;
+        final segments = parsed.pathSegments;
+        if (segments.length < 2) return null;
+        final root = _packageRoots[segments.first];
+        if (root == null) return null;
+        return path.normalize(
+          path.join(root, 'lib', path.joinAll(segments.skip(1))),
+        );
+      }
+      if (parsed.hasScheme) return null;
+      final target = path.normalize(
+        Uri.file(sourcePath).resolveUri(parsed).toFilePath(),
       );
+      return target.contains('\u0000') ? null : target;
+    } on FormatException {
+      return null;
+    } on UnsupportedError {
+      return null;
     }
-    if (parsed.hasScheme) return null;
-    return path.normalize(Uri.file(sourcePath).resolveUri(parsed).toFilePath());
   }
 
-  /// Checks one library and its explicit exports for an exact component ID.
-  bool _libraryExportsComponentId(
+  /// Checks exact symbol exports, optionally matching an ID or defining Library.
+  /// Null means namespace evidence is incomplete.
+  /// Unknown branches must not be counted as proof that another binding is unique.
+  bool? _libraryExposesSymbol(
     String libraryPath,
     String symbol,
     String? componentId,
-    Set<String> visited,
-  ) {
+    Set<String> visited, {
+    String? declaringLibrary,
+  }) {
     final normalized = path.normalize(libraryPath);
     if (!visited.add(normalized)) return false;
     final file = File(normalized);
-    if (!file.existsSync()) return false;
+    if (!file.existsSync()) return null;
     late final CompilationUnit unit;
     try {
-      unit = parseString(
+      final parsed = parseString(
         content: file.readAsStringSync(),
         path: normalized,
         throwIfDiagnostics: false,
-      ).unit;
+      );
+      if (parsed.errors.isNotEmpty) return null;
+      unit = parsed.unit;
     } on Object {
-      return false;
+      return null;
     }
+    if (unit.directives.any((d) => d is PartDirective || d is PartOfDirective))
+      return null;
     if (_declaredNames(unit).contains(symbol)) {
-      return componentId == null ||
-          _unitDeclaresComponentId(unit, symbol, componentId);
+      return declaringLibrary != null
+          ? path.equals(normalized, declaringLibrary)
+          : componentId == null ||
+                _unitDeclaresComponentId(unit, symbol, componentId);
     }
     var contributors = 0;
     var matching = 0;
     for (final directive in unit.directives.whereType<ExportDirective>()) {
-      if (directive.configurations.isNotEmpty ||
-          !_combinatorsExpose(directive.combinators, symbol)) {
-        continue;
-      }
+      if (!_combinatorsExpose(directive.combinators, symbol)) continue;
+      if (directive.configurations.isNotEmpty) return null;
       final uri = directive.uri.stringValue;
-      if (uri == null) continue;
+      if (uri == null) return null;
       final exported = _resolveLibrary(uri, normalized);
-      if (exported == null) continue;
-      if (_libraryExportsComponentId(exported, symbol, null, {...visited}))
-        contributors++;
-      if (componentId != null &&
-          _libraryExportsComponentId(exported, symbol, componentId, {
-            ...visited,
-          }))
-        matching++;
+      if (exported == null) return null;
+      final declares = _libraryExposesSymbol(exported, symbol, null, {
+        ...visited,
+      });
+      if (declares == null) return null;
+      if (declares) contributors++;
+      if (componentId != null || declaringLibrary != null) {
+        final matches = _libraryExposesSymbol(exported, symbol, componentId, {
+          ...visited,
+        }, declaringLibrary: declaringLibrary);
+        if (matches == null) return null;
+        if (matches) matching++;
+      }
     }
-    return componentId == null
+    return componentId == null && declaringLibrary == null
         ? contributors > 0
         : contributors == 1 && matching == 1;
   }
@@ -332,21 +416,17 @@ final class CCRouterContractOwnerIndex {
     return false;
   }
 
-  /// Reads the stable value from a direct `CCComponentId('...')` expression.
+  /// Reads only literal values from proven framework Component ID constructors.
   static String? _componentIdLiteral(Expression? expression) {
-    final arguments = switch (expression) {
-      InstanceCreationExpression value
-          when value.constructorName.type.name.lexeme == 'CCComponentId' =>
-        value.argumentList.arguments,
-      MethodInvocation value
-          when value.target == null &&
-              value.methodName.name == 'CCComponentId' =>
-        value.argumentList.arguments,
-      _ => null,
-    };
+    if (expression == null) return null;
+    final arguments = CCRouterResolvedSymbols.constructorArguments(
+      expression,
+      'CCComponentId',
+      'component',
+    )?.arguments;
     if (arguments == null || arguments.length != 1) return null;
     final value = arguments.single;
-    return value is SimpleStringLiteral ? value.value : null;
+    return value is StringLiteral ? value.stringValue : null;
   }
 
   /// Applies Dart `show` and `hide` combinators for one requested symbol.
@@ -615,11 +695,8 @@ final class CCRouterContractOwnerIndexCache {
                   declaration['symbol'] is! String ||
                   ui['componentId'] is! String)
                 continue;
-              final uri = Uri.tryParse('${declaration['packageUri']}');
-              if (uri == null ||
-                  uri.scheme != 'package' ||
-                  uri.pathSegments.length < 2)
-                continue;
+              final uri = _contractMetadataUri(declaration['packageUri']);
+              if (uri == null) continue;
               final contractPackage = uri.pathSegments.first;
               final sourceRoot = roots[contractPackage];
               if (sourceRoot == null) continue;
@@ -632,29 +709,13 @@ final class CCRouterContractOwnerIndexCache {
               );
               if (!path.isWithin(path.join(sourceRoot, 'lib'), sourcePath))
                 continue;
-              final libraryValue = declaration['libraryUri'];
               final libraryUri = !declaration.containsKey('libraryUri')
                   ? uri
-                  : libraryValue is String
-                  ? Uri.tryParse(libraryValue)
-                  : null;
+                  : _contractMetadataUri(declaration['libraryUri']);
               // Keep source locations separate from the defining library.
               // Invalid explicit identity never falls back to Package + name.
               if (libraryUri == null ||
-                  libraryUri.scheme != 'package' ||
-                  libraryUri.hasAuthority ||
-                  libraryUri.hasQuery ||
-                  libraryUri.hasFragment ||
-                  libraryUri.pathSegments.length < 2 ||
-                  libraryUri.pathSegments.first != contractPackage ||
-                  libraryUri.pathSegments.any(
-                    (segment) =>
-                        segment.isEmpty ||
-                        segment == '.' ||
-                        segment == '..' ||
-                        segment.contains('/') ||
-                        segment.contains(r'\'),
-                  ))
+                  libraryUri.pathSegments.first != contractPackage)
                 continue;
               final libraryPath = path.normalize(
                 path.join(
@@ -675,7 +736,7 @@ final class CCRouterContractOwnerIndexCache {
                 contractSourcePath: sourcePath,
                 contractLibraryUri: libraryUri.toString(),
               );
-              pending['uiFragment\u0000$contractPackage\u0000${item.contractSymbol}\u0000${item.componentId}\u0000$sourcePath'] =
+              pending['uiFragment\u0000$contractPackage\u0000${item.contractSymbol}\u0000${item.componentId}\u0000$sourcePath\u0000$libraryUri'] =
                   item;
             }
           }
@@ -714,25 +775,43 @@ final class CCRouterContractOwnerIndexCache {
         final symbol = contractMap['symbol'];
         final packageUri = contractMap['packageUri'];
         if (symbol is! String || packageUri is! String) continue;
-        final parsedUri = Uri.tryParse(packageUri);
-        if (parsedUri == null || parsedUri.scheme != 'package') continue;
+        final parsedUri = _contractMetadataUri(packageUri);
+        if (parsedUri == null) continue;
         final segments = parsedUri.pathSegments;
-        if (segments.length < 2) continue;
         final contractPackage = segments.first;
         final contractRoot = roots[contractPackage];
         if (contractRoot == null) continue;
         final sourcePath = path.normalize(
           path.join(contractRoot, 'lib', path.joinAll(segments.skip(1))),
         );
+        if (!path.isWithin(path.join(contractRoot, 'lib'), sourcePath))
+          continue;
+        final libraryUri = contractMap.containsKey('libraryUri')
+            ? _contractMetadataUri(contractMap['libraryUri'])
+            : parsedUri;
+        if (libraryUri == null ||
+            libraryUri.pathSegments.first != contractPackage)
+          continue;
+        final libraryPath = path.normalize(
+          path.join(
+            contractRoot,
+            'lib',
+            path.joinAll(libraryUri.pathSegments.skip(1)),
+          ),
+        );
+        if (!path.isWithin(path.join(contractRoot, 'lib'), libraryPath))
+          continue;
         watched.add(path.normalize(File(sourcePath).absolute.path));
+        watched.add(path.normalize(File(libraryPath).absolute.path));
         final pendingOwner = _PendingContractOwner(
           kind: kind,
           contractSymbol: symbol,
           contractPackage: contractPackage,
           componentId: componentId,
           contractSourcePath: sourcePath,
+          contractLibraryUri: libraryUri.toString(),
         );
-        pending['${kind.name}\u0000$contractPackage\u0000$symbol\u0000$componentId'] =
+        pending['${kind.name}\u0000$contractPackage\u0000$symbol\u0000$componentId\u0000$sourcePath\u0000$libraryUri'] =
             pendingOwner;
       }
     }
@@ -864,6 +943,35 @@ final class _PendingContractOwner {
 
   /// Defining library identity when metadata distinguishes it from the source.
   final String? contractLibraryUri;
+}
+
+/// Accepts portable Contract identity URIs without queries, fragments or path escapes.
+/// Source location and defining Library each require this proof before file access.
+Uri? _contractMetadataUri(Object? value) {
+  if (value is! String) return null;
+  try {
+    final uri = Uri.tryParse(value);
+    if (uri == null ||
+        uri.scheme != 'package' ||
+        uri.hasAuthority ||
+        uri.hasAbsolutePath ||
+        uri.hasQuery ||
+        uri.hasFragment ||
+        uri.pathSegments.length < 2 ||
+        uri.pathSegments.any(
+          (segment) =>
+              segment.isEmpty ||
+              segment == '.' ||
+              segment == '..' ||
+              segment.contains('/') ||
+              segment.contains(r'\') ||
+              segment.contains('\u0000'),
+        ))
+      return null;
+    return uri;
+  } on FormatException {
+    return null;
+  }
 }
 
 /// Defers UI Owner fixes when format evidence cannot prove current UI metadata.

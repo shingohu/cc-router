@@ -1,0 +1,6 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/duplicate_declaration_test.dart
+00:00 +0: contract/probe.route.contract.g.dart rejects repeated CCRouteContract annotations
+00:10 +1: metadata/src/probe.route.json rejects repeated CCRouteContract annotations
+00:12 +2: init_task/probe.init_task.g.dart rejects repeated CCInitTask annotations
+00:14 +3: metadata/src/probe.init_task.json rejects repeated CCInitTask annotations
+00:16 +4: All tests passed!

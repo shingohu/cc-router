@@ -5,7 +5,9 @@ import 'package:analyzer/dart/analysis/analysis_context_collection.dart';
 import 'package:analyzer/dart/analysis/results.dart';
 import 'package:ccrouter_analyzer_plugin/src/contract_owner_index.dart';
 import 'package:ccrouter_analyzer_plugin/src/quick_fixes.dart';
-import 'package:ccrouter_analyzer_plugin/src/source_analyzer.dart';
+import 'package:ccrouter_analyzer_plugin/src/project_context.dart';
+import 'package:ccrouter_analyzer_plugin/src/source_analyzer.dart'
+    show CCRouterAnalyzerDiagnostic, CCRouterSourceAnalyzer;
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
 
@@ -24,6 +26,678 @@ void main() {
   late _UIFixture fixture;
   setUp(() => fixture = _UIFixture());
   tearDown(() => fixture.dispose());
+
+  test(
+    'UI Owner cache keeps distinct Libraries that share a named part',
+    () async {
+      for (final name in ['first', 'second']) {
+        fixture.write('owner/lib/$name.dart', '''
+library shared;
+$_imports
+part 'shared_marker.dart';
+const ownerId = CCComponentId('orders');
+const contractId = 'orders.$name';
+''');
+      }
+      fixture.write('owner/lib/shared_marker.dart', '''
+part of shared;
+final class SharedProps { const SharedProps(); }
+enum SharedAction { select }
+@CCUIFragmentContract<SharedProps, SharedAction>(componentId: ownerId, id: contractId)
+abstract final class Marker {}
+''');
+      fixture.write(
+        'owner/lib/src/ccrouter_generated/metadata/ccrouter_package.json',
+        jsonEncode({
+          'schemaVersion': 3,
+          'metadata': [
+            {
+              'package': 'owner_contracts',
+              'uiSchemaVersion': 1,
+              'uiContracts': [
+                for (final name in ['first', 'second'])
+                  {
+                    'componentId': 'orders',
+                    'id': 'orders.$name',
+                    'declaration': {
+                      'symbol': 'Marker',
+                      'packageUri':
+                          'package:owner_contracts/shared_marker.dart',
+                      'libraryUri': 'package:owner_contracts/$name.dart',
+                    },
+                  },
+              ],
+            },
+          ],
+        }),
+      );
+      for (final name in ['first', 'second']) {
+        final source = _consumer('CCUIFragmentDependency<owner.Marker>()')
+            .replaceFirst(
+              _imports,
+              "$_imports\nimport 'package:owner_contracts/$name.dart' as owner;",
+            )
+            .replaceFirst(
+              "dependencies: [CCComponentId('orders')]",
+              'dependencies: []',
+            );
+        final result = await fixture.resolve(source);
+        expect(result.diagnostics, isEmpty);
+        final owners = CCRouterContractOwnerIndexCache().resolve(fixture.file);
+        expect(
+          _coreOwnerIssues(fixture, result, owners),
+          hasLength(1),
+          reason: name,
+        );
+      }
+    },
+  );
+
+  for (final kind in ['Service', 'Command']) {
+    test(
+      '$kind part Owner metadata proves the defining Library separately from location',
+      () async {
+        fixture.write('owner/lib/core_root.dart', '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+part 'core_part.dart';
+const ownerId = CCComponentId('orders');
+''');
+        fixture.write('owner/lib/core_part.dart', '''
+part of 'core_root.dart';
+@CC${kind}Contract(componentId: ownerId, id: 'orders.shared', alias: 'shared')
+${kind == 'Service' ? 'abstract interface class Shared {}' : 'final class Shared implements CCCommand<void> { const Shared(); }'}
+''');
+        for (final library in <Object?>[
+          'package:owner_contracts/core_root.dart',
+          null,
+          'package:owner_contracts/core_root.dart?query',
+          'package:other/root.dart',
+          123,
+        ]) {
+          fixture.write(
+            'owner/lib/src/ccrouter_generated/metadata/ccrouter_package.json',
+            jsonEncode({
+              'capabilityCatalog': {
+                'records': [
+                  {
+                    'kind': kind.toLowerCase(),
+                    'componentId': 'orders',
+                    'contract': {
+                      'symbol': 'Shared',
+                      'packageUri': 'package:owner_contracts/core_part.dart',
+                      if (library != null) 'libraryUri': library,
+                    },
+                  },
+                ],
+              },
+            }),
+          );
+          final source = _consumer('CCUIFragmentDependency<Summary>()')
+              .replaceFirst(
+                _imports,
+                "$_imports\nimport 'package:owner_contracts/core_root.dart' as owner;",
+              )
+              .replaceFirst(
+                "dependencies: [CCComponentId('orders')]",
+                'dependencies: []',
+              )
+              .replaceFirst(
+                'uiDependencies:',
+                '${kind.toLowerCase()}Dependencies: [CC${kind}Dependency<owner.Shared>()], uiDependencies:',
+              );
+          final result = await fixture.resolve(source);
+          expect(result.diagnostics, isEmpty);
+          final owners = CCRouterContractOwnerIndexCache().resolve(
+            fixture.file,
+          );
+          final expected = library == 'package:owner_contracts/core_root.dart'
+              ? 1
+              : 0;
+          expect(
+            _coreOwnerIssues(fixture, result, owners),
+            hasLength(expected),
+            reason: '$library',
+          );
+          final fixes = CCRouterQuickFixes.compute(
+            source: source,
+            filePath: fixture.file,
+            offset: source.indexOf('CC${kind}Dependency<'),
+            diagnosticCode: 'ccrouter_component_owner_dependency_missing',
+            contractOwners: owners,
+            sourcePackage: 'consumer',
+            resolvedUnit: result.unit,
+          );
+          expect(fixes, hasLength(expected), reason: '$library');
+        }
+      },
+    );
+    test(
+      '$kind Owner metadata rejects query and fragment source identities',
+      () async {
+        fixture.write('owner/lib/core.dart', '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+const ownerId = CCComponentId('orders');
+@CC${kind}Contract(componentId: ownerId, id: 'orders.shared', alias: 'shared')
+${kind == 'Service' ? 'abstract interface class Shared {}' : 'final class Shared implements CCCommand<void> { const Shared(); }'}
+''');
+        for (final suffix in ['', '?query', '#fragment']) {
+          fixture.write(
+            'owner/lib/src/ccrouter_generated/metadata/ccrouter_package.json',
+            jsonEncode({
+              'capabilityCatalog': {
+                'records': [
+                  {
+                    'kind': kind.toLowerCase(),
+                    'componentId': 'orders',
+                    'contract': {
+                      'symbol': 'Shared',
+                      'packageUri': 'package:owner_contracts/core.dart$suffix',
+                    },
+                  },
+                ],
+              },
+            }),
+          );
+          final source = _consumer('CCUIFragmentDependency<Summary>()')
+              .replaceFirst(
+                _imports,
+                "$_imports\nimport 'package:owner_contracts/core.dart' as owner;",
+              )
+              .replaceFirst(
+                "dependencies: [CCComponentId('orders')]",
+                'dependencies: []',
+              )
+              .replaceFirst(
+                'uiDependencies:',
+                '${kind.toLowerCase()}Dependencies: [CC${kind}Dependency<owner.Shared>()], uiDependencies:',
+              );
+          final result = await fixture.resolve(source);
+          expect(result.diagnostics, isEmpty);
+          final owners = CCRouterContractOwnerIndexCache().resolve(
+            fixture.file,
+          );
+          expect(
+            _coreOwnerIssues(fixture, result, owners),
+            hasLength(suffix.isEmpty ? 1 : 0),
+            reason: suffix,
+          );
+        }
+      },
+    );
+    test(
+      '$kind Owner cache retains same-name Contracts from distinct Libraries',
+      () async {
+        for (final name in ['first', 'second']) {
+          fixture.write('owner/lib/$name.dart', '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+const ownerId = CCComponentId('orders');
+@CC${kind}Contract(componentId: ownerId, id: 'orders.$name', alias: '$name')
+${kind == 'Service' ? 'abstract interface class Shared {}' : 'final class Shared implements CCCommand<void> { const Shared(); }'}
+''');
+        }
+        fixture.write(
+          'owner/lib/src/ccrouter_generated/metadata/ccrouter_package.json',
+          jsonEncode({
+            'capabilityCatalog': {
+              'records': [
+                for (final name in ['first', 'second'])
+                  {
+                    'kind': kind.toLowerCase(),
+                    'componentId': 'orders',
+                    'contract': {
+                      'symbol': 'Shared',
+                      'packageUri': 'package:owner_contracts/$name.dart',
+                    },
+                  },
+              ],
+            },
+          }),
+        );
+        for (final name in ['first', 'second']) {
+          final source = _consumer('CCUIFragmentDependency<Summary>()')
+              .replaceFirst(
+                _imports,
+                "$_imports\nimport 'package:owner_contracts/$name.dart' as owner;",
+              )
+              .replaceFirst(
+                "dependencies: [CCComponentId('orders')]",
+                "dependencies: []",
+              )
+              .replaceFirst(
+                'uiDependencies:',
+                '${kind.toLowerCase()}Dependencies: [CC${kind}Dependency<owner.Shared>()], uiDependencies:',
+              );
+          final result = await fixture.resolve(source);
+          expect(result.diagnostics, isEmpty);
+          final owners = CCRouterContractOwnerIndexCache().resolve(
+            fixture.file,
+          );
+          expect(
+            _coreOwnerIssues(fixture, result, owners),
+            hasLength(1),
+            reason: name,
+          );
+          final fixes = CCRouterQuickFixes.compute(
+            source: source,
+            filePath: fixture.file,
+            offset: source.indexOf('CC${kind}Dependency<'),
+            diagnosticCode: 'ccrouter_component_owner_dependency_missing',
+            contractOwners: owners,
+            sourcePackage: 'consumer',
+            resolvedUnit: result.unit,
+          );
+          expect(fixes, hasLength(1), reason: name);
+          expect(fixes.single.replacement, contains('owner.ownerId'));
+        }
+      },
+    );
+  }
+
+  test(
+    'timeout checks prove SDK Duration identity and defer shadowed names',
+    () async {
+      for (final (declaration, timeout, invalid) in [
+        (
+          'class Duration { static const zero = core.Duration(seconds: 1); }',
+          'Duration.zero',
+          false,
+        ),
+        (
+          'extension Duration on Object { static const zero = core.Duration(seconds: 1); }',
+          'Duration.zero',
+          false,
+        ),
+        ('typedef Delay = core.Duration;', 'Delay.zero', true),
+        ('typedef Delay = core.Duration;', 'Delay(microseconds: 0)', true),
+        ('', 'core.Duration.zero', true),
+        ('', 'core.Duration(seconds: 1)', false),
+      ]) {
+        final source =
+            _consumer(
+              'CCUIFragmentDependency<Summary>()',
+              extra:
+                  '''
+$declaration
+@CCInitTask(id: 'startup.run', gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional, timeout: $timeout)
+void run() {}
+''',
+            ).replaceFirst(
+              _imports,
+              "$_imports\nimport 'dart:core';\nimport 'dart:core' as core;",
+            );
+        final result = await fixture.resolve(source);
+        expect(result.diagnostics, isEmpty);
+        expect(
+          fixture.codes(result).contains('ccrouter_timeout_invalid'),
+          invalid,
+          reason: timeout,
+        );
+        if (declaration.startsWith('class Duration') ||
+            declaration.startsWith('extension Duration')) {
+          final parsed = CCRouterSourceAnalyzer.analyze(
+            source: source,
+            filePath: fixture.file,
+            packageRoot: fixture.root.path,
+            packageName: 'consumer',
+          );
+          expect(
+            parsed.map((issue) => issue.code),
+            isNot(contains('ccrouter_timeout_invalid')),
+          );
+        }
+      }
+    },
+  );
+
+  test(
+    'imported Duration holders cannot impersonate SDK zero in parser checks',
+    () async {
+      fixture.write(
+        'lib/duration_holder.dart',
+        "import 'dart:core' as core;\nclass Duration { static const zero = core.Duration(seconds: 1); }",
+      );
+      final source = _consumer(
+        'CCUIFragmentDependency<Summary>()',
+        extra: '''
+@CCInitTask(id: 'startup.run', gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional, timeout: Duration.zero)
+void run() {}
+''',
+      ).replaceFirst(_imports, "$_imports\nimport 'duration_holder.dart';");
+      final result = await fixture.resolve(source);
+      expect(result.diagnostics, isEmpty);
+      expect(
+        fixture.codes(result),
+        isNot(contains('ccrouter_timeout_invalid')),
+      );
+      final parsed = CCRouterSourceAnalyzer.analyze(
+        source: source,
+        filePath: fixture.file,
+        packageRoot: fixture.root.path,
+        packageName: 'consumer',
+      );
+      expect(
+        parsed.map((issue) => issue.code),
+        isNot(contains('ccrouter_timeout_invalid')),
+      );
+    },
+  );
+
+  test(
+    'Gate constructor aliases retain framework identity for literal validation',
+    () async {
+      final source = _consumer(
+        'CCUIFragmentDependency<Summary>()',
+        extra: '''
+typedef OpenGate = CCInitTaskGate;
+@CCInitTask(id: 'startup.run', gate: OpenGate('Bad Gate'), failurePolicy: CCInitTaskFailurePolicy.optional)
+void run() {}
+''',
+      );
+      final result = await fixture.resolve(source);
+      expect(result.diagnostics, isEmpty);
+      expect(fixture.codes(result), contains('ccrouter_identifier_invalid'));
+    },
+  );
+
+  final argumentCases =
+      (jsonDecode(
+                File(
+                  '../ccrouter_test/fixtures/annotation_argument_cases.json',
+                ).readAsStringSync(),
+              )
+              as List)
+          .cast<Map<String, dynamic>>();
+  for (final entry in argumentCases) {
+    test('IDE argument semantics: ${entry['name']}', () async {
+      final annotation = switch (entry['kind']) {
+        'routeContract' => '@CCRouteContract<void>',
+        'route' => '@CCRoute<void>',
+        _ => '@CCInitTask',
+      };
+      final declaration = switch (entry['kind']) {
+        'routeContract' =>
+          "$annotation(componentId: CCComponentId('owner'), id: 'probe.route', ${entry['arguments']})\nabstract class ProbeRouteContract { const ProbeRouteContract(); }",
+        'route' =>
+          "$annotation(id: 'probe.route', ${entry['arguments']})\nfinal class Probe { const Probe(); }",
+        _ =>
+          "$annotation(${entry['arguments']}, gate: CCInitTaskGate.appStarted, failurePolicy: CCInitTaskFailurePolicy.optional)\nvoid initialize() {}",
+      };
+      final source = _consumer(
+        'CCUIFragmentDependency<Summary>()',
+        extra:
+            '''
+const CCRoutePattern? absentPattern = null;
+const CCInitTaskContract? absentTask = null;
+const String? absentId = null;
+const sharedTask = CCInitTaskContract(id: 'probe.shared');
+$declaration
+''',
+      );
+      final result = await fixture.resolve(source);
+      expect(result.diagnostics, isEmpty);
+      const code = 'ccrouter_annotation_arguments_conflict';
+      expect(fixture.codes(result).contains(code), entry['conflict']);
+      final fixes = CCRouterQuickFixes.compute(
+        source: source,
+        filePath: fixture.file,
+        offset: source.indexOf(annotation),
+        diagnosticCode: code,
+        resolvedUnit: result.unit,
+      );
+      expect(fixes, hasLength(entry['fixes']));
+      for (final fix in fixes) {
+        final fixed = source.replaceRange(
+          fix.offset,
+          fix.offset + fix.length,
+          fix.replacement,
+        );
+        final repaired = await fixture.resolve(fixed);
+        expect(repaired.diagnostics, isEmpty);
+        expect(fixture.codes(repaired), isNot(contains(code)));
+      }
+      final parsed = CCRouterSourceAnalyzer.analyze(
+        source: source,
+        filePath: fixture.file,
+        packageRoot: fixture.root.path,
+        packageName: 'consumer',
+      );
+      expect(
+        parsed.any((issue) => issue.code == code),
+        entry['parserConflict'],
+      );
+      final parsedFixes = CCRouterQuickFixes.compute(
+        source: source,
+        filePath: fixture.file,
+        offset: source.indexOf(annotation),
+        diagnosticCode: code,
+      );
+      expect(
+        parsedFixes,
+        hasLength(
+          entry['parserConflict'] && entry['fixes'] > 0 ? entry['fixes'] : 0,
+        ),
+      );
+    });
+  }
+
+  for (final kind in ['Service', 'Command']) {
+    test('$kind self Owner cannot be repaired with a self dependency', () async {
+      final owners = CCRouterContractOwnerIndex(
+        owners: [
+          CCRouterContractOwner(
+            kind: kind == 'Service'
+                ? CCRouterContractKind.service
+                : CCRouterContractKind.command,
+            contractSymbol: 'Shared',
+            contractPackage: 'consumer',
+            componentId: 'orders',
+            componentIdSymbol: 'orderOwner',
+            contractLibraryUri: 'package:consumer/probe.dart',
+          ),
+        ],
+        packageRoots: {'consumer': fixture.root.path},
+      );
+      for (final consumer in [
+        "CCComponentId('orders')",
+        "Identity('orders')",
+        'Identity(ownerName)',
+        r"Identity('${'orders'}')",
+        'orderOwner',
+        "CCComponentId('consumer')",
+      ]) {
+        final source = _coreOwnerConsumer(kind)
+            .replaceFirst("id: CCComponentId('consumer')", 'id: $consumer')
+            .replaceFirst(
+              'const computed',
+              "typedef Identity = CCComponentId;\nconst ownerName = 'orders';\nconst orderOwner = CCComponentId('orders');\nconst computed",
+            );
+        final result = await fixture.resolve(source);
+        expect(result.diagnostics, isEmpty);
+        final external = consumer == "CCComponentId('consumer')";
+        expect(
+          _coreOwnerIssues(fixture, result, owners),
+          hasLength(external ? 1 : 0),
+        );
+        final fixes = CCRouterQuickFixes.compute(
+          source: source,
+          filePath: fixture.file,
+          offset: source.indexOf('CC${kind}Dependency<Shared>'),
+          diagnosticCode: 'ccrouter_component_owner_dependency_missing',
+          sourcePackage: 'consumer',
+          contractOwners: owners,
+          resolvedUnit: result.unit,
+        );
+        expect(fixes, hasLength(external ? 1 : 0));
+      }
+    });
+    test(
+      '$kind owner detection follows dependency and component typedefs',
+      () async {
+        final owners = _coreOwners(fixture, kind);
+        for (final spelling in [
+          'CC${kind}Dependency<Shared>',
+          'Dependency',
+          'cc.CC${kind}Dependency<Shared>',
+        ]) {
+          final source = _coreOwnerConsumer(kind)
+              .replaceFirst(
+                _imports,
+                "$_imports\nimport 'package:ccrouter_contracts/ccrouter_contracts.dart' as cc;",
+              )
+              .replaceFirst(
+                'const component',
+                'typedef Dependency = cc.CC${kind}Dependency<Shared>;\ntypedef Descriptor = CCComponent;\nconst component',
+              )
+              .replaceFirst(
+                'component = CCComponent(',
+                'component = Descriptor(',
+              )
+              .replaceFirst('CC${kind}Dependency<Shared>(', '$spelling(');
+          final result = await fixture.resolve(source);
+          expect(result.diagnostics, isEmpty);
+          expect(_coreOwnerIssues(fixture, result, owners), hasLength(1));
+        }
+      },
+    );
+    test('$kind owner detection ignores same-name functions', () async {
+      final source = _coreOwnerConsumer(kind)
+          .replaceFirst(
+            _imports,
+            "$_imports\nimport 'package:ccrouter_contracts/ccrouter_contracts.dart' as cc;",
+          )
+          .replaceFirst('const component', '''
+@CC${kind}Contract(componentId: CCComponentId('other'), id: 'other.shared')
+${kind == 'Service' ? 'abstract interface class Other {}' : 'final class Other implements CCCommand<void> { const Other(); }'}
+cc.CC${kind}Dependency<Other> CC${kind}Dependency<T>({String? alias}) => cc.CC${kind}Dependency<Other>();
+final component''')
+          .replaceFirst(
+            "dependencies: []",
+            "dependencies: [CCComponentId('other')]",
+          );
+      final result = await fixture.resolve(source);
+      expect(result.diagnostics, isEmpty);
+      expect(
+        _coreOwnerIssues(fixture, result, _coreOwners(fixture, kind)),
+        isEmpty,
+      );
+    });
+    for (final state in ['owner changed', 'removed', 'duplicated', 'foreign']) {
+      test('$kind owner facts defer when current annotation is $state', () async {
+        final source = _coreOwnerConsumer(kind);
+        const annotation =
+            "@CCContractPlaceholder(componentId: CCComponentId('orders'), id: 'orders.shared', alias: 'shared')";
+        final actual = annotation.replaceFirst(
+          'CCContractPlaceholder',
+          'CC${kind}Contract',
+        );
+        final replacement = switch (state) {
+          'owner changed' => actual.replaceFirst(
+            "CCComponentId('orders')",
+            "CCComponentId('changed')",
+          ),
+          'removed' => '',
+          'duplicated' => '$actual\n$actual',
+          _ => actual,
+        };
+        var edited = source.replaceFirst(actual, replacement);
+        if (state == 'foreign')
+          edited = edited.replaceFirst('const computed', '''
+class CC${kind}Contract { const CC${kind}Contract({Object? componentId, Object? id, Object? alias}); }
+const computed''');
+        final result = await fixture.resolve(edited);
+        expect(result.diagnostics, isEmpty);
+        expect(
+          _coreOwnerIssues(fixture, result, _coreOwners(fixture, kind)),
+          isEmpty,
+        );
+      });
+    }
+  }
+
+  for (final kind in ['Service', 'Command']) {
+    for (final alias in ['bad-alias', 'class', 'hashCode']) {
+      test('$kind dependency literal alias $alias is diagnosed', () async {
+        final result = await fixture.resolve(_coreConsumer(kind, "'$alias'"));
+        expect(result.diagnostics, isEmpty);
+        final issues = fixture
+            .issues(result)
+            .where((issue) => issue.code == 'ccrouter_alias_invalid')
+            .toList();
+        expect(issues, hasLength(1));
+        expect(
+          result.content.substring(
+            issues.single.offset,
+            issues.single.offset + issues.single.length,
+          ),
+          "'$alias'",
+        );
+      });
+    }
+    test('$kind dependency valid and computed aliases defer', () async {
+      for (final alias in ["'shared'", 'computed', 'null']) {
+        final result = await fixture.resolve(_coreConsumer(kind, alias));
+        expect(result.diagnostics, isEmpty);
+        expect(
+          fixture.codes(result),
+          isNot(contains('ccrouter_alias_invalid')),
+        );
+      }
+    });
+    test('$kind dependency prefix and typedef retain constructor identity', () async {
+      final source = _coreConsumer(kind, "'bad-alias'")
+          .replaceFirst(
+            _imports,
+            "$_imports\nimport 'package:ccrouter_contracts/ccrouter_contracts.dart' as cc;",
+          )
+          .replaceAll('CC${kind}Dependency<Shared>', 'Dependency')
+          .replaceFirst(
+            'const computed',
+            'typedef Dependency = cc.CC${kind}Dependency<Shared>;\nconst computed',
+          );
+      final result = await fixture.resolve(source);
+      expect(result.diagnostics, isEmpty);
+      expect(fixture.codes(result), contains('ccrouter_alias_invalid'));
+      final prefixed = await fixture.resolve(
+        _coreConsumer(kind, "'bad-alias'")
+            .replaceFirst(
+              _imports,
+              "$_imports\nimport 'package:ccrouter_contracts/ccrouter_contracts.dart' as cc;",
+            )
+            .replaceAll(
+              'CC${kind}Dependency<Shared>',
+              'cc.CC${kind}Dependency<Shared>',
+            ),
+      );
+      expect(prefixed.diagnostics, isEmpty);
+      expect(fixture.codes(prefixed), contains('ccrouter_alias_invalid'));
+    });
+    test('$kind dependency same-name function is ignored', () async {
+      final source = _coreConsumer(kind, "'bad-alias'")
+          .replaceFirst(
+            _imports,
+            "$_imports\nimport 'package:ccrouter_contracts/ccrouter_contracts.dart' as cc;",
+          )
+          .replaceFirst('const component', '''
+cc.CC${kind}Dependency<T> CC${kind}Dependency<T extends ${kind == 'Service' ? 'Object' : 'cc.CCCommand<Object?>'}>({String? alias}) =>
+  cc.CC${kind}Dependency<T>(alias: 'shared');
+final component''');
+      final result = await fixture.resolve(source);
+      expect(result.diagnostics, isEmpty);
+      expect(fixture.codes(result), isNot(contains('ccrouter_alias_invalid')));
+    });
+    test('$kind dependency under foreign component is ignored', () async {
+      final result = await fixture.resolve(
+        _coreConsumer(kind, "'bad-alias'").replaceFirst('const component', '''
+class CCComponent { const CCComponent({Object? id, Object? version,
+  Object? dependencies, Object? uiDependencies, Object? ${kind.toLowerCase()}Dependencies}); }
+const component'''),
+      );
+      expect(result.diagnostics, isEmpty);
+      expect(fixture.codes(result), isNot(contains('ccrouter_alias_invalid')));
+    });
+  }
 
   for (final alias in ['build-card', 'class', 'toString']) {
     test('UI alias $alias is diagnosed with framework identity', () async {
@@ -608,6 +1282,267 @@ const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
       );
     },
   );
+
+  for (final form in [
+    'fileHost',
+    'queryHost',
+    'fileGenerated',
+    'queryGenerated',
+    'typeAlias',
+  ]) {
+    test(
+      'UI SPI $form paths keep their configured identity',
+      () async {
+        fixture.write(
+          'ui/lib/src/ui_fragment.dart',
+          'class CCUIHostAssembly {} class CCUIRenderer {}',
+        );
+        fixture.write(
+          'ui/lib/ccrouter_ui_host.dart',
+          "export 'src/ui_fragment.dart' show CCUIHostAssembly;",
+        );
+        fixture.write(
+          'ui/lib/ccrouter_ui_generated.dart',
+          "export 'src/ui_fragment.dart' show CCUIRenderer;",
+        );
+        Link(
+          p.join(fixture.root.path, 'owner/lib/spi_alias.dart'),
+        ).createSync(p.join(fixture.root.path, 'ui/lib/src/ui_fragment.dart'));
+        final generated = form.endsWith('Generated');
+        final library = generated
+            ? 'ccrouter_ui_generated.dart'
+            : 'ccrouter_ui_host.dart';
+        final source = form == 'typeAlias'
+            ? "import 'package:owner_contracts/spi_alias.dart' as ui; ui.CCUIHostAssembly? assembly; ui.CCUIRenderer? renderer;"
+            : form.startsWith('file')
+            ? "import '${File(p.join(fixture.root.path, 'ui/lib/$library')).uri}';"
+            : "import 'package:ccrouter_ui/$library?query';";
+        final result = await fixture.resolve(source);
+        expect(
+          result.diagnostics.where(
+            (d) => d.diagnosticCode.severity.name == 'ERROR',
+          ),
+          isEmpty,
+        );
+        final issues = CCRouterSourceAnalyzer.analyze(
+          source: source,
+          filePath: fixture.file,
+          packageRoot: fixture.root.path,
+          packageName: 'consumer',
+          resolvedUnit: result.unit,
+          uriConverter: fixture.collection
+              .contextFor(fixture.file)
+              .currentSession
+              .uriConverter,
+        );
+        expect(
+          issues.where((d) => d.code == 'ccrouter_ui_spi_access'),
+          isNotEmpty,
+        );
+      },
+      skip: Platform.isWindows && form == 'typeAlias'
+          ? 'POSIX symlink fixture'
+          : false,
+    );
+  }
+
+  test('hidden transitive UI SPI names do not count as uses', () async {
+    fixture.write(
+      'ui/lib/src/ui_fragment.dart',
+      'class CCUIHostAssembly {} class CCUIRenderer {}',
+    );
+    fixture.write(
+      'lib/spi_barrel.dart',
+      "export 'package:ccrouter_ui/src/ui_fragment.dart';",
+    );
+    final result = await fixture.resolve(
+      "import 'spi_barrel.dart' hide CCUIHostAssembly, CCUIRenderer;",
+    );
+    expect(
+      result.diagnostics.where(
+        (d) => d.diagnosticCode.severity.name == 'ERROR',
+      ),
+      isEmpty,
+    );
+    expect(
+      fixture.codes(result).where((d) => d == 'ccrouter_ui_spi_access'),
+      isEmpty,
+    );
+  });
+
+  test('UI Host typedef static access keeps its reference location', () async {
+    fixture.write(
+      'ui/lib/src/ui_fragment.dart',
+      'class CCUIHostAssembly { static int wrap() => 0; }',
+    );
+    fixture.write(
+      'lib/spi_barrel.dart',
+      "export 'package:ccrouter_ui/src/ui_fragment.dart';",
+    );
+    const source =
+        "import 'spi_barrel.dart' as ui; typedef Host = ui.CCUIHostAssembly; final value = Host.wrap();";
+    final result = await fixture.resolve(source);
+    expect(
+      result.diagnostics.where(
+        (d) => d.diagnosticCode.severity.name == 'ERROR',
+      ),
+      isEmpty,
+    );
+    final issues = fixture
+        .issues(result)
+        .where((d) => d.code == 'ccrouter_ui_spi_access');
+    expect(
+      issues.map((d) => d.offset),
+      contains(source.lastIndexOf('Host.wrap')),
+    );
+  });
+
+  test(
+    'transitive UI show lists keep only effectively exposed SPI names',
+    () async {
+      fixture.write(
+        'ui/lib/src/ui_fragment.dart',
+        'class CCUIHostAssembly {} class CCUIRenderer {}',
+      );
+      fixture.write(
+        'lib/spi_barrel.dart',
+        "export 'package:ccrouter_ui/src/ui_fragment.dart';",
+      );
+      for (final (selection, forbidden) in [
+        ('show CCUIHostAssembly', true),
+        ('show CCUIHostAssembly hide CCUIHostAssembly', false),
+        ('show CCUIHostAssembly show CCUIRenderer', false),
+      ]) {
+        final result = await fixture.resolve(
+          "import 'spi_barrel.dart' $selection;",
+        );
+        expect(
+          result.diagnostics.where(
+            (d) => d.diagnosticCode.severity.name == 'ERROR',
+          ),
+          isEmpty,
+        );
+        expect(
+          fixture.codes(result).contains('ccrouter_ui_spi_access'),
+          forbidden,
+          reason: selection,
+        );
+      }
+    },
+  );
+
+  test('a foreign UI SPI copy is not the configured framework library', () async {
+    fixture.write(
+      'owner/lib/src/ui_fragment.dart',
+      'class CCUIHostAssembly {} class CCUIRenderer {}',
+    );
+    final result = await fixture.resolve(
+      "import 'package:owner_contracts/src/ui_fragment.dart' as ui; ui.CCUIHostAssembly? assembly; ui.CCUIRenderer? renderer;",
+    );
+    expect(
+      result.diagnostics.where(
+        (d) => d.diagnosticCode.severity.name == 'ERROR',
+      ),
+      isEmpty,
+    );
+    final issues = CCRouterSourceAnalyzer.analyze(
+      source: result.content,
+      filePath: fixture.file,
+      packageRoot: fixture.root.path,
+      packageName: 'consumer',
+      resolvedUnit: result.unit,
+      uriConverter: fixture.collection
+          .contextFor(fixture.file)
+          .currentSession
+          .uriConverter,
+    );
+    expect(issues.where((d) => d.code == 'ccrouter_ui_spi_access'), isEmpty);
+  });
+
+  test(
+    'UI Host and Generated barrel aliases preserve their role matrix',
+    () async {
+      fixture.write(
+        'ui/lib/src/ui_fragment.dart',
+        'class CCUIHostAssembly {} class CCUIRenderer {}',
+      );
+      fixture.write(
+        'ui/lib/ccrouter_ui_host.dart',
+        "export 'src/ui_fragment.dart' show CCUIHostAssembly;",
+      );
+      fixture.write(
+        'ui/lib/ccrouter_ui_generated.dart',
+        "export 'src/ui_fragment.dart' show CCUIRenderer;",
+      );
+      for (final role in [
+        CCRouterAnalyzerProjectRole.host,
+        CCRouterAnalyzerProjectRole.package,
+      ]) {
+        for (final generated in [false, true]) {
+          final library = generated
+              ? 'ccrouter_ui_generated.dart'
+              : 'ccrouter_ui_host.dart';
+          final source =
+              "import '${File(p.join(fixture.root.path, 'ui/lib/$library')).uri}';";
+          final result = await fixture.resolve(source);
+          expect(
+            result.diagnostics.where(
+              (d) => d.diagnosticCode.severity.name == 'ERROR',
+            ),
+            isEmpty,
+          );
+          final issues = CCRouterSourceAnalyzer.analyze(
+            source: source,
+            filePath: fixture.file,
+            packageRoot: fixture.root.path,
+            packageName: 'consumer',
+            resolvedUnit: result.unit,
+            projectRole: role,
+            uriConverter: fixture.collection
+                .contextFor(fixture.file)
+                .currentSession
+                .uriConverter,
+          ).where((d) => d.code == 'ccrouter_ui_spi_access');
+          expect(
+            issues.isNotEmpty,
+            generated || role == CCRouterAnalyzerProjectRole.package,
+            reason: '$role/$library',
+          );
+        }
+      }
+    },
+  );
+
+  test(
+    'business UI types in the same implementation library stay allowed',
+    () async {
+      fixture.write(
+        'ui/lib/src/ui_fragment.dart',
+        'class CCUIFragmentRenderInput<P,A> {} enum CCUIFragmentUpdatePolicy { always }',
+      );
+      final result = await fixture.resolve(
+        "import 'package:ccrouter_ui/ccrouter_ui.dart'; CCUIFragmentRenderInput<Object,Object>? input; const policy = CCUIFragmentUpdatePolicy.always;",
+      );
+      expect(
+        result.diagnostics.where(
+          (d) => d.diagnosticCode.severity.name == 'ERROR',
+        ),
+        isEmpty,
+      );
+      final issues = CCRouterSourceAnalyzer.analyze(
+        source: result.content,
+        filePath: fixture.file,
+        packageRoot: fixture.root.path,
+        packageName: 'consumer',
+        resolvedUnit: result.unit,
+        uriConverter: fixture.collection
+            .contextFor(fixture.file)
+            .currentSession
+            .uriConverter,
+      );
+      expect(issues.where((d) => d.code == 'ccrouter_ui_spi_access'), isEmpty);
+    },
+  );
   test(
     'foreign component constructors never inherit UI dependency semantics',
     () async {
@@ -918,6 +1853,53 @@ Future<void> _expectOwnerFix(
   expect(fixed.diagnostics, isEmpty);
   expect(fixture.issues(fixed, owners: owners), isEmpty);
 }
+
+CCRouterContractOwnerIndex _coreOwners(_UIFixture fixture, String kind) =>
+    CCRouterContractOwnerIndex(
+      owners: [
+        CCRouterContractOwner(
+          kind: kind == 'Service'
+              ? CCRouterContractKind.service
+              : CCRouterContractKind.command,
+          contractSymbol: 'Shared',
+          contractPackage: 'consumer',
+          componentId: 'orders',
+          componentIdSymbol: null,
+          contractLibraryUri: 'package:consumer/probe.dart',
+        ),
+      ],
+      packageRoots: {'consumer': fixture.root.path},
+    );
+
+String _coreOwnerConsumer(String kind) => _coreConsumer(
+  kind,
+  "'shared'",
+).replaceFirst("dependencies: [CCComponentId('orders')]", 'dependencies: []');
+
+List<CCRouterAnalyzerDiagnostic> _coreOwnerIssues(
+  _UIFixture fixture,
+  ResolvedUnitResult result,
+  CCRouterContractOwnerIndex owners,
+) => fixture
+    .issues(result, owners: owners)
+    .where(
+      (issue) => issue.code == 'ccrouter_component_owner_dependency_missing',
+    )
+    .toList();
+
+String _coreConsumer(String kind, String alias) =>
+    _consumer(
+      'CCUIFragmentDependency<Summary>()',
+      extra:
+          '''
+const computed = 'bad-alias';
+@CC${kind}Contract(componentId: CCComponentId('orders'), id: 'orders.shared', alias: 'shared')
+${kind == 'Service' ? 'abstract interface class Shared {}' : 'final class Shared implements CCCommand<void> { const Shared(); }'}
+''',
+    ).replaceFirst(
+      'uiDependencies:',
+      '${kind.toLowerCase()}Dependencies: [CC${kind}Dependency<Shared>(alias: $alias)], uiDependencies:',
+    );
 
 String _consumer(String dependencies, {String extra = ''}) =>
     '''

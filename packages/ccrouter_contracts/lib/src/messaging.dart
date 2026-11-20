@@ -16,6 +16,7 @@ abstract interface class CCCommand<R> {}
 /// Declares one stable typed Command contract for generated registration.
 ///
 /// Use this annotation on a public, concrete, immutable `CCCommand<R>` class.
+/// Each class must carry exactly one [CCCommandContract] annotation.
 /// A component-internal Command may omit [componentId], allowing the generator
 /// to infer the Package's sole [CCComponent]. A Command moved into a shared
 /// contracts Package must declare its owning component explicitly.
@@ -63,6 +64,7 @@ final class CCCommandContract {
 /// installs it through the component Registrar.
 final class CCCommandHandler {
   /// Creates a stateless generated Command handler marker.
+  /// A function carries exactly one [CCCommandHandler] annotation.
   const CCCommandHandler();
 }
 
@@ -137,6 +139,7 @@ final class CCEventContract {
 /// then derives `<componentId>.<eventId>` deterministically.
 final class CCEventSubscription {
   /// Creates one generated static subscription declaration.
+  /// A function carries one [CCEventSubscription]; repeated IDs are rejected.
   const CCEventSubscription({this.id});
 
   /// Globally stable Subscriber identity, or null for the single default.

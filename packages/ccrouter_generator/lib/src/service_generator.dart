@@ -507,6 +507,12 @@ List<_ServiceContractModel> _readServiceContracts(LibraryReader library) {
         element,
       );
     }
+    if (_serviceContractChecker.annotationsOfExact(element).length != 1) {
+      _failService(
+        'Contract requires exactly one CCServiceContract annotation.',
+        element,
+      );
+    }
     _validateServiceContractInheritance(element);
     final component = annotated.annotation.read('componentId').objectValue;
     final componentId = component.getField('value')?.toStringValue();
@@ -582,6 +588,12 @@ List<_ServiceModel> _readServices(LibraryReader library) {
         element.displayName.startsWith('_')) {
       _failService(
         'CCService requires a public, concrete, non-generic class.',
+        element,
+      );
+    }
+    if (_serviceChecker.annotationsOfExact(element).length != 1) {
+      _failService(
+        'Declaration requires exactly one CCService annotation.',
         element,
       );
     }
@@ -702,6 +714,12 @@ List<_ServiceModel> _readServices(LibraryReader library) {
 _ServiceContractModel? _serviceContractAnnotation(InterfaceElement element) {
   final annotation = _serviceContractChecker.firstAnnotationOfExact(element);
   if (annotation == null || element is! ClassElement) return null;
+  if (_serviceContractChecker.annotationsOfExact(element).length != 1) {
+    _failService(
+      'Contract requires exactly one CCServiceContract annotation.',
+      element,
+    );
+  }
   final component = annotation.getField('componentId');
   final componentId = component?.getField('value')?.toStringValue();
   final id = annotation.getField('id')?.toStringValue();
@@ -1065,7 +1083,7 @@ String _servicePackageUri(String package, String libraryPath) {
   return 'package:$package/${libraryPath.substring('lib/'.length)}';
 }
 
-/// Serializes one declaration's portable Package URI and source coordinates.
+/// Preserves exact source coordinates and adds defining-Library identity for parts.
 Map<String, Object?> _serviceSourceReference(Element element) {
   final fragment = element.firstFragment;
   final libraryFragment = fragment.libraryFragment!;
@@ -1075,6 +1093,8 @@ Map<String, Object?> _serviceSourceReference(Element element) {
   return <String, Object?>{
     'symbol': element.displayName,
     'packageUri': libraryFragment.source.uri.toString(),
+    if (libraryFragment.source.uri != element.library!.uri)
+      'libraryUri': element.library!.uri.toString(),
     'line': location.lineNumber,
     'column': location.columnNumber,
   };

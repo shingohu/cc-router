@@ -372,6 +372,11 @@ major Contract SemVer and regeneration of A/B/Host. Use matching framework/UI/ge
 sources. Packages without UI retain their existing schema and generated API.
 The optional Analyzer Plugin checks effective aliases (including defaults),
 repeated dependencies, enum/DTO Actions, Renderer signatures and UI SPI access.
+UI SPI checks follow URI/symlink aliases to the configured framework library and
+respect effective show/hide visibility. Standalone UI type/Renderer files receive
+semantic checks without requiring a Component declaration in the same file. Host
+code may use UI Host APIs; handwritten Generated SPI remains forbidden in Hosts
+and components. Business UI types from the same implementation library stay allowed.
 Required UI Owner checks share the conservative imported-public-constant Quick
 Fix with Service/Command dependencies. Regenerate old metadata to provide UI
 marker identity and source positions. Host completeness errors enter the IDE

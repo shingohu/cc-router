@@ -2,6 +2,9 @@
 
 ## 0.1.0 - Unreleased
 
+- Preserve distinct Contract consumer ranges when merging Host bundles; deduplicate
+  only complete requirement values so merged snapshots do not lose constraints.
+
 - Add Host-only `CCHostAssembly.extend` for additive components and route Catalog
   adaptation while preserving generated provenance and optional bindings.
 

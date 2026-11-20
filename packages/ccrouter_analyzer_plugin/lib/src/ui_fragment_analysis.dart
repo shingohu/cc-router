@@ -19,12 +19,14 @@ typedef _Issue = ({
 /// Read-only UI declaration checks; schema and Host closure remain Generator-owned.
 abstract final class CCRouterUIFragmentAnalysis {
   /// Examines authored declarations without starting sessions or generation.
+  /// [matchesLibrary] borrows the current call's SDK Library identity proof.
   static List<_Issue> issues({
     required CompilationUnit unit,
     required String filePath,
     required String packageRoot,
     required String packageName,
     required CCRouterAnalyzerProjectRole? projectRole,
+    required bool Function(Uri actual, String canonical) matchesLibrary,
   }) {
     final issues = <_Issue>[];
     final role =
@@ -47,12 +49,20 @@ abstract final class CCRouterUIFragmentAnalysis {
           if (directive is ExportDirective)
             ...directive.configurations.map((c) => c.uri.stringValue),
         ];
-        if (uris.any(
-          (uri) =>
-              uri == 'package:ccrouter_ui/ccrouter_ui_generated.dart' ||
-              (role == CCRouterAnalyzerProjectRole.package &&
-                  uri == 'package:ccrouter_ui/ccrouter_ui_host.dart'),
-        )) {
+        if (uris.any((uri) {
+          final parsed = uri == null ? null : Uri.tryParse(uri);
+          if (parsed == null) return false;
+          final actual = Uri.file(filePath).resolveUri(parsed);
+          return matchesLibrary(
+                actual,
+                'package:ccrouter_ui/ccrouter_ui_generated.dart',
+              ) ||
+              role == CCRouterAnalyzerProjectRole.package &&
+                  matchesLibrary(
+                    actual,
+                    'package:ccrouter_ui/ccrouter_ui_host.dart',
+                  );
+        })) {
           add(
             directive,
             'spi_access',
@@ -64,7 +74,7 @@ abstract final class CCRouterUIFragmentAnalysis {
     }
     if (packageName != 'ccrouter_ui' &&
         p.isWithin(p.join(packageRoot, 'lib'), filePath)) {
-      final references = _SPIReferences(role);
+      final references = _SPIReferences(role, matchesLibrary);
       unit.accept(references);
       for (final node in references.locations) {
         add(
@@ -397,18 +407,19 @@ final class _AnnotationVisitor extends RecursiveAstVisitor<void> {
 /// Checks canonical class references through prefixed and transitive barrels.
 final class _SPIReferences extends RecursiveAstVisitor<void> {
   /// The Package role controls whether Host assembly references are permitted.
-  _SPIReferences(this.role);
+  _SPIReferences(this.role, this.matchesLibrary);
 
   /// Unknown roles defer Host-only checks.
   final CCRouterAnalyzerProjectRole? role;
+
+  /// Current SDK Library proof owned only by this synchronous scan.
+  final bool Function(Uri actual, String canonical) matchesLibrary;
 
   /// Source nodes owned only by this synchronous scan.
   final locations = <AstNode>[];
 
   /// Compares defining-library identity instead of a public barrel's spelling.
   bool _forbidden(InterfaceElement element) =>
-      element.library.uri.toString() ==
-          'package:ccrouter_ui/src/ui_fragment.dart' &&
       (const {
             'CCUIFragmentDescriptor',
             'CCUIFragmentRequirement',
@@ -420,13 +431,35 @@ final class _SPIReferences extends RecursiveAstVisitor<void> {
               const {
                 'CCUIHostAssembly',
                 'CCUIDiagnostic',
-              }.contains(element.name));
+              }.contains(element.name)) &&
+      matchesLibrary(
+        element.library.uri,
+        'package:ccrouter_ui/src/ui_fragment.dart',
+      );
 
   /// Generated types remain forbidden in handwritten code even in a Host.
   @override
   void visitSimpleIdentifier(SimpleIdentifier node) {
+    final combinator = node.thisOrAncestorOfType<Combinator>();
+    if (combinator != null) {
+      final directive = combinator.parent;
+      if (combinator is! ShowCombinator ||
+          directive is! NamespaceDirective ||
+          !directive.combinators.every(
+            (c) => switch (c) {
+              ShowCombinator c => c.shownNames.any((n) => n.name == node.name),
+              HideCombinator c => !c.hiddenNames.any(
+                (n) => n.name == node.name,
+              ),
+            },
+          ))
+        return;
+    }
     final element = node.element;
-    if (element is InterfaceElement && _forbidden(element)) locations.add(node);
+    final alias = element is TypeAliasElement ? element.aliasedType : null;
+    if (element is InterfaceElement && _forbidden(element) ||
+        alias is InterfaceType && _forbidden(alias.element))
+      locations.add(node);
     super.visitSimpleIdentifier(node);
   }
 

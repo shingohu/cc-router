@@ -2,6 +2,31 @@
 
 ## 0.1.0 - Unreleased
 
+- Prove Host/UI SPI library identity through the configured SDK for URI/symlink aliases, check Host named types/typedef references, and apply effective show/hide visibility without reporting excluded names. Analyze standalone typed UI/Renderer sources through the existing session.
+
+- Enforce generated internal API boundaries for Dart-supported file/query URI spellings and import-target symlinks. Borrow the existing SDK URI converter for Package aliases and conditional branches without requesting full type resolution for plain imports.
+
+- Respect conditional imports, part namespaces and Contract show/hide/local shadowing before parser-only Owner diagnostics or fixes. Match exact defining Libraries through real import/export paths.
+
+- Require complete parser-only Owner namespace proof, including named-extension shadowing and unknown conditional/missing exports. Reject malformed/escaping URI evidence without crashes and preserve valid encoded source filenames in bridged diagnostics.
+
+- Key Owner records by exact defining Library and source, including same-name Core Contracts and shared named UI parts. Validate portable Core/UI identity URIs and refresh both part and Library evidence.
+
+- Prove SDK Duration and framework Gate identity before literal checks; avoid
+  shadowed zero false positives and support resolved constructor aliases.
+
+- Align argument conflicts and Quick Fixes on one private rule set: null/empty Route defaults and null InitTask identities are inactive; unknown nullable references defer. Preserve the internal Quick Fix import while sharing implementation with source diagnostics.
+
+- Preserve Component ID identity through resolved typedefs/prefixes and const string arguments; defer unproven consumer IDs. Prove parser-only exported Owner constants and validate adjacent literal strings consistently.
+
+- Prevent self-Owner dependency edits for Service/Command/UI, including proven imported
+  component-ID constants. Reuse canonical constructor proof for parser-only prefixed
+  Component fixes and remove the duplicate constructor parser.
+
+- Unify Service/Command/UI Owner constructor proofs and resolved typedef handling. Defer stale Owner diagnostics/fixes when current Contract annotations are missing, duplicated, foreign or changed.
+
+- Diagnose literal Service/Command Dependency aliases with `ccrouter_alias_invalid`, preserving constructor identity checks and conservative expression deferral.
+
 - Add optional Event Contract alias with legacy default-name compatibility,
   generated Client collision checks and reserved-name diagnostics.
 

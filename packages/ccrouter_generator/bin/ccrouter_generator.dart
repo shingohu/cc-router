@@ -1478,6 +1478,8 @@ Future<bool> _generateResolvedWorkspace(
 /// dependency and the generator copies the resolved owner's version and shape
 /// fingerprint into metadata. This keeps handwritten code free of duplicated
 /// compatibility strings while making stale generated output detectable.
+/// Persisted snapshot fields remain authoritative; only absent legacy fields
+/// and task dependencies without a snapshot are completed from current records.
 void _annotateConsumerContractMetadata(
   Map<String, List<Map<String, Object?>>> localMetadata,
   Iterable<Map<String, Object?>> externalMetadata,
@@ -1511,8 +1513,21 @@ void _annotateConsumerContractMetadata(
       }
       for (final task in _objects(document['initTasks'])) {
         final dependencies = <Map<String, Object?>>[];
+        final snapshots = _objects(
+          task['contractDependencies'],
+        ).toList(growable: false);
         for (final dependencyId in _strings(task['dependsOn'])) {
           final contract = contracts['initTask:$dependencyId'];
+          final existing = snapshots
+              .where((dependency) => dependency['id'] == dependencyId)
+              .toList(growable: false);
+          if (existing.isNotEmpty) {
+            for (final snapshot in existing) {
+              _copyConsumerContractFields(snapshot, contract);
+            }
+            dependencies.addAll(existing);
+            continue;
+          }
           if (contract == null) continue;
           dependencies.add(<String, Object?>{
             'id': dependencyId,
@@ -5697,24 +5712,37 @@ String _emitPackageContractDescriptors(
   return out.toString();
 }
 
+/// Emits each distinct persisted consumer constraint; legacy missing fields use
+/// the resolved Contract defaults without overwriting existing snapshot values.
 String _emitPackageContractRequirements(
   Iterable<Map<String, Object?>> metadata,
   String packageName,
   Map<String, Map<String, Object?>> records,
 ) {
   final requirements = <String, Map<String, Object?>>{};
-  void add({required String kind, required String id, required String owner}) {
+  void add({
+    required String kind,
+    required String id,
+    required String owner,
+    Map<String, Object?>? snapshot,
+  }) {
     final record = records[id];
     if (record == null || id.isEmpty) return;
-    final key = '$kind\u0000$id\u0000$owner';
+    final version =
+        snapshot?['requiredVersionRange'] ?? record['version'] ?? '';
+    final fingerprint =
+        snapshot?['requiredShapeFingerprint'] ??
+        record['shapeFingerprint'] ??
+        '';
+    final key = '$kind\u0000$id\u0000$owner\u0000$version\u0000$fingerprint';
     requirements.putIfAbsent(
       key,
       () => <String, Object?>{
         'kind': kind,
         'id': id,
         'owner': owner,
-        'version': '${record['version'] ?? ''}',
-        'fingerprint': '${record['shapeFingerprint'] ?? ''}',
+        'version': '$version',
+        'fingerprint': '$fingerprint',
       },
     );
   }
@@ -5727,6 +5755,7 @@ String _emitPackageContractRequirements(
           kind: 'service',
           id: '${dependency['id'] ?? ''}',
           owner: '${dependency['componentId'] ?? ''}',
+          snapshot: dependency,
         );
       }
       for (final dependency in _objects(component['commandDependencies'])) {
@@ -5734,6 +5763,7 @@ String _emitPackageContractRequirements(
           kind: 'command',
           id: '${dependency['id'] ?? ''}',
           owner: '${dependency['componentId'] ?? ''}',
+          snapshot: dependency,
         );
       }
       if (componentOwner.isEmpty) continue;
@@ -5743,16 +5773,35 @@ String _emitPackageContractRequirements(
         kind: 'event',
         id: '${subscription['eventId'] ?? ''}',
         owner: '${subscription['eventComponentId'] ?? ''}',
+        snapshot: subscription,
       );
     }
     for (final task in _objects(document['initTasks'])) {
+      final snapshots = _objects(
+        task['contractDependencies'],
+      ).toList(growable: false);
       for (final dependencyId in _strings(task['dependsOn'])) {
         final record = records[dependencyId];
-        add(
-          kind: 'initTask',
-          id: dependencyId,
-          owner: '${record?['componentId'] ?? ''}',
-        );
+        final existing = snapshots
+            .where((dependency) => dependency['id'] == dependencyId)
+            .toList(growable: false);
+        if (existing.isEmpty) {
+          add(
+            kind: 'initTask',
+            id: dependencyId,
+            owner: '${record?['componentId'] ?? ''}',
+          );
+        } else {
+          for (final snapshot in existing) {
+            add(
+              kind: 'initTask',
+              id: dependencyId,
+              owner:
+                  '${snapshot['componentId'] ?? record?['componentId'] ?? ''}',
+              snapshot: snapshot,
+            );
+          }
+        }
       }
     }
   }

@@ -1,0 +1,14 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart
+00:00 +0: invalid UI range produces one source error instead of Host fallout
+00:00 +0 -1: invalid UI range produces one source error instead of Host fallout [E]
+  Expected: an object with length of <1>
+    Actual: [Instance of 'CCWorkspaceDiagnostic', Instance of 'CCWorkspaceDiagnostic']
+     Which: has length of <2>
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart 164:5  main.<fn>
+
+00:00 +0 -1: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

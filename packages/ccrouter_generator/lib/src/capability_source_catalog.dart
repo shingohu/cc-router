@@ -480,6 +480,7 @@ final class CCSourceReference {
     required this.packageUri,
     required this.line,
     required this.column,
+    this.libraryUri,
   });
 
   /// Declared class or member name at the referenced source position.
@@ -487,6 +488,10 @@ final class CCSourceReference {
 
   /// Portable URI beginning with `package:`.
   final String packageUri;
+
+  /// Defining Library URI when source coordinates refer to a distinct part file.
+  /// Older records omit this identity; it never replaces the authored source location.
+  final String? libraryUri;
 
   /// One-based source line, or `null` for metadata from an older generator.
   final int? line;
@@ -510,7 +515,8 @@ final class CCSourceReference {
     return '`$packageUri$suffix`$symbolSuffix';
   }
 
-  /// Decodes a source reference, deriving Package URI for schema-v2 metadata.
+  /// Decodes a portable source reference, deriving URI for schema-v2 metadata.
+  /// Malformed or escaping explicit locations fail before catalog publication.
   factory CCSourceReference.fromJson(
     Map<String, Object?> json, {
     String fallbackPackage = '',
@@ -520,12 +526,13 @@ final class CCSourceReference {
     final effectiveUri = packageUri.isNotEmpty
         ? packageUri
         : _catalogPackageUri(fallbackPackage, fallbackLibrary);
-    if (!effectiveUri.startsWith('package:')) {
-      throw FormatException('Capability source must use a Package URI.');
-    }
+    _catalogPortableUri(effectiveUri);
     return CCSourceReference(
       symbol: '${json['symbol'] ?? ''}',
       packageUri: effectiveUri,
+      libraryUri: json.containsKey('libraryUri')
+          ? _catalogLibraryUri(json['libraryUri'], effectiveUri)
+          : null,
       line: json['line'] is int ? json['line']! as int : null,
       column: json['column'] is int ? json['column']! as int : null,
     );
@@ -535,6 +542,7 @@ final class CCSourceReference {
   Map<String, Object?> toJson() => <String, Object?>{
     'symbol': symbol,
     'packageUri': packageUri,
+    if (libraryUri != null) 'libraryUri': libraryUri,
     'line': line,
     'column': column,
   };
@@ -558,18 +566,17 @@ final class CCGeneratedArtifact {
   /// Portable generated-library Package URI.
   final String packageUri;
 
-  /// Decodes one generated artifact reference.
+  /// Decodes one artifact, rejecting incomplete or nonportable source identity.
   factory CCGeneratedArtifact.fromJson(Map<String, Object?> json) {
     final artifact = CCGeneratedArtifact(
       role: '${json['role'] ?? ''}',
       symbol: '${json['symbol'] ?? ''}',
       packageUri: '${json['packageUri'] ?? ''}',
     );
-    if (artifact.role.isEmpty ||
-        artifact.symbol.isEmpty ||
-        !artifact.packageUri.startsWith('package:')) {
+    if (artifact.role.isEmpty || artifact.symbol.isEmpty) {
       throw const FormatException('Invalid generated capability artifact.');
     }
+    _catalogPortableUri(artifact.packageUri);
     return artifact;
   }
 
@@ -639,7 +646,8 @@ List<CCCapabilitySourceRecord> _mergeCapabilityRecords(
   return result;
 }
 
-/// Selects one equal source reference or rejects conflicting generated facts.
+/// Enriches absent legacy Library evidence without accepting conflicting locations.
+/// Two explicit, different defining Libraries remain incompatible generated facts.
 CCSourceReference? _mergeSourceReference(
   CCSourceReference? left,
   CCSourceReference? right,
@@ -648,19 +656,67 @@ CCSourceReference? _mergeSourceReference(
 ) {
   if (left == null) return right;
   if (right == null) return left;
-  if (computeCCCanonicalJsonFingerprint(left.toJson()) !=
-      computeCCCanonicalJsonFingerprint(right.toJson())) {
+  final leftValue = left.toJson();
+  final rightValue = right.toJson();
+  if (left.libraryUri == null && right.libraryUri != null)
+    leftValue['libraryUri'] = right.libraryUri;
+  if (right.libraryUri == null && left.libraryUri != null)
+    rightValue['libraryUri'] = left.libraryUri;
+  if (computeCCCanonicalJsonFingerprint(leftValue) !=
+      computeCCCanonicalJsonFingerprint(rightValue)) {
     throw FormatException(
       'Capability "$capabilityId" has conflicting $role source locations.',
     );
   }
-  return left;
+  return left.libraryUri == null && right.libraryUri != null ? right : left;
+}
+
+/// Accepts explicit defining-Library evidence only within the source Package.
+/// Invalid explicit values never silently fall back to an authored part location.
+String _catalogLibraryUri(Object? value, String source) {
+  final uri = _catalogPortableUri(value);
+  if (uri.pathSegments.first !=
+      _catalogPortableUri(source).pathSegments.first) {
+    throw const FormatException(
+      'Capability defining Library must use the source Package.',
+    );
+  }
+  return uri.toString();
+}
+
+/// Validates decoded segments once before accepting a catalog Package location.
+Uri _catalogPortableUri(Object? value) {
+  final uri = value is String ? Uri.tryParse(value) : null;
+  if (uri == null ||
+      uri.scheme != 'package' ||
+      uri.hasAuthority ||
+      uri.hasAbsolutePath ||
+      uri.hasQuery ||
+      uri.hasFragment ||
+      uri.pathSegments.length < 2 ||
+      uri.pathSegments.any(
+        (segment) =>
+            segment.isEmpty ||
+            segment == '.' ||
+            segment == '..' ||
+            segment.contains('/') ||
+            segment.contains(r'\') ||
+            segment.contains('\u0000'),
+      )) {
+    throw const FormatException(
+      'Capability location must use a portable Package URI.',
+    );
+  }
+  return uri;
 }
 
 /// Converts old Package-relative metadata paths into Package URIs.
 String _catalogPackageUri(String package, String library) {
   if (package.isEmpty || !library.startsWith('lib/')) return '';
-  return 'package:$package/${library.substring('lib/'.length)}';
+  return Uri(
+    scheme: 'package',
+    pathSegments: [package, ...library.substring('lib/'.length).split('/')],
+  ).toString();
 }
 
 /// Converts one loosely typed JSON value to a string-keyed object.

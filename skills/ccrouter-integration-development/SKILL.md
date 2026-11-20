@@ -46,7 +46,6 @@ operation deduplication, including health-cache invalidation for real gaps.
 See the lifecycle and multiple-Host guidance in
 [implementation-patterns.md](references/implementation-patterns.md).
 
-
 This Skill and the sibling `ccrouter-cli-development` directory form one
 installation bundle. Keep both complete directories together, including their
 references. Required guidance is bundled; framework design links are optional
@@ -124,6 +123,24 @@ namespaces defer to the authoritative Builder instead of guessing.
 Analyzer diagnostics and annotation Quick Fixes require framework declaration
 identity. A foreign same-name annotation is ignored; unresolved ambiguous imports
 wait for semantic resolution rather than offering speculative edits.
+Parser-only Contract ownership also respects show/hide, local shadows and conditional
+imports. With exact Library metadata, its declaration must be reachable through the
+actual import/export graph; another same-name type in the Package is not evidence.
+Owner edits defer for relevant conditional imports or incomplete part namespaces.
+Catalog source/artifact locations require portable Package URIs; invalid records
+fail decoding, while legacy raw filenames are URI-encoded once. Invalid UI diagnostic
+positions defer; malformed source imports stay Builder-owned. Percent-encoded
+generated directory names remain subject to the internal API boundary checks.
+Source import/export checks follow Dart target-file semantics, including accepted
+file/query spellings, string escapes and import-target symlinks. The IDE borrows the
+current SDK URI converter for Package aliases and each conditional branch without
+full type resolution for path checks. Metadata locations still require portable Package URIs.
+Host/UI SPI boundary checks also prove URI/symlink aliases against the current SDK
+libraries. Named types, typedef references and effectively exposed show names are
+checked; hide exclusions are not uses. Foreign copies with the same filenames or
+type names are ignored. Standalone typed UI/Renderer sources receive existing-session
+semantic checks without a Component declaration in the same file. This boundary
+proof does not broaden Contract/Renderer type compatibility.
 Route/Contract literal placement IDs, self-parent and invalid/repeated policy
 IDs receive early diagnostics; computed configuration and complete topology stay
 Generator-owned. Conditional generated-internal imports/exports are checked per
@@ -951,13 +968,99 @@ the Service Contract.
 
 ## Generated Code and Validation
 
+Only decimal digits make a numeric prerelease identifier: `0x10` and `-0` are
+nonnumeric labels, distinct from `16` and `0`. Numeric prereleases compare by
+length then lexical order without machine-int conversion. Core fields retain Dart int.
+Caret/tilde bounds avoid successor overflow while preserving existing literal
+comparator semantics, including next-core prereleases; no Pub/npm filtering is added.
+Compatibility diagnostics attribute malformed installed versions to the Owner and
+invalid range syntax to the consumer independently; valid consumer ranges are not
+blamed for an Owner parse failure. Well-formed mismatches keep `versionOutOfRange`.
+UI Host maps malformed generated versions/ranges to sanitized
+`CCUIFragmentError('staleGeneratedOutput', id)` rather than raw parser exceptions.
+The final Core ContractBundle gate validates both installed and required identities:
+capability IDs are bounded to 128 characters, and Owners use bounded lowercase
+component syntax. Matching malformed identities are stale generated output, not
+valid compatibility evidence. Malformed consumer fingerprints are also
+`staleGeneratedOutput`; different valid lowercase SHA-256 values remain
+`fingerprintChanged`. Host and Runtime share this check before startup.
+Host ContractBundle merging preserves every distinct consumer range constraint.
+Only complete duplicate requirement values, including range and fingerprint, are
+deduplicated; merge order never selects a winning range. No range intersection is
+rewritten, and revalidating the merged snapshot preserves the original constraints.
+CLI Package Bundle emission preserves persisted consumer range/fingerprint snapshots.
+Only absent legacy fields use the resolved Contract defaults; existing ranges are
+not rewritten to the Owner's current exact version. InitTask dependency snapshots
+follow the same rule, and stale recorded Owners fail Workspace validation with
+`ownerMismatch`. Distinct range constraints survive emission; no authored
+`versionRange` parameter is added to source APIs.
+IDE Contract Owner identity includes its defining Library, so same-name Contracts
+with the same Package/Owner and distinct Libraries cannot overwrite one another,
+including shared named parts. Service/Command part metadata keeps source URI and
+coordinates plus optional `libraryUri`; catalog round trips retain that evidence.
+Absent legacy evidence may be enriched by a consistent record, while explicit
+conflicts fail generation. Invalid/query/fragment URI evidence defers IDE Owner
+checks and fixes rather than guessing. Regenerate old part metadata for exact identity.
+Parser-only Owner fixes require complete export namespace evidence and respect
+local shadowing, including named extensions. Conditional, missing or unparseable
+branches that may expose the symbol defer edits; they are not proof of absence.
+A conditional export that hides the target symbol does not block a proven binding.
+Malformed URI encodings, NUL, queries/fragments, noncanonical `package:/...` and
+escaping locations never become IDE paths or crash source/diagnostic decoding.
+Valid encoded filename characters such as `#` and literal `%` keep their file identity.
+CLI preflight defers malformed import/export URIs to Builder's source errors; a
+preflight skip does not establish validity.
+
+UI capability and Owner IDs are bounded to 128 characters at generation, Workspace
+and Host boundaries. Owner IDs use lowercase component grammar; capability IDs
+retain their existing segment spelling. Workspace validates typed identities,
+versions and SHA-256 fingerprints on Contract/Renderer/Requirement records even
+when snapshots agree. Package-local checks also validate consumer ranges; malformed
+ranges produce a source error without duplicate Host comparison fallout.
+
 Contract and Component version strings use the shared Runtime `CCSemVer` parser
 and reject leading/trailing whitespace. Keep version values such as `1.0.0`
 canonical; supported range expressions still accept outer whitespace and
 whitespace-separated comparators. Generator validation and persisted metadata
 follow the same version and generated-member rules. The optional Analyzer checks
-literal Service/Command/UI Contract aliases with the same reserved-name policy;
-computed aliases and full generation remain Generator-owned.
+literal Service/Command/Event/UI Contract aliases and Service/Command Dependency
+overrides with the same reserved-name policy (`ccrouter_alias_invalid`; UI keeps
+`ccrouter_ui_alias_invalid`). Only direct literal lists and proven framework constructors
+are checked; computed aliases and full generation remain Generator-owned.
+Each Route/Service/Command Contract declaration must carry exactly one matching annotation;
+local declarations, imported providers/Handlers and consumer dependencies reject duplicates.
+Each InitTask Handler must carry one `CCInitTask`; registration and metadata generation
+reject repeated identities, Gates or failure policies. Service/Command/UI Owner diagnostics
+and fixes require proven framework constructors. Resolved Contracts require one current
+annotation whose Owner agrees with metadata. Resolved prefixes/typedefs are supported. Missing,
+duplicate, foreign or changed annotations defer until regeneration; unresolved ambiguous
+imports defer to semantic analysis rather than suggesting speculative dependency edits.
+A proven self-owned Service/Command/UI dependency never receives an add-Owner fix.
+Remove that cross-component declaration; use internal Service lookup, the Owner Command
+Client, or internal Widget composition for the matching capability. Parser-only prefixed
+Component calls share the same constructor
+proof and Owner fixes with explicit const calls.
+
+Provider, Route/RouteImplementation, CommandHandler, EventSubscription and
+ComponentContribution readers reject repeated annotations of the same kind in
+source and metadata generation. Resolved Component ID typedefs, prefixes and
+const string arguments retain identity; unproven consumer IDs defer Owner fixes.
+Adjacent string literals use their combined ID/alias value. CLI dependency preflight
+proves framework declaration identity; foreign names, unknown namespaces and
+self-consumption defer to the authoritative Builder.
+
+Route/Route Contract conflicts require a non-null `pattern` and a nonempty `patterns`
+list. Explicit null and empty-list defaults are inactive. InitTask requires exactly one
+non-null `contract`/`id`; null constants are inactive and unproven nullable references
+defer IDE conflict checks. Two inactive identities still require a value and receive
+no deletion fix. Non-null task Contracts/dependsOn retain top-level const-reference
+rules in both source and metadata generation. Nullable Component/InitTask Contract
+constants whose value is null publish no declaration.
+IDE timeout checks prove SDK Duration identity; same-name business holders defer.
+Resolved Gate constructor aliases retain framework identity for literal validation.
+
+`CCServiceKey<T>` equality requires the exact generic type and name; subtype
+assignability does not make Keys equal.
 
 For a new component or internal page, the generator CLI provides non-overwriting
 templates:

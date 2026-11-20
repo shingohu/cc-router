@@ -21,6 +21,7 @@ final class _ComponentMetadataBuilder implements Builder {
   final Map<String, List<String>> buildExtensions;
 
   /// Emits no files for libraries without a top-level component definition.
+  /// A nullable null constant represents absence and contributes no component.
   @override
   Future<void> build(BuildStep buildStep) async {
     if (buildStep.inputId.path.contains('/ccrouter_generated/')) return;
@@ -33,12 +34,16 @@ final class _ComponentMetadataBuilder implements Builder {
     for (final element
         in library.allElements.whereType<TopLevelVariableElement>()) {
       if (!_component.isExactlyType(element.type)) continue;
-      if (!element.isConst || element.computeConstantValue() == null) {
+      final value = element.computeConstantValue();
+      if (!element.isConst || value == null) {
         _fail(
           'CCComponent declarations must be top-level const values.',
           element,
         );
       }
+      if (value.isNull &&
+          element.type.nullabilitySuffix == NullabilitySuffix.question)
+        continue;
       if (element.displayName.startsWith('_')) {
         _fail(
           'CCComponent declarations must be public because generated assembly '
@@ -46,10 +51,7 @@ final class _ComponentMetadataBuilder implements Builder {
           element,
         );
       }
-      final component = _ComponentModel.read(
-        ConstantReader(element.computeConstantValue()),
-        element,
-      );
+      final component = _ComponentModel.read(ConstantReader(value), element);
       components.add(component);
       symbols[component.id] = element.displayName;
     }

@@ -47,6 +47,48 @@ Future<void> initializeAnalytics(CCInvocationContext context) async {}
     expect(output, contains('init_source.initializeAnalytics'));
   });
 
+  test(
+    'nullable omission support still rejects inline Contract construction',
+    () async {
+      final logs = await _generate(
+        reader,
+        ccInitTaskBuilder(BuilderOptions.empty),
+        '''
+@CCInitTask(contract: CCInitTaskContract(id: 'startup.inline'),
+  gate: CCInitTaskGate.appStarted, failurePolicy: CCInitTaskFailurePolicy.optional)
+void initializeInline() {}
+''',
+        'lib/src/ccrouter_generated/init_task/probe.init_task.g.dart',
+        fails: true,
+      );
+      expect(logs, contains('contract must reference a top-level'));
+    },
+  );
+
+  test(
+    'a same-name Duration holder keeps its actual positive timeout',
+    () async {
+      final output = await _generate(
+        reader,
+        ccInitTaskMetadataBuilder(BuilderOptions.empty),
+        '''
+import 'dart:core';
+import 'dart:core' as core;
+class Duration { static const zero = core.Duration(seconds: 1); }
+@CCInitTask(id: 'startup.run', gate: CCInitTaskGate.appStarted,
+  failurePolicy: CCInitTaskFailurePolicy.optional, timeout: Duration.zero)
+void run() {}
+''',
+        'lib/src/ccrouter_generated/metadata/src/probe.init_task.json',
+      );
+      expect(
+        ((jsonDecode(output) as Map)['initTasks'] as List)
+            .single['timeoutMicroseconds'],
+        1000000,
+      );
+    },
+  );
+
   test('zero-argument internal task is adapted to Runtime signature', () async {
     final output = await _generate(
       reader,

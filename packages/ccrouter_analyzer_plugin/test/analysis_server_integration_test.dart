@@ -20,6 +20,206 @@ bool _has(List<Map<String, dynamic>> errors, String code) =>
 
 void main() {
   test(
+    'real LSP nullable InitTask identity refreshes argument conflicts',
+    () async {
+      const file = 'lib/src/nullable_task.dart';
+      const source = '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+const CCInitTaskContract? selectedTask = null;
+@CCInitTask(contract: selectedTask, id: 'startup.run',
+  gate: CCInitTaskGate.appStarted, failurePolicy: CCInitTaskFailurePolicy.optional)
+void run() {}
+''';
+      final server = await AnalysisServerSession.start({
+        file: source,
+      }, lsp: true);
+      addTearDown(server.close);
+      final uri = Uri.file(server.path(file)).toString();
+      server.notify('textDocument/didOpen', {
+        'textDocument': {
+          'uri': uri,
+          'languageId': 'dart',
+          'version': 1,
+          'text': source,
+        },
+      });
+      const conflict = 'ccrouter_annotation_arguments_conflict';
+      await server.waitFor(
+        file,
+        (errors) =>
+            _has(errors, 'ccrouter_generated_output_missing') &&
+            !_has(errors, conflict),
+      );
+      var revision = server.revisions[server.path(file)]!;
+      server.notify('textDocument/didChange', {
+        'textDocument': {'uri': uri, 'version': 2},
+        'contentChanges': [
+          {
+            'text': source.replaceFirst(
+              'selectedTask = null',
+              "selectedTask = CCInitTaskContract(id: 'startup.shared')",
+            ),
+          },
+        ],
+      });
+      await server.waitFor(
+        file,
+        (errors) => _has(errors, conflict),
+        after: revision,
+      );
+      revision = server.revisions[server.path(file)]!;
+      server.notify('textDocument/didChange', {
+        'textDocument': {'uri': uri, 'version': 3},
+        'contentChanges': [
+          {'text': source},
+        ],
+      });
+      await server.waitFor(
+        file,
+        (errors) => !_has(errors, conflict),
+        after: revision,
+      );
+    },
+    timeout: const Timeout(Duration(minutes: 2)),
+  );
+
+  for (final kind in ['Service', 'Command']) {
+    test(
+      'real LSP $kind part Owner refreshes source and defining Library edits',
+      () async {
+        const file = 'lib/src/component.dart';
+        const contractFile = 'modules/owner_contracts/lib/contracts_part.dart';
+        const libraryFile = 'modules/owner_contracts/lib/contracts.dart';
+        const library =
+            "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\npart 'contracts_part.dart';\nconst ownerId = CCComponentId('owner');\nconst alternateId = CCComponentId('alternate');";
+        final contracts =
+            '''
+part of 'contracts.dart';
+@CC${kind}Contract(componentId: ownerId, id: 'owner.shared')
+${kind == 'Service' ? 'abstract interface class Shared {}' : 'final class Shared implements CCCommand<void> { const Shared(); }'}
+''';
+        final source =
+            '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:owner_contracts/contracts.dart';
+typedef Descriptor = CCComponent;
+typedef Dependency = CC${kind}Dependency<Shared>;
+const component = Descriptor(id: CCComponentId('consumer'), version: '1.0.0',
+  ${kind.toLowerCase()}Dependencies: [Dependency()]);
+''';
+        final server = await AnalysisServerSession.start(
+          {file: source},
+          lsp: true,
+          dependencyPackages: {
+            'owner_contracts': {
+              'lib/contracts.dart': library,
+              'lib/contracts_part.dart': contracts,
+              'lib/src/ccrouter_generated/metadata/ccrouter_package.json':
+                  jsonEncode({
+                    'capabilityCatalog': {
+                      'records': [
+                        {
+                          'kind': kind.toLowerCase(),
+                          'componentId': 'owner',
+                          'contract': {
+                            'symbol': 'Shared',
+                            'packageUri':
+                                'package:owner_contracts/contracts_part.dart',
+                            'libraryUri':
+                                'package:owner_contracts/contracts.dart',
+                          },
+                        },
+                      ],
+                    },
+                  }),
+            },
+          },
+        );
+        addTearDown(server.close);
+        const code = 'ccrouter_component_owner_dependency_missing';
+        for (final (path, text) in [
+          (file, source),
+          (contractFile, contracts),
+          (libraryFile, library),
+        ]) {
+          server.notify('textDocument/didOpen', {
+            'textDocument': {
+              'uri': Uri.file(server.path(path)).toString(),
+              'languageId': 'dart',
+              'version': 1,
+              'text': text,
+            },
+          });
+        }
+        await server.waitFor(file, (errors) => _has(errors, code));
+        var revision = server.revisions[server.path(file)]!;
+        server.notify('textDocument/didChange', {
+          'textDocument': {
+            'uri': Uri.file(server.path(contractFile)).toString(),
+            'version': 2,
+          },
+          'contentChanges': [
+            {
+              'text': contracts.replaceFirst(
+                'componentId: ownerId',
+                'componentId: alternateId',
+              ),
+            },
+          ],
+        });
+        await server.waitFor(
+          file,
+          (errors) => !_has(errors, code),
+          after: revision,
+        );
+        revision = server.revisions[server.path(file)]!;
+        server.notify('textDocument/didChange', {
+          'textDocument': {
+            'uri': Uri.file(server.path(contractFile)).toString(),
+            'version': 3,
+          },
+          'contentChanges': [
+            {'text': contracts},
+          ],
+        });
+        await server.waitFor(
+          file,
+          (errors) => _has(errors, code),
+          after: revision,
+        );
+        for (final (version, text, missing) in [
+          (
+            2,
+            library.replaceFirst(
+              "ownerId = CCComponentId('owner')",
+              "ownerId = CCComponentId('alternate')",
+            ),
+            false,
+          ),
+          (3, library, true),
+        ]) {
+          revision = server.revisions[server.path(file)]!;
+          server.notify('textDocument/didChange', {
+            'textDocument': {
+              'uri': Uri.file(server.path(libraryFile)).toString(),
+              'version': version,
+            },
+            'contentChanges': [
+              {'text': text},
+            ],
+          });
+          await server.waitFor(
+            file,
+            (errors) => _has(errors, code) == missing,
+            after: revision,
+          );
+        }
+      },
+      timeout: const Timeout(Duration(minutes: 2)),
+    );
+  }
+
+  test(
     'review real LSP refreshes terminal DTO facts after part-only edits',
     () async {
       const file = 'lib/src/dto_root.dart';
@@ -300,42 +500,54 @@ class Home {}
     );
   });
 
-  test(
-    'real LSP reports and clears UI alias diagnostics on editor overlay',
-    () async {
-      const file = 'lib/src/ui.dart';
-      const source =
-          "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\nimport 'package:ccrouter_contracts/ccrouter_ui_contracts.dart';\nclass Marker {}\nconst component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', uiDependencies: [CCUIFragmentDependency<Marker>(alias: 'bad-alias')]);\n";
-      final server = await AnalysisServerSession.start({
-        file: source,
-      }, lsp: true);
-      addTearDown(server.close);
-      final uri = Uri.file(server.path(file)).toString();
-      server.notify('textDocument/didOpen', {
-        'textDocument': {
-          'uri': uri,
-          'languageId': 'dart',
-          'version': 1,
-          'text': source,
-        },
-      });
-      const code = 'ccrouter_ui_alias_invalid';
-      await server.waitFor(file, (errors) => _has(errors, code));
-      final revision = server.revisions[server.path(file)]!;
-      server.notify('textDocument/didChange', {
-        'textDocument': {'uri': uri, 'version': 2},
-        'contentChanges': [
-          {'text': source.replaceFirst('bad-alias', 'card')},
-        ],
-      });
-      await server.waitFor(
-        file,
-        (errors) => !_has(errors, code),
-        after: revision,
-      );
-    },
-    timeout: const Timeout(Duration(minutes: 2)),
-  );
+  for (final kind in ['UI', 'Service', 'Command']) {
+    test(
+      'real LSP reports and clears $kind alias diagnostics on editor overlay',
+      () async {
+        const file = 'lib/src/ui.dart';
+        final source = kind == 'UI'
+            ? "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\nimport 'package:ccrouter_contracts/ccrouter_ui_contracts.dart';\nclass Marker {}\nconst component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0', uiDependencies: [CCUIFragmentDependency<Marker>(alias: 'bad-alias')]);\n"
+            : '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+@CC${kind}Contract(componentId: CCComponentId('owner'), id: 'owner.shared')
+${kind == 'Service' ? 'abstract interface class Shared {}' : 'final class Shared implements CCCommand<void> { const Shared(); }'}
+const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
+  dependencies: [CCComponentId('owner')],
+  ${kind.toLowerCase()}Dependencies: [CC${kind}Dependency<Shared>(alias: 'bad-alias')]);
+''';
+        final server = await AnalysisServerSession.start({
+          file: source,
+        }, lsp: true);
+        addTearDown(server.close);
+        final uri = Uri.file(server.path(file)).toString();
+        server.notify('textDocument/didOpen', {
+          'textDocument': {
+            'uri': uri,
+            'languageId': 'dart',
+            'version': 1,
+            'text': source,
+          },
+        });
+        final code = kind == 'UI'
+            ? 'ccrouter_ui_alias_invalid'
+            : 'ccrouter_alias_invalid';
+        await server.waitFor(file, (errors) => _has(errors, code));
+        final revision = server.revisions[server.path(file)]!;
+        server.notify('textDocument/didChange', {
+          'textDocument': {'uri': uri, 'version': 2},
+          'contentChanges': [
+            {'text': source.replaceFirst('bad-alias', 'card')},
+          ],
+        });
+        await server.waitFor(
+          file,
+          (errors) => !_has(errors, code),
+          after: revision,
+        );
+      },
+      timeout: const Timeout(Duration(minutes: 2)),
+    );
+  }
 
   test(
     'real LSP accepts DTO Action after editor shape repair',
@@ -839,6 +1051,7 @@ void broken() { missingFunction(); }
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 const ownerId = CCComponentId('owner');
 const alternateId = CCComponentId('alternate');
+@CCServiceContract(componentId: ownerId, id: 'owner.shared')
 abstract interface class SharedService {}
 @CCService(id: 'owner.probe')
 class OwnerProbe {}

@@ -1,0 +1,12 @@
+00:00 +0: loading <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/service_key_test.dart
+00:00 +0: Service Keys compare exact generic types symmetrically
+00:00 +0 -1: Service Keys compare exact generic types symmetrically [E]
+  Expected: false
+    Actual: <true>
+
+  package:matcher                                        expect
+  package:flutter_test/src/widget_tester.dart 477:18     expect
+  packages/ccrouter_test/test/service_key_test.dart 8:5  main.<fn>
+
+00:00 +0 -1: equal Service Keys support hash collections without merging types
+00:00 +1 -1: Some tests failed.

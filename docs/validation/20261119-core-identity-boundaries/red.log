@@ -1,0 +1,162 @@
+00:00 +0: loading <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/contract_identity_validation_test.dart
+00:00 +0: route installed identities reject malformed generated inputs
+00:00 +0 -1: route installed identities reject malformed generated inputs [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+   / owner
+
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18                       expect
+  packages/ccrouter_test/test/contract_identity_validation_test.dart 26:9  main.<fn>
+
+00:00 +0 -1: route malformed requirements are stale rather than missing
+00:00 +0 -2: route malformed requirements are stale rather than missing [E]
+  Expected: CCContractCompatibilityCode:<CCContractCompatibilityCode.staleGeneratedOutput>
+    Actual: CCContractCompatibilityCode:<CCContractCompatibilityCode.missing>
+
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18                       expect
+  packages/ccrouter_test/test/contract_identity_validation_test.dart 35:9  main.<fn>
+
+00:00 +0 -2: route distinguishes malformed consumer fingerprint from valid drift
+00:00 +0 -3: route distinguishes malformed consumer fingerprint from valid drift [E]
+  Expected: CCContractCompatibilityCode:<CCContractCompatibilityCode.staleGeneratedOutput>
+    Actual: CCContractCompatibilityCode:<CCContractCompatibilityCode.fingerprintChanged>
+
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18                       expect
+  packages/ccrouter_test/test/contract_identity_validation_test.dart 49:9  main.<fn>
+
+00:00 +0 -3: route preserves exact identity length boundary and capitalized segments
+00:00 +1 -3: service installed identities reject malformed generated inputs
+00:00 +1 -4: service installed identities reject malformed generated inputs [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+   / owner
+
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18                       expect
+  packages/ccrouter_test/test/contract_identity_validation_test.dart 26:9  main.<fn>
+
+00:00 +1 -4: service malformed requirements are stale rather than missing
+00:00 +1 -5: service malformed requirements are stale rather than missing [E]
+  Expected: CCContractCompatibilityCode:<CCContractCompatibilityCode.staleGeneratedOutput>
+    Actual: CCContractCompatibilityCode:<CCContractCompatibilityCode.missing>
+
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18                       expect
+  packages/ccrouter_test/test/contract_identity_validation_test.dart 35:9  main.<fn>
+
+00:00 +1 -5: service distinguishes malformed consumer fingerprint from valid drift
+00:00 +1 -6: service distinguishes malformed consumer fingerprint from valid drift [E]
+  Expected: CCContractCompatibilityCode:<CCContractCompatibilityCode.staleGeneratedOutput>
+    Actual: CCContractCompatibilityCode:<CCContractCompatibilityCode.fingerprintChanged>
+
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18                       expect
+  packages/ccrouter_test/test/contract_identity_validation_test.dart 49:9  main.<fn>
+
+00:00 +1 -6: service preserves exact identity length boundary and capitalized segments
+00:00 +2 -6: command installed identities reject malformed generated inputs
+00:00 +2 -7: command installed identities reject malformed generated inputs [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+   / owner
+
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18                       expect
+  packages/ccrouter_test/test/contract_identity_validation_test.dart 26:9  main.<fn>
+
+00:00 +2 -7: command malformed requirements are stale rather than missing
+00:00 +2 -8: command malformed requirements are stale rather than missing [E]
+  Expected: CCContractCompatibilityCode:<CCContractCompatibilityCode.staleGeneratedOutput>
+    Actual: CCContractCompatibilityCode:<CCContractCompatibilityCode.missing>
+
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18                       expect
+  packages/ccrouter_test/test/contract_identity_validation_test.dart 35:9  main.<fn>
+
+00:00 +2 -8: command distinguishes malformed consumer fingerprint from valid drift
+00:00 +2 -9: command distinguishes malformed consumer fingerprint from valid drift [E]
+  Expected: CCContractCompatibilityCode:<CCContractCompatibilityCode.staleGeneratedOutput>
+    Actual: CCContractCompatibilityCode:<CCContractCompatibilityCode.fingerprintChanged>
+
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18                       expect
+  packages/ccrouter_test/test/contract_identity_validation_test.dart 49:9  main.<fn>
+
+00:00 +2 -9: command preserves exact identity length boundary and capitalized segments
+00:00 +3 -9: event installed identities reject malformed generated inputs
+00:00 +3 -10: event installed identities reject malformed generated inputs [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+   / owner
+
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18                       expect
+  packages/ccrouter_test/test/contract_identity_validation_test.dart 26:9  main.<fn>
+
+00:00 +3 -10: event malformed requirements are stale rather than missing
+00:00 +3 -11: event malformed requirements are stale rather than missing [E]
+  Expected: CCContractCompatibilityCode:<CCContractCompatibilityCode.staleGeneratedOutput>
+    Actual: CCContractCompatibilityCode:<CCContractCompatibilityCode.missing>
+
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18                       expect
+  packages/ccrouter_test/test/contract_identity_validation_test.dart 35:9  main.<fn>
+
+00:00 +3 -11: event distinguishes malformed consumer fingerprint from valid drift
+00:00 +3 -12: event distinguishes malformed consumer fingerprint from valid drift [E]
+  Expected: CCContractCompatibilityCode:<CCContractCompatibilityCode.staleGeneratedOutput>
+    Actual: CCContractCompatibilityCode:<CCContractCompatibilityCode.fingerprintChanged>
+
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18                       expect
+  packages/ccrouter_test/test/contract_identity_validation_test.dart 49:9  main.<fn>
+
+00:00 +3 -12: event preserves exact identity length boundary and capitalized segments
+00:00 +4 -12: initTask installed identities reject malformed generated inputs
+00:00 +4 -13: initTask installed identities reject malformed generated inputs [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+   / owner
+
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18                       expect
+  packages/ccrouter_test/test/contract_identity_validation_test.dart 26:9  main.<fn>
+
+00:00 +4 -13: initTask malformed requirements are stale rather than missing
+00:00 +4 -14: initTask malformed requirements are stale rather than missing [E]
+  Expected: CCContractCompatibilityCode:<CCContractCompatibilityCode.staleGeneratedOutput>
+    Actual: CCContractCompatibilityCode:<CCContractCompatibilityCode.missing>
+
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18                       expect
+  packages/ccrouter_test/test/contract_identity_validation_test.dart 35:9  main.<fn>
+
+00:00 +4 -14: initTask distinguishes malformed consumer fingerprint from valid drift
+00:00 +4 -15: initTask distinguishes malformed consumer fingerprint from valid drift [E]
+  Expected: CCContractCompatibilityCode:<CCContractCompatibilityCode.staleGeneratedOutput>
+    Actual: CCContractCompatibilityCode:<CCContractCompatibilityCode.fingerprintChanged>
+
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18                       expect
+  packages/ccrouter_test/test/contract_identity_validation_test.dart 49:9  main.<fn>
+
+00:00 +4 -15: initTask preserves exact identity length boundary and capitalized segments
+00:00 +5 -15: Host and Runtime reject malformed Contract identity before startup
+00:00 +5 -16: Host and Runtime reject malformed Contract identity before startup [E]
+  Expected: throws <Instance of 'CCHostAssemblyError'> with `type`: CCHostAssemblyErrorCode:<CCHostAssemblyErrorCode.contractCompatibility>
+    Actual: <Closure: () => CCHostAssembly>
+     Which: returned <Instance of 'CCHostAssembly'>
+
+  package:matcher                                                          expect
+  package:flutter_test/src/widget_tester.dart 477:18                       expect
+  packages/ccrouter_test/test/contract_identity_validation_test.dart 60:5  main.<fn>
+
+00:00 +5 -16: Some tests failed.

@@ -1,0 +1,28 @@
+00:00 +0: loading test/contract_owner_index_test.dart
+00:00 +0: test/contract_owner_index_test.dart: invalid encoded or absolute-path metadata URIs yield no Owner facts
+00:00 +0 -1: test/generator_diagnostics_bridge_test.dart: malformed or escaping published locations never become IDE paths
+00:00 +0 -1: test/contract_owner_index_test.dart: invalid encoded or absolute-path metadata URIs yield no Owner facts [E]
+  Expected: null
+    Actual: <Instance of 'CCRouterContractOwner'>
+
+  package:matcher                           expect
+  test/contract_owner_index_test.dart 32:7  main.<fn>
+
+00:00 +0 -2: test/generator_diagnostics_bridge_test.dart: malformed or escaping published locations never become IDE paths [E]
+  Expected: empty
+    Actual: Set:[
+              '/var/folders/w_/bg986vkx6zdb8967pqvsgcmc0000gn/T/ccrouter-bridge-test-DQQ0y7/lib/src/com\x00ponent.dart'
+            ]
+  package:bridge_host/src/com%00ponent.dart
+
+  package:matcher                                   expect
+  test/generator_diagnostics_bridge_test.dart 30:7  main.<fn>
+
+00:00 +0 -2: Some tests failed.
+
+Failing tests:
+  test/contract_owner_index_test.dart: invalid encoded or absolute-path metadata URIs yield no Owner facts
+  test/generator_diagnostics_bridge_test.dart: malformed or escaping published locations never become IDE paths
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

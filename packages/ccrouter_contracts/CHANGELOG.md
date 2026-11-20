@@ -2,6 +2,22 @@
 
 ## 0.1.0 - Unreleased
 
+- Recheck bounded Contract/Owner identities and required SHA-256 fingerprints at the shared Host/Runtime compatibility gate. Classify malformed consumer metadata as stale, preserving fingerprintChanged for valid shape drift.
+
+- Attribute invalid installed versions to their Owner without falsely blaming valid consumer ranges. Continue validating consumer syntax independently and compare only parsed installed versions.
+
+- Compare prerelease decimal identifiers without int parsing; keep signs/radix-like
+  labels distinct and preserve equality/hash semantics. Avoid caret/tilde successor
+  overflow without changing ordinary comparator boundaries.
+
+- Clarify effective-value argument conflicts, explicit null/empty defaults and absent nullable declaration constants; non-null task Contract references remain top-level const.
+
+- Document one annotation per declaration and role for generated Providers, Routes, page bindings, Handlers, Subscriptions and Contributions.
+
+- Document unique Route Contract and InitTask Handler annotations; generation rejects repeated identities and scheduling policies.
+
+- Fix asymmetric `CCServiceKey<T>` equality: require the exact generic type and name. Document single-annotation Service/Command Contracts.
+
 - Add optional Event Contract alias with legacy default-name compatibility,
   generated Client collision checks and reserved-name diagnostics.
 

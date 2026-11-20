@@ -1,6 +1,7 @@
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 
 import 'workspace_validator.dart';
+import 'contract_validation.dart';
 
 /// Validates UI metadata independently of the original five Contract families.
 ///
@@ -61,6 +62,7 @@ List<CCWorkspaceDiagnostic> validateUIFragmentWorkspaceDiagnostics(
   final owners = <String, String>{};
   final contracts = <String, Map<String, Object?>>{};
   final implementations = <String, Map<String, Object?>>{};
+  final ranges = <String, CCContractVersionRange>{};
   for (final document in values) {
     for (final component in _objects(document['components'])) {
       components['${component['id']}'] = component;
@@ -94,6 +96,41 @@ List<CCWorkspaceDiagnostic> validateUIFragmentWorkspaceDiagnostics(
         'declaration',
         'Upgrade the Generator and regenerate UI metadata.',
       );
+    }
+    for (final (role, locationKey) in const [
+      ('uiContracts', 'declaration'),
+      ('uiRenderers', 'implementation'),
+      ('uiRequirements', 'consumerDeclaration'),
+    ]) {
+      for (final record in _objects(document[role])) {
+        if (!_validDescriptor(record)) {
+          report(
+            'stale_generated_output',
+            'UI staleGeneratedOutput: invalid descriptor for ${_identity(record)}.',
+            record,
+            locationKey,
+            'Regenerate valid bounded identities, versions and SHA-256 fingerprints.',
+          );
+        }
+        if (role == 'uiRequirements') {
+          final range = record['versionRange'];
+          try {
+            if (range is! String) throw const FormatException();
+            ranges.putIfAbsent(
+              range,
+              () => CCContractVersionRange.parse(range),
+            );
+          } on FormatException {
+            report(
+              'stale_generated_output',
+              'UI staleGeneratedOutput: invalid consumer range for ${_identity(record)}.',
+              record,
+              locationKey,
+              'Repair the consumer range and regenerate.',
+            );
+          }
+        }
+      }
     }
     for (final contract in _objects(document['uiContracts'])) {
       final identity = _identity(contract);
@@ -198,10 +235,10 @@ List<CCWorkspaceDiagnostic> validateUIFragmentWorkspaceDiagnostics(
             'Regenerate the consumer, Renderer and Host against the same Contract shape.',
           );
         } else {
-          try {
-            if (!CCContractVersionRange.parse(
-              '${requirement['versionRange']}',
-            ).allowsText('${renderer['version']}')) {
+          final range = ranges[requirement['versionRange']];
+          // Invalid fields already have a source-located error from the first pass.
+          if (range != null && _validDescriptor(renderer)) {
+            if (!range.allowsText(renderer['version'] as String)) {
               report(
                 'version_out_of_range',
                 'UI versionOutOfRange: $identity.',
@@ -210,20 +247,30 @@ List<CCWorkspaceDiagnostic> validateUIFragmentWorkspaceDiagnostics(
                 'Align the required version range and installed Renderer version.',
               );
             }
-          } on FormatException {
-            report(
-              'stale_generated_output',
-              'UI staleGeneratedOutput: invalid version for $identity.',
-              requirement,
-              'consumerDeclaration',
-              'Repair the Contract version or consumer range and regenerate.',
-            );
           }
         }
       }
     }
   }
   return errors..sort((a, b) => a.message.compareTo(b.message));
+}
+
+/// External records require the same field grammar as Generator and UI Host.
+bool _validDescriptor(Map<String, Object?> record) {
+  final owner = record['componentId'];
+  final id = record['id'];
+  final version = record['version'];
+  final fingerprint = record['shapeFingerprint'];
+  return owner is String &&
+      owner.length <= 128 &&
+      RegExp(r'^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$').hasMatch(owner) &&
+      id is String &&
+      id.length <= 128 &&
+      RegExp(r'^[a-z][A-Za-z0-9]*(?:[._-][A-Za-z0-9]+)*$').hasMatch(id) &&
+      version is String &&
+      isContractSemanticVersion(version) &&
+      fingerprint is String &&
+      RegExp(r'^[a-f0-9]{64}$').hasMatch(fingerprint);
 }
 
 /// Composite public identity independent of instance Key.
@@ -252,16 +299,29 @@ CCWorkspaceDiagnosticLocation? _location(Object? value) {
   final uri = value['packageUri'];
   final line = value['line'];
   final column = value['column'];
-  final parsed = uri is String ? Uri.tryParse(uri) : null;
-  if (parsed == null ||
-      parsed.scheme != 'package' ||
-      parsed.pathSegments.length < 2 ||
-      parsed.pathSegments.any((s) => s == '..' || s == '.') ||
-      line is! int ||
-      line < 1 ||
-      column is! int ||
-      column < 1)
+  if (line is! int || line < 1 || column is! int || column < 1) return null;
+  try {
+    final parsed = uri is String ? Uri.tryParse(uri) : null;
+    if (parsed == null ||
+        parsed.scheme != 'package' ||
+        parsed.hasAuthority ||
+        parsed.hasAbsolutePath ||
+        parsed.hasQuery ||
+        parsed.hasFragment ||
+        parsed.pathSegments.length < 2 ||
+        parsed.pathSegments.any(
+          (s) =>
+              s.isEmpty ||
+              s == '..' ||
+              s == '.' ||
+              s.contains('/') ||
+              s.contains(r'\') ||
+              s.contains('\u0000'),
+        ))
+      return null;
+  } on FormatException {
     return null;
+  }
   final symbol = value['symbol'];
   return CCWorkspaceDiagnosticLocation(
     uri: uri as String,

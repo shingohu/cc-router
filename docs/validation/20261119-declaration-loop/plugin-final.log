@@ -1,0 +1,259 @@
+00:00 +0: loading test/plugin_test.dart
+00:00 +0: test/plugin_test.dart: advertises a stable name and supported server boundary
+00:00 +1: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +2: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +3: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +4: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +5: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +6: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +7: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +8: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +9: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +10: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +11: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +12: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +13: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +14: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +15: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +16: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +17: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +18: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +19: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +20: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +21: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +22: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +23: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +24: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +25: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +26: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +27: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +28: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +29: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +30: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +31: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:00 +32: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +33: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +34: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +35: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +36: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +37: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +38: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +39: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +40: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +41: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +42: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +43: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +44: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +45: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +46: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +47: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +48: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +49: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +50: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +51: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +52: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +53: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +54: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +55: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +56: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:01 +57: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +58: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +59: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +60: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +61: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +62: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +63: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +64: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +65: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +66: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +67: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +68: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +69: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +70: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +71: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +72: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +73: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +74: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +75: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +76: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +77: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +78: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +79: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +80: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +81: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +82: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +83: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +84: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +85: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +86: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +87: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +88: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +89: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +90: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +91: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +92: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +93: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +94: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +95: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +96: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +97: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +98: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +99: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +100: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +101: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +102: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +103: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +104: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +105: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +106: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +107: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +108: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +109: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +110: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +111: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +112: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:02 +113: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:03 +114: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:03 +115: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:04 +116: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:04 +117: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:04 +118: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:04 +119: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:05 +120: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:05 +121: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:05 +122: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:05 +123: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:06 +124: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:06 +125: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:06 +126: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:06 +127: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:07 +128: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:07 +129: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:07 +130: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:08 +131: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:08 +132: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:09 +133: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:09 +134: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:09 +135: test/analysis_server_integration_test.dart: real LSP Service Owner diagnosis defers stale metadata after overlay edits
+00:09 +136: test/demo_component_dependency_integration_test.dart: reports missing component owners from the resolved Demo graph
+00:10 +137: test/demo_component_dependency_integration_test.dart: reports missing component owners from the resolved Demo graph
+00:10 +138: test/demo_component_dependency_integration_test.dart: reports missing component owners from the resolved Demo graph
+00:11 +139: test/demo_component_dependency_integration_test.dart: reports missing component owners from the resolved Demo graph
+00:12 +140: test/demo_component_dependency_integration_test.dart: reports missing component owners from the resolved Demo graph
+00:12 +141: test/demo_component_dependency_integration_test.dart: reports missing component owners from the resolved Demo graph
+00:12 +142: test/demo_component_dependency_integration_test.dart: reports missing component owners from the resolved Demo graph
+00:12 +143: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:12 +144: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:13 +145: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:13 +146: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:13 +147: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:13 +148: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:14 +149: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:14 +150: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:14 +151: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:14 +152: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:14 +153: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:15 +154: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:15 +155: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:15 +156: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:15 +157: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:15 +158: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:15 +159: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:16 +160: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:16 +161: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:16 +162: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:16 +163: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:16 +164: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:16 +165: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:17 +166: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:17 +167: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:17 +168: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:17 +169: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:17 +170: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:17 +171: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:17 +172: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:17 +173: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:18 +174: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:18 +175: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:18 +176: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:18 +177: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:18 +178: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:18 +179: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:19 +180: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:19 +181: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:19 +182: test/analysis_server_integration_test.dart: real LSP Command Owner diagnosis defers stale metadata after overlay edits
+00:19 +183: test/ui_analysis_test.dart: review subtype facts refresh after edits without retaining stale graphs
+00:19 +184: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:20 +185: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:20 +186: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:20 +187: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:20 +188: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:21 +189: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:21 +190: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:21 +191: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:21 +192: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:22 +193: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:22 +194: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:22 +195: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:22 +196: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:23 +197: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:23 +198: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:23 +199: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:23 +200: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:24 +201: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:24 +202: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:24 +203: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:24 +204: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:24 +205: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:24 +206: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:25 +207: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:25 +208: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:25 +209: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:25 +210: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:25 +211: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:26 +212: test/analysis_server_integration_test.dart: review real LSP refreshes terminal DTO facts after part-only edits
+00:26 +213: test/ui_analysis_test.dart: prefixed and transitive UI symbols preserve framework identity
+00:26 +214: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:26 +215: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:26 +216: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:27 +217: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:27 +218: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:27 +219: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:27 +220: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:28 +221: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:28 +222: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:28 +223: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:28 +224: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:29 +225: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:29 +226: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:29 +227: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:29 +228: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:30 +229: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:30 +230: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:30 +231: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:30 +232: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:31 +233: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:31 +234: test/analysis_server_integration_test.dart: real LSP refreshes sealed Action diagnostics after an unsaved part repair
+00:31 +235: test/analysis_server_integration_test.dart: real LSP clears route placement and policy errors on unsaved repair
+00:37 +236: test/analysis_server_integration_test.dart: real LSP diagnoses component lifecycle and refreshes after Host role change
+00:44 +237: test/analysis_server_integration_test.dart: real server publishes and clears invalid ccrouter.yaml
+00:51 +238: test/analysis_server_integration_test.dart: real LSP reports and clears UI alias diagnostics on editor overlay
+00:57 +239: test/analysis_server_integration_test.dart: real LSP reports and clears Service alias diagnostics on editor overlay
+01:02 +240: test/analysis_server_integration_test.dart: real LSP reports and clears Command alias diagnostics on editor overlay
+01:07 +241: test/analysis_server_integration_test.dart: real LSP accepts DTO Action after editor shape repair
+01:13 +242: test/analysis_server_integration_test.dart: real legacy ccrouter_host_component_owner_missing server bridges and clears current watch diagnostics
+01:19 +243: test/analysis_server_integration_test.dart: real LSP ccrouter_host_component_owner_missing server bridges and clears current watch diagnostics
+01:24 +244: test/analysis_server_integration_test.dart: real LSP ccrouter_ui_missing_implementation server bridges and clears current watch diagnostics
+01:30 +245: test/analysis_server_integration_test.dart: real legacy server follows unsaved Pub manifest overlays
+01:34 +246: test/analysis_server_integration_test.dart: real LSP server follows unsaved Pub manifest overlays
+01:42 +247: test/analysis_server_integration_test.dart: real legacy server publishes and clears stale Pub resolution hints
+01:53 +248: test/analysis_server_integration_test.dart: real LSP server publishes and clears stale Pub resolution hints
+02:02 +249: test/analysis_server_integration_test.dart: real server publishes an initial stale Pub hint for a Workspace member
+02:10 +250: test/analysis_server_integration_test.dart: real server polls structured diagnostics for a nested Workspace Host
+02:14 +251: test/analysis_server_integration_test.dart: real server clears foreign annotation diagnostics despite unrelated errors
+02:22 +252: test/analysis_server_integration_test.dart: real watcher refreshes consumers across workspace Contract packages
+02:32 +253: test/analysis_server_integration_test.dart: real LSP diagnostics and codeAction fix the open document
+02:39 +254: test/analysis_server_integration_test.dart: real legacy disk watcher refreshes all five generated capability kinds
+03:08 +255: test/analysis_server_integration_test.dart: real LSP disk watcher refreshes all five generated capability kinds
+03:36 +256: test/analysis_server_integration_test.dart: real server: unsaved overlays and service Quick Fix round trip
+03:42 +257: All tests passed!

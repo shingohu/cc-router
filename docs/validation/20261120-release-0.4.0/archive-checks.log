@@ -1,0 +1,31 @@
+Release checks (2026-11-20)
+
+$ <home>/fvm/versions/ohos/oh-3.41.9-release/bin/cache/dart-sdk/bin/dart tool/documentation_check.dart
+Documentation check passed for 209 Markdown files.
+exit_code: 0
+
+$ <home>/fvm/versions/ohos/oh-3.41.9-release/bin/cache/dart-sdk/bin/dart tool/release_sensitivity_check.dart --include-untracked
+Release sensitivity check passed.
+exit_code: 0
+
+$ git diff --check
+(no output)
+exit_code: 0
+
+$ node tool/sanitize_validation_evidence.mjs
+Evidence files requiring path normalization: 0
+exit_code: 0
+
+$ python3 - <<'PY'
+from pathlib import Path
+import hashlib,json,subprocess
+m=json.loads(Path('docs/validation/20261120-release-0.4.0/source-manifest.json').read_text())
+assert all(hashlib.sha256(Path(p).read_bytes()).hexdigest()==h for p,h in m['files'].items())
+f=json.loads(Path('/tmp/ccrouter-release-frozen.json').read_text())
+assert all(Path(p).is_file() and hashlib.sha256(Path(p).read_bytes()).hexdigest()==h for p,h in f.items())
+assert not subprocess.check_output(['git','status','--short','--','demo']).strip()
+assert not subprocess.check_output(['git','diff','--name-only','--','*pubspec*','*lock*']).strip()
+print(f"85 source/doc changes match; {len(f)} frozen files match; Demo clean; deps unchanged.")
+PY
+85 source/doc changes match; 1134 frozen files match; Demo clean; deps unchanged.
+exit_code: 0

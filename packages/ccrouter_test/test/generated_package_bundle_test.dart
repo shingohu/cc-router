@@ -4,6 +4,82 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  for (final (reverse, duplicate) in [
+    (false, false),
+    (true, false),
+    (false, true),
+  ]) {
+    test(
+      'Contract merge preserves constraints: reverse=$reverse duplicate=$duplicate',
+      () {
+        const fingerprint =
+            'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';
+        CCContractDescriptor contract(String version) => CCContractDescriptor(
+          kind: CCContractKind.service,
+          id: 'owner.service',
+          ownerComponentId: 'owner',
+          version: version,
+          shapeFingerprint: fingerprint,
+        );
+        CCContractRequirement requirement(String range) =>
+            CCContractRequirement(
+              kind: CCContractKind.service,
+              contractId: 'owner.service',
+              consumerPackage: 'consumer',
+              ownerComponentId: 'owner',
+              requiredVersionRange: range,
+              requiredShapeFingerprint: fingerprint,
+            );
+        final requirements = [
+          requirement('^1.0.0'),
+          requirement(duplicate ? '^1.0.0' : '<1.5.0'),
+        ];
+        final owner = CCGeneratedPackageBundle(
+          packageName: 'owner',
+          packageVersion: '1.0.0',
+          contentFingerprint: 'owner',
+          contractBundle: CCContractBundleDescriptor(
+            packageName: 'owner',
+            packageVersion: '1.0.0',
+            contracts: [contract('1.1.0')],
+          ),
+        );
+        final consumer = CCGeneratedPackageBundle(
+          packageName: 'consumer',
+          packageVersion: '1.0.0',
+          contentFingerprint: 'consumer',
+          dependencies: [owner],
+          contractBundle: CCContractBundleDescriptor(
+            packageName: 'consumer',
+            packageVersion: '1.0.0',
+            requirements: reverse ? requirements.reversed : requirements,
+          ),
+        );
+        final merged = CCHostAssembly.fromPackageBundles([
+          consumer,
+        ]).contractBundle!;
+        expect(merged.requirements, hasLength(duplicate ? 1 : 2));
+        for (final version in ['1.1.0', '1.8.0', '0.9.0']) {
+          Set<CCContractCompatibilityCode> evaluate(
+            Iterable<CCContractRequirement> edges,
+          ) => CCContractBundleDescriptor.validate([
+            CCContractBundleDescriptor(
+              packageName: 'replay',
+              packageVersion: '1.0.0',
+              contracts: [contract(version)],
+              requirements: edges,
+            ),
+          ]).map((issue) => issue.code).toSet();
+          expect(
+            evaluate(merged.requirements),
+            unorderedEquals(evaluate(requirements)),
+            reason: version,
+          );
+        }
+      },
+    );
+  }
+
   test(
     'extends an assembly without losing optional bindings or provenance',
     () {

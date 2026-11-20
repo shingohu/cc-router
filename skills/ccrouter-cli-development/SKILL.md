@@ -129,7 +129,74 @@ CCRouter progress, diagnostics, and failures remain visible.
 ### Generate
 
 Run `generate` after authored annotation, component, contribution, dependency,
-or Host topology changes. Use `--check` for a read-only freshness gate and
+or Host topology changes.
+Dependency preflight follows exact Library namespaces and canonical framework
+Component, ID, Contract and Dependency declarations. Same-name business symbols,
+unknown/conditional imports and self-owned requirements defer to Builder; a
+preflight skip does not certify the declaration. Source and metadata readers
+reject repeated Route, Provider, Handler, Subscription, binding and Contribution
+annotations instead of selecting one by order.
+Only decimal digits make a numeric prerelease identifier: `0x10` and `-0` are
+nonnumeric labels, distinct from `16` and `0`. Numeric prereleases compare by
+length then lexical order without machine-int conversion. Core fields retain Dart int.
+Caret/tilde bounds avoid successor overflow while preserving existing literal
+comparator semantics, including next-core prereleases; no Pub/npm filtering is added.
+Compatibility diagnostics attribute malformed installed versions to the Owner and
+invalid range syntax to the consumer independently; valid consumer ranges are not
+blamed for an Owner parse failure. Well-formed mismatches keep `versionOutOfRange`.
+UI Host maps malformed generated versions/ranges to sanitized
+`CCUIFragmentError('staleGeneratedOutput', id)` rather than raw parser exceptions.
+The final Core ContractBundle gate validates both installed and required identities:
+capability IDs are bounded to 128 characters, and Owners use bounded lowercase
+component syntax. Matching malformed identities are stale generated output, not
+valid compatibility evidence. Malformed consumer fingerprints are also
+`staleGeneratedOutput`; different valid lowercase SHA-256 values remain
+`fingerprintChanged`. Host and Runtime share this check before startup.
+Host ContractBundle merging preserves every distinct consumer range constraint.
+Only complete duplicate requirement values, including range and fingerprint, are
+deduplicated; merge order never selects a winning range. No range intersection is
+rewritten, and revalidating the merged snapshot preserves the original constraints.
+CLI Package Bundle emission preserves persisted consumer range/fingerprint snapshots.
+Only absent legacy fields use the resolved Contract defaults; existing ranges are
+not rewritten to the Owner's current exact version. InitTask dependency snapshots
+follow the same rule, and stale recorded Owners fail Workspace validation with
+`ownerMismatch`. Distinct range constraints survive emission; no authored
+`versionRange` parameter is added to source APIs.
+IDE Contract Owner identity includes its defining Library, so same-name Contracts
+with the same Package/Owner and distinct Libraries cannot overwrite one another,
+including shared named parts. Service/Command part metadata keeps source URI and
+coordinates plus optional `libraryUri`; catalog round trips retain that evidence.
+Absent legacy evidence may be enriched by a consistent record, while explicit
+conflicts fail generation. Invalid/query/fragment URI evidence defers IDE Owner
+checks and fixes rather than guessing. Regenerate old part metadata for exact identity.
+Parser-only Owner fixes require complete export namespace evidence and respect
+local shadowing, including named extensions. Conditional, missing or unparseable
+branches that may expose the symbol defer edits; they are not proof of absence.
+A conditional export that hides the target symbol does not block a proven binding.
+Malformed URI encodings, NUL, queries/fragments, noncanonical `package:/...` and
+escaping locations never become IDE paths or crash source/diagnostic decoding.
+Valid encoded filename characters such as `#` and literal `%` keep their file identity.
+CLI preflight defers malformed import/export URIs to Builder's source errors; a
+preflight skip does not establish validity.
+
+UI capability and Owner IDs are bounded to 128 characters at generation, Workspace
+and Host boundaries. Owner IDs use lowercase component grammar; capability IDs
+retain their existing segment spelling. Workspace validates typed identities,
+versions and SHA-256 fingerprints on Contract/Renderer/Requirement records even
+when snapshots agree. Package-local checks also validate consumer ranges; malformed
+ranges produce a source error without duplicate Host comparison fallout.
+
+Route/Route Contract conflicts require a non-null `pattern` and a nonempty `patterns`
+list. Explicit null and empty-list defaults are inactive. InitTask requires exactly one
+non-null `contract`/`id`; null constants are inactive and unproven nullable references
+defer IDE conflict checks. Two inactive identities still require a value and receive
+no deletion fix. Non-null task Contracts/dependsOn retain top-level const-reference
+rules in both source and metadata generation. Nullable Component/InitTask Contract
+constants whose value is null publish no declaration.
+IDE timeout checks prove SDK Duration identity; same-name business holders defer.
+Resolved Gate constructor aliases retain framework identity for literal validation.
+
+ Use `--check` for a read-only freshness gate and
 `--no-cache --check` as the reference path when validating cache correctness.
 Custom `--output-dir` catalogs also participate in comparison and rollback,
 including docs/build directories. Only the explicit current/legacy catalog
@@ -708,6 +775,17 @@ errors. Preserve the failing workspace, propose the narrowest fix, and rerun
 the same command before using `--no-cache` for comparison.
 
 ### Catalog and Source Location
+
+Catalog decoding rejects malformed or escaping source, implementation and artifact
+Package URIs. Legacy raw filenames are URI-encoded once; do not repair an index by
+concatenating URI strings. UI diagnostics with invalid positions defer, while invalid
+authored import/export URIs remain Builder source errors. Percent-encoded generated
+directory names still participate in the internal API boundary check.
+Source import/export targets use Dart URI and native path semantics, including
+accepted file/query spellings, string escapes and import-target symlinks. CLI
+prefiltering uses import/export keywords, then checks the AST against resolved
+Package roots. Roots are reused within one validation call; metadata's portable
+Package-location validation remains separate.
 
 Use generated metadata and `ccrouter find` as the machine-readable source of
 truth. Catalog Markdown is a human view; it must not be edited to repair an

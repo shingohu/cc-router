@@ -1,0 +1,135 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/package_workspace_test.dart
+00:00 +0: catalog rejects nonportable source and artifact URI package:
+00:00 +0 -1: catalog rejects nonportable source and artifact URI package: [E]
+  Expected: throws <Instance of 'FormatException'>
+    Actual: <Closure: () => CCSourceReference>
+     Which: returned <Instance of 'CCSourceReference'>
+
+  package:matcher                                                         expect
+  packages/ccrouter_test/generator_test/package_workspace_test.dart 31:7  main.<fn>
+
+00:00 +0 -1: catalog rejects nonportable source and artifact URI package:contracts
+00:00 +0 -2: catalog rejects nonportable source and artifact URI package:contracts [E]
+  Expected: throws <Instance of 'FormatException'>
+    Actual: <Closure: () => CCSourceReference>
+     Which: returned <Instance of 'CCSourceReference'>
+
+  package:matcher                                                         expect
+  packages/ccrouter_test/generator_test/package_workspace_test.dart 31:7  main.<fn>
+
+00:00 +0 -2: catalog rejects nonportable source and artifact URI package:/contracts/source.dart
+00:00 +0 -3: catalog rejects nonportable source and artifact URI package:/contracts/source.dart [E]
+  Expected: throws <Instance of 'FormatException'>
+    Actual: <Closure: () => CCSourceReference>
+     Which: returned <Instance of 'CCSourceReference'>
+
+  package:matcher                                                         expect
+  packages/ccrouter_test/generator_test/package_workspace_test.dart 31:7  main.<fn>
+
+00:00 +0 -3: catalog rejects nonportable source and artifact URI package://contracts/source.dart
+00:00 +0 -4: catalog rejects nonportable source and artifact URI package://contracts/source.dart [E]
+  Expected: throws <Instance of 'FormatException'>
+    Actual: <Closure: () => CCSourceReference>
+     Which: returned <Instance of 'CCSourceReference'>
+
+  package:matcher                                                         expect
+  packages/ccrouter_test/generator_test/package_workspace_test.dart 31:7  main.<fn>
+
+00:00 +0 -4: catalog rejects nonportable source and artifact URI package:contracts/source.dart?query
+00:00 +0 -5: catalog rejects nonportable source and artifact URI package:contracts/source.dart?query [E]
+  Expected: throws <Instance of 'FormatException'>
+    Actual: <Closure: () => CCSourceReference>
+     Which: returned <Instance of 'CCSourceReference'>
+
+  package:matcher                                                         expect
+  packages/ccrouter_test/generator_test/package_workspace_test.dart 31:7  main.<fn>
+
+00:00 +0 -5: catalog rejects nonportable source and artifact URI package:contracts/source.dart#fragment
+00:00 +0 -6: catalog rejects nonportable source and artifact URI package:contracts/source.dart#fragment [E]
+  Expected: throws <Instance of 'FormatException'>
+    Actual: <Closure: () => CCSourceReference>
+     Which: returned <Instance of 'CCSourceReference'>
+
+  package:matcher                                                         expect
+  packages/ccrouter_test/generator_test/package_workspace_test.dart 31:7  main.<fn>
+
+00:00 +0 -6: catalog rejects nonportable source and artifact URI package:contracts/../source.dart
+00:00 +0 -7: catalog rejects nonportable source and artifact URI package:contracts/../source.dart [E]
+  Expected: throws <Instance of 'FormatException'>
+    Actual: <Closure: () => CCSourceReference>
+     Which: returned <Instance of 'CCSourceReference'>
+
+  package:matcher                                                         expect
+  packages/ccrouter_test/generator_test/package_workspace_test.dart 31:7  main.<fn>
+
+00:00 +0 -7: catalog rejects nonportable source and artifact URI package:contracts/%2E%2E/source.dart
+00:00 +0 -8: catalog rejects nonportable source and artifact URI package:contracts/%2E%2E/source.dart [E]
+  Expected: throws <Instance of 'FormatException'>
+    Actual: <Closure: () => CCSourceReference>
+     Which: returned <Instance of 'CCSourceReference'>
+
+  package:matcher                                                         expect
+  packages/ccrouter_test/generator_test/package_workspace_test.dart 31:7  main.<fn>
+
+00:00 +0 -8: catalog rejects nonportable source and artifact URI package:contracts/sub%2Fsource.dart
+00:00 +0 -9: catalog rejects nonportable source and artifact URI package:contracts/sub%2Fsource.dart [E]
+  Expected: throws <Instance of 'FormatException'>
+    Actual: <Closure: () => CCSourceReference>
+     Which: returned <Instance of 'CCSourceReference'>
+
+  package:matcher                                                         expect
+  packages/ccrouter_test/generator_test/package_workspace_test.dart 31:7  main.<fn>
+
+00:00 +0 -9: catalog rejects nonportable source and artifact URI package:contracts/sub%5Csource.dart
+00:00 +0 -10: catalog rejects nonportable source and artifact URI package:contracts/sub%5Csource.dart [E]
+  Expected: throws <Instance of 'FormatException'>
+    Actual: <Closure: () => CCSourceReference>
+     Which: returned <Instance of 'CCSourceReference'>
+
+  package:matcher                                                         expect
+  packages/ccrouter_test/generator_test/package_workspace_test.dart 31:7  main.<fn>
+
+00:00 +0 -10: catalog rejects nonportable source and artifact URI package:contracts/%FF.dart
+00:00 +0 -11: catalog rejects nonportable source and artifact URI package:contracts/%FF.dart [E]
+  Expected: throws <Instance of 'FormatException'>
+    Actual: <Closure: () => CCSourceReference>
+     Which: returned <Instance of 'CCSourceReference'>
+
+  package:matcher                                                         expect
+  packages/ccrouter_test/generator_test/package_workspace_test.dart 31:7  main.<fn>
+
+00:00 +0 -11: catalog rejects nonportable source and artifact URI package:contracts/%00.dart
+00:00 +0 -12: catalog rejects nonportable source and artifact URI package:contracts/%00.dart [E]
+  Expected: throws <Instance of 'FormatException'>
+    Actual: <Closure: () => CCSourceReference>
+     Which: returned <Instance of 'CCSourceReference'>
+
+  package:matcher                                                         expect
+  packages/ccrouter_test/generator_test/package_workspace_test.dart 31:7  main.<fn>
+
+00:00 +0 -12: catalog rejects nonportable source and artifact URI package:contracts//source.dart
+00:00 +0 -13: catalog rejects nonportable source and artifact URI package:contracts//source.dart [E]
+  Expected: throws <Instance of 'FormatException'>
+    Actual: <Closure: () => CCSourceReference>
+     Which: returned <Instance of 'CCSourceReference'>
+
+  package:matcher                                                         expect
+  packages/ccrouter_test/generator_test/package_workspace_test.dart 31:7  main.<fn>
+
+00:00 +0 -13: catalog retains valid encoded and legacy source filenames
+00:00 +0 -14: catalog retains valid encoded and legacy source filenames [E]
+  Expected: 'package:contracts/source%23one.dart'
+    Actual: 'package:contracts/source#one.dart'
+     Which: is different.
+            Expected: ... cts/source%23one.dar ...
+              Actual: ... cts/source#one.dart
+                                    ^
+             Differ at offset 24
+
+  package:matcher                                                         expect
+  packages/ccrouter_test/generator_test/package_workspace_test.dart 64:7  main.<fn>
+
+00:00 +0 -14: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

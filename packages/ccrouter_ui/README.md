@@ -31,3 +31,16 @@ and the [design and implementation record](../../docs/CCRouter-ui-fragment-desig
 The [independent enum/DTO validation](../../docs/validation/ui-fragment-adoption-20261020/README.md)
 documents a verified local technical workflow. It does not establish final API
 freeze, human onboarding usability, distribution readiness or device coverage.
+
+Malformed generated Contract versions or consumer ranges fail Host assembly with
+sanitized `CCUIFragmentError('staleGeneratedOutput', id)`. Raw parser input is not
+included. Well-formed incompatible ranges retain `versionOutOfRange`; ownership,
+missing implementation and fingerprint failures keep their existing codes.
+
+
+UI capability and Owner IDs are bounded to 128 characters at generation, Workspace
+and Host boundaries. Owner IDs use lowercase component grammar; capability IDs
+retain their existing segment spelling. Workspace validates typed identities,
+versions and SHA-256 fingerprints on Contract/Renderer/Requirement records even
+when snapshots agree. Package-local checks also validate consumer ranges; malformed
+ranges produce a source error without duplicate Host comparison fallout.

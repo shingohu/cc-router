@@ -1,0 +1,61 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/command_generator_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/command_generator_test.dart: Command Contracts reject duplicate declarations in local and imported paths
+00:11 +1: packages/ccrouter_test/generator_test/command_generator_test.dart: handler builder emits stable typed registration
+00:14 +2: packages/ccrouter_test/generator_test/command_generator_test.dart: one-parameter handler is adapted to the registry signature
+00:16 +3: packages/ccrouter_test/generator_test/command_generator_test.dart: metadata contains portable contract and handler locations
+00:19 +4: packages/ccrouter_test/generator_test/command_generator_test.dart: command alias changes the generated Contract fingerprint
+00:23 +5: packages/ccrouter_test/generator_test/command_generator_test.dart: keyword Command alias fails generation
+00:25 +6: packages/ccrouter_test/generator_test/command_generator_test.dart: Object member Command alias fails at its declaration
+00:27 +7: packages/ccrouter_test/generator_test/command_generator_test.dart: Owner Command Client rejects an inferred Object member until aliased
+00:30 +8: packages/ccrouter_test/generator_test/command_generator_test.dart: mutable payload fields fail generation
+00:32 +9: packages/ccrouter_test/generator_test/command_generator_test.dart: handler result mismatch fails generation
+00:33 +10: packages/ccrouter_test/generator_test/command_generator_test.dart: invalid stable ID fails generation
+00:35 +11: packages/ccrouter_test/generator_test/command_generator_test.dart: annotated Command cannot bypass its generated Client
+00:37 +12: loading packages/ccrouter_test/generator_test/service_generator_test.dart
+00:37 +12: packages/ccrouter_test/generator_test/service_generator_test.dart: Service Contracts reject duplicate declarations in local and imported paths
+00:45 +13: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder emits a typed owner-only Token
+00:47 +14: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder infers one directly implemented contract
+00:48 +15: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder emits an internal type-local Provider
+00:51 +16: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder emits a component caller for sync and async members
+00:52 +17: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder preserves bounded generic methods and explicit forwarding
+00:54 +18: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy defaults preserve Dart string and collection constants
+00:57 +19: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy preserves wide collection default types
+00:59 +20: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy rejects inaccessible default-only enum types
+01:01 +21: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy forwards colliding parameter and generic names
+01:03 +22: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy import prefixes avoid generic parameter names
+01:04 +23: packages/ccrouter_test/generator_test/service_generator_test.dart: contract alias is the default generated Service Client member
+01:06 +24: packages/ccrouter_test/generator_test/service_generator_test.dart: Object member Service dependency alias fails before emitting a Client
+01:08 +25: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder embeds typed Key and explicit alias
+01:10 +26: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder emits nothing without a Service dependency
+01:12 +27: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder rejects an owner missing from required dependencies
+01:15 +28: packages/ccrouter_test/generator_test/service_generator_test.dart: proxy builder rejects a contract imported through src
+01:17 +29: packages/ccrouter_test/generator_test/service_generator_test.dart: service metadata records contracts and ownerless implementations
+01:26 +30: packages/ccrouter_test/generator_test/service_generator_test.dart: stream methods generate typed cancellation-aware proxies and metadata
+01:31 +31: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects keyword alias
+01:35 +32: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects concrete declaration
+01:38 +33: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects invalid ID
+01:41 +34: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects generic contract
+01:43 +35: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects nullable stream
+01:45 +36: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects stream getter
+01:47 +37: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects nested stream
+01:49 +38: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects stream element
+01:51 +39: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects custom stream
+01:52 +40: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects multiple stream cancellation tokens
+01:54 +41: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects future-or result
+01:56 +42: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects callback parameter
+01:57 +43: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects setter
+01:59 +44: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects operator
+02:01 +45: packages/ccrouter_test/generator_test/service_generator_test.dart: contract builder rejects contract inheritance
+02:02 +46: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects missing identity
+02:04 +47: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects parameterized constructor
+02:06 +48: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects private implementation
+02:08 +49: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects invalid Key
+02:09 +50: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects multiple directly implemented contracts
+02:11 +51: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects an id beside an inferred contract
+02:13 +52: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder does not infer an indirectly inherited contract
+02:15 +53: packages/ccrouter_test/generator_test/service_generator_test.dart: service builder rejects direct and indirect contracts together
+02:17 +54: loading packages/ccrouter_test/generator_test/metadata_builder_test.dart
+02:17 +54: packages/ccrouter_test/generator_test/metadata_builder_test.dart: component metadata rejects duplicate Service Contracts
+02:25 +55: packages/ccrouter_test/generator_test/metadata_builder_test.dart: component metadata rejects duplicate Command Contracts
+02:27 +56: packages/ccrouter_test/generator_test/metadata_builder_test.dart: metadata builders preserve all mixed capability documents
+02:36 +57: All tests passed!

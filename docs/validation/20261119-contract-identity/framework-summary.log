@@ -1,0 +1,13 @@
+Summary: final 12 nonempty lines from the complete /tmp/ccrouter-identity-framework.log.
+00:22 +1711: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/zone_retention_regression_test.dart: Zone lifetime unrelated pending Future in factory cannot retain closed Route payload
+00:22 +1712: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through business outgoing animation
+00:22 +1713: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/zone_retention_regression_test.dart: Zone lifetime unrelated pending Future in initializer cannot retain closed Route payload
+00:22 +1714: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/zone_retention_regression_test.dart: Zone lifetime unrelated pending Future in initializer cannot retain closed Route payload
+00:22 +1715: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/zone_retention_regression_test.dart: Zone lifetime unrelated pending Future in initializer cannot retain closed Route payload
+00:22 +1716: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through gesture outgoing animation
+00:22 +1717: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through gesture outgoing animation
+00:22 +1718: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through gesture outgoing animation
+00:22 +1719: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through go outgoing animation
+00:22 +1720: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through reset outgoing animation
+00:22 +1721: <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/managed_cross_lifecycle_regression_test.dart: Scope remains live through replace outgoing animation
+00:23 +1722: All tests passed!

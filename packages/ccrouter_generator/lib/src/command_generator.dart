@@ -318,6 +318,12 @@ List<_CommandContractModel> _readCommandContracts(LibraryReader library) {
         element,
       );
     }
+    if (_commandContractChecker.annotationsOfExact(element).length != 1) {
+      _failCommand(
+        'Contract requires exactly one CCCommandContract annotation.',
+        element,
+      );
+    }
     final commandInterfaces = element.allSupertypes
         .where((type) => _commandChecker.isExactlyType(type))
         .toList(growable: false);
@@ -405,6 +411,12 @@ List<_CommandHandlerModel> _readCommandHandlers(LibraryReader library) {
         element,
       );
     }
+    if (_commandHandlerChecker.annotationsOfExact(element).length != 1) {
+      _failCommand(
+        'Handler requires exactly one CCCommandHandler annotation.',
+        element,
+      );
+    }
     final parameters = element.formalParameters;
     if (parameters.isEmpty || parameters.length > 2) {
       _failCommand(
@@ -464,6 +476,12 @@ _CommandContractModel _readCommandContract(ClassElement element) {
   if (annotation == null) {
     _failCommand(
       'CCCommandHandler parameter ${element.displayName} must be annotated with CCCommandContract.',
+      element,
+    );
+  }
+  if (_commandContractChecker.annotationsOfExact(element).length != 1) {
+    _failCommand(
+      'Contract requires exactly one CCCommandContract annotation.',
       element,
     );
   }
@@ -601,6 +619,7 @@ String _commandGeneratedLibraryPath(String source) {
 }
 
 /// Serializes a source declaration without embedding source contents.
+/// Preserves exact source coordinates and adds defining-Library identity for parts.
 Map<String, Object?> _commandSourceReference(Element element) {
   final fragment = element.firstFragment;
   final libraryFragment = fragment.libraryFragment!;
@@ -610,6 +629,8 @@ Map<String, Object?> _commandSourceReference(Element element) {
   return <String, Object?>{
     'symbol': element.displayName,
     'packageUri': libraryFragment.source.uri.toString(),
+    if (libraryFragment.source.uri != element.library!.uri)
+      'libraryUri': element.library!.uri.toString(),
     'line': location.lineNumber,
     'column': location.columnNumber,
   };

@@ -7,6 +7,111 @@ import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
 void main() {
+  for (final mode in [
+    'conditionalImport',
+    'prefixedConditionalImport',
+    'hiddenConditionalImport',
+    'partImport',
+    'partExport',
+    'consumerPart',
+  ]) {
+    test('parser-only Owner reference requires complete $mode evidence', () {
+      final fixture = _OwnerFixture.create();
+      addTearDown(fixture.dispose);
+      final index = CCRouterContractOwnerIndexCache().resolve(
+        fixture.consumerSource.path,
+      );
+      const owner = CCRouterContractOwner(
+        kind: CCRouterContractKind.service,
+        contractSymbol: 'SharedService',
+        contractPackage: 'owner_contracts',
+        componentId: 'owner.component',
+        componentIdSymbol: 'ownerComponentId',
+      );
+      void write(String name, String source) => File(
+        path.join(fixture.consumerSource.parent.path, name),
+      ).writeAsStringSync(source);
+      write('empty.dart', '');
+      write('other.dart', '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+const ownerComponentId = CCComponentId('wrong.component');
+''');
+      write('with_part.dart', "part 'owner_part.dart';");
+      write('owner_part.dart', '''
+part of 'with_part.dart';
+const ownerComponentId = 'wrong';
+''');
+      write('barrel.dart', "export 'with_part.dart';");
+      write('consumer_part.dart', '''
+part of 'component.dart';
+const ownerComponentId = 'wrong';
+''');
+      final prefix = mode == 'prefixedConditionalImport' ? ' as owner' : '';
+      final extra = switch (mode) {
+        'conditionalImport' ||
+        'prefixedConditionalImport' ||
+        'hiddenConditionalImport' =>
+          "import 'empty.dart' if (dart.library.io) 'other.dart'$prefix ${mode == 'hiddenConditionalImport' ? 'hide' : 'show'} ownerComponentId;",
+        'partImport' => "import 'with_part.dart' show ownerComponentId;",
+        'partExport' => "import 'barrel.dart' show ownerComponentId;",
+        _ => "part 'consumer_part.dart';",
+      };
+      final unit = parseString(
+        content:
+            '''
+import 'package:owner_contracts/owner_contracts.dart'$prefix show ownerComponentId;
+$extra
+''',
+        path: fixture.consumerSource.path,
+      ).unit;
+      expect(
+        index.visibleComponentIdReference(
+          unit: unit,
+          sourcePath: fixture.consumerSource.path,
+          owner: owner,
+        ),
+        mode == 'hiddenConditionalImport' ? 'ownerComponentId' : isNull,
+      );
+    });
+  }
+
+  test('invalid encoded or absolute-path metadata URIs yield no Owner facts', () {
+    for (final uri in [
+      'package:owner_contracts/%FF.dart',
+      'package:owner_contracts/%00.dart',
+      'package:/owner_contracts/src/contracts.dart',
+    ]) {
+      final fixture = _OwnerFixture.create();
+      addTearDown(fixture.dispose);
+      final file = File(
+        path.join(
+          fixture.root.path,
+          'owner_contracts/lib/src/ccrouter_generated/metadata/ccrouter_package.json',
+        ),
+      );
+      final document = jsonDecode(file.readAsStringSync()) as Map;
+      for (final record in document['capabilityCatalog']['records'] as List) {
+        record['contract']['packageUri'] = uri;
+      }
+      file.writeAsStringSync(jsonEncode(document));
+      final index = CCRouterContractOwnerIndexCache().resolve(
+        fixture.consumerSource.path,
+      );
+      expect(
+        index.resolve(
+          kind: CCRouterContractKind.service,
+          contractSymbol: 'SharedService',
+          prefix: null,
+          importPrefixes: const {
+            '': {'owner_contracts'},
+          },
+          sourcePackage: 'consumer',
+        ),
+        isNull,
+      );
+    }
+  });
+
   test('local shadowing cannot produce an imported owner Quick Fix', () {
     final fixture = _OwnerFixture.create();
     addTearDown(fixture.dispose);
@@ -304,6 +409,7 @@ dependencies:
       path.join(contracts.path, 'lib', 'src', 'contracts.dart'),
     )..createSync(recursive: true);
     contractSource.writeAsStringSync('''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 const ownerComponentId = CCComponentId('owner.component');
 
 @CCServiceContract(
@@ -394,6 +500,14 @@ final class RunCommand {}
             'name': 'owner_contracts',
             'rootUri': '../owner_contracts',
             'packageUri': 'lib/',
+          },
+          {
+            'name': 'ccrouter_contracts',
+            'rootUri': Directory(
+              '../ccrouter_contracts',
+            ).absolute.uri.toString(),
+            'packageUri': 'lib/',
+            'languageVersion': '3.10',
           },
         ],
       }),

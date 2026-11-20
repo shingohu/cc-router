@@ -7,6 +7,63 @@ import 'package:path/path.dart' as path;
 import 'package:test/test.dart';
 
 void main() {
+  test(
+    'valid encoded filename characters retain their published source path',
+    () {
+      for (final (name, encoded) in [
+        ('com#ponent.dart', 'com%23ponent.dart'),
+        ('com%FFponent.dart', 'com%25FFponent.dart'),
+      ]) {
+        final fixture = _BridgeFixture.create();
+        addTearDown(fixture.dispose);
+        final source = File(path.join(fixture.source.parent.path, name))
+          ..writeAsStringSync('const component = 1;\n');
+        fixture.writeStatus(eventRevision: 7);
+        fixture.writeDiagnostics(eventRevision: 7);
+        final value = jsonDecode(fixture.diagnostics.readAsStringSync()) as Map;
+        value['diagnostics'][0]['primaryLocation']['uri'] =
+            'package:bridge_host/src/$encoded';
+        fixture.diagnostics.writeAsStringSync(jsonEncode(value));
+        expect(
+          fixture.bridge.diagnosticsFor(source.path),
+          hasLength(1),
+          reason: encoded,
+        );
+        expect(fixture.bridge.affectedDartPaths(fixture.diagnostics.path), {
+          source.path,
+        });
+      }
+    },
+  );
+
+  test('malformed or escaping published locations never become IDE paths', () {
+    for (final uri in [
+      'package:bridge_host/%FF.dart',
+      'package:bridge_host/src/com%00ponent.dart',
+      'package:/bridge_host/src/component.dart',
+      'package:bridge_host/src/component.dart?query',
+      'package:bridge_host/../outside.dart',
+    ]) {
+      final fixture = _BridgeFixture.create();
+      addTearDown(fixture.dispose);
+      fixture.writeStatus(eventRevision: 7);
+      fixture.writeDiagnostics(eventRevision: 7);
+      final value = jsonDecode(fixture.diagnostics.readAsStringSync()) as Map;
+      value['diagnostics'][0]['primaryLocation']['uri'] = uri;
+      fixture.diagnostics.writeAsStringSync(jsonEncode(value));
+      expect(
+        fixture.bridge.diagnosticsFor(fixture.source.path),
+        isEmpty,
+        reason: uri,
+      );
+      expect(
+        fixture.bridge.affectedDartPaths(fixture.diagnostics.path),
+        isEmpty,
+        reason: uri,
+      );
+    }
+  });
+
   test('accepts only the current failed watch identity', () {
     final fixture = _BridgeFixture.create();
     addTearDown(fixture.dispose);

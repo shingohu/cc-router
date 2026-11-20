@@ -1,0 +1,24 @@
+00:00 +0: loading <home>/develop/LiberLive/cc-router/packages/ccrouter_test/test/ui_fragment_test.dart
+00:00 +0: UI Host enforces the generated owner length boundary at 128
+00:00 +1: UI Host enforces the generated owner length boundary at 129
+00:00 +1 -1: UI Host enforces the generated owner length boundary at 129 [E]
+  Expected: throws <Instance of 'CCUIFragmentError'> with `code`: 'staleGeneratedOutput'
+    Actual: <Closure: () => CCHostAssembly>
+     Which: returned <Instance of 'CCHostAssembly'>
+
+  package:matcher                                           expect
+  package:flutter_test/src/widget_tester.dart 477:18        expect
+  packages/ccrouter_test/test/ui_fragment_test.dart 260:11  main.<fn>
+
+00:00 +1 -1: UI Host enforces the generated id length boundary at 128
+00:00 +2 -1: UI Host enforces the generated id length boundary at 129
+00:00 +2 -2: UI Host enforces the generated id length boundary at 129 [E]
+  Expected: throws <Instance of 'CCUIFragmentError'> with `code`: 'staleGeneratedOutput'
+    Actual: <Closure: () => CCHostAssembly>
+     Which: returned <Instance of 'CCHostAssembly'>
+
+  package:matcher                                           expect
+  package:flutter_test/src/widget_tester.dart 477:18        expect
+  packages/ccrouter_test/test/ui_fragment_test.dart 260:11  main.<fn>
+
+00:00 +2 -2: Some tests failed.

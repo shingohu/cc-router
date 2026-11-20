@@ -1,0 +1,27 @@
+00:00 +0: loading test/semantic_analysis_test.dart
+00:00 +0: test/semantic_analysis_test.dart: Host lifecycle checks transitive show by semantic identity
+00:02 +0 -1: test/semantic_analysis_test.dart: Host lifecycle checks transitive show by semantic identity
+00:02 +0 -1: test/ui_analysis_test.dart: transitive UI show lists keep only effectively exposed SPI names [E]
+  Expected: <true>
+    Actual: <false>
+  show CCUIHostAssembly
+
+  package:matcher                    expect
+  test/ui_analysis_test.dart 1383:7  main.<fn>
+
+00:02 +0 -2: test/semantic_analysis_test.dart: Host lifecycle checks transitive show by semantic identity [E]
+  Expected: <true>
+    Actual: <false>
+
+  package:matcher                         expect
+  test/semantic_analysis_test.dart 190:7  main.<fn>
+
+00:02 +0 -2: test/semantic_analysis_test.dart: Host lifecycle checks show then hide by semantic identity
+00:03 +1 -2: Some tests failed.
+
+Failing tests:
+  test/semantic_analysis_test.dart: Host lifecycle checks transitive show by semantic identity
+  test/ui_analysis_test.dart: transitive UI show lists keep only effectively exposed SPI names
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

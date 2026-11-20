@@ -1,0 +1,8 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/command_generator_test.dart
+00:00 +0: packages/ccrouter_test/generator_test/command_generator_test.dart: Command Contracts reject duplicate declarations in local and imported paths
+00:08 +1: loading packages/ccrouter_test/generator_test/service_generator_test.dart
+00:08 +1: packages/ccrouter_test/generator_test/service_generator_test.dart: Service Contracts reject duplicate declarations in local and imported paths
+00:15 +2: loading packages/ccrouter_test/generator_test/metadata_builder_test.dart
+00:15 +2: packages/ccrouter_test/generator_test/metadata_builder_test.dart: component metadata rejects duplicate Service Contracts
+00:20 +3: packages/ccrouter_test/generator_test/metadata_builder_test.dart: component metadata rejects duplicate Command Contracts
+00:22 +4: All tests passed!

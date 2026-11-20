@@ -364,6 +364,12 @@ List<_EventSubscriptionModel> _readEventSubscriptions(LibraryReader library) {
         element,
       );
     }
+    if (_eventSubscriptionChecker.annotationsOfExact(element).length != 1) {
+      _failEvent(
+        'Handler requires exactly one CCEventSubscription annotation.',
+        element,
+      );
+    }
     final parameters = element.formalParameters;
     if (parameters.isEmpty || parameters.length > 2) {
       _failEvent(

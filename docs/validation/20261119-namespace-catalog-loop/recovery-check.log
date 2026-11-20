@@ -1,0 +1,22 @@
+Original directory run: 837 passed, 19 failed, 1 skipped.
+Recovered failures matched by exact test name: 19 / 19.
+All three rerun logs report success.
+PASS installed flutter build preflight reuses an active watch
+PASS concurrent Flutter runs reuse one Host watch until the last lease exits
+PASS pub-hook install preserves an entrypoint when its rename fails
+PASS pub-hook install, status, and uninstall are reversible
+PASS pub-hook uninstall safely restores a verified schema 4 install
+PASS schema 5 install is stale but remains safely uninstallable
+PASS schema 6 install is stale but remains safely uninstallable
+PASS schema 4 uninstall rejects unowned Dart backups
+PASS installed wrapper preserves successful pub exit and skips plain projects
+PASS installed wrapper never runs generation for help or dry-run Pub calls
+PASS Flutter wrapper locates only the real top-level command
+PASS clean guard rejects only a live watch owner
+PASS clean guard also rejects a live V1 watch owner
+PASS inner Dart wrapper runs post-pub once and preserves bypass semantics
+PASS inner Dart wrapper runs generation from the Package root
+PASS Flutter wrapper suppresses nested Dart post-pub hooks
+PASS pub-hook run skips a project without resolved CCRouter packages
+PASS pub-hook run skips a Workspace aggregator
+PASS prebuilt sealed UI Package survives independent Git and archive consumption

@@ -1,0 +1,172 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart
+00:00 +0: UI Package rejects matching malformed componentId: Orders
+00:00 +0 -1: UI Package rejects matching malformed componentId: Orders [E]
+  Expected: contains 'ccrouter_ui_stale_generated_output'
+    Actual: MappedListIterable<CCWorkspaceDiagnostic, String>:[
+              'ccrouter_ui_dependency_missing',
+              'ccrouter_ui_owner_mismatch'
+            ]
+     Which: does not contain 'ccrouter_ui_stale_generated_output'
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart 123:9  main.<fn>
+
+00:00 +0 -1: UI Host rejects matching malformed componentId: Orders
+00:00 +0 -2: UI Host rejects matching malformed componentId: Orders [E]
+  Expected: contains 'ccrouter_ui_stale_generated_output'
+    Actual: MappedListIterable<CCWorkspaceDiagnostic, String>:[
+              'ccrouter_ui_dependency_missing',
+              'ccrouter_ui_owner_mismatch'
+            ]
+     Which: does not contain 'ccrouter_ui_stale_generated_output'
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart 123:9  main.<fn>
+
+00:00 +0 -2: UI Package rejects matching malformed componentId: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+00:00 +0 -3: UI Package rejects matching malformed componentId: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa [E]
+  Expected: contains 'ccrouter_ui_stale_generated_output'
+    Actual: MappedListIterable<CCWorkspaceDiagnostic, String>:[
+              'ccrouter_ui_dependency_missing',
+              'ccrouter_ui_owner_mismatch'
+            ]
+     Which: does not contain 'ccrouter_ui_stale_generated_output'
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart 123:9  main.<fn>
+
+00:00 +0 -3: UI Host rejects matching malformed componentId: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+00:00 +0 -4: UI Host rejects matching malformed componentId: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa [E]
+  Expected: contains 'ccrouter_ui_stale_generated_output'
+    Actual: MappedListIterable<CCWorkspaceDiagnostic, String>:[
+              'ccrouter_ui_dependency_missing',
+              'ccrouter_ui_owner_mismatch'
+            ]
+     Which: does not contain 'ccrouter_ui_stale_generated_output'
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart 123:9  main.<fn>
+
+00:00 +0 -4: UI Package rejects matching malformed id: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+00:00 +0 -5: UI Package rejects matching malformed id: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa [E]
+  Expected: contains 'ccrouter_ui_stale_generated_output'
+    Actual: MappedListIterable<CCWorkspaceDiagnostic, String>:[]
+     Which: does not contain 'ccrouter_ui_stale_generated_output'
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart 123:9  main.<fn>
+
+00:00 +0 -5: UI Host rejects matching malformed id: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+00:00 +0 -6: UI Host rejects matching malformed id: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa [E]
+  Expected: contains 'ccrouter_ui_stale_generated_output'
+    Actual: MappedListIterable<CCWorkspaceDiagnostic, String>:[]
+     Which: does not contain 'ccrouter_ui_stale_generated_output'
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart 123:9  main.<fn>
+
+00:00 +0 -6: UI Package rejects matching malformed id:
+00:00 +0 -7: UI Package rejects matching malformed id:  [E]
+  Expected: contains 'ccrouter_ui_stale_generated_output'
+    Actual: MappedListIterable<CCWorkspaceDiagnostic, String>:[]
+     Which: does not contain 'ccrouter_ui_stale_generated_output'
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart 123:9  main.<fn>
+
+00:00 +0 -7: UI Host rejects matching malformed id:
+00:00 +0 -8: UI Host rejects matching malformed id:  [E]
+  Expected: contains 'ccrouter_ui_stale_generated_output'
+    Actual: MappedListIterable<CCWorkspaceDiagnostic, String>:[]
+     Which: does not contain 'ccrouter_ui_stale_generated_output'
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart 123:9  main.<fn>
+
+00:00 +0 -8: UI Package rejects matching malformed id: 17
+00:00 +0 -9: UI Package rejects matching malformed id: 17 [E]
+  Expected: contains 'ccrouter_ui_stale_generated_output'
+    Actual: MappedListIterable<CCWorkspaceDiagnostic, String>:[]
+     Which: does not contain 'ccrouter_ui_stale_generated_output'
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart 123:9  main.<fn>
+
+00:00 +0 -9: UI Host rejects matching malformed id: 17
+00:00 +0 -10: UI Host rejects matching malformed id: 17 [E]
+  Expected: contains 'ccrouter_ui_stale_generated_output'
+    Actual: MappedListIterable<CCWorkspaceDiagnostic, String>:[]
+     Which: does not contain 'ccrouter_ui_stale_generated_output'
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart 123:9  main.<fn>
+
+00:00 +0 -10: UI Package rejects matching malformed shapeFingerprint: shape
+00:00 +0 -11: UI Package rejects matching malformed shapeFingerprint: shape [E]
+  Expected: contains 'ccrouter_ui_stale_generated_output'
+    Actual: MappedListIterable<CCWorkspaceDiagnostic, String>:[]
+     Which: does not contain 'ccrouter_ui_stale_generated_output'
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart 123:9  main.<fn>
+
+00:00 +0 -11: UI Host rejects matching malformed shapeFingerprint: shape
+00:00 +0 -12: UI Host rejects matching malformed shapeFingerprint: shape [E]
+  Expected: contains 'ccrouter_ui_stale_generated_output'
+    Actual: MappedListIterable<CCWorkspaceDiagnostic, String>:[]
+     Which: does not contain 'ccrouter_ui_stale_generated_output'
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart 123:9  main.<fn>
+
+00:00 +0 -12: UI Package rejects matching malformed shapeFingerprint: null
+00:00 +0 -13: UI Package rejects matching malformed shapeFingerprint: null [E]
+  Expected: contains 'ccrouter_ui_stale_generated_output'
+    Actual: MappedListIterable<CCWorkspaceDiagnostic, String>:[]
+     Which: does not contain 'ccrouter_ui_stale_generated_output'
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart 123:9  main.<fn>
+
+00:00 +0 -13: UI Host rejects matching malformed shapeFingerprint: null
+00:00 +0 -14: UI Host rejects matching malformed shapeFingerprint: null [E]
+  Expected: contains 'ccrouter_ui_stale_generated_output'
+    Actual: MappedListIterable<CCWorkspaceDiagnostic, String>:[]
+     Which: does not contain 'ccrouter_ui_stale_generated_output'
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart 123:9  main.<fn>
+
+00:00 +0 -14: UI Package rejects matching malformed version: invalid
+00:00 +0 -15: UI Package rejects matching malformed version: invalid [E]
+  Expected: contains 'ccrouter_ui_stale_generated_output'
+    Actual: MappedListIterable<CCWorkspaceDiagnostic, String>:[]
+     Which: does not contain 'ccrouter_ui_stale_generated_output'
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart 123:9  main.<fn>
+
+00:00 +0 -15: UI Host rejects matching malformed version: invalid
+00:00 +1 -15: UI Package rejects matching malformed version: null
+00:00 +1 -16: UI Package rejects matching malformed version: null [E]
+  Expected: contains 'ccrouter_ui_stale_generated_output'
+    Actual: MappedListIterable<CCWorkspaceDiagnostic, String>:[]
+     Which: does not contain 'ccrouter_ui_stale_generated_output'
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart 123:9  main.<fn>
+
+00:00 +1 -16: UI Host rejects matching malformed version: null
+00:00 +2 -16: package-local UI metadata rejects an invalid range without Host closure
+00:00 +2 -17: package-local UI metadata rejects an invalid range without Host closure [E]
+  Expected: contains 'ccrouter_ui_stale_generated_output'
+    Actual: MappedListIterable<CCWorkspaceDiagnostic, String>:[]
+     Which: does not contain 'ccrouter_ui_stale_generated_output'
+
+  package:matcher                                                              expect
+  packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart 130:5  main.<fn>
+
+00:00 +2 -17: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

@@ -1,0 +1,39 @@
+00:00 +0: loading packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: component dependency preflight foreign CCComponent never triggers a speculative preflight failure
+00:00 +0 -1: component dependency preflight foreign CCComponent never triggers a speculative preflight failure [E]
+  Expected: empty
+    Actual: [Instance of 'CCComponentDependencyPreflightIssue']
+
+  package:matcher                                                                      expect
+  packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart 38:9  main.<fn>.<fn>
+
+00:00 +0 -1: component dependency preflight foreign CCServiceDependency never triggers a speculative preflight failure
+00:00 +0 -2: component dependency preflight foreign CCServiceDependency never triggers a speculative preflight failure [E]
+  Expected: empty
+    Actual: [Instance of 'CCComponentDependencyPreflightIssue']
+
+  package:matcher                                                                      expect
+  packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart 38:9  main.<fn>.<fn>
+
+00:00 +0 -2: component dependency preflight foreign CCServiceContract never triggers a speculative preflight failure
+00:00 +0 -3: component dependency preflight foreign CCServiceContract never triggers a speculative preflight failure [E]
+  Expected: empty
+    Actual: [Instance of 'CCComponentDependencyPreflightIssue']
+
+  package:matcher                                                                      expect
+  packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart 38:9  main.<fn>.<fn>
+
+00:00 +0 -3: component dependency preflight foreign CCComponentId never triggers a speculative preflight failure
+00:00 +0 -4: component dependency preflight foreign CCComponentId never triggers a speculative preflight failure [E]
+  Expected: empty
+    Actual: [Instance of 'CCComponentDependencyPreflightIssue']
+
+  package:matcher                                                                      expect
+  packages/ccrouter_test/generator_test/component_dependency_preflight_test.dart 38:9  main.<fn>.<fn>
+
+00:00 +0 -4: (tearDownAll)
+00:00 +0 -4: Some tests failed.
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

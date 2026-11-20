@@ -1,0 +1,25 @@
+00:00 +0: loading test/semantic_analysis_test.dart
+00:00 +0: parser-only conditionalImport Owner edit would introduce a Dart error
+00:01 +0 -1: parser-only conditionalImport Owner edit would introduce a Dart error [E]
+  Expected: empty
+    Actual: [Instance of 'CCRouterSourceFix']
+
+  package:matcher                         expect
+  test/semantic_analysis_test.dart 485:7  main.<fn>
+
+00:01 +0 -1: parser-only partImport Owner edit would introduce a Dart error
+00:01 +0 -2: parser-only partImport Owner edit would introduce a Dart error [E]
+  Expected: empty
+    Actual: [Instance of 'CCRouterSourceFix']
+
+  package:matcher                         expect
+  test/semantic_analysis_test.dart 485:7  main.<fn>
+
+00:01 +0 -2: Some tests failed.
+
+Failing tests:
+  test/semantic_analysis_test.dart: parser-only conditionalImport Owner edit would introduce a Dart error
+  test/semantic_analysis_test.dart: parser-only partImport Owner edit would introduce a Dart error
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

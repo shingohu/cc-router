@@ -2,6 +2,32 @@
 
 ## 0.1.0 - Unreleased
 
+- Resolve source import/export targets using Dart URI semantics and native symlink identity before checking generated Package boundaries. Keyword prefiltering preserves escaped directory names; resolved roots are reused only within one validation call.
+
+- Validate Catalog source/artifact and UI diagnostic Package locations consistently, encode legacy raw filenames once, and keep malformed source URIs Builder-owned without crashing internal API checks. Recognize encoded generated directory names in those checks.
+
+- Reject absolute-path/NUL defining Library URIs and defer malformed authored import/export URIs during dependency preflight instead of throwing before Builder.
+
+- Preserve optional defining Library identity on Service/Command part source references and catalog round trips. Enrich absent legacy evidence while rejecting conflicting explicit Library identities; normal non-part metadata remains unchanged.
+
+- Preserve consumer version/fingerprint snapshots during Package Bundle emission
+  and InitTask metadata completion. Deduplicate complete constraints, retain legacy
+  field completion, and reject stale task dependency Owners before generation.
+
+- Distinguish malformed generated consumer fingerprints from valid SHA-256 drift in Workspace compatibility diagnostics.
+
+- Validate UI descriptor identity/version/fingerprint fields and consumer ranges in both Package and Host metadata checks; avoid duplicate malformed-range fallout.
+
+- Avoid cascading consumer-range errors when an installed Contract version is malformed; retain independent errors when both inputs are invalid.
+
+- Treat null nullable Component/InitTask Contract constants as absence. Accept explicit null task Contract omission and enforce non-null top-level Contract-reference syntax on both source and metadata paths.
+
+- Reject repeated Provider/Route/RouteImplementation/Handler/Subscription/Contribution annotations in shared source and metadata readers. Prove Core identity during dependency preflight and defer foreign, ambiguous and self-owned requirements to Builder.
+
+- Reject repeated Route Contract and InitTask annotations through shared source/metadata readers; never select an identity, Gate or failure policy by annotation order.
+
+- Reject duplicate Service/Command Contract annotations in local declarations, imported Handler/provider bindings and consumer dependency metadata.
+
 - Add optional Event Contract alias with legacy default-name compatibility,
   generated Client collision checks and reserved-name diagnostics.
 

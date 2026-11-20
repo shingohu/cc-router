@@ -1498,6 +1498,8 @@ abstract final class CCRouteWorkspaceValidator {
   }
 
   /// Checks generated consumer metadata without changing legacy schema output.
+  /// Installed version errors remain with their Contract; only range parsing
+  /// failures produce the consumer-range diagnostic.
   static void _validateConsumerCompatibility({
     required CCContractKind kind,
     required Map<String, Object?> dependency,
@@ -1508,17 +1510,32 @@ abstract final class CCRouteWorkspaceValidator {
     if (contract == null) return;
     final range = dependency['requiredVersionRange'];
     final fingerprint = dependency['requiredShapeFingerprint'];
-    if (range is! String || fingerprint is! String) {
+    if (range is! String ||
+        fingerprint is! String ||
+        fingerprint.length != 64 ||
+        !RegExp(r'^[0-9a-f]{64}$').hasMatch(fingerprint)) {
       errors.add(
         '[contract:${CCContractCompatibilityCode.staleGeneratedOutput.name}] '
-        '${kind.name} contract "$id" is missing generated consumer metadata.',
+        '${kind.name} contract "$id" has invalid or missing generated consumer metadata.',
+      );
+      return;
+    }
+    if (kind == CCContractKind.initTask &&
+        dependency['componentId'] != null &&
+        dependency['componentId'] != contract['componentId']) {
+      errors.add(
+        '[contract:${CCContractCompatibilityCode.ownerMismatch.name}] '
+        'initTask contract "$id" has a stale dependency Owner.',
       );
       return;
     }
     try {
-      if (!CCContractVersionRange.parse(
-        range,
-      ).allowsText('${contract['version']}')) {
+      final parsedRange = CCContractVersionRange.parse(range);
+      final version = contract['version'];
+      // Installed metadata already owns its invalid-version diagnostic above.
+      if (version is String &&
+          isContractSemanticVersion(version) &&
+          !parsedRange.allows(CCSemVer.parse(version))) {
         errors.add(
           '[contract:${CCContractCompatibilityCode.versionOutOfRange.name}] '
           '${kind.name} contract "$id" is outside its consumer version range.',

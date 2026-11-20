@@ -5,6 +5,7 @@ import 'package:analyzer/dart/constant/value.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/dart/element/element.dart';
+import 'package:analyzer/dart/element/nullability_suffix.dart';
 import 'package:analyzer/dart/element/type.dart';
 import 'package:build/build.dart';
 import 'package:source_gen/source_gen.dart';
@@ -44,8 +45,9 @@ Builder ccInitTaskMetadataBuilderInternal() => _InitTaskMetadataBuilder();
 final class _InitTaskGenerator extends Generator {
   /// Generates no source for libraries without initialization handlers.
   @override
-  String generate(LibraryReader library, BuildStep buildStep) {
+  Future<String> generate(LibraryReader library, BuildStep buildStep) async {
     if (buildStep.inputId.path.contains('/ccrouter_generated/')) return '';
+    await _validateInitTaskReferences(library.element, buildStep);
     final tasks = _readInitTasks(library);
     if (tasks.isEmpty) return '';
     final sourceUri = _initTaskPackageUri(
@@ -269,6 +271,7 @@ final class _InitTaskModel {
 }
 
 /// Reads and validates top-level task Contract constants in one library.
+/// Nullable constants whose value is null express absence, not a task identity.
 List<_InitTaskContractModel> _readInitTaskContracts(LibraryReader library) {
   final contracts = <_InitTaskContractModel>[];
   final ids = <String>{};
@@ -288,6 +291,9 @@ List<_InitTaskContractModel> _readInitTaskContracts(LibraryReader library) {
         element,
       );
     }
+    if (value.isNull &&
+        element.type.nullabilitySuffix == NullabilitySuffix.question)
+      continue;
     final model = _contractFromObject(value, element: element);
     if (!ids.add(model.id)) {
       _failInitTask(
@@ -329,7 +335,9 @@ final class _InitTaskReferenceVisitor extends RecursiveAstVisitor<void> {
             const <NamedExpression>[]) {
       final name = argument.name.label.name;
       final expression = argument.expression;
-      if (name == 'contract' && !_isInitTaskContractReference(expression)) {
+      if (name == 'contract' &&
+          expression is! NullLiteral &&
+          !_isInitTaskContractReference(expression)) {
         throw InvalidGenerationSourceError(
           'CCInitTask contract must reference a top-level '
           'CCInitTaskContract constant.',
@@ -368,6 +376,12 @@ List<_InitTaskModel> _readInitTasks(LibraryReader library) {
         element.typeParameters.isNotEmpty) {
       _failInitTask(
         'CCInitTask requires a public, top-level, non-generic function.',
+        element,
+      );
+    }
+    if (_initTaskChecker.annotationsOfExact(element).length != 1) {
+      _failInitTask(
+        'Handler requires exactly one CCInitTask annotation.',
         element,
       );
     }

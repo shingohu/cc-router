@@ -1,0 +1,47 @@
+00:00 +0: loading test/quick_fixes_test.dart
+00:00 +0: parser-only Owner edits respect named extension shadowing
+00:00 +0 -1: parser-only Owner edits respect named extension shadowing [E]
+  Expected: empty
+    Actual: [Instance of 'CCRouterSourceFix']
+
+  package:matcher                  expect
+  test/quick_fixes_test.dart 24:5  main.<fn>
+
+00:00 +0 -1: parser-only Owner edits defer unproven conditionalExport namespaces
+00:00 +0 -2: parser-only Owner edits defer unproven conditionalExport namespaces [E]
+  Expected: empty
+    Actual: [Instance of 'CCRouterSourceFix']
+
+  package:matcher                  expect
+  test/quick_fixes_test.dart 56:7  main.<fn>
+
+00:00 +0 -2: parser-only Owner edits defer unproven packageQuery namespaces
+00:00 +0 -3: parser-only Owner edits defer unproven packageQuery namespaces [E]
+  Expected: empty
+    Actual: [Instance of 'CCRouterSourceFix']
+
+  package:matcher                  expect
+  test/quick_fixes_test.dart 56:7  main.<fn>
+
+00:00 +0 -3: parser-only Owner edits defer unproven relativeQuery namespaces
+00:00 +0 -4: parser-only Owner edits defer unproven relativeQuery namespaces [E]
+  Unsupported operation: Cannot extract a file path from a URI with a query component
+  dart:core                                                                       _Uri.toFilePath
+  package:ccrouter_analyzer_plugin/src/contract_owner_index.dart 272:67           CCRouterContractOwnerIndex._resolveLibrary
+  package:ccrouter_analyzer_plugin/src/contract_owner_index.dart 205:24           CCRouterContractOwnerIndex.visibleComponentIdReference
+  package:ccrouter_analyzer_plugin/src/component_dependency_analyzer.dart 186:32  CCRouterComponentDependencyAnalyzer._containsOwner
+  package:ccrouter_analyzer_plugin/src/component_dependency_analyzer.dart 117:17  CCRouterComponentDependencyAnalyzer.findMissing
+  package:ccrouter_analyzer_plugin/src/source_quick_fixes.dart 157:60             CCRouterQuickFixes._componentDependencyFixes
+  package:ccrouter_analyzer_plugin/src/source_quick_fixes.dart 91:14              CCRouterQuickFixes.compute
+  test/quick_fixes_test.dart 53:40                                                main.<fn>
+
+00:00 +0 -4: Some tests failed.
+
+Failing tests:
+  test/quick_fixes_test.dart: parser-only Owner edits defer unproven conditionalExport namespaces
+  test/quick_fixes_test.dart: parser-only Owner edits defer unproven packageQuery namespaces
+  test/quick_fixes_test.dart: parser-only Owner edits defer unproven relativeQuery namespaces
+  test/quick_fixes_test.dart: parser-only Owner edits respect named extension shadowing
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

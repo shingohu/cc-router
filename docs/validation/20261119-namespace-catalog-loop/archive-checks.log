@@ -1,0 +1,82 @@
+Final archive checks (2026-11-19)
+
+$ fvm dart tool/documentation_check.dart
+Documentation check passed for 206 Markdown files.
+exit_code: 0
+
+$ fvm dart tool/release_sensitivity_check.dart --include-untracked
+Release sensitivity check passed.
+exit_code: 0
+
+$ git diff --check
+(no output)
+exit_code: 0
+
+$ node tool/sanitize_validation_evidence.mjs
+Evidence files requiring path normalization: 0
+exit_code: 0
+
+$ fvm dart format --output=none --set-exit-if-changed packages/ccrouter_analyzer_plugin/lib/src/contract_owner_index.dart packages/ccrouter_analyzer_plugin/lib/src/component_dependency_analyzer.dart packages/ccrouter_analyzer_plugin/test/contract_owner_index_test.dart packages/ccrouter_analyzer_plugin/test/semantic_analysis_test.dart packages/ccrouter_analyzer_plugin/test/source_analyzer_test.dart packages/ccrouter_generator/lib/src/capability_source_catalog.dart packages/ccrouter_generator/lib/src/ui_fragment_workspace.dart packages/ccrouter_generator/lib/src/internal_api_boundary_validator.dart packages/ccrouter_test/generator_test/package_workspace_test.dart packages/ccrouter_test/generator_test/ui_fragment_workspace_test.dart packages/ccrouter_test/generator_test/internal_api_boundary_validator_test.dart
+Formatted 11 files (0 changed) in 0.13 seconds.
+exit_code: 0
+
+$ python3 - <<'PY'
+from pathlib import Path
+import hashlib,json,subprocess
+manifest=json.loads(Path('docs/validation/20261119-namespace-catalog-loop/source-manifest.json').read_text())
+bad=[p for p,h in manifest['files'].items() if not Path(p).is_file() or hashlib.sha256(Path(p).read_bytes()).hexdigest()!=h]
+print(f"Manifest: {len(manifest['files'])} files checked, {len(bad)} mismatches")
+assert not bad,bad
+names=subprocess.check_output(['git','ls-files','--others','--exclude-standard','-z']).decode().split('\0')
+bad=[]
+count=0
+for name in names:
+ p=Path(name)
+ if not name or not p.is_file() or p.suffix not in {'.dart','.md','.json','.log'}: continue
+ count+=1
+ for i,line in enumerate(p.read_text().splitlines(),1):
+  if line.rstrip(' \t')!=line: bad.append(f'{name}:{i}')
+print(f'Untracked whitespace: {count} files checked, {len(bad)} issues')
+assert not bad,bad
+for label,args in [('Demo Git status',['git','status','--short','--','demo']),('Dependency file diff',['git','diff','--name-only','--','*pubspec*','*lock*'])]:
+ value=subprocess.check_output(args,text=True).strip()
+ print(label+': '+(value or 'clean'))
+ assert not value
+PY
+Manifest: 80 files checked, 0 mismatches
+Untracked whitespace: 272 files checked, 0 issues
+Demo Git status: clean
+Dependency file diff: clean
+exit_code: 0
+
+Post-report checks (paired SDK direct entrypoint)
+
+$ <home>/fvm/versions/ohos/oh-3.41.9-release/bin/cache/dart-sdk/bin/dart tool/documentation_check.dart
+Documentation check passed for 206 Markdown files.
+exit_code: 0
+
+$ <home>/fvm/versions/ohos/oh-3.41.9-release/bin/cache/dart-sdk/bin/dart tool/release_sensitivity_check.dart --include-untracked
+Release sensitivity check passed.
+exit_code: 0
+
+$ git diff --check
+(no output)
+exit_code: 0
+
+$ node tool/sanitize_validation_evidence.mjs
+Evidence files requiring path normalization: 0
+exit_code: 0
+
+$ python3 - <<'PY'
+from pathlib import Path
+import hashlib,json,subprocess
+m=json.loads(Path('docs/validation/20261119-namespace-catalog-loop/source-manifest.json').read_text())
+assert all(Path(p).is_file() and hashlib.sha256(Path(p).read_bytes()).hexdigest()==h for p,h in m['files'].items())
+assert not subprocess.check_output(['git','status','--short','--','demo']).strip()
+assert not subprocess.check_output(['git','diff','--name-only','--','*pubspec*','*lock*']).strip()
+print('All 80 fingerprints match; Demo clean; dependency files unchanged.')
+print('SDK version metadata after direct final checks:',(Path('demo/.fvm/flutter_sdk').resolve()/'bin/cache/flutter.version.json').exists())
+PY
+All 80 fingerprints match; Demo clean; dependency files unchanged.
+SDK version metadata after direct final checks: True
+exit_code: 0

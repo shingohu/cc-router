@@ -123,6 +123,15 @@ final class _RouteModel {
         element,
       );
     }
+    final checker = contractFirst
+        ? _RouteContractGenerator._contract
+        : _RouteGenerator._route;
+    if (checker.annotationsOfExact(element).length != 1) {
+      _fail(
+        'Declaration requires exactly one ${contractFirst ? 'CCRouteContract' : 'CCRoute'} annotation.',
+        element,
+      );
+    }
     if (contractFirst &&
         (!element.displayName.endsWith('RouteContract') ||
             element.displayName == 'RouteContract')) {
@@ -448,6 +457,13 @@ final class _RouteImplementationModel {
         element,
       );
     }
+    if (_RouteGenerator._implementation.annotationsOfExact(element).length !=
+        1) {
+      _fail(
+        'Declaration requires exactly one CCRouteImplementation annotation.',
+        element,
+      );
+    }
     final constructor = element.unnamedConstructor;
     if (constructor == null || constructor.isFactory) {
       _fail(
@@ -705,6 +721,15 @@ List<_ComponentCommandDependencyModel> _readComponentCommandDependencies(
         owner,
       );
     }
+    if (_componentCommandContractChecker
+            .annotationsOfExact(commandElement)
+            .length !=
+        1) {
+      _fail(
+        'Contract requires exactly one CCCommandContract annotation.',
+        commandElement,
+      );
+    }
     final contractOwner = annotation
         .getField('componentId')
         ?.getField('value')
@@ -878,6 +903,15 @@ List<_ComponentServiceDependencyModel> _readComponentServiceDependencies(
         'CCServiceDependency<${contractType.getDisplayString()}> requires T '
         'to be annotated with CCServiceContract.',
         owner,
+      );
+    }
+    if (_componentServiceContractChecker
+            .annotationsOfExact(contractElement)
+            .length !=
+        1) {
+      _fail(
+        'Contract requires exactly one CCServiceContract annotation.',
+        contractElement,
       );
     }
     final contractOwner = annotation

@@ -1,0 +1,51 @@
+00:00 +0: loading test/ui_analysis_test.dart
+00:00 +0: Service part Owner metadata proves the defining Library separately from location
+00:01 +0 -1: Service part Owner metadata proves the defining Library separately from location [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+  package:owner_contracts/core_root.dart
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 57:9  main.<fn>
+
+00:01 +0 -1: Service Owner metadata rejects query and fragment source identities
+00:01 +0 -2: Service Owner metadata rejects query and fragment source identities [E]
+  Expected: an object with length of <0>
+    Actual: [Instance of 'CCRouterAnalyzerDiagnostic']
+     Which: has length of <1>
+  ?query
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 85:9  main.<fn>
+
+00:01 +0 -2: Command part Owner metadata proves the defining Library separately from location
+00:02 +0 -3: Command part Owner metadata proves the defining Library separately from location [E]
+  Expected: an object with length of <1>
+    Actual: []
+     Which: has length of <0>
+  package:owner_contracts/core_root.dart
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 57:9  main.<fn>
+
+00:02 +0 -3: Command Owner metadata rejects query and fragment source identities
+00:02 +0 -4: Command Owner metadata rejects query and fragment source identities [E]
+  Expected: an object with length of <0>
+    Actual: [Instance of 'CCRouterAnalyzerDiagnostic']
+     Which: has length of <1>
+  ?query
+
+  package:matcher                  expect
+  test/ui_analysis_test.dart 85:9  main.<fn>
+
+00:02 +0 -4: Some tests failed.
+
+Failing tests:
+  test/ui_analysis_test.dart: Command Owner metadata rejects query and fragment source identities
+  test/ui_analysis_test.dart: Command part Owner metadata proves the defining Library separately from location
+  test/ui_analysis_test.dart: Service Owner metadata rejects query and fragment source identities
+  test/ui_analysis_test.dart: Service part Owner metadata proves the defining Library separately from location
+
+Consider enabling the flag chain-stack-traces to receive more detailed exceptions.
+For example, 'dart test --chain-stack-traces'.

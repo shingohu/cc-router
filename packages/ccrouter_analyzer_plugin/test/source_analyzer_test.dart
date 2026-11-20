@@ -20,6 +20,185 @@ void main() {
   });
   tearDown(() => root.deleteSync(recursive: true));
 
+  test('malformed import URIs do not crash source analysis', () {
+    for (final uri in [
+      'package:other/%FF.dart',
+      'package:other/src/ccrouter_generated/%FF.dart',
+      'package:other/src/ccrouter_generated/%00.dart',
+      'local%FF.dart',
+      'local.dart?query',
+      'package:/other/public.dart',
+    ]) {
+      final issues = CCRouterSourceAnalyzer.analyze(
+        source: "import '$uri';",
+        filePath: path.join(packageRoot, 'lib/src/probe.dart'),
+        packageRoot: packageRoot,
+        packageName: 'sample_component',
+      );
+      expect(issues, isEmpty, reason: uri);
+    }
+  });
+
+  test(
+    'invalid Package URI evidence cannot supply a parsed Contract namespace',
+    () {
+      for (final (uri, expected) in [
+        ('package:sample_component/api.dart', true),
+        ('package:sample_component/api.dart?query', false),
+        ('package:sample_component/api.dart#fragment', false),
+        ('package:/sample_component/api.dart', false),
+        ('package:sample_component/dir%2Ffile.dart', false),
+      ]) {
+        final issues = CCRouterSourceAnalyzer.analyze(
+          source:
+              '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import '$uri' as api;
+const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
+  serviceDependencies: [CCServiceDependency<api.SharedService>()]);
+''',
+          filePath: path.join(packageRoot, 'lib/src/probe.dart'),
+          packageRoot: packageRoot,
+          packageName: 'consumer',
+          contractOwners: _localOwnerIndex(),
+        );
+        expect(
+          issues.any(
+            (issue) =>
+                issue.code == 'ccrouter_component_owner_dependency_missing',
+          ),
+          expected,
+          reason: uri,
+        );
+      }
+    },
+  );
+
+  test(
+    'parser-only dependency aliases require proven constructors and literal lists',
+    () {
+      for (final kind in ['Service', 'Command']) {
+        for (final (declaration, collection, expected) in [
+          ('', "[CC${kind}Dependency<Shared>(alias: 'hashCode')]", true),
+          ('', "[CC${kind}Dependency<Shared>(alias: computed)]", false),
+          (
+            '',
+            "[...other, CC${kind}Dependency<Shared>(alias: 'hashCode')]",
+            false,
+          ),
+          ('', 'other', false),
+          (
+            "Object CC${kind}Dependency<T>({String? alias}) => Object();",
+            "[CC${kind}Dependency<Shared>(alias: 'hashCode')]",
+            false,
+          ),
+          (
+            'class CCComponent { const CCComponent({Object? ${kind.toLowerCase()}Dependencies}); }',
+            "[CC${kind}Dependency<Shared>(alias: 'hashCode')]",
+            false,
+          ),
+          (
+            'extension CCComponent on Object {}',
+            "[CC${kind}Dependency<Shared>(alias: 'hashCode')]",
+            false,
+          ),
+          (
+            'extension CC${kind}Dependency on Object {}',
+            "[CC${kind}Dependency<Shared>(alias: 'hashCode')]",
+            false,
+          ),
+        ]) {
+          final issues = CCRouterSourceAnalyzer.analyze(
+            source:
+                "import 'package:ccrouter_contracts/ccrouter_contracts.dart';\n"
+                '$declaration\nconst component = CCComponent(${kind.toLowerCase()}Dependencies: $collection);',
+            filePath: path.join(packageRoot, 'lib/src/probe.dart'),
+            packageRoot: packageRoot,
+            packageName: 'sample_component',
+          );
+          expect(
+            issues.any((issue) => issue.code == 'ccrouter_alias_invalid'),
+            expected,
+            reason: '$kind: $declaration $collection',
+          );
+        }
+      }
+    },
+  );
+
+  for (final (label, imports, declaration, type) in [
+    (
+      'local type shadows an imported Contract',
+      "import 'package:owner_contracts/owner_contracts.dart' show SharedService;",
+      'class SharedService {}',
+      'SharedService',
+    ),
+    (
+      'hidden Contract is not an imported type',
+      "import 'package:owner_contracts/owner_contracts.dart' as api hide SharedService;\nimport 'package:other/other.dart' as api show SharedService;",
+      '',
+      'api.SharedService',
+    ),
+    (
+      'conditional Contract namespace is unknown',
+      "import 'package:owner_contracts/owner_contracts.dart' if (dart.library.io) 'package:other/other.dart' as api show SharedService;",
+      '',
+      'api.SharedService',
+    ),
+    (
+      'conditional competing namespace is unknown',
+      "import 'package:owner_contracts/owner_contracts.dart' as api show SharedService;\nimport 'package:other/empty.dart' if (dart.library.io) 'package:other/other.dart' as api show SharedService;",
+      '',
+      'api.SharedService',
+    ),
+  ]) {
+    test('parser-only Owner checks defer when $label', () {
+      final issues = CCRouterSourceAnalyzer.analyze(
+        source:
+            '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+$imports
+$declaration
+const component = CCComponent(id: CCComponentId('consumer'), version: '1.0.0',
+  serviceDependencies: [CCServiceDependency<$type>()]);
+''',
+        filePath: path.join(packageRoot, 'lib/src/probe.dart'),
+        packageRoot: packageRoot,
+        packageName: 'consumer',
+        contractOwners: _ownerIndex(),
+      );
+      expect(
+        issues.map((issue) => issue.code),
+        isNot(contains('ccrouter_component_owner_dependency_missing')),
+      );
+    });
+  }
+
+  test('parser-only Owner checks defer shadowed or ambiguous constructors', () {
+    for (final extra in [
+      "import 'unknown.dart';",
+      'class CCComponent { const CCComponent({Object? serviceDependencies}); }',
+      'Object CCServiceDependency<T>() => Object();',
+    ]) {
+      final issues = CCRouterSourceAnalyzer.analyze(
+        source:
+            '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+$extra
+const component = CCComponent(serviceDependencies: [CCServiceDependency<SharedService>()]);
+''',
+        filePath: path.join(packageRoot, 'lib/src/component.dart'),
+        packageRoot: packageRoot,
+        packageName: 'sample_component',
+        contractOwners: _localOwnerIndex(),
+      );
+      expect(
+        issues.map((issue) => issue.code),
+        isNot(contains('ccrouter_component_owner_dependency_missing')),
+      );
+    }
+  });
+
   final routeCases =
       jsonDecode(
             File(
@@ -203,6 +382,89 @@ Completion receiveAlias(Object event) async {}
       contains('ccrouter_cross_package_generated_import'),
     );
   });
+
+  test('file URI namespaces respect generated Package boundaries', () {
+    final foreign = File(
+      path.join(root.path, 'other/lib/src/ccrouter_generated/hidden.dart'),
+    ).uri;
+    final own = File(
+      path.join(packageRoot, 'lib/src/ccrouter_generated/own.dart'),
+    ).uri;
+    final public = File(path.join(root.path, 'other/lib/other.dart')).uri;
+    for (final (uri, forbidden) in [
+      (foreign.toString(), true),
+      if (!Platform.isWindows)
+        (foreign.replace(host: 'localhost').toString(), true),
+      (own.toString(), false),
+      (public.toString(), false),
+      (foreign.replace(query: 'query').toString(), true),
+      (foreign.replace(fragment: 'fragment').toString(), false),
+      (foreign.resolve('%FF.dart').toString(), false),
+      (foreign.resolve('%00.dart').toString(), false),
+    ]) {
+      for (final source in [
+        "import '$uri';",
+        "export '$uri';",
+        "import 'public.dart' if (dart.library.io) '$uri';",
+      ]) {
+        final issues = CCRouterSourceAnalyzer.analyze(
+          source: source,
+          filePath: path.join(packageRoot, 'lib/src/page.dart'),
+          packageRoot: packageRoot,
+          packageName: 'sample_component',
+        ).where((d) => d.code == 'ccrouter_cross_package_generated_import');
+        expect(issues, hasLength(forbidden ? 1 : 0), reason: source);
+        for (final issue in issues) {
+          expect(
+            source.substring(issue.offset, issue.offset + issue.length),
+            "'$uri'",
+          );
+        }
+      }
+    }
+  });
+
+  test(
+    'native aliases preserve own and foreign generated boundaries',
+    () {
+      final aliases = Directory.systemTemp.createTempSync(
+        'ccrouter_source_alias_',
+      );
+      addTearDown(() => aliases.deleteSync(recursive: true));
+      final own = File(
+        path.join(packageRoot, 'lib/src/ccrouter_generated/own.dart'),
+      )..createSync(recursive: true);
+      final foreign = File(
+        path.join(root.path, 'other/lib/src/ccrouter_generated/hidden.dart'),
+      )..createSync(recursive: true);
+      own.writeAsStringSync('const own = 1;');
+      foreign.writeAsStringSync('const hidden = 1;');
+      final ownAlias = Link(path.join(aliases.path, 'own'))
+        ..createSync(packageRoot);
+      final hiddenAlias = Link(path.join(packageRoot, 'lib/public_alias.dart'))
+        ..createSync(foreign.path);
+      for (final (uri, forbidden) in [
+        (
+          File(
+            path.join(ownAlias.path, 'lib/src/ccrouter_generated/own.dart'),
+          ).uri.toString(),
+          false,
+        ),
+        (hiddenAlias.uri.toString(), true),
+        ('package:sample_component/public_alias.dart', true),
+        ('../public_alias.dart', true),
+      ]) {
+        final issues = CCRouterSourceAnalyzer.analyze(
+          source: "import '$uri';",
+          filePath: path.join(packageRoot, 'lib/src/page.dart'),
+          packageRoot: packageRoot,
+          packageName: 'sample_component',
+        ).where((d) => d.code == 'ccrouter_cross_package_generated_import');
+        expect(issues, hasLength(forbidden ? 1 : 0), reason: uri);
+      }
+    },
+    skip: Platform.isWindows ? 'POSIX symlink fixture' : false,
+  );
 
   test('checks every conditional import and export at its exact URI', () {
     const foreign = 'package:other/src/ccrouter_generated/host/x.dart';
@@ -483,8 +745,10 @@ Future<void> initializeRequired() async {}
     () {
       final diagnostics = CCRouterSourceAnalyzer.analyze(
         source: '''
-import 'package:owner_contracts/owner_contracts.dart';
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:owner_contracts/owner_contracts.dart' show SharedService, RunCommand, ownerComponentId;
 
+const consumerComponentId = CCComponentId('consumer.component');
 const consumerComponent = CCComponent(
   id: consumerComponentId,
   version: '1.0.0',
@@ -519,8 +783,10 @@ const consumerComponent = CCComponent(
   test('accepts the exact required owner dependency', () {
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '''
-import 'package:owner_contracts/owner_contracts.dart';
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:owner_contracts/owner_contracts.dart' show SharedService, RunCommand, ownerComponentId;
 
+const consumerComponentId = CCComponentId('consumer.component');
 const consumerComponent = CCComponent(
   id: consumerComponentId,
   version: '1.0.0',
@@ -543,9 +809,11 @@ const consumerComponent = CCComponent(
   test('accepts a local const alias of the required owner', () {
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '''
-import 'package:owner_contracts/owner_contracts.dart';
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:owner_contracts/owner_contracts.dart' show SharedService, RunCommand, ownerComponentId;
 
 const sharedOwner = ownerComponentId;
+const consumerComponentId = CCComponentId('consumer.component');
 const consumerComponent = CCComponent(
   id: consumerComponentId,
   version: '1.0.0',
@@ -577,6 +845,7 @@ const consumerComponent = CCComponent(
           '''
 const ownerComponentId = CCComponentId('owner.component');
 $aliases
+const consumerComponentId = CCComponentId('consumer.component');
 const consumerComponent = CCComponent(
   id: CCComponentId('consumer.component'),
   version: '1.0.0',
@@ -603,9 +872,11 @@ const consumerComponent = CCComponent(
     () {
       final cycleDiagnostics = CCRouterSourceAnalyzer.analyze(
         source: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 const ownerComponentId = CCComponentId('owner.component');
 const cycleA = cycleB;
 const cycleB = cycleA;
+const consumerComponentId = CCComponentId('consumer.component');
 const consumerComponent = CCComponent(
   id: CCComponentId('consumer.component'),
   version: '1.0.0',
@@ -625,8 +896,10 @@ const consumerComponent = CCComponent(
 
       final wrongOwnerDiagnostics = CCRouterSourceAnalyzer.analyze(
         source: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
 const ownerComponentId = CCComponentId('owner.component');
 const wrongOwner = CCComponentId('wrong.component');
+const consumerComponentId = CCComponentId('consumer.component');
 const consumerComponent = CCComponent(
   id: CCComponentId('consumer.component'),
   version: '1.0.0',
@@ -654,8 +927,10 @@ const consumerComponent = CCComponent(
   test('does not let an optional dependency satisfy a Service consumer', () {
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '''
-import 'package:owner_contracts/owner_contracts.dart';
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:owner_contracts/owner_contracts.dart' show SharedService, RunCommand, ownerComponentId;
 
+const consumerComponentId = CCComponentId('consumer.component');
 const consumerComponent = CCComponent(
   id: consumerComponentId,
   version: '1.0.0',
@@ -678,9 +953,11 @@ const consumerComponent = CCComponent(
   test('declines dependency inference for a spread list', () {
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '''
-import 'package:owner_contracts/owner_contracts.dart';
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+import 'package:owner_contracts/owner_contracts.dart' show SharedService, RunCommand, ownerComponentId;
 
 const baseDependencies = <CCComponentId>[];
+const consumerComponentId = CCComponentId('consumer.component');
 const consumerComponent = CCComponent(
   id: consumerComponentId,
   version: '1.0.0',
@@ -874,7 +1151,7 @@ class Owner {
     );
   });
 
-  test('reports mutually exclusive Route and InitTask arguments', () {
+  test('reports Route conflict and defers unresolved InitTask arguments', () {
     final diagnostics = CCRouterSourceAnalyzer.analyze(
       source: '''
 import 'package:ccrouter_contracts/ccrouter_contracts.dart';
@@ -901,7 +1178,7 @@ void initializeFeature() {}
       diagnostics.where(
         (item) => item.code == 'ccrouter_annotation_arguments_conflict',
       ),
-      hasLength(2),
+      hasLength(1),
     );
   });
 
@@ -991,6 +1268,23 @@ abstract interface class Probe {}
         );
       }
     }
+  });
+
+  test('adjacent Contract literal strings use the same ID and alias rules', () {
+    final diagnostics = CCRouterSourceAnalyzer.analyze(
+      source: '''
+import 'package:ccrouter_contracts/ccrouter_contracts.dart';
+@CCServiceContract(componentId: CCComponentId('owner'), id: 'Bad' ' ID', alias: 'hash' 'Code')
+abstract interface class Probe {}
+''',
+      filePath: path.join(packageRoot, 'lib/src/adjacent.dart'),
+      packageRoot: packageRoot,
+      packageName: 'sample_component',
+    );
+    expect(
+      diagnostics.map((issue) => issue.code),
+      containsAll(['ccrouter_identifier_invalid', 'ccrouter_alias_invalid']),
+    );
   });
 
   test(

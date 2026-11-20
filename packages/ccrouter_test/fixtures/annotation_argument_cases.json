@@ -1,0 +1,114 @@
+[
+  {
+    "name": "Route null pattern with patterns",
+    "kind": "route",
+    "arguments": "pattern: null, patterns: [CCPathPattern('/probe')]",
+    "conflict": false,
+    "parserConflict": false,
+    "fixes": 0
+  },
+  {
+    "name": "Route pattern with empty patterns",
+    "kind": "route",
+    "arguments": "pattern: CCPathPattern('/probe'), patterns: []",
+    "conflict": false,
+    "parserConflict": false,
+    "fixes": 0
+  },
+  {
+    "name": "Route constant null pattern",
+    "kind": "route",
+    "arguments": "pattern: absentPattern, patterns: [CCPathPattern('/probe')]",
+    "conflict": false,
+    "parserConflict": false,
+    "fixes": 0
+  },
+  {
+    "name": "Route two active patterns",
+    "kind": "route",
+    "arguments": "pattern: CCPathPattern('/probe'), patterns: [CCPathPattern('/other')]",
+    "conflict": true,
+    "parserConflict": true,
+    "fixes": 2
+  },
+  {
+    "name": "InitTask null contract with ID",
+    "kind": "task",
+    "arguments": "contract: null, id: 'probe.task'",
+    "conflict": false,
+    "parserConflict": false,
+    "fixes": 0
+  },
+  {
+    "name": "InitTask constant null contract",
+    "kind": "task",
+    "arguments": "contract: absentTask, id: 'probe.task'",
+    "conflict": false,
+    "parserConflict": false,
+    "fixes": 0
+  },
+  {
+    "name": "InitTask contract with null ID",
+    "kind": "task",
+    "arguments": "contract: sharedTask, id: null",
+    "conflict": false,
+    "parserConflict": false,
+    "fixes": 0
+  },
+  {
+    "name": "InitTask contract with constant null ID",
+    "kind": "task",
+    "arguments": "contract: sharedTask, id: absentId",
+    "conflict": false,
+    "parserConflict": false,
+    "fixes": 0
+  },
+  {
+    "name": "InitTask two active identities",
+    "kind": "task",
+    "arguments": "contract: sharedTask, id: 'probe.task'",
+    "conflict": true,
+    "parserConflict": false,
+    "fixes": 2
+  },
+  {
+    "name": "InitTask two null identities",
+    "kind": "task",
+    "arguments": "contract: null, id: null",
+    "conflict": true,
+    "parserConflict": true,
+    "fixes": 0
+  },
+  {
+    "name": "Route Contract null pattern with patterns",
+    "kind": "routeContract",
+    "arguments": "pattern: null, patterns: [CCPathPattern('/probe')]",
+    "conflict": false,
+    "parserConflict": false,
+    "fixes": 0
+  },
+  {
+    "name": "Route Contract pattern with empty patterns",
+    "kind": "routeContract",
+    "arguments": "pattern: CCPathPattern('/probe'), patterns: []",
+    "conflict": false,
+    "parserConflict": false,
+    "fixes": 0
+  },
+  {
+    "name": "Route Contract constant null pattern",
+    "kind": "routeContract",
+    "arguments": "pattern: absentPattern, patterns: [CCPathPattern('/probe')]",
+    "conflict": false,
+    "parserConflict": false,
+    "fixes": 0
+  },
+  {
+    "name": "Route Contract two active patterns",
+    "kind": "routeContract",
+    "arguments": "pattern: CCPathPattern('/probe'), patterns: [CCPathPattern('/other')]",
+    "conflict": true,
+    "parserConflict": true,
+    "fixes": 2
+  }
+]

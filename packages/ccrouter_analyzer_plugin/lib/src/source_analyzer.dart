@@ -1,7 +1,9 @@
 import 'dart:io';
 
 import 'package:analyzer/dart/analysis/utilities.dart';
+import 'package:analyzer/dart/analysis/uri_converter.dart';
 import 'package:analyzer/dart/ast/ast.dart';
+import 'package:analyzer/dart/element/element.dart' show ConstructorElement;
 import 'package:analyzer/dart/element/type.dart';
 import 'package:analyzer/source/line_info.dart';
 import 'package:analyzer_plugin/protocol/protocol_common.dart';
@@ -17,6 +19,8 @@ import 'package:path/path.dart' as path;
 import 'package:yaml/yaml.dart';
 
 part 'route_configuration_analysis.dart';
+part 'dependency_alias_analysis.dart';
+part 'source_quick_fixes.dart';
 
 /// Describes one CCRouter-specific diagnostic before it is converted to the
 /// Analysis Server protocol.
@@ -238,6 +242,7 @@ abstract final class CCRouterSourceAnalyzer {
   /// [resolvedUnit] must represent exactly [source]; the plugin checks current
   /// overlay identity after resolution; each rule declines missing symbol proof.
   /// [projectRole] reuses cached Host/Package evidence when provided.
+  /// [uriConverter] borrows SDK target mapping for imports without type resolution.
   static List<CCRouterAnalyzerDiagnostic> analyze({
     required String source,
     required String filePath,
@@ -245,6 +250,7 @@ abstract final class CCRouterSourceAnalyzer {
     String? packageName,
     CCRouterContractOwnerIndex? contractOwners,
     CompilationUnit? resolvedUnit,
+    UriConverter? uriConverter,
     CCRouterAnalyzerProjectRole? projectRole,
   }) => analyzeWithLineInfo(
     source: source,
@@ -253,6 +259,7 @@ abstract final class CCRouterSourceAnalyzer {
     packageName: packageName,
     contractOwners: contractOwners,
     resolvedUnit: resolvedUnit,
+    uriConverter: uriConverter,
     projectRole: projectRole,
   ).diagnostics;
 
@@ -260,6 +267,7 @@ abstract final class CCRouterSourceAnalyzer {
   /// [resolvedUnit] optionally supplies current type/constant identities. Missing
   /// semantic information suppresses lifecycle rules and uncertain type errors.
   /// [projectRole] may reuse the plugin's cached Package role.
+  /// [uriConverter] is used synchronously and is never retained after this call.
   static CCRouterSourceAnalysis analyzeWithLineInfo({
     required String source,
     required String filePath,
@@ -267,6 +275,7 @@ abstract final class CCRouterSourceAnalyzer {
     String? packageName,
     CCRouterContractOwnerIndex? contractOwners,
     CompilationUnit? resolvedUnit,
+    UriConverter? uriConverter,
     CCRouterAnalyzerProjectRole? projectRole,
   }) {
     // Generated libraries are implementation artifacts. Their imports are
@@ -305,6 +314,33 @@ abstract final class CCRouterSourceAnalyzer {
     );
     final unit = resolvedUnit ?? parsed.unit;
     final diagnostics = <CCRouterAnalyzerDiagnostic>[];
+    // Both identities must resolve through the current SDK configuration.
+    final libraryPaths = <Uri, String?>{};
+    String? libraryPath(Uri uri) => libraryPaths.putIfAbsent(uri, () {
+      try {
+        final target = uriConverter?.uriToPath(uri);
+        return target == null ? null : _nativeSourcePath(target);
+      } on Object {
+        return null;
+      }
+    });
+    bool matchesLibrary(Uri actual, String canonical) {
+      if (actual.toString() == canonical) return true;
+      final actualPath = libraryPath(actual);
+      return actualPath != null &&
+          actualPath == libraryPath(Uri.parse(canonical));
+    }
+
+    final resolvedTargets = <int, String?>{
+      for (final directive in unit.directives.whereType<NamespaceDirective>())
+        if (directive.configurations.isEmpty)
+          directive.uri.offset: switch (directive) {
+            ImportDirective d =>
+              d.libraryImport?.importedLibrary?.firstFragment.source.fullName,
+            ExportDirective d =>
+              d.libraryExport?.exportedLibrary?.firstFragment.source.fullName,
+          },
+    };
     for (final directive
         in parsed.unit.directives.whereType<NamespaceDirective>()) {
       for (final reference in [
@@ -312,7 +348,15 @@ abstract final class CCRouterSourceAnalyzer {
         ...directive.configurations.map((configuration) => configuration.uri),
       ]) {
         final uri = reference.stringValue;
-        if (uri == null || !_isGeneratedImport(uri, filePath, root, owner)) {
+        if (uri == null ||
+            !_isGeneratedImport(
+              uri,
+              filePath,
+              root,
+              owner,
+              resolvedTarget: resolvedTargets[reference.offset],
+              uriConverter: uriConverter,
+            )) {
           continue;
         }
         diagnostics.add(
@@ -335,6 +379,7 @@ abstract final class CCRouterSourceAnalyzer {
       filePath: filePath,
       packageRoot: root,
       projectRole: projectRole,
+      matchesLibrary: matchesLibrary,
     )) {
       diagnostics.add(
         CCRouterAnalyzerDiagnostic(
@@ -385,6 +430,7 @@ abstract final class CCRouterSourceAnalyzer {
       packageRoot: root,
       packageName: owner,
       projectRole: projectRole,
+      matchesLibrary: matchesLibrary,
     )) {
       diagnostics.add(
         CCRouterAnalyzerDiagnostic(
@@ -610,6 +656,7 @@ abstract final class CCRouterSourceAnalyzer {
       if (name == null) continue;
       diagnostics.addAll(_argumentRuleDiagnostics(annotation, name));
     }
+    diagnostics.addAll(_dependencyAliasDiagnostics(unit));
     return diagnostics;
   }
 
@@ -673,8 +720,7 @@ abstract final class CCRouterSourceAnalyzer {
       diagnostics.addAll(_RouteConfigurationAnalysis.diagnostics(annotation));
     }
     if ((annotationName == 'CCRoute' || annotationName == 'CCRouteContract') &&
-        _namedArgument(annotation, 'pattern') != null &&
-        _namedArgument(annotation, 'patterns') != null) {
+        _hasRoutePatternConflict(annotation)) {
       diagnostics.add(
         _ruleDiagnostic(
           annotation,
@@ -688,7 +734,7 @@ abstract final class CCRouterSourceAnalyzer {
     if (annotationName == 'CCInitTask' && _hasCompleteArguments(annotation)) {
       final contract = _nonNullNamedArgument(annotation, 'contract');
       final id = _nonNullNamedArgument(annotation, 'id');
-      if (contract == id) {
+      if (contract != null && id != null && contract == id) {
         diagnostics.add(
           _ruleDiagnostic(
             annotation,
@@ -794,19 +840,65 @@ abstract final class CCRouterSourceAnalyzer {
     return arguments != null && !arguments.rightParenthesis.isSynthetic;
   }
 
-  /// Whether one named argument is present and not the literal `null`.
-  static bool _nonNullNamedArgument(Annotation annotation, String name) {
+  /// Proves argument activity from resolved constants or safe literal syntax.
+  /// Unknown nullable references defer instead of being mistaken for a value.
+  static bool? _nonNullNamedArgument(Annotation annotation, String name) {
     final expression = _namedArgument(annotation, name);
-    return expression != null && expression is! NullLiteral;
+    if (expression == null || expression is NullLiteral) return false;
+    final value = annotation.elementAnnotation
+        ?.computeConstantValue()
+        ?.getField(name);
+    if (value != null) return !value.isNull;
+    if (expression is StringLiteral)
+      return expression.stringValue == null ? null : true;
+    if (CCRouterResolvedSymbols.isFrameworkConstructor(
+      expression,
+      'CCInitTaskContract',
+      'initialization',
+    ))
+      return true;
+    return null;
+  }
+
+  /// Shares the Generator's active pattern versus nonempty pattern-list rule.
+  /// Explicit null/empty defaults and unproven computed lists never create edits.
+  static bool _hasRoutePatternConflict(Annotation annotation) {
+    final value = annotation.elementAnnotation?.computeConstantValue();
+    if (value != null) {
+      final pattern = value.getField('pattern');
+      final patterns = value.getField('patterns')?.toListValue();
+      return pattern != null &&
+          !pattern.isNull &&
+          patterns != null &&
+          patterns.isNotEmpty;
+    }
+    final pattern = _namedArgument(annotation, 'pattern');
+    final patterns = _namedArgument(annotation, 'patterns');
+    if (pattern == null ||
+        patterns is! ListLiteral ||
+        !patterns.elements.any((entry) => entry is Expression))
+      return false;
+    return const ['CCPathPattern', 'CCUriPattern', 'CCRegexPattern'].any(
+      (name) => CCRouterResolvedSymbols.isFrameworkConstructor(
+        pattern,
+        name,
+        'route_pattern',
+      ),
+    );
   }
 
   /// Reads a string only when the editor buffer contains a literal value.
   static String? _literalString(Expression? expression) =>
-      expression is SimpleStringLiteral ? expression.value : null;
+      expression is StringLiteral ? expression.stringValue : null;
 
   /// Reads the first string argument of a named constructor type.
   static String? _constructorString(Expression? expression, String typeName) {
-    final arguments = _constructorArguments(expression, typeName);
+    if (expression == null) return null;
+    final arguments = CCRouterResolvedSymbols.constructorArguments(
+      expression,
+      typeName,
+      'initialization',
+    )?.arguments;
     if (arguments == null) return null;
     return arguments.isEmpty ? null : _literalString(arguments.first);
   }
@@ -814,12 +906,36 @@ abstract final class CCRouterSourceAnalyzer {
   /// Evaluates literal `Duration` expressions without executing user code.
   static int? _durationMicroseconds(Expression? expression) {
     if (expression == null) return null;
-    if (expression is PrefixedIdentifier &&
+    final element = switch (expression) {
+      InstanceCreationExpression e => e.constructorName.element,
+      MethodInvocation e => e.methodName.element,
+      PrefixedIdentifier e => e.identifier.element,
+      PropertyAccess e => e.propertyName.element,
+      _ => null,
+    };
+    if (element != null) {
+      final owner = element.enclosingElement;
+      if (owner?.name != 'Duration' ||
+          owner?.library?.uri.toString() != 'dart:core')
+        return null;
+      if (element.name == 'zero') return 0;
+      if (element is! ConstructorElement) return null;
+    } else if (!_hasUnambiguousCoreDuration(expression)) {
+      return null;
+    }
+    if (element == null &&
+        expression is PrefixedIdentifier &&
         expression.prefix.name == 'Duration' &&
         expression.identifier.name == 'zero') {
       return 0;
     }
-    final arguments = _constructorArguments(expression, 'Duration');
+    final arguments = element != null
+        ? switch (expression) {
+            InstanceCreationExpression e => e.argumentList.arguments,
+            MethodInvocation e => e.argumentList.arguments,
+            _ => null,
+          }
+        : _constructorArguments(expression, 'Duration');
     if (arguments == null) return null;
     var total = 0;
     for (final argument in arguments) {
@@ -830,6 +946,60 @@ abstract final class CCRouterSourceAnalyzer {
       total += value * factor;
     }
     return total;
+  }
+
+  /// Parser-only Duration checks require an unshadowed, visible SDK binding.
+  /// Ambiguous imports and partial libraries wait for semantic resolution.
+  static bool _hasUnambiguousCoreDuration(Expression expression) {
+    final unit = expression.thisOrAncestorOfType<CompilationUnit>();
+    if (unit == null ||
+        unit.declaredFragment != null ||
+        unit.directives.any((d) => d is PartDirective || d is PartOfDirective))
+      return false;
+    if (unit.declarations.any(
+      (d) => switch (d) {
+        NamedCompilationUnitMember d => d.name.lexeme == 'Duration',
+        ExtensionDeclaration d => d.name?.lexeme == 'Duration',
+        TopLevelVariableDeclaration d => d.variables.variables.any(
+          (v) => v.name.lexeme == 'Duration',
+        ),
+        _ => false,
+      },
+    ))
+      return false;
+    final imports = unit.directives.whereType<ImportDirective>();
+    var visible = !imports.any((d) => d.uri.stringValue == 'dart:core');
+    for (final directive in imports) {
+      if (directive.prefix != null ||
+          !directive.combinators.every(
+            (c) => switch (c) {
+              ShowCombinator c => c.shownNames.any((n) => n.name == 'Duration'),
+              HideCombinator c => !c.hiddenNames.any(
+                (n) => n.name == 'Duration',
+              ),
+            },
+          ))
+        continue;
+      if (directive.configurations.isNotEmpty ||
+          directive.deferredKeyword != null)
+        return false;
+      final uri = directive.uri.stringValue;
+      if (uri == 'dart:core') {
+        visible = true;
+        continue;
+      }
+      if (uri != null &&
+          (uri.startsWith('dart:') ||
+              const {
+                'package:ccrouter/ccrouter.dart',
+                'package:ccrouter_contracts/ccrouter_contracts.dart',
+                'package:ccrouter_ui/ccrouter_ui.dart',
+                'package:ccrouter_contracts/ccrouter_ui_contracts.dart',
+              }.contains(uri)))
+        continue;
+      return false;
+    }
+    return visible;
   }
 
   /// Reads arguments from an unresolved constructor-shaped invocation.
@@ -936,32 +1106,79 @@ abstract final class CCRouterSourceAnalyzer {
   }
 
   /// Determines whether [uri] reaches another Package's generated internals.
+  /// File URIs use the same native path boundary as relative imports.
+  /// Malformed editor URIs defer to Dart diagnostics without crashing Plugin analysis.
   static bool _isGeneratedImport(
     String uri,
     String sourcePath,
     String packageRoot,
-    String owner,
-  ) {
-    final parsed = Uri.tryParse(uri);
-    if (parsed == null) return false;
-    if (parsed.scheme == 'package') {
-      final segments = parsed.pathSegments;
-      return segments.length >= 3 &&
-          segments[1] == 'src' &&
-          segments[2] == 'ccrouter_generated' &&
-          segments.first != owner;
+    String owner, {
+    String? resolvedTarget,
+    UriConverter? uriConverter,
+  }) {
+    try {
+      final parsed = Uri.tryParse(uri);
+      if (parsed == null || parsed.hasFragment) return false;
+      final String targetPath;
+      if (parsed.scheme == 'package') {
+        final segments = parsed.pathSegments;
+        if (segments.length < 2 || segments.any((s) => s.contains('\u0000')))
+          return false;
+        final relative = path.posix
+            .normalize(segments.skip(1).join('/'))
+            .split('/');
+        final generated =
+            relative.length >= 3 &&
+            relative[0] == 'src' &&
+            relative[1] == 'ccrouter_generated';
+        if (generated && segments.first != owner) return true;
+        String? mappedTarget = resolvedTarget;
+        if (uriConverter != null) {
+          try {
+            mappedTarget = uriConverter.uriToPath(parsed);
+          } on Object {
+            mappedTarget = null;
+          }
+        }
+        if (mappedTarget != null) {
+          targetPath = mappedTarget;
+        } else if (segments.first == owner) {
+          targetPath = path.join(
+            packageRoot,
+            'lib',
+            path.joinAll(segments.skip(1)),
+          );
+        } else {
+          return false;
+        }
+      } else {
+        if (parsed.hasScheme && parsed.scheme != 'file') return false;
+        targetPath = path.fromUri(Uri.file(sourcePath).resolveUri(parsed));
+      }
+      if (targetPath.contains('\u0000')) return false;
+      final target = _nativeSourcePath(targetPath);
+      final ownGenerated = _nativeSourcePath(
+        path.join(packageRoot, 'lib', 'src', 'ccrouter_generated'),
+      );
+      return path.isWithin(ownGenerated, target) == false &&
+          target.contains(
+            '${path.separator}lib${path.separator}src${path.separator}ccrouter_generated${path.separator}',
+          );
+    } on FormatException {
+      return false;
+    } on UnsupportedError {
+      return false;
     }
-    if (parsed.hasScheme) return false;
-    final target = path.normalize(
-      Uri.file(sourcePath).resolveUri(parsed).toFilePath(),
-    );
-    final ownGenerated = path.normalize(
-      path.join(packageRoot, 'lib', 'src', 'ccrouter_generated'),
-    );
-    return path.isWithin(ownGenerated, target) == false &&
-        target.contains(
-          '${path.separator}lib${path.separator}src${path.separator}ccrouter_generated${path.separator}',
-        );
+  }
+
+  /// Resolves existing aliases; missing files retain their lexical editor path.
+  static String _nativeSourcePath(String value) {
+    final file = File(value).absolute;
+    try {
+      return path.normalize(file.resolveSymbolicLinksSync());
+    } on FileSystemException {
+      return path.normalize(file.path);
+    }
   }
 
   /// Returns whether [filePath] itself is a generated CCRouter source file.
