@@ -1229,6 +1229,51 @@ void main() {
     expect(diagnostic.rootCauseGroup, 'missing-owner:missing');
   });
 
+  test(
+    'quoted IDs retain metadata order and every distinct source location',
+    () {
+      final result = CCRouteWorkspaceValidator.validate([
+        for (final (id, file) in [
+          ('orders.z', 'z'),
+          ('orders.a', 'a'),
+          ('orders.a', 'duplicate'),
+        ])
+          document(
+            components: file == 'z' ? [component('orders')] : [],
+            routes: [route(id, 'orders')],
+            source: 'lib/$file.dart',
+          ),
+      ]);
+      final conflict = result.diagnostics.singleWhere(
+        (d) => d.message.contains('ambiguous patterns'),
+      );
+      expect(conflict.message, startsWith('Routes "orders.a" and "orders.z"'));
+      expect(conflict.primaryLocation?.uri, 'package:orders/z.dart');
+      expect(conflict.relatedLocations.map((r) => r.location.uri), [
+        'package:orders/a.dart',
+        'package:orders/duplicate.dart',
+      ]);
+    },
+  );
+
+  test('malformed ID containing a quote keeps its diagnostic location', () {
+    const id = 'orders.a"b';
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: [],
+        source: 'lib/service.dart',
+        serviceContracts: [
+          {'id': id, 'componentId': 'orders', 'alias': 'bad-name'},
+        ],
+      ),
+    ]);
+    final diagnostic = result.diagnostics.singleWhere(
+      (d) => d.message.contains('invalid Client alias'),
+    );
+    expect(diagnostic.primaryLocation?.uri, 'package:orders/service.dart');
+  });
+
   test('missing owner diagnostics retain exact authored locations', () {
     final missing = route(
       'orders.detail',

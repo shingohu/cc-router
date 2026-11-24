@@ -1140,11 +1140,14 @@ abstract final class CCRouteWorkspaceValidator {
       );
     }
 
+    late final positionsById = _diagnosticPositionsById(entities);
     for (final error in errors) {
       if (_isMissingOwnerCascade(error, missingOwners)) continue;
-      final matches = entities
-          .where((entity) => error.contains('"${entity.id}"'))
-          .toList(growable: false);
+      final matches = _matchingDiagnosticEntities(
+        error,
+        entities,
+        positionsById,
+      );
       final primary = matches.firstOrNull;
       diagnostics.add(
         CCWorkspaceDiagnostic(
@@ -1169,6 +1172,46 @@ abstract final class CCRouteWorkspaceValidator {
     }
     diagnostics.sort((left, right) => left.message.compareTo(right.message));
     return List.unmodifiable(diagnostics);
+  }
+
+  /// Indexes declaration positions for attribution, with literal fallback for quoted IDs.
+  static Map<String, List<int>>? _diagnosticPositionsById(
+    List<_WorkspaceDiagnosticEntity> entities,
+  ) {
+    final positions = <String, List<int>>{};
+    for (var i = 0; i < entities.length; i++) {
+      final id = entities[i].id;
+      // A malformed ID can contain a delimiter and span several quoted fragments.
+      if (id.contains('"')) return null;
+      (positions[id] ??= []).add(i);
+    }
+    return positions;
+  }
+
+  /// Matches quoted IDs once per declaration in original metadata order.
+  static List<_WorkspaceDiagnosticEntity> _matchingDiagnosticEntities(
+    String message,
+    List<_WorkspaceDiagnosticEntity> entities,
+    Map<String, List<int>>? positionsById,
+  ) {
+    if (positionsById == null) {
+      return entities
+          .where((entity) => message.contains('"${entity.id}"'))
+          .toList();
+    }
+    final positions = <int>{};
+    // Adjacent pairs include overlapping matches in malformed error text.
+    var start = message.indexOf('"');
+    while (start >= 0) {
+      final end = message.indexOf('"', start + 1);
+      if (end < 0) break;
+      final matches = positionsById[message.substring(start + 1, end)];
+      if (matches != null) positions.addAll(matches);
+      start = end;
+    }
+    return [
+      for (final position in positions.toList()..sort()) entities[position],
+    ];
   }
 
   /// Enumerates source-bearing entities from generated metadata documents.
