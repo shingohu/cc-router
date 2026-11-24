@@ -1808,6 +1808,25 @@ void main() {
     expect(result.errors, contains(contains('ambiguous patterns')));
   });
 
+  test('rarest anchor retains both fixed and dynamic matches', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: [
+          route('orders.a', 'orders', pattern: '/a/:id/c'),
+          route('orders.b', 'orders', pattern: '/:id/b/c'),
+          route('orders.c', 'orders', pattern: '/a/b/:id'),
+          route('orders.d', 'orders', pattern: '/x/y/:id'),
+        ],
+      ),
+    ]);
+    expect(result.errors, [
+      'Routes "orders.a" and "orders.b" have ambiguous patterns "/a/:id/c" and "/:id/b/c" with equal specificity.',
+      'Routes "orders.a" and "orders.c" have ambiguous patterns "/a/:id/c" and "/a/b/:id" with equal specificity.',
+      'Routes "orders.b" and "orders.c" have ambiguous patterns "/:id/b/c" and "/a/b/:id" with equal specificity.',
+    ]);
+  });
+
   test('indexed candidates retain wildcard conflicts', () {
     final result = CCRouteWorkspaceValidator.validate([
       document(

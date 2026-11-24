@@ -94,6 +94,31 @@ final class _WorkspacePatternConflictIndex {
       yield* _entries;
       return;
     }
+    if (_wildcardEntries.isEmpty) {
+      // A prior pattern is either fixed or dynamic at an anchor, so the two
+      // posting lists are disjoint. Compare sizes before enumerating either.
+      Set<int>? bestFixed;
+      Set<int>? bestDynamic;
+      var smallestSize = _entries.length + 1;
+      for (final anchor in pattern.fixedSegments.entries) {
+        final fixed = _fixedEntries[anchor.key]?[anchor.value];
+        final dynamicIds = _dynamicEntries[anchor.key];
+        final size = (fixed?.length ?? 0) + (dynamicIds?.length ?? 0);
+        if (size == 0) return;
+        if (size < smallestSize) {
+          smallestSize = size;
+          bestFixed = fixed;
+          bestDynamic = dynamicIds;
+        }
+      }
+      for (final id in bestFixed ?? const <int>{}) {
+        yield _entries[id];
+      }
+      for (final id in bestDynamic ?? const <int>{}) {
+        yield _entries[id];
+      }
+      return;
+    }
     Set<int>? smallestCandidateIds;
     for (final anchor in pattern.fixedSegments.entries) {
       final candidateIds = <int>{
