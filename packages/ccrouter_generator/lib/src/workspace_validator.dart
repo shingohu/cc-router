@@ -332,6 +332,7 @@ abstract final class CCRouteWorkspaceValidator {
     final contributions = <String, Map<String, Object?>>{};
     final serviceContracts = <String, Map<String, Object?>>{};
     final serviceImplementations = <String, Map<String, Object?>>{};
+    final routeScopedSelections = <(String, String)>{};
     final commandContracts = <String, Map<String, Object?>>{};
     final commandHandlers = <String, Map<String, Object?>>{};
     final eventContracts = <String, Map<String, Object?>>{};
@@ -426,6 +427,14 @@ abstract final class CCRouteWorkspaceValidator {
           );
         } else {
           serviceImplementations[key] = implementation;
+          if (implementation['scope'] == 'route') {
+            final contractId = '${implementation['contractId'] ?? ''}';
+            routeScopedSelections.add((contractId, keyName));
+            // An explicitly default provider also answers an unkeyed lookup.
+            if (implementation['isDefault'] == true) {
+              routeScopedSelections.add((contractId, ''));
+            }
+          }
         }
         if (implementation['isDefault'] == true) {
           final defaultKey = '$ownerId\u0000$id';
@@ -611,20 +620,7 @@ abstract final class CCRouteWorkspaceValidator {
             'Key "${keyName.isEmpty ? '<default>' : keyName}" more than once.',
           );
         }
-        final selectedImplementations = serviceImplementations.values.where((
-          implementation,
-        ) {
-          if ('${implementation['contractId'] ?? ''}' != contractId) {
-            return false;
-          }
-          final providerKey = '${implementation['key'] ?? ''}';
-          return keyName.isNotEmpty
-              ? providerKey == keyName
-              : providerKey.isEmpty || implementation['isDefault'] == true;
-        });
-        if (selectedImplementations.any(
-          (implementation) => implementation['scope'] == 'route',
-        )) {
+        if (routeScopedSelections.contains((contractId, keyName))) {
           errors.add(
             'Component "$componentId" cannot generate Service Client member '
             '"$member" for Route-scoped contract "$contractId". Resolve the '

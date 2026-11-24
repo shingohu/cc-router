@@ -969,6 +969,104 @@ void main() {
     expect(result.errors, contains(contains('Route-scoped contract')));
   });
 
+  test(
+    'Route-scoped Service diagnostics follow contract, key and first provider',
+    () {
+      const contract = 'orders.draft';
+      Map<String, Object?> provider(
+        String id,
+        String contractId,
+        String? key,
+        String scope, {
+        bool isDefault = false,
+      }) => {
+        'id': id,
+        'contractId': contractId,
+        'componentId': 'orders',
+        'key': key,
+        'scope': scope,
+        'isDefault': isDefault,
+      };
+      for (final routeKey in <String?>[null, 'primary']) {
+        for (final isDefault in [false, true]) {
+          for (final routeFirst in [false, true]) {
+            final result = CCRouteWorkspaceValidator.validate([
+              document(
+                components: [component('orders')],
+                routes: [],
+                serviceContracts: [
+                  for (final id in [contract, 'orders.other'])
+                    {'id': id, 'componentId': 'orders'},
+                ],
+                serviceImplementations: [
+                  provider(
+                    'orders.provider',
+                    contract,
+                    routeKey,
+                    routeFirst ? 'route' : 'app',
+                    isDefault: isDefault,
+                  ),
+                  provider(
+                    'orders.provider',
+                    contract,
+                    routeKey,
+                    routeFirst ? 'app' : 'route',
+                    isDefault: !isDefault,
+                  ),
+                  provider(
+                    'orders.other',
+                    'orders.other',
+                    'other',
+                    'route',
+                    isDefault: true,
+                  ),
+                ],
+              ),
+              document(
+                package: 'payment',
+                routes: [],
+                components: [
+                  component(
+                    'payment',
+                    dependencies: ['orders'],
+                    serviceDependencies: [
+                      for (final (key, member) in [
+                        (null, 'draft'),
+                        ('primary', 'primaryDraft'),
+                        ('other', 'otherDraft'),
+                      ])
+                        {
+                          'id': contract,
+                          'componentId': 'orders',
+                          'key': key,
+                          'member': member,
+                        },
+                    ],
+                  ),
+                ],
+              ),
+            ]);
+            final expectedMembers = [
+              if (routeFirst && (routeKey == null || isDefault)) 'draft',
+              if (routeFirst && routeKey == 'primary') 'primaryDraft',
+            ];
+            expect(
+              result.errors,
+              contains(contains('declares Service "orders.provider"')),
+            );
+            expect(
+              result.errors.where((e) => e.contains('Route-scoped contract')),
+              [
+                for (final member in expectedMembers)
+                  'Component "payment" cannot generate Service Client member "$member" for Route-scoped contract "$contract". Resolve the Service from an exact managed page Context instead.',
+              ],
+            );
+          }
+        }
+      }
+    },
+  );
+
   test('accepts components and emits derived route exposure', () {
     final result = CCRouteWorkspaceValidator.validate([
       document(
