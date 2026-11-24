@@ -969,6 +969,104 @@ void main() {
     expect(result.errors, contains(contains('Route-scoped contract')));
   });
 
+  test(
+    'Route-scoped Service diagnostics follow contract, key and first provider',
+    () {
+      const contract = 'orders.draft';
+      Map<String, Object?> provider(
+        String id,
+        String contractId,
+        String? key,
+        String scope, {
+        bool isDefault = false,
+      }) => {
+        'id': id,
+        'contractId': contractId,
+        'componentId': 'orders',
+        'key': key,
+        'scope': scope,
+        'isDefault': isDefault,
+      };
+      for (final routeKey in <String?>[null, 'primary']) {
+        for (final isDefault in [false, true]) {
+          for (final routeFirst in [false, true]) {
+            final result = CCRouteWorkspaceValidator.validate([
+              document(
+                components: [component('orders')],
+                routes: [],
+                serviceContracts: [
+                  for (final id in [contract, 'orders.other'])
+                    {'id': id, 'componentId': 'orders'},
+                ],
+                serviceImplementations: [
+                  provider(
+                    'orders.provider',
+                    contract,
+                    routeKey,
+                    routeFirst ? 'route' : 'app',
+                    isDefault: isDefault,
+                  ),
+                  provider(
+                    'orders.provider',
+                    contract,
+                    routeKey,
+                    routeFirst ? 'app' : 'route',
+                    isDefault: !isDefault,
+                  ),
+                  provider(
+                    'orders.other',
+                    'orders.other',
+                    'other',
+                    'route',
+                    isDefault: true,
+                  ),
+                ],
+              ),
+              document(
+                package: 'payment',
+                routes: [],
+                components: [
+                  component(
+                    'payment',
+                    dependencies: ['orders'],
+                    serviceDependencies: [
+                      for (final (key, member) in [
+                        (null, 'draft'),
+                        ('primary', 'primaryDraft'),
+                        ('other', 'otherDraft'),
+                      ])
+                        {
+                          'id': contract,
+                          'componentId': 'orders',
+                          'key': key,
+                          'member': member,
+                        },
+                    ],
+                  ),
+                ],
+              ),
+            ]);
+            final expectedMembers = [
+              if (routeFirst && (routeKey == null || isDefault)) 'draft',
+              if (routeFirst && routeKey == 'primary') 'primaryDraft',
+            ];
+            expect(
+              result.errors,
+              contains(contains('declares Service "orders.provider"')),
+            );
+            expect(
+              result.errors.where((e) => e.contains('Route-scoped contract')),
+              [
+                for (final member in expectedMembers)
+                  'Component "payment" cannot generate Service Client member "$member" for Route-scoped contract "$contract". Resolve the Service from an exact managed page Context instead.',
+              ],
+            );
+          }
+        }
+      }
+    },
+  );
+
   test('accepts components and emits derived route exposure', () {
     final result = CCRouteWorkspaceValidator.validate([
       document(
@@ -1129,6 +1227,51 @@ void main() {
       (item) => item.code == 'ccrouter_host_component_owner_missing',
     );
     expect(diagnostic.rootCauseGroup, 'missing-owner:missing');
+  });
+
+  test(
+    'quoted IDs retain metadata order and every distinct source location',
+    () {
+      final result = CCRouteWorkspaceValidator.validate([
+        for (final (id, file) in [
+          ('orders.z', 'z'),
+          ('orders.a', 'a'),
+          ('orders.a', 'duplicate'),
+        ])
+          document(
+            components: file == 'z' ? [component('orders')] : [],
+            routes: [route(id, 'orders')],
+            source: 'lib/$file.dart',
+          ),
+      ]);
+      final conflict = result.diagnostics.singleWhere(
+        (d) => d.message.contains('ambiguous patterns'),
+      );
+      expect(conflict.message, startsWith('Routes "orders.a" and "orders.z"'));
+      expect(conflict.primaryLocation?.uri, 'package:orders/z.dart');
+      expect(conflict.relatedLocations.map((r) => r.location.uri), [
+        'package:orders/a.dart',
+        'package:orders/duplicate.dart',
+      ]);
+    },
+  );
+
+  test('malformed ID containing a quote keeps its diagnostic location', () {
+    const id = 'orders.a"b';
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: [],
+        source: 'lib/service.dart',
+        serviceContracts: [
+          {'id': id, 'componentId': 'orders', 'alias': 'bad-name'},
+        ],
+      ),
+    ]);
+    final diagnostic = result.diagnostics.singleWhere(
+      (d) => d.message.contains('invalid Client alias'),
+    );
+    expect(diagnostic.primaryLocation?.uri, 'package:orders/service.dart');
   });
 
   test('missing owner diagnostics retain exact authored locations', () {
@@ -1663,6 +1806,25 @@ void main() {
       ),
     ]);
     expect(result.errors, contains(contains('ambiguous patterns')));
+  });
+
+  test('rarest anchor retains both fixed and dynamic matches', () {
+    final result = CCRouteWorkspaceValidator.validate([
+      document(
+        components: [component('orders')],
+        routes: [
+          route('orders.a', 'orders', pattern: '/a/:id/c'),
+          route('orders.b', 'orders', pattern: '/:id/b/c'),
+          route('orders.c', 'orders', pattern: '/a/b/:id'),
+          route('orders.d', 'orders', pattern: '/x/y/:id'),
+        ],
+      ),
+    ]);
+    expect(result.errors, [
+      'Routes "orders.a" and "orders.b" have ambiguous patterns "/a/:id/c" and "/:id/b/c" with equal specificity.',
+      'Routes "orders.a" and "orders.c" have ambiguous patterns "/a/:id/c" and "/a/b/:id" with equal specificity.',
+      'Routes "orders.b" and "orders.c" have ambiguous patterns "/:id/b/c" and "/a/b/:id" with equal specificity.',
+    ]);
   });
 
   test('indexed candidates retain wildcard conflicts', () {

@@ -94,6 +94,31 @@ final class _WorkspacePatternConflictIndex {
       yield* _entries;
       return;
     }
+    if (_wildcardEntries.isEmpty) {
+      // A prior pattern is either fixed or dynamic at an anchor, so the two
+      // posting lists are disjoint. Compare sizes before enumerating either.
+      Set<int>? bestFixed;
+      Set<int>? bestDynamic;
+      var smallestSize = _entries.length + 1;
+      for (final anchor in pattern.fixedSegments.entries) {
+        final fixed = _fixedEntries[anchor.key]?[anchor.value];
+        final dynamicIds = _dynamicEntries[anchor.key];
+        final size = (fixed?.length ?? 0) + (dynamicIds?.length ?? 0);
+        if (size == 0) return;
+        if (size < smallestSize) {
+          smallestSize = size;
+          bestFixed = fixed;
+          bestDynamic = dynamicIds;
+        }
+      }
+      for (final id in bestFixed ?? const <int>{}) {
+        yield _entries[id];
+      }
+      for (final id in bestDynamic ?? const <int>{}) {
+        yield _entries[id];
+      }
+      return;
+    }
     Set<int>? smallestCandidateIds;
     for (final anchor in pattern.fixedSegments.entries) {
       final candidateIds = <int>{
@@ -332,6 +357,7 @@ abstract final class CCRouteWorkspaceValidator {
     final contributions = <String, Map<String, Object?>>{};
     final serviceContracts = <String, Map<String, Object?>>{};
     final serviceImplementations = <String, Map<String, Object?>>{};
+    final routeScopedSelections = <(String, String)>{};
     final commandContracts = <String, Map<String, Object?>>{};
     final commandHandlers = <String, Map<String, Object?>>{};
     final eventContracts = <String, Map<String, Object?>>{};
@@ -426,6 +452,14 @@ abstract final class CCRouteWorkspaceValidator {
           );
         } else {
           serviceImplementations[key] = implementation;
+          if (implementation['scope'] == 'route') {
+            final contractId = '${implementation['contractId'] ?? ''}';
+            routeScopedSelections.add((contractId, keyName));
+            // An explicitly default provider also answers an unkeyed lookup.
+            if (implementation['isDefault'] == true) {
+              routeScopedSelections.add((contractId, ''));
+            }
+          }
         }
         if (implementation['isDefault'] == true) {
           final defaultKey = '$ownerId\u0000$id';
@@ -611,20 +645,7 @@ abstract final class CCRouteWorkspaceValidator {
             'Key "${keyName.isEmpty ? '<default>' : keyName}" more than once.',
           );
         }
-        final selectedImplementations = serviceImplementations.values.where((
-          implementation,
-        ) {
-          if ('${implementation['contractId'] ?? ''}' != contractId) {
-            return false;
-          }
-          final providerKey = '${implementation['key'] ?? ''}';
-          return keyName.isNotEmpty
-              ? providerKey == keyName
-              : providerKey.isEmpty || implementation['isDefault'] == true;
-        });
-        if (selectedImplementations.any(
-          (implementation) => implementation['scope'] == 'route',
-        )) {
+        if (routeScopedSelections.contains((contractId, keyName))) {
           errors.add(
             'Component "$componentId" cannot generate Service Client member '
             '"$member" for Route-scoped contract "$contractId". Resolve the '
@@ -1144,11 +1165,14 @@ abstract final class CCRouteWorkspaceValidator {
       );
     }
 
+    late final positionsById = _diagnosticPositionsById(entities);
     for (final error in errors) {
       if (_isMissingOwnerCascade(error, missingOwners)) continue;
-      final matches = entities
-          .where((entity) => error.contains('"${entity.id}"'))
-          .toList(growable: false);
+      final matches = _matchingDiagnosticEntities(
+        error,
+        entities,
+        positionsById,
+      );
       final primary = matches.firstOrNull;
       diagnostics.add(
         CCWorkspaceDiagnostic(
@@ -1173,6 +1197,46 @@ abstract final class CCRouteWorkspaceValidator {
     }
     diagnostics.sort((left, right) => left.message.compareTo(right.message));
     return List.unmodifiable(diagnostics);
+  }
+
+  /// Indexes declaration positions for attribution, with literal fallback for quoted IDs.
+  static Map<String, List<int>>? _diagnosticPositionsById(
+    List<_WorkspaceDiagnosticEntity> entities,
+  ) {
+    final positions = <String, List<int>>{};
+    for (var i = 0; i < entities.length; i++) {
+      final id = entities[i].id;
+      // A malformed ID can contain a delimiter and span several quoted fragments.
+      if (id.contains('"')) return null;
+      (positions[id] ??= []).add(i);
+    }
+    return positions;
+  }
+
+  /// Matches quoted IDs once per declaration in original metadata order.
+  static List<_WorkspaceDiagnosticEntity> _matchingDiagnosticEntities(
+    String message,
+    List<_WorkspaceDiagnosticEntity> entities,
+    Map<String, List<int>>? positionsById,
+  ) {
+    if (positionsById == null) {
+      return entities
+          .where((entity) => message.contains('"${entity.id}"'))
+          .toList();
+    }
+    final positions = <int>{};
+    // Adjacent pairs include overlapping matches in malformed error text.
+    var start = message.indexOf('"');
+    while (start >= 0) {
+      final end = message.indexOf('"', start + 1);
+      if (end < 0) break;
+      final matches = positionsById[message.substring(start + 1, end)];
+      if (matches != null) positions.addAll(matches);
+      start = end;
+    }
+    return [
+      for (final position in positions.toList()..sort()) entities[position],
+    ];
   }
 
   /// Enumerates source-bearing entities from generated metadata documents.
