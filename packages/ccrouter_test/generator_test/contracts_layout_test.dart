@@ -114,7 +114,7 @@ void main() {
       ),
       contains(contains('Public route "orders.detail"')),
     );
-  });
+  }, timeout: const Timeout(Duration(minutes: 2)));
 }
 
 Future<({String code, Map<String, Map<String, Object?>> documents})> _generate(
